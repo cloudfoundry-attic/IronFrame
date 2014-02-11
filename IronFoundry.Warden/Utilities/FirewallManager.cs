@@ -1,8 +1,8 @@
-﻿using System;
-using NetFwTypeLib;
-
-namespace IronFoundry.Warden.Utilities
+﻿namespace IronFoundry.Warden.Utilities
 {
+    using System;
+    using NetFwTypeLib;
+
     /// <summary>
     /// http://www.shafqatahmed.com/2008/01/controlling-win.html
     /// http://blogs.msdn.com/b/securitytools/archive/2009/08/21/automating-windows-firewall-settings-with-c.aspx

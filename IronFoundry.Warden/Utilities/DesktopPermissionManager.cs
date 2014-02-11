@@ -1,10 +1,10 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using System.Security.AccessControl;
-using Asprosys.Security.AccessControl;
-
-namespace IronFoundry.Warden.Utilities
+﻿namespace IronFoundry.Warden.Utilities
 {
+    using System;
+    using System.Runtime.InteropServices;
+    using System.Security.AccessControl;
+    using Asprosys.Security.AccessControl;
+
     public class DesktopPermissionManager
     {
         // No need to close handle.

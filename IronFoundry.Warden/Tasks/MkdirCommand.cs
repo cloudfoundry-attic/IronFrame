@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using IronFoundry.Warden.Containers;
-
-namespace IronFoundry.Warden.Tasks
+﻿namespace IronFoundry.Warden.Tasks
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Text;
+    using IronFoundry.Warden.Containers;
+
     public class MkdirCommand : PathCommand
     {
         public MkdirCommand(Container container, string[] arguments)

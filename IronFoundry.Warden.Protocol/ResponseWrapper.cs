@@ -1,9 +1,9 @@
-﻿using System;
-using System.IO;
-using ProtoBuf;
-
-namespace IronFoundry.Warden.Protocol
+﻿namespace IronFoundry.Warden.Protocol
 {
+    using System;
+    using System.IO;
+    using ProtoBuf;
+
     public class ResponseWrapper
     {
         private readonly Response response;

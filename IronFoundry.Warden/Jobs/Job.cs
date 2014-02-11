@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using NLog;
-
-namespace IronFoundry.Warden.Jobs
+﻿namespace IronFoundry.Warden.Jobs
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using NLog;
+
     public class Job
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();

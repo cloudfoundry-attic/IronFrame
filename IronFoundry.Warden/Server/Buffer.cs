@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using IronFoundry.Warden.Protocol;
-using NLog;
-using ProtoBuf;
-
-namespace IronFoundry.Warden.Server
+﻿namespace IronFoundry.Warden.Server
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Text;
+    using IronFoundry.Warden.Protocol;
+    using NLog;
+    using ProtoBuf;
+
     public class Buffer : IDisposable
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();

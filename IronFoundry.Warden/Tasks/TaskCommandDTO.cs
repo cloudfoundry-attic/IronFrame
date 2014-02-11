@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
-
-namespace IronFoundry.Warden.Tasks
+﻿namespace IronFoundry.Warden.Tasks
 {
+    using Newtonsoft.Json;
+
     public class TaskCommandDTO
     {
         [JsonProperty(PropertyName="cmd")]

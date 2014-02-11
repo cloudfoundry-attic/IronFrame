@@ -1,8 +1,8 @@
-﻿using System;
-using NLog;
-
-namespace IronFoundry.Warden.Utilities
+﻿namespace IronFoundry.Warden.Utilities
 {
+    using System;
+    using NLog;
+
     public class LocalTcpPortManager
     {
         private static readonly string workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.System);

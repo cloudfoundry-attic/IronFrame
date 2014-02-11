@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace IronFoundry.Warden.Containers
+﻿namespace IronFoundry.Warden.Containers
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+
     /// <summary>
     /// warden/lib/warden/container/base.rb
     /// </summary>

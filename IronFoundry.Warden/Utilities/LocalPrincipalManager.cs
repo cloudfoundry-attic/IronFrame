@@ -1,11 +1,11 @@
-﻿using System;
-using System.DirectoryServices;
-using System.DirectoryServices.AccountManagement;
-using System.Web.Security;
-using NLog;
-
-namespace IronFoundry.Warden.Utilities
+﻿namespace IronFoundry.Warden.Utilities
 {
+    using System;
+    using System.DirectoryServices;
+    using System.DirectoryServices.AccountManagement;
+    using System.Web.Security;
+    using NLog;
+
     public class LocalPrincipalManager
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();

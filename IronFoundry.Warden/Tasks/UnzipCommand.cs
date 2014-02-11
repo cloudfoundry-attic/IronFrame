@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using IronFoundry.Warden.Containers;
-using ICSharpCode.SharpZipLib.Zip;
-using IronFoundry.Warden.Properties;
-
-namespace IronFoundry.Warden.Tasks
+﻿namespace IronFoundry.Warden.Tasks
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using Containers;
+    using ICSharpCode.SharpZipLib.Zip;
+    using Properties;
+
     public class UnzipCommand : TaskCommand
     {
         private readonly FileInfo zipFile;

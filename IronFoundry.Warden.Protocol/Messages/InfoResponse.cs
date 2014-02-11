@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace IronFoundry.Warden.Protocol
+﻿namespace IronFoundry.Warden.Protocol
 {
+    using System;
+    using System.Collections.Generic;
+
     public partial class InfoResponse : Response
     {
         public InfoResponse(string hostIp, string containerIp, string containerPath, string containerState)

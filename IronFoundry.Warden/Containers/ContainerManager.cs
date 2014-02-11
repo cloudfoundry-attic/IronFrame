@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
-using NLog;
-using IronFoundry.Warden.Utilities;
-
-namespace IronFoundry.Warden.Containers
+﻿namespace IronFoundry.Warden.Containers
 {
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Threading.Tasks;
+    using NLog;
+    using Utilities;
+
     public class ContainerManager : IContainerManager
     {
         private readonly ConcurrentDictionary<ContainerHandle, Container> containers =

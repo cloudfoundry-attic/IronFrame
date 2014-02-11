@@ -1,14 +1,14 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using IronFoundry.Warden.Containers;
-using Microsoft.VisualBasic.FileIO;
-using NLog;
-using IronFoundry.Warden.Protocol;
-using IronFoundry.Warden.Utilities;
-
-namespace IronFoundry.Warden.Handlers
+﻿namespace IronFoundry.Warden.Handlers
 {
+    using System;
+    using System.IO;
+    using System.Threading.Tasks;
+    using Containers;
+    using Microsoft.VisualBasic.FileIO;
+    using NLog;
+    using Protocol;
+    using Utilities;
+
     public abstract class CopyRequestHandler : ContainerRequestHandler
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();

@@ -1,13 +1,13 @@
-﻿using System;
-using System.IO;
-using System.Threading;
-using IronFoundry.Warden.Configuration;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Jobs;
-using NLog;
-
-namespace IronFoundry.Warden.Utilities
+﻿namespace IronFoundry.Warden.Utilities
 {
+    using System;
+    using System.IO;
+    using System.Threading;
+    using IronFoundry.Warden.Configuration;
+    using IronFoundry.Warden.Containers;
+    using IronFoundry.Warden.Jobs;
+    using NLog;
+
     public static class Statics
     {
         private static readonly Logger log = LogManager.GetCurrentClassLogger();

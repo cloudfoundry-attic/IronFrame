@@ -1,11 +1,11 @@
-﻿using System;
-using System.IO;
-using IronFoundry.Warden.Containers;
-using ICSharpCode.SharpZipLib.GZip;
-using ICSharpCode.SharpZipLib.Tar;
-
-namespace IronFoundry.Warden.Tasks
+﻿namespace IronFoundry.Warden.Tasks
 {
+    using System;
+    using System.IO;
+    using Containers;
+    using ICSharpCode.SharpZipLib.GZip;
+    using ICSharpCode.SharpZipLib.Tar;
+
     public class TarCommand : TaskCommand
     {
         private const string CurrentDirectory = ".";

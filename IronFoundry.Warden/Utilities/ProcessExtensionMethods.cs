@@ -1,12 +1,12 @@
-﻿using System;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Text;
-using IronFoundry.Warden.PInvoke;
-
-namespace IronFoundry.Warden.Utilities
+﻿namespace IronFoundry.Warden.Utilities
 {
+    using System;
+    using System.ComponentModel;
+    using System.Diagnostics;
+    using System.Runtime.InteropServices;
+    using System.Text;
+    using PInvoke;
+
     public static class ProcessExtensionMethods
     {
         public static string GetUserName(this Process targetProcess)

@@ -1,9 +1,9 @@
-﻿using System;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Protocol;
-
-namespace IronFoundry.Warden.Handlers
+﻿namespace IronFoundry.Warden.Handlers
 {
+    using System;
+    using Containers;
+    using Protocol;
+
     public abstract class ContainerRequestHandler : RequestHandler
     {
         protected readonly IContainerManager containerManager;

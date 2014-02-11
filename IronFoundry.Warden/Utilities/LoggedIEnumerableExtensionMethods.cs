@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using NLog;
-
-namespace IronFoundry.Warden.Utilities
+﻿namespace IronFoundry.Warden.Utilities
 {
+    using System;
+    using System.Collections.Generic;
+    using NLog;
+
     public static class LoggedIEnumerableExtensionMethods
     {
         public static void Foreach<T>(this IEnumerable<T> collection, Logger log, Action<T> action)

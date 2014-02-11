@@ -58,6 +58,7 @@
     <Compile Include="Handlers\CreateRequestHandler.cs" />
     <Compile Include="Handlers\DestroyRequestHandler.cs" />
     <Compile Include="Handlers\EchoRequestHandler.cs" />
+    <Compile Include="Handlers\LimitCpuRequestHandler.cs" />
     <Compile Include="Handlers\ResponseData.cs" />
     <Compile Include="Handlers\InfoRequestHandler.cs" />
     <Compile Include="Handlers\IStreamingHandler.cs" />

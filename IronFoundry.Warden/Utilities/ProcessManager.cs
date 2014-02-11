@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using IronFoundry.Warden.Containers;
-using NLog;
-
-namespace IronFoundry.Warden.Utilities
+﻿namespace IronFoundry.Warden.Utilities
 {
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using Containers;
+    using NLog;
+
     public class ProcessManager
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();

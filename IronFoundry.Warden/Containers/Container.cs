@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Net;
-using System.Threading;
-using NLog;
-using IronFoundry.Warden.Protocol;
-using IronFoundry.Warden.Utilities;
-
-namespace IronFoundry.Warden.Containers
+﻿namespace IronFoundry.Warden.Containers
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Net;
+    using System.Threading;
+    using NLog;
+    using Protocol;
+    using Utilities;
+
     public class Container
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();

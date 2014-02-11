@@ -1,9 +1,9 @@
-﻿using System.Threading.Tasks;
-using IronFoundry.Warden.Protocol;
-using NLog;
-
-namespace IronFoundry.Warden.Handlers
+﻿namespace IronFoundry.Warden.Handlers
 {
+    using System.Threading.Tasks;
+    using IronFoundry.Warden.Protocol;
+    using NLog;
+
     public class LimitMemoryRequestHandler : RequestHandler
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();

@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using IronFoundry.Warden.Protocol;
-
-namespace IronFoundry.Warden.Handlers
+﻿namespace IronFoundry.Warden.Handlers
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using Protocol;
+
     public abstract class RequestHandler
     {
         private readonly Request request;

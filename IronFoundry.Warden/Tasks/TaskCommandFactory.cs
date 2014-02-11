@@ -1,9 +1,9 @@
-﻿using System;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Protocol;
-
-namespace IronFoundry.Warden.Tasks
+﻿namespace IronFoundry.Warden.Tasks
 {
+    using System;
+    using Containers;
+    using Protocol;
+
     public class TaskCommandFactory
     {
         private readonly Container container;

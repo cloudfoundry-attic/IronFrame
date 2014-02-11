@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Protocol;
-
-namespace IronFoundry.Warden.Tasks
+﻿namespace IronFoundry.Warden.Tasks
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using Containers;
+    using Protocol;
+
     public class WebApplicationCommand : ProcessCommand
     {
         private static readonly string RuntimeVersionTwo = "2.0";

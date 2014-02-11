@@ -1,9 +1,9 @@
-﻿using System;
-using IronFoundry.Warden.Protocol;
-using IronFoundry.Warden.Utilities;
-
-namespace IronFoundry.Warden.Containers
+﻿namespace IronFoundry.Warden.Containers
 {
+    using System;
+    using Protocol;
+    using Utilities;
+
     public class InfoBuilder
     {
         private readonly Container container;

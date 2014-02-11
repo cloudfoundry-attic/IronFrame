@@ -1,11 +1,11 @@
-﻿using System;
-using System.Threading.Tasks;
-using IronFoundry.Warden.Protocol;
-using IronFoundry.Warden.Utilities;
-using NLog;
-
-namespace IronFoundry.Warden.Server
+﻿namespace IronFoundry.Warden.Server
 {
+    using System;
+    using System.Threading.Tasks;
+    using NLog;
+    using Protocol;
+    using Utilities;
+
     public class WardenExceptionHandler
     {
         private readonly Logger log;

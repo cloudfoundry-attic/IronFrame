@@ -1,16 +1,16 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Jobs;
-using IronFoundry.Warden.Properties;
-using IronFoundry.Warden.Protocol;
-using IronFoundry.Warden.Utilities;
-using NLog;
-using System.Collections.Generic;
-
-namespace IronFoundry.Warden.Handlers
+﻿namespace IronFoundry.Warden.Handlers
 {
+    using System;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Containers;
+    using Jobs;
+    using Properties;
+    using Protocol;
+    using Utilities;
+    using NLog;
+    using System.Collections.Generic;
+
     public class StreamRequestHandler : JobRequestHandler, IStreamingHandler, IJobListener
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();

@@ -1,11 +1,11 @@
-﻿using System;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Jobs;
-using IronFoundry.Warden.Protocol;
-using IronFoundry.Warden.Tasks;
-
-namespace IronFoundry.Warden.Handlers
+﻿namespace IronFoundry.Warden.Handlers
 {
+    using System;
+    using Containers;
+    using Jobs;
+    using Protocol;
+    using Tasks;
+
     public abstract class TaskRequestHandler : ContainerRequestHandler
     {
         public TaskRequestHandler(IContainerManager containerManager, Request request)

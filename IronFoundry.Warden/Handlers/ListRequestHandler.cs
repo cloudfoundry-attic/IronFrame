@@ -1,11 +1,11 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Protocol;
-
-namespace IronFoundry.Warden.Handlers
+﻿namespace IronFoundry.Warden.Handlers
 {
+    using System;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using Containers;
+    using Protocol;
+
     public class ListRequestHandler : RequestHandler
     {
         private readonly IContainerManager containerManager;

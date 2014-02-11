@@ -1,13 +1,13 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Text;
-using IronFoundry.Warden.Configuration;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Utilities;
-
-namespace IronFoundry.Warden.Tasks
+﻿namespace IronFoundry.Warden.Tasks
 {
+    using System;
+    using System.IO;
+    using System.Linq;
+    using System.Text;
+    using Configuration;
+    using Containers;
+    using Utilities;
+
     /// <summary>
     /// Opens existing file and replaces the @ROOT@ tokens with paths in the container.
     /// </summary>

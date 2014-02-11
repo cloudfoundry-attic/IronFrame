@@ -1,8 +1,8 @@
-﻿using System.Runtime.InteropServices;
-using System.Text;
-
-namespace IronFoundry.Warden.PInvoke
+﻿namespace IronFoundry.Warden.PInvoke
 {
+    using System.Runtime.InteropServices;
+    using System.Text;
+
     internal partial class NativeMethods
     {
         [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]

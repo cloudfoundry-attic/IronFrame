@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace IronFoundry.Warden.Containers
+﻿namespace IronFoundry.Warden.Containers
 {
+    using System;
+    using System.Collections.Generic;
+
     public interface IContainerManager : IDisposable
     {
         void DestroyContainer(ContainerHandle handle);

@@ -1,7 +1,7 @@
-﻿using IronFoundry.Warden.Jobs;
-
-namespace IronFoundry.Warden.Tasks
+﻿namespace IronFoundry.Warden.Tasks
 {
+    using IronFoundry.Warden.Jobs;
+
     public class TaskCommandResult : IJobResult
     {
         private readonly int exitCode;

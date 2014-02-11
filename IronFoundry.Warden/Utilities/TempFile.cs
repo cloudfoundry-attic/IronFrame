@@ -1,8 +1,8 @@
-﻿using System;
-using System.IO;
-
-namespace IronFoundry.Warden.Utilities
+﻿namespace IronFoundry.Warden.Utilities
 {
+    using System;
+    using System.IO;
+
     public class TempFile : IDisposable
     {
         private readonly string basePath;

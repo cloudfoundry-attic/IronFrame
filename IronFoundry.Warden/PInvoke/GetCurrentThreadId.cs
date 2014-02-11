@@ -1,7 +1,7 @@
-﻿using System.Runtime.InteropServices;
-
-namespace IronFoundry.Warden.PInvoke
+﻿namespace IronFoundry.Warden.PInvoke
 {
+    using System.Runtime.InteropServices;
+
     internal partial class NativeMethods
     {
         [DllImport("kernel32.dll", SetLastError = true)]

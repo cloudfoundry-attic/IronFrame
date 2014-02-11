@@ -1,15 +1,15 @@
-﻿using System;
-using System.Diagnostics;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Protocol;
-using IronFoundry.Warden.Utilities;
-using NLog;
-
-namespace IronFoundry.Warden.Tasks
+﻿namespace IronFoundry.Warden.Tasks
 {
+    using System;
+    using System.Diagnostics;
+    using System.Net;
+    using System.Text;
+    using System.Threading.Tasks;
+    using Containers;
+    using NLog;
+    using Protocol;
+    using Utilities;
+
     public abstract class ProcessCommand : TaskCommand
     {
         private readonly StringBuilder stdout = new StringBuilder();

@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
-namespace IronFoundry.Warden.Jobs
+﻿namespace IronFoundry.Warden.Jobs
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+
     public interface IJobRunnable
     {
         void Cancel();

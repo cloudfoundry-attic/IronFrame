@@ -1,9 +1,9 @@
-﻿using System;
-using System.Runtime.Serialization;
-using System.Text;
-
-namespace IronFoundry.Warden
+﻿namespace IronFoundry.Warden
 {
+    using System;
+    using System.Runtime.Serialization;
+    using System.Text;
+
     [Serializable]
     public class WardenException : Exception, ISerializable
     {

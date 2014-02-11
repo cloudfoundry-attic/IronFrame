@@ -1,9 +1,9 @@
-﻿using System;
-using System.ComponentModel;
-using System.Net;
-
-namespace IronFoundry.Warden.PInvoke
+﻿namespace IronFoundry.Warden.PInvoke
 {
+    using System;
+    using System.ComponentModel;
+    using System.Net;
+
     internal static class Utils
     {
         public static SafeUserTokenHandle LogonAndGetUserPrimaryToken(NetworkCredential credential)

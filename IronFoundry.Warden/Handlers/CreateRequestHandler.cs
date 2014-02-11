@@ -1,13 +1,13 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Security.AccessControl;
-using System.Threading.Tasks;
-using IronFoundry.Warden.Containers;
-using NLog;
-using IronFoundry.Warden.Protocol;
-
-namespace IronFoundry.Warden.Handlers
+﻿namespace IronFoundry.Warden.Handlers
 {
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Security.AccessControl;
+    using System.Threading.Tasks;
+    using Containers;
+    using NLog;
+    using Protocol;
+
     public class CreateRequestHandler : ContainerRequestHandler
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();

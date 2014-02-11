@@ -1,11 +1,11 @@
-﻿using System;
-using System.Linq;
-using System.Collections.Generic;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Protocol;
-
-namespace IronFoundry.Warden.Tasks
+﻿namespace IronFoundry.Warden.Tasks
 {
+    using System;
+    using System.Linq;
+    using System.Collections.Generic;
+    using Containers;
+    using Protocol;
+
     public class ExeCommand : ProcessCommand
     {
         private readonly string executable;

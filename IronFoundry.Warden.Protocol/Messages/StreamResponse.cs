@@ -1,7 +1,7 @@
-﻿using System;
-
-namespace IronFoundry.Warden.Protocol
+﻿namespace IronFoundry.Warden.Protocol
 {
+    using System;
+
     public partial class StreamResponse : Response
     {
         public override Message.Type ResponseType

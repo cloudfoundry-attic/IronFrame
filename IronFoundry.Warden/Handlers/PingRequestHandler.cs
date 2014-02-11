@@ -1,8 +1,8 @@
-﻿using System.Threading.Tasks;
-using IronFoundry.Warden.Protocol;
-
-namespace IronFoundry.Warden.Handlers
+﻿namespace IronFoundry.Warden.Handlers
 {
+    using System.Threading.Tasks;
+    using IronFoundry.Warden.Protocol;
+
     public class PingRequestHandler : RequestHandler
     {
         private readonly PingRequest request;

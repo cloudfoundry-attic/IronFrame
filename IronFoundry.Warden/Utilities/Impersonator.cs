@@ -1,10 +1,10 @@
-﻿using System;
-using System.Net;
-using System.Security.Principal;
-using IronFoundry.Warden.PInvoke;
-
-namespace IronFoundry.Warden.Utilities
+﻿namespace IronFoundry.Warden.Utilities
 {
+    using System;
+    using System.Net;
+    using System.Security.Principal;
+    using IronFoundry.Warden.PInvoke;
+
     public static class Impersonator
     {
         public static WindowsImpersonationContext GetContext(NetworkCredential credential, bool shouldImpersonate = false)

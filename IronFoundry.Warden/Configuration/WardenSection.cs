@@ -1,7 +1,7 @@
-﻿using System.Configuration;
-
-namespace IronFoundry.Warden.Configuration
+﻿namespace IronFoundry.Warden.Configuration
 {
+    using System.Configuration;
+
     public class WardenSection : ConfigurationSection
     {
         public const string SectionName = "warden-server";

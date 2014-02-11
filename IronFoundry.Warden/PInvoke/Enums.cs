@@ -1,7 +1,7 @@
-﻿using System;
-
-namespace IronFoundry.Warden.PInvoke
+﻿namespace IronFoundry.Warden.PInvoke
 {
+    using System;
+
     internal partial class NativeMethods
     {
         [Flags]

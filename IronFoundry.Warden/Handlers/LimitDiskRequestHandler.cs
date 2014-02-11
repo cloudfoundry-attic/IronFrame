@@ -12,7 +12,7 @@ namespace IronFoundry.Warden.Handlers
         public LimitDiskRequestHandler(Request request)
             : base(request)
         {
-            this.request = (LimitDiskRequest)request;
+            this.request = (LimitDiskRequest) request;
         }
 
         public override Task<Response> HandleAsync()

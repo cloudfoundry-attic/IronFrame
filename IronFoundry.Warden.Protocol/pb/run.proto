@@ -15,13 +15,16 @@ package IronFoundry.Warden.Protocol;
 import "info.proto";
 import "resource_limits.proto";
 
-
 message RunRequest {
   required string handle = 1;
 
   required string script = 2;
   optional bool privileged = 3 [default = false];
   optional ResourceLimits rlimits = 4;
+
+  optional bool discard_output = 5 [default = false];
+
+  optional string log_tag = 6;
 }
 
 message RunResponse {

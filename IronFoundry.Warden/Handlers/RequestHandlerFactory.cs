@@ -1,10 +1,10 @@
-﻿using System;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Jobs;
-using IronFoundry.Warden.Protocol;
-
-namespace IronFoundry.Warden.Handlers
+﻿namespace IronFoundry.Warden.Handlers
 {
+    using System;
+    using IronFoundry.Warden.Containers;
+    using IronFoundry.Warden.Jobs;
+    using IronFoundry.Warden.Protocol;
+
     public class RequestHandlerFactory
     {
         private readonly IContainerManager containerManager;
@@ -65,6 +65,9 @@ namespace IronFoundry.Warden.Handlers
                     break;
                 case Message.Type.LimitDisk:
                     handler = new LimitDiskRequestHandler(request);
+                    break;
+                case Message.Type.LimitCpu:
+                    handler = new LimitCpuRequestHandler(request);
                     break;
                 case Message.Type.LimitMemory:
                     handler = new LimitMemoryRequestHandler(request);

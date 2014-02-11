@@ -1,12 +1,11 @@
-﻿using System;
-using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
-
-namespace IronFoundry.Warden.Utilities
+﻿namespace IronFoundry.Warden.Utilities
 {
-    // TODO: Duped from IronFoundry.Misc.Utilities.Utility?
+    using System;
+    using System.Linq;
+    using System.Net;
+    using System.Net.NetworkInformation;
+    using System.Net.Sockets;
+
     public class IPUtilities
     {
         public static ushort RandomFreePort()

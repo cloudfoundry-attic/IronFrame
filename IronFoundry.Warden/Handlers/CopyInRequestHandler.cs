@@ -1,8 +1,8 @@
-﻿using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Protocol;
-
-namespace IronFoundry.Warden.Handlers
+﻿namespace IronFoundry.Warden.Handlers
 {
+    using Containers;
+    using Protocol;
+
     public class CopyInRequestHandler : CopyRequestHandler
     {
         public CopyInRequestHandler(IContainerManager containerManager, Request request)

@@ -1,13 +1,13 @@
-﻿using System;
-using System.IO;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
-using ProtoBuf;
-using IronFoundry.Warden.Protocol;
-
-namespace IronFoundry.Warden.Utilities
+﻿namespace IronFoundry.Warden.Utilities
 {
+    using System;
+    using System.IO;
+    using System.Net.Sockets;
+    using System.Text;
+    using System.Threading.Tasks;
+    using ProtoBuf;
+    using Protocol;
+
     public class MessageWriter
     {
         private readonly NetworkStream destination;

@@ -1,7 +1,7 @@
-﻿using System;
-
-namespace IronFoundry.Warden.Utilities
+﻿namespace IronFoundry.Warden.Utilities
 {
+    using System;
+
     public class LocalPrincipalData
     {
         private readonly string userName;

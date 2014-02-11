@@ -1,12 +1,12 @@
-﻿using System;
-using System.Threading.Tasks;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Protocol;
-using IronFoundry.Warden.Utilities;
-using NLog;
-
-namespace IronFoundry.Warden.Handlers
+﻿namespace IronFoundry.Warden.Handlers
 {
+    using System;
+    using System.Threading.Tasks;
+    using Containers;
+    using NLog;
+    using Protocol;
+    using Utilities;
+
     public class DestroyRequestHandler : ContainerRequestHandler
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();

@@ -1,16 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Jobs;
-using NLog;
-using IronFoundry.Warden.Utilities;
-
-namespace IronFoundry.Warden.Server
+﻿namespace IronFoundry.Warden.Server
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Containers;
+    using Jobs;
+    using NLog;
+    using Utilities;
+
     public class TcpServer
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();

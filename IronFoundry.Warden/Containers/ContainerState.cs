@@ -1,8 +1,8 @@
-﻿using System;
-using System.Linq;
-
-namespace IronFoundry.Warden.Containers
+﻿namespace IronFoundry.Warden.Containers
 {
+    using System;
+    using System.Linq;
+
     public class ContainerState : IEquatable<ContainerState>
     {
         // Container object created, but setup not performed

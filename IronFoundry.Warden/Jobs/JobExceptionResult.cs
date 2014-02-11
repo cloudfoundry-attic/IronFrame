@@ -1,7 +1,7 @@
-﻿using System;
-
-namespace IronFoundry.Warden.Jobs
+﻿namespace IronFoundry.Warden.Jobs
 {
+    using System;
+
     public class JobExceptionResult : IJobResult
     {
         private readonly string stderr;

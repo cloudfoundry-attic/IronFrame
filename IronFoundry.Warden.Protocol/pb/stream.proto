@@ -28,7 +28,6 @@
 package IronFoundry.Warden.Protocol;
 import "info.proto";
 
-
 message StreamRequest {
   required string handle = 1;
 

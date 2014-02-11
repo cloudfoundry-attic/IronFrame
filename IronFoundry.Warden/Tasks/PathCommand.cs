@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using IronFoundry.Warden.Containers;
-
-namespace IronFoundry.Warden.Tasks
+﻿namespace IronFoundry.Warden.Tasks
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Text;
+    using IronFoundry.Warden.Containers;
+
     public abstract class PathCommand : TaskCommand
     {
         public PathCommand(Container container, string[] arguments)

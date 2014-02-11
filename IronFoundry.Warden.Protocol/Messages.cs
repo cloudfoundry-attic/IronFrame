@@ -1320,6 +1320,74 @@ namespace IronFoundry.Warden.Protocol
   }
   
 }
+// Generated from: limit_cpu.proto
+// Note: requires additional types generated from: info.proto
+namespace IronFoundry.Warden.Protocol
+{
+  [global::System.Serializable, global::ProtoBuf.ProtoContract(Name=@"LimitCpuRequest")]
+  public partial class LimitCpuRequest : global::ProtoBuf.IExtensible
+  {
+    public LimitCpuRequest() {}
+    
+    private string _handle;
+    [global::ProtoBuf.ProtoMember(1, IsRequired = true, Name=@"handle", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public string Handle
+    {
+      get { return _handle; }
+      set { _handle = value; }
+    }
+
+    private ulong? _limitInShares;
+    [global::ProtoBuf.ProtoMember(2, IsRequired = false, Name=@"limit_in_shares", DataFormat = global::ProtoBuf.DataFormat.TwosComplement)]
+    public ulong LimitInShares
+    {
+      get { return _limitInShares?? default(ulong); }
+      set { _limitInShares = value; }
+    }
+    [global::System.Xml.Serialization.XmlIgnore]
+    [global::System.ComponentModel.Browsable(false)]
+    public bool LimitInSharesSpecified
+    {
+      get { return _limitInShares != null; }
+      set { if (value == (_limitInShares== null)) _limitInShares = value ? LimitInShares : (ulong?)null; }
+    }
+    private bool ShouldSerializeLimitInShares() { return LimitInSharesSpecified; }
+    private void ResetLimitInShares() { LimitInSharesSpecified = false; }
+    
+    private global::ProtoBuf.IExtension extensionObject;
+    global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+      { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
+  }
+  
+  [global::System.Serializable, global::ProtoBuf.ProtoContract(Name=@"LimitCpuResponse")]
+  public partial class LimitCpuResponse : global::ProtoBuf.IExtensible
+  {
+    public LimitCpuResponse() {}
+    
+
+    private ulong? _limitInShares;
+    [global::ProtoBuf.ProtoMember(1, IsRequired = false, Name=@"limit_in_shares", DataFormat = global::ProtoBuf.DataFormat.TwosComplement)]
+    public ulong LimitInShares
+    {
+      get { return _limitInShares?? default(ulong); }
+      set { _limitInShares = value; }
+    }
+    [global::System.Xml.Serialization.XmlIgnore]
+    [global::System.ComponentModel.Browsable(false)]
+    public bool LimitInSharesSpecified
+    {
+      get { return _limitInShares != null; }
+      set { if (value == (_limitInShares== null)) _limitInShares = value ? LimitInShares : (ulong?)null; }
+    }
+    private bool ShouldSerializeLimitInShares() { return LimitInSharesSpecified; }
+    private void ResetLimitInShares() { LimitInSharesSpecified = false; }
+    
+    private global::ProtoBuf.IExtension extensionObject;
+    global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+      { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
+  }
+  
+}
 // Generated from: limit_disk.proto
 // Note: requires additional types generated from: info.proto
 namespace IronFoundry.Warden.Protocol
@@ -2061,6 +2129,9 @@ namespace IronFoundry.Warden.Protocol
       [global::ProtoBuf.ProtoEnum(Name=@"LimitBandwidth", Value=53)]
       LimitBandwidth = 53,
             
+      [global::ProtoBuf.ProtoEnum(Name=@"LimitCpu", Value=54)]
+      LimitCpu = 54,
+            
       [global::ProtoBuf.ProtoEnum(Name=@"Ping", Value=91)]
       Ping = 91,
             
@@ -2588,6 +2659,42 @@ namespace IronFoundry.Warden.Protocol
       get { return _rlimits; }
       set { _rlimits = value; }
     }
+
+    private bool? _discardOutput;
+    [global::ProtoBuf.ProtoMember(5, IsRequired = false, Name=@"discard_output", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public bool DiscardOutput
+    {
+      get { return _discardOutput?? (bool)false; }
+      set { _discardOutput = value; }
+    }
+    [global::System.Xml.Serialization.XmlIgnore]
+    [global::System.ComponentModel.Browsable(false)]
+    public bool DiscardOutputSpecified
+    {
+      get { return _discardOutput != null; }
+      set { if (value == (_discardOutput== null)) _discardOutput = value ? DiscardOutput : (bool?)null; }
+    }
+    private bool ShouldSerializeDiscardOutput() { return DiscardOutputSpecified; }
+    private void ResetDiscardOutput() { DiscardOutputSpecified = false; }
+    
+
+    private string _logTag;
+    [global::ProtoBuf.ProtoMember(6, IsRequired = false, Name=@"log_tag", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public string LogTag
+    {
+      get { return _logTag?? ""; }
+      set { _logTag = value; }
+    }
+    [global::System.Xml.Serialization.XmlIgnore]
+    [global::System.ComponentModel.Browsable(false)]
+    public bool LogTagSpecified
+    {
+      get { return _logTag != null; }
+      set { if (value == (_logTag== null)) _logTag = value ? LogTag : (string)null; }
+    }
+    private bool ShouldSerializeLogTag() { return LogTagSpecified; }
+    private void ResetLogTag() { LogTagSpecified = false; }
+    
     private global::ProtoBuf.IExtension extensionObject;
     global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
       { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
@@ -2718,6 +2825,42 @@ namespace IronFoundry.Warden.Protocol
       get { return _rlimits; }
       set { _rlimits = value; }
     }
+
+    private bool? _discardOutput;
+    [global::ProtoBuf.ProtoMember(5, IsRequired = false, Name=@"discard_output", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public bool DiscardOutput
+    {
+      get { return _discardOutput?? (bool)false; }
+      set { _discardOutput = value; }
+    }
+    [global::System.Xml.Serialization.XmlIgnore]
+    [global::System.ComponentModel.Browsable(false)]
+    public bool DiscardOutputSpecified
+    {
+      get { return _discardOutput != null; }
+      set { if (value == (_discardOutput== null)) _discardOutput = value ? DiscardOutput : (bool?)null; }
+    }
+    private bool ShouldSerializeDiscardOutput() { return DiscardOutputSpecified; }
+    private void ResetDiscardOutput() { DiscardOutputSpecified = false; }
+    
+
+    private string _logTag;
+    [global::ProtoBuf.ProtoMember(6, IsRequired = false, Name=@"log_tag", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public string LogTag
+    {
+      get { return _logTag?? ""; }
+      set { _logTag = value; }
+    }
+    [global::System.Xml.Serialization.XmlIgnore]
+    [global::System.ComponentModel.Browsable(false)]
+    public bool LogTagSpecified
+    {
+      get { return _logTag != null; }
+      set { if (value == (_logTag== null)) _logTag = value ? LogTag : (string)null; }
+    }
+    private bool ShouldSerializeLogTag() { return LogTagSpecified; }
+    private void ResetLogTag() { LogTagSpecified = false; }
+    
     private global::ProtoBuf.IExtension extensionObject;
     global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
       { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }

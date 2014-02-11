@@ -1,11 +1,11 @@
-﻿using System.Threading.Tasks;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Jobs;
-using NLog;
-using IronFoundry.Warden.Protocol;
-
-namespace IronFoundry.Warden.Handlers
+﻿namespace IronFoundry.Warden.Handlers
 {
+    using System.Threading.Tasks;
+    using Containers;
+    using Jobs;
+    using NLog;
+    using Protocol;
+
     public class RunRequestHandler : TaskRequestHandler
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();

@@ -1,15 +1,15 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Handlers;
-using IronFoundry.Warden.Jobs;
-using IronFoundry.Warden.Protocol;
-using IronFoundry.Warden.Utilities;
-using NLog;
-
-namespace IronFoundry.Warden.Server
+﻿namespace IronFoundry.Warden.Server
 {
+    using System;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using IronFoundry.Warden.Containers;
+    using IronFoundry.Warden.Handlers;
+    using IronFoundry.Warden.Jobs;
+    using IronFoundry.Warden.Protocol;
+    using IronFoundry.Warden.Utilities;
+    using NLog;
+
     public class MessageHandler
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();

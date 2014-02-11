@@ -1,18 +1,18 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Jobs;
-using Newtonsoft.Json;
-using NLog;
-using IronFoundry.Warden.Protocol;
-using IronFoundry.Warden.Utilities;
-
-namespace IronFoundry.Warden.Tasks
+﻿namespace IronFoundry.Warden.Tasks
 {
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Containers;
+    using Jobs;
+    using Newtonsoft.Json;
+    using NLog;
+    using Protocol;
+    using Utilities;
+
     public class TaskRunner : IJobRunnable
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();

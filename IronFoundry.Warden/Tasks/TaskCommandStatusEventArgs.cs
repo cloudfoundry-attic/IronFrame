@@ -1,7 +1,7 @@
-﻿using System;
-
-namespace IronFoundry.Warden.Tasks
+﻿namespace IronFoundry.Warden.Tasks
 {
+    using System;
+
     public class TaskCommandStatusEventArgs : EventArgs
     {
         private readonly TaskCommandStatus status;

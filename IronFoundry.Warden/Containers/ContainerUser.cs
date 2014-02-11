@@ -1,11 +1,11 @@
-﻿using System;
-using System.Net;
-using System.Security.Principal;
-using System.Text.RegularExpressions;
-using IronFoundry.Warden.Utilities;
-
-namespace IronFoundry.Warden.Containers
+﻿namespace IronFoundry.Warden.Containers
 {
+    using System;
+    using System.Net;
+    using System.Security.Principal;
+    using System.Text.RegularExpressions;
+    using IronFoundry.Warden.Utilities;
+
     public class ContainerUser : IEquatable<ContainerUser>
     {
         private const string userPrefix = "warden_";

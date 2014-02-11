@@ -1,10 +1,10 @@
-﻿using System;
-using System.IO;
-using System.Security.AccessControl;
-using IronFoundry.Warden.Configuration;
-
-namespace IronFoundry.Warden.Containers
+﻿namespace IronFoundry.Warden.Containers
 {
+    using System;
+    using System.IO;
+    using System.Security.AccessControl;
+    using IronFoundry.Warden.Configuration;
+
     public class ContainerDirectory
     {
         private readonly DirectoryInfo containerDirectory;

@@ -1,8 +1,8 @@
-﻿using System;
-using IronFoundry.Warden.Containers;
-
-namespace IronFoundry.Warden.Tasks
+﻿namespace IronFoundry.Warden.Tasks
 {
+    using System;
+    using IronFoundry.Warden.Containers;
+
     public abstract class TaskCommand
     {
         protected readonly Container container;

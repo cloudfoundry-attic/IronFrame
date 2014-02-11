@@ -1,8 +1,8 @@
-﻿using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Protocol;
-
-namespace IronFoundry.Warden.Handlers
+﻿namespace IronFoundry.Warden.Handlers
 {
+    using Containers;
+    using Protocol;
+
     public class CopyOutRequestHandler : CopyRequestHandler
     {
         public CopyOutRequestHandler(IContainerManager containerManager, Request request)

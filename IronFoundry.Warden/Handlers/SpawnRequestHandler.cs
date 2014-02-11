@@ -1,12 +1,12 @@
-﻿using System;
-using System.Threading.Tasks;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Jobs;
-using NLog;
-using IronFoundry.Warden.Protocol;
-
-namespace IronFoundry.Warden.Handlers
+﻿namespace IronFoundry.Warden.Handlers
 {
+    using System;
+    using System.Threading.Tasks;
+    using Containers;
+    using Jobs;
+    using NLog;
+    using Protocol;
+
     /// <summary>
     /// This request will spawn the requested script in the background and
     /// create a job ID that can be used to retrieve results later on with a

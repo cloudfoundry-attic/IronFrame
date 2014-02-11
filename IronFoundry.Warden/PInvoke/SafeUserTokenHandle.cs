@@ -1,8 +1,8 @@
-using System;
-using Microsoft.Win32.SafeHandles;
-
 namespace IronFoundry.Warden.PInvoke
 {
+    using System;
+    using Microsoft.Win32.SafeHandles;
+
     internal sealed class SafeUserTokenHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
         public SafeUserTokenHandle() : base(true)

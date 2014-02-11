@@ -1,9 +1,9 @@
-﻿using System;
-using System.IO;
-using System.Net.Sockets;
-
-namespace IronFoundry.Warden.Server
+﻿namespace IronFoundry.Warden.Server
 {
+    using System;
+    using System.IO;
+    using System.Net.Sockets;
+
     public class SocketExceptionHandler
     {
         private readonly Exception exception;

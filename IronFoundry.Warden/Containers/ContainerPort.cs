@@ -1,8 +1,8 @@
-﻿using System;
-using IronFoundry.Warden.Utilities;
-
-namespace IronFoundry.Warden.Containers
+﻿namespace IronFoundry.Warden.Containers
 {
+    using System;
+    using Utilities;
+
     public class ContainerPort : IEquatable<ContainerPort>
     {
         private readonly ushort port;

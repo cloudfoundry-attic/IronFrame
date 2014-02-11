@@ -1,10 +1,10 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Net;
-
-namespace IronFoundry.Warden.Utilities
+﻿namespace IronFoundry.Warden.Utilities
 {
+    using System;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Net;
+
     [System.ComponentModel.DesignerCategory("Code")]
     public class BackgroundProcess : Process
     {
