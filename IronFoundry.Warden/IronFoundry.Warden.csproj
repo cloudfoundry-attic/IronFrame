@@ -1,0 +1,209 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{CC1C255A-A120-4D7F-B40F-C4CB3CDB193B}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>IronFoundry.Warden</RootNamespace>
+    <AssemblyName>IronFoundry.Warden</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>false</Prefer32Bit>
+    <NoWarn>
+    </NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>false</Prefer32Bit>
+    <NoWarn>4014</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\shared\CommonAssemblyInfo.cs">
+      <Link>CommonAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="Configuration\WardenConfig.cs" />
+    <Compile Include="Configuration\WardenSection.cs" />
+    <Compile Include="Containers\Container.cs" />
+    <Compile Include="Containers\ContainerDirectory.cs" />
+    <Compile Include="Containers\ContainerHandle.cs" />
+    <Compile Include="Containers\ContainerManager.cs" />
+    <Compile Include="Containers\ContainerPort.cs" />
+    <Compile Include="Containers\ContainerUser.cs" />
+    <Compile Include="Containers\ContainerState.cs" />
+    <Compile Include="Containers\IContainerManager.cs" />
+    <Compile Include="Containers\InfoBuilder.cs" />
+    <Compile Include="Handlers\ContainerRequestHandler.cs" />
+    <Compile Include="Handlers\CopyRequestHandler.cs" />
+    <Compile Include="Handlers\CopyInRequestHandler.cs" />
+    <Compile Include="Handlers\CopyOutRequestHandler.cs" />
+    <Compile Include="Handlers\CreateRequestHandler.cs" />
+    <Compile Include="Handlers\DestroyRequestHandler.cs" />
+    <Compile Include="Handlers\EchoRequestHandler.cs" />
+    <Compile Include="Handlers\ResponseData.cs" />
+    <Compile Include="Handlers\InfoRequestHandler.cs" />
+    <Compile Include="Handlers\IStreamingHandler.cs" />
+    <Compile Include="Handlers\JobRequestHandler.cs" />
+    <Compile Include="Handlers\LimitBandwidthRequestHandler.cs" />
+    <Compile Include="Handlers\LimitDiskRequestHandler.cs" />
+    <Compile Include="Handlers\LimitMemoryRequestHandler.cs" />
+    <Compile Include="Handlers\LinkRequestHandler.cs" />
+    <Compile Include="Handlers\ListRequestHandler.cs" />
+    <Compile Include="Jobs\IJobListener.cs" />
+    <Compile Include="Jobs\IJobResult.cs" />
+    <Compile Include="Jobs\IJobRunnable.cs" />
+    <Compile Include="Jobs\IJobStatus.cs" />
+    <Compile Include="Jobs\Job.cs" />
+    <Compile Include="Jobs\JobExceptionResult.cs" />
+    <Compile Include="Jobs\JobStatusEventArgs.cs" />
+    <Compile Include="PInvoke\CloseHandle.cs" />
+    <Compile Include="PInvoke\Constants.cs" />
+    <Compile Include="PInvoke\Structs.cs" />
+    <Compile Include="PInvoke\LookupAccountSid.cs" />
+    <Compile Include="PInvoke\GetTokenInformation.cs" />
+    <Compile Include="PInvoke\OpenProcessToken.cs" />
+    <Compile Include="PInvoke\DuplicateTokenEx.cs" />
+    <Compile Include="PInvoke\Enums.cs" />
+    <Compile Include="PInvoke\GetCurrentThreadId.cs" />
+    <Compile Include="PInvoke\GetLengthSid.cs" />
+    <Compile Include="PInvoke\GetProcessWindowStation.cs" />
+    <Compile Include="PInvoke\GetThreadDesktop.cs" />
+    <Compile Include="PInvoke\LogonUser.cs" />
+    <Compile Include="PInvoke\NativeMethods.cs" />
+    <Compile Include="Utilities\LocalPrincipalData.cs" />
+    <Compile Include="Utilities\LoggedIEnumerableExtensionMethods.cs" />
+    <Compile Include="Utilities\FirewallManager.cs" />
+    <Compile Include="Utilities\ProcessExtensionMethods.cs" />
+    <Compile Include="PInvoke\RevertToSelf.cs" />
+    <Compile Include="PInvoke\SafeUserTokenHandle.cs" />
+    <Compile Include="PInvoke\SecurityAttributes.cs" />
+    <Compile Include="PInvoke\Utils.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Server\WardenClient.cs" />
+    <Compile Include="Server\WardenExceptionHandler.cs" />
+    <Compile Include="Server\MessageHandler.cs" />
+    <Compile Include="Server\SocketExceptionHandler.cs" />
+    <Compile Include="Tasks\ExeCommand.cs" />
+    <Compile Include="Utilities\BackgroundProcess.cs" />
+    <Compile Include="Tasks\ReplaceTokensCommand.cs" />
+    <Compile Include="Tasks\ProcessCommand.cs" />
+    <Compile Include="Tasks\TarCommand.cs" />
+    <Compile Include="Tasks\TaskCommandStatusEventArgs.cs" />
+    <Compile Include="Tasks\UnzipCommand.cs" />
+    <Compile Include="Tasks\PathCommand.cs" />
+    <Compile Include="Tasks\PowershellCommand.cs" />
+    <Compile Include="Tasks\TouchCommand.cs" />
+    <Compile Include="Tasks\TaskCommandStatus.cs" />
+    <Compile Include="Tasks\MkdirCommand.cs" />
+    <Compile Include="Tasks\TaskCommandDTO.cs" />
+    <Compile Include="Tasks\TaskCommand.cs" />
+    <Compile Include="Tasks\TaskCommandFactory.cs" />
+    <Compile Include="Tasks\TaskCommandResult.cs" />
+    <Compile Include="Handlers\TaskRequestHandler.cs" />
+    <Compile Include="Jobs\IJobManager.cs" />
+    <Compile Include="Jobs\JobManager.cs" />
+    <Compile Include="Handlers\NetInRequestHandler.cs" />
+    <Compile Include="Handlers\NetOutRequestHandler.cs" />
+    <Compile Include="Handlers\RequestHandler.cs" />
+    <Compile Include="Handlers\RequestHandlerFactory.cs" />
+    <Compile Include="Handlers\PingRequestHandler.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Handlers\RunRequestHandler.cs" />
+    <Compile Include="Handlers\SpawnRequestHandler.cs" />
+    <Compile Include="Handlers\StopRequestHandler.cs" />
+    <Compile Include="Handlers\StreamRequestHandler.cs" />
+    <Compile Include="Server\TcpServer.cs" />
+    <Compile Include="Tasks\WebApplicationCommand.cs" />
+    <Compile Include="Utilities\DesktopPermissionManager.cs" />
+    <Compile Include="Utilities\Impersonator.cs" />
+    <Compile Include="Utilities\IPUtilities.cs" />
+    <Compile Include="Utilities\LocalPrincipalManager.cs" />
+    <Compile Include="Tasks\TaskRunner.cs" />
+    <Compile Include="Utilities\LocalTcpPortManager.cs" />
+    <Compile Include="Utilities\LoggerExtensionMethods.cs" />
+    <Compile Include="Utilities\MessageWriter.cs" />
+    <Compile Include="Utilities\ProcessManager.cs" />
+    <Compile Include="Utilities\Statics.cs" />
+    <Compile Include="Utilities\TempFile.cs" />
+    <Compile Include="Server\Buffer.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IronFoundry.Warden.Protocol\IronFoundry.Warden.Protocol.csproj">
+      <Project>{ddd0537b-4afe-4beb-bf30-4df0a5367a18}</Project>
+      <Name>IronFoundry.Warden.Protocol</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\IronFoundry.Warden.Shared\IronFoundry.Warden.Shared.csproj">
+      <Project>{cb7ba555-21fd-4c57-a629-a925b6a83a31}</Project>
+      <Name>IronFoundry.Warden.Shared</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="AsproLock">
+      <HintPath>..\lib\AsproLock\AsproLock.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog, Version=2.1.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\NLog.2.1.0\lib\net45\NLog.dll</HintPath>
+    </Reference>
+    <Reference Include="protobuf-net">
+      <HintPath>..\packages\protobuf-net.2.0.0.668\lib\net40\protobuf-net.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.DirectoryServices" />
+    <Reference Include="System.DirectoryServices.AccountManagement" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.XML" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="NetFwTypeLib">
+      <Guid>{58FBCF7C-E7A9-467C-80B3-FC65E8FCCA08}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

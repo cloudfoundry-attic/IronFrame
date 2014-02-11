@@ -1,0 +1,10 @@
+bin/
+obj/
+*.exe
+*.suo
+packages/
+*.user
+_ReSharper.*/
+/_ReSharper.*/
+*.Publish.xml
+/.JustCode/

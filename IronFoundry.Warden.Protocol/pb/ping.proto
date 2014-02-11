@@ -1,0 +1,26 @@
+// Pings.
+//
+// ### Request
+//
+// Empty.
+//
+// ### Response
+//
+// Empty.
+//
+// ### Errors
+//
+// None.
+//
+// ### Definition
+//
+
+package IronFoundry.Warden.Protocol;
+import "info.proto";
+
+
+message PingRequest {
+}
+
+message PingResponse {
+}

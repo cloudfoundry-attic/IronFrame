@@ -1,0 +1,24 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Default">
+  <Import Project="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)\build.targets'))" />
+
+  <PropertyGroup>
+    <SolutionDir Condition=" '$(SolutionDir)' == '' ">$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\'))</SolutionDir>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">Any CPU</Platform>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SolutionFile Include="$(SolutionDir)\IFwarden.sln" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <VersionFile Include="$(SolutionDir)\src\shared\CommonAssemblyInfo.cs" />
+  </ItemGroup>
+
+  <Target Name="ResolveTestAssemblies">
+    <ItemGroup>
+      <TestAssembly Include="$(SolutionDir)\**\bin\$(Configuration)\*.Test.dll" />
+      <TestAssembly Include="$(SolutionDir)\**\bin\$(Configuration)\*.Tests.dll" />
+    </ItemGroup>
+  </Target>
+</Project>

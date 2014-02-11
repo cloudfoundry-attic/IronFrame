@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">$(MSBuildProjectDirectory)\..\</SolutionDir>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <NuGetExePath Condition=" '$(NuGetExePath)' == '' ">$(MSBuildProjectDirectory)\nuget.exe</NuGetExePath>
+    <PackageSources Condition=" $(PackageSources) == '' ">https://nuget.org/api/v2/</PackageSources>
+    <!--
+    <TempPath>$([System.IO.Path]::GetTempPath())\$([System.IO.Path]::GetRandomFileName())\</TempPath>
+    -->
+    <TempPath>$([System.IO.Path]::GetTempPath())$([System.IO.Path]::GetRandomFileName())\</TempPath>
+    <InstallCommand>"$(NuGetExePath)" install "$(TempPath)packages.config" -o "$(SolutionDir)packages" -source "$(PackageSources)" -solutionDir "$(SolutionDir) "</InstallCommand>
+  </PropertyGroup>
+
+  <Target Name="RestorePackages" DependsOnTargets="DownloadNuGet">
+    <Message Text="Restoring packages from NuGet..." Importance="High" />
+    <ItemGroup>
+      <PackagesConfigFiles Include="$(SolutionDir)\**\packages.config" />
+    </ItemGroup>
+    <MakeDir Directories="$(SolutionDir)packages" />
+    <MakeDir Directories="$(TempPath)" />
+    <CombinePackagesConfigFiles InputFiles="@(PackagesConfigFiles)" OutputPath="$(TempPath)" />
+    <Exec Command="$(InstallCommand)" LogStandardErrorAsError="true" />
+    <RemoveDir Directories="$(TempPath)" />
+  </Target>
+
+  <Target Name="DownloadNuGet">
+    <SetEnvironmentVariable EnvKey="VisualStudioVersion" EnvValue="$(VisualStudioVersion)" Condition=" '$(VisualStudioVersion)' != '' AND '$(OS)' == 'Windows_NT' " />
+    <DownloadNuGet OutputFilename="$(NuGetExePath)" Condition="!Exists('$(NuGetExePath)')" />
+    <!--
+    <MsBuild Targets="_DownloadNuGet" Projects="$(MSBuildThisFileFullPath)" Properties="Configuration=NOT_IMPORTANT" />
+    -->
+  </Target>
+
+  <!--
+  <Target Name="_DownloadNuGet">
+    <DownloadNuGet OutputFilename="$(NuGetExePath)" Condition="!Exists('$(NuGetExePath)')" />
+  </Target>
+  -->
+
+  <UsingTask TaskName="DownloadNuGet" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <OutputFilename ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Reference Include="System.Core" />
+      <Using Namespace="System" />
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Net" />
+      <Using Namespace="Microsoft.Build.Framework" />
+      <Using Namespace="Microsoft.Build.Utilities" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+            try {
+                OutputFilename = Path.GetFullPath(OutputFilename);
+
+                Log.LogMessage("Downloading latest version of NuGet.exe...");
+                WebClient webClient = new WebClient();
+                webClient.DownloadFile("https://nuget.org/nuget.exe", OutputFilename);
+
+                return true;
+            }
+            catch (Exception ex) {
+                Log.LogErrorFromException(ex);
+                return false;
+            }
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <UsingTask TaskName="SetEnvironmentVariable" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <EnvKey ParameterType="System.String" Required="true" />
+      <EnvValue ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[ Environment.SetEnvironmentVariable(EnvKey, EnvValue, System.EnvironmentVariableTarget.Process); ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <UsingTask TaskName="CombinePackagesConfigFiles" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <InputFiles ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <OutputPath ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Reference Include="System.Core" />
+      <Reference Include="System.Xml" />
+      <Using Namespace="System" />
+      <Using Namespace="System.Collections.Generic" />
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Net" />
+      <Using Namespace="System.Xml" />
+      <Using Namespace="Microsoft.Build.Framework" />
+      <Using Namespace="Microsoft.Build.Utilities" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+          try {
+            var resultPackages = new HashSet<Tuple<string, string>>();
+
+            foreach (var inputFile in InputFiles.Select(p => p.GetMetadata("FullPath"))) {
+              if (!File.Exists(inputFile))
+                throw new FileNotFoundException("Could not find file: " + inputFile);
+
+              string xmlText = File.ReadAllText(inputFile);
+              XmlDocument doc = new XmlDocument();
+              doc.LoadXml(xmlText);
+
+              foreach (XmlNode packageNode in doc.SelectNodes("/packages/package")) {
+                resultPackages.Add(Tuple.Create(packageNode.Attributes["id"].Value.ToLowerInvariant(), packageNode.Attributes["version"].Value));
+              }
+            }
+
+            XmlDocument outputDoc = new XmlDocument();
+            outputDoc.LoadXml("<packages/>");
+            XmlNode outputPackagesNode = outputDoc.SelectSingleNode("/packages");
+
+            foreach (var resultPackage in resultPackages) {
+              XmlElement outputPackageNode = outputDoc.CreateElement("package");
+              XmlAttribute idAttr = outputDoc.CreateAttribute("id");
+              idAttr.Value = resultPackage.Item1;
+              var versionAttr = outputDoc.CreateAttribute("version");
+              versionAttr.Value = resultPackage.Item2;
+              outputPackageNode.Attributes.Append(idAttr);
+              outputPackageNode.Attributes.Append(versionAttr);
+              outputPackagesNode.AppendChild(outputPackageNode);
+            }
+
+            var tempFile = Path.Combine(OutputPath, "packages.config");
+            outputDoc.Save(tempFile);
+            return true;
+          }
+          catch (Exception ex) {
+            Log.LogErrorFromException(ex);
+            return false;
+          }
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+</Project>

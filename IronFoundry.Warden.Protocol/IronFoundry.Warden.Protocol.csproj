@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{DDD0537B-4AFE-4BEB-BF30-4DF0A5367A18}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>IronFoundry.Warden.Protocol</RootNamespace>
+    <AssemblyName>IronFoundry.Warden.Protocol</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\shared\CommonAssemblyInfo.cs">
+      <Link>CommonAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="Constants.cs" />
+    <Compile Include="IContainerRequest.cs" />
+    <Compile Include="ITaskRequest.cs" />
+    <Compile Include="Messages\ICopyRequest.cs" />
+    <Compile Include="Messages\ResourceLimits.cs" />
+    <Compile Include="MessageUnwrapper.cs" />
+    <Compile Include="Messages\StreamRequest.cs" />
+    <Compile Include="Messages\StreamResponse.cs" />
+    <Compile Include="Messages\StopRequest.cs" />
+    <Compile Include="Messages\StopResponse.cs" />
+    <Compile Include="Messages\SpawnRequest.cs" />
+    <Compile Include="Messages\SpawnResponse.cs" />
+    <Compile Include="Messages\RunRequest.cs" />
+    <Compile Include="Messages\RunResponse.cs" />
+    <Compile Include="Messages\NetOutRequest.cs" />
+    <Compile Include="Messages\NetOutResponse.cs" />
+    <Compile Include="Messages\NetInRequest.cs" />
+    <Compile Include="Messages\NetInResponse.cs" />
+    <Compile Include="Messages\ListRequest.cs" />
+    <Compile Include="Messages\ListResponse.cs" />
+    <Compile Include="Messages\LinkRequest.cs" />
+    <Compile Include="Messages\LinkResponse.cs" />
+    <Compile Include="Messages\LimitMemoryRequest.cs" />
+    <Compile Include="Messages\LimitMemoryResponse.cs" />
+    <Compile Include="Messages\LimitDiskRequest.cs" />
+    <Compile Include="Messages\LimitDiskResponse.cs" />
+    <Compile Include="Messages\LimitBandwidthRequest.cs" />
+    <Compile Include="Messages\LimitBandwidthResponse.cs" />
+    <Compile Include="Messages\InfoRequest.cs" />
+    <Compile Include="Messages\InfoResponse.cs" />
+    <Compile Include="Messages\DestroyRequest.cs" />
+    <Compile Include="Messages\DestroyResponse.cs" />
+    <Compile Include="Messages\CreateRequest.cs" />
+    <Compile Include="Messages\CreateResponse.cs" />
+    <Compile Include="Messages\CopyOutRequest.cs" />
+    <Compile Include="Messages\CopyOutResponse.cs" />
+    <Compile Include="Messages\CopyInRequest.cs" />
+    <Compile Include="Messages\CopyInResponse.cs" />
+    <Compile Include="Messages\EchoRequest.cs" />
+    <Compile Include="Messages\EchoResponse.cs" />
+    <Compile Include="Messages\ErrorResponse.cs" />
+    <Compile Include="Messages\PingResponse.cs" />
+    <Compile Include="Request.cs" />
+    <Compile Include="Messages.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResponseWrapper.cs" />
+    <Compile Include="WardenException.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="protobuf-net">
+      <HintPath>..\packages\protobuf-net.2.0.0.668\lib\net40\protobuf-net.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.XML" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Response.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Messages\PingRequest.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IronFoundry.Warden.Shared\IronFoundry.Warden.Shared.csproj">
+      <Project>{cb7ba555-21fd-4c57-a629-a925b6a83a31}</Project>
+      <Name>IronFoundry.Warden.Shared</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
