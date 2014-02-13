@@ -23,3 +23,14 @@ stacks:
   - name: mswin-clr
     description: Microsoft .NET / Windows 64-bit
 ```
+
+To install the warden as a service, use the following commmands:
+
+```IronFoundry.Warden.Service.exe install -username:<ifuser> -password:<password> --autostart````
+
+You can also start and stop the service from the command line by using:
+```IronFoundry.Warden.Service.exe stop```
+```IronFoundry.Warden.Service.exe start```
+
+You can uninstall the service via the uninstall command:
+```IronFoundry.Warden.Service.exe uninstall```
