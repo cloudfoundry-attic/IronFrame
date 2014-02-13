@@ -3,6 +3,7 @@ obj/
 *.exe
 *.suo
 packages/
+output/
 *.user
 _ReSharper.*/
 /_ReSharper.*/

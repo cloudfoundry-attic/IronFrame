@@ -47,7 +47,7 @@
         <PropertyGroup>            
             <OutputDir Condition=" '$(OutputDir)' == '' ">$(BUILD_ROOT)</OutputDir>
             <OutputDir Condition=" '$(OutputDir)' == '' and '$(SolutionDir)' != '' ">$(SolutionDir)\output\$(BuildVersion)\</OutputDir>
-            <BinOutputDir>$(OutputDir)\binaries\</BinOutputDir>
+            <BinOutputDir>$(OutputDir)binaries\</BinOutputDir>
         </PropertyGroup>
 
         <Message Text="BuildIsPrivate: $(BuildIsPrivate)" />
@@ -139,9 +139,19 @@
     <Target Name="_TestSingle">
         <xunit Assemblies="$(File)" />
     </Target>
+
+    <Target Name="Package">
+        <ItemGroup>
+            <PackagedOutput Include="$(SolutionDir)\**\bin\$(Configuration)\**"></PackagedOutput>
+        </ItemGroup>
+
+        <RemoveDir Condition="Exists('$(BinOutputDir)')" Directories="$(BinOutputDir)" />
+
+        <Copy SourceFiles="@(PackagedOutput)" DestinationFolder="$(BinOutputDir)" />
+    </Target>
     
     <!-- External Targets (i.e. called from the command-line or build server -->
-    <Target Name="Default" DependsOnTargets="PackageRestore;SetVersion;Build;Test">
+    <Target Name="Default" DependsOnTargets="PackageRestore;SetVersion;Build;Test;Package">
     </Target>
     
     <Target Name="CI" DependsOnTargets="Clean;Default">
