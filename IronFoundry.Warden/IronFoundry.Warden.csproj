@@ -89,6 +89,7 @@
     <Compile Include="PInvoke\GetThreadDesktop.cs" />
     <Compile Include="PInvoke\LogonUser.cs" />
     <Compile Include="PInvoke\NativeMethods.cs" />
+    <Compile Include="Utilities\IProcess.cs" />
     <Compile Include="Utilities\LocalPrincipalData.cs" />
     <Compile Include="Utilities\LoggedIEnumerableExtensionMethods.cs" />
     <Compile Include="Utilities\FirewallManager.cs" />
