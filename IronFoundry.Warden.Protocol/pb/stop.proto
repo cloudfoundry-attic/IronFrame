@@ -28,8 +28,6 @@
 //
 
 package IronFoundry.Warden.Protocol;
-import "info.proto";
-
 
 message StopRequest {
   required string handle = 1;

@@ -13,6 +13,7 @@ if (!(Test-Path $proto_dir))
     exit 1
 }
 
+$messageLocation = Get-Location
 Push-Location -Verbose $proto_dir
 
 $protogen_args = @()
@@ -23,8 +24,6 @@ foreach ($proto_file in $proto_files)
     $protogen_args += "-i:$in_name"
 }
 
-$protogen_output = & $protogen_exe -p:detectMissing -p:fixCase -q $protogen_args
+& $protogen_exe -p:detectMissing -p:fixCase -q $protogen_args -o:$messageLocation\Messages.cs
 
 Pop-Location -Verbose
-
-Set-Content Messages.cs $protogen_output

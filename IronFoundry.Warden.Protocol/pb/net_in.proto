@@ -25,8 +25,6 @@
 //
 
 package IronFoundry.Warden.Protocol;
-import "info.proto";
-
 
 message NetInRequest {
   required string handle = 1;

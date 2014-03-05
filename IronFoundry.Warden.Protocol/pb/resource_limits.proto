@@ -10,8 +10,6 @@
 //
 
 package IronFoundry.Warden.Protocol;
-import "info.proto";
-
 
 message ResourceLimits {
   optional uint64 as         =  1;

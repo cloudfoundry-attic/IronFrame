@@ -12,8 +12,9 @@
 //
 
 package IronFoundry.Warden.Protocol;
-import "info.proto";
+
 import "resource_limits.proto";
+import "info.proto";
 
 message RunRequest {
   required string handle = 1;

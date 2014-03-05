@@ -22,8 +22,6 @@
 //
 
 package IronFoundry.Warden.Protocol;
-import "info.proto";
-
 
 message LimitMemoryRequest {
   required string handle = 1;

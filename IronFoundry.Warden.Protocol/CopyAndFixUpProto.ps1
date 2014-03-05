@@ -11,22 +11,11 @@ if (!(Test-Path $warden_proto_dir))
 
 mkdir -ErrorAction SilentlyContinue $target_proto_dir
 
-$std_replace_text = "package IronFoundry.Warden.Protocol;`r`nimport `"info.proto`";`r`n"
-
 $warden_proto_files = Get-ChildItem $warden_proto_dir -File -Filter '*.proto'
 foreach ($proto_file in $warden_proto_files)
-{
-    $repl_text = $std_replace_text
-    if ($proto_file.Name -eq 'info.proto')
-    {
-        $repl_text = 'package IronFoundry.Warden.Protocol;'
-    }
-    elseif (($proto_file.Name -eq 'run.proto') -or ($proto_file.Name -eq 'spawn.proto'))
-    {
-        $repl_text = "package IronFoundry.Warden.Protocol;`r`nimport `"info.proto`";`r`nimport `"resource_limits.proto`";`r`n"
-    }
+{   
     (Get-Content -Path $proto_file.FullName) | ForEach-Object {
-        $_ -replace 'package warden;', $repl_text
+        $_ -replace 'package warden;', 'package IronFoundry.Warden.Protocol;'
     } | Set-Content (Join-Path $target_proto_dir $proto_file.Name)
 }
 

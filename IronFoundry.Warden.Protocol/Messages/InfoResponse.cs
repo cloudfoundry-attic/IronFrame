@@ -32,9 +32,9 @@
 
             this.BandwidthStatInfo = new InfoResponse.BandwidthStat();
             this.CpuStatInfo = new InfoResponse.CpuStat();
-            this.DiskStatInfo = new InfoResponse.DiskStat();
+            //this.DiskStatInfo = new InfoResponse.DiskStat();
             this.HostIp = hostIp;
-            this.MemoryStatInfo = new InfoResponse.MemoryStat();
+            //this.MemoryStatInfo = new InfoResponse.MemoryStat();
             this.State = containerState;
         }
 

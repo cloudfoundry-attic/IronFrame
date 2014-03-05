@@ -32,8 +32,6 @@
 //
 
 package IronFoundry.Warden.Protocol;
-import "info.proto";
-
 
 message LimitDiskRequest {
   required string handle = 1;

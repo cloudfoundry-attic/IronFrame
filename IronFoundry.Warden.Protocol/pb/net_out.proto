@@ -23,8 +23,6 @@
 //
 
 package IronFoundry.Warden.Protocol;
-import "info.proto";
-
 
 message NetOutRequest {
   required string handle = 1;
