@@ -30,11 +30,11 @@
             this.ContainerIp = containerIp;
             this.ContainerPath = containerPath;
 
-            this.BandwidthStatInfo = new InfoResponse.BandwidthStat();
+            this.BandwidthStatInfo = BandwidthStat.CreateDefault();
             this.CpuStatInfo = new InfoResponse.CpuStat();
-            //this.DiskStatInfo = new InfoResponse.DiskStat();
+            this.DiskStatInfo = DiskStat.CreateDefault();
             this.HostIp = hostIp;
-            //this.MemoryStatInfo = new InfoResponse.MemoryStat();
+            this.MemoryStatInfo = MemoryStat.CreateDefault();
             this.State = containerState;
         }
 
@@ -42,5 +42,46 @@
         {
             get { return Message.Type.Info; }
         }
+
+        public partial class BandwidthStat
+        {
+            public static BandwidthStat CreateDefault()
+            {
+                return new BandwidthStat()
+                {
+                    InBurst = 0,
+                    OutBurst = 0,
+
+                    InRate = 0,
+                    OutRate = 0,
+                };
+            }
+        }
+
+        public partial class DiskStat
+        {
+            public static DiskStat CreateDefault()
+            {
+                return new DiskStat()
+                {
+                    BytesUsed = 0,
+                    InodesUsed = 0,
+                };
+            }
+        }
+
+        public partial class MemoryStat
+        {
+            public static MemoryStat CreateDefault()
+            {
+                return new MemoryStat()
+                {
+                    TotalRss = 0,
+                    TotalCache = 0
+                };
+            }
+        }
     }
+
+
 }

@@ -27,7 +27,7 @@ namespace IronFoundry.Warden.Test
             var manager = new ProcessManager("TestUser");
             var expectedTimepan = new TimeSpan(1500);
             
-            var mockProcess = Substitute.For<IProcess>();
+            var mockProcess = Substitute.For<IProcess>();            
             mockProcess.TotalProcessorTime.Returns(expectedTimepan);
 
             manager.AddProcess(mockProcess);
@@ -57,6 +57,44 @@ namespace IronFoundry.Warden.Test
             var stats = manager.GetStats();
 
             Assert.Equal(firstProcess.TotalProcessorTime + secondProcess.TotalProcessorTime, stats.TotalProcessorTime);
+        }
+
+        [Fact]
+        public void WhenManagingOneProcess_ReturnsTotalUserProcessorTime()
+        {
+            var manager = new ProcessManager("TestUser");
+            var expectedTimepan = new TimeSpan(1500);
+
+            var mockProcess = Substitute.For<IProcess>();
+            mockProcess.TotalUserProcessorTime.Returns(expectedTimepan);
+
+            manager.AddProcess(mockProcess);
+
+            var stats = manager.GetStats();
+
+            Assert.Equal(expectedTimepan, stats.TotalUserProcessorTime);
+        }
+
+        [Fact]
+        public void WhenManagingMultipleProcesses_ReturnsAggregateTotalUserProcessorTime()
+        {
+            var manager = new ProcessManager("TestUser");
+            var expectedTimepan = new TimeSpan(1500);
+
+            var firstProcess = Substitute.For<IProcess>();
+            firstProcess.TotalUserProcessorTime.Returns(expectedTimepan);
+            firstProcess.Id.Returns(0);
+
+            var secondProcess = Substitute.For<IProcess>();
+            secondProcess.TotalUserProcessorTime.Returns(expectedTimepan);
+            secondProcess.Id.Returns(1);
+
+            manager.AddProcess(firstProcess);
+            manager.AddProcess(secondProcess);
+
+            var stats = manager.GetStats();
+
+            Assert.Equal(firstProcess.TotalUserProcessorTime + secondProcess.TotalUserProcessorTime, stats.TotalUserProcessorTime);
         }
     }
 }

@@ -108,9 +108,20 @@
             var results = new ProcessStats();
             if ( processes.Count == 0 ) { return results; }
 
-            results.TotalProcessorTime = processes.Values.Select(p => p.TotalProcessorTime).Aggregate<TimeSpan>((ag, next) => ag + next);
+            results = processes.Values
+                .Select(p => StatsFromProcess(p))
+                .Aggregate<ProcessStats>((ag, next) => ag + next);
 
             return results;
+        }
+
+        private static ProcessStats StatsFromProcess(IProcess process)
+        {
+            return new ProcessStats
+            {
+                TotalProcessorTime = process.TotalProcessorTime,
+                TotalUserProcessorTime = process.TotalUserProcessorTime,
+            };
         }
 
         class RealProcessWrapper : IProcess
@@ -142,6 +153,11 @@
                 get { return process.TotalProcessorTime; }
             }
 
+            public TimeSpan TotalUserProcessorTime
+            {
+                get { return process.UserProcessorTime; }
+            }
+
             public void Kill()
             {
                 process.Kill();
@@ -155,12 +171,21 @@
                     handlers.Invoke(this, EventArgs.Empty);
                 }
             }
-
         }
     }
 
-    public class ProcessStats
+    public struct ProcessStats
     {
         public TimeSpan TotalProcessorTime { get; set; }
+        public TimeSpan TotalUserProcessorTime { get; set; }
+
+        public static ProcessStats operator + (ProcessStats left, ProcessStats right)
+        {
+            return new ProcessStats
+            {
+                TotalProcessorTime = left.TotalProcessorTime + right.TotalProcessorTime,
+                TotalUserProcessorTime = left.TotalUserProcessorTime + right.TotalUserProcessorTime,
+            };
+        }
     }
 }
