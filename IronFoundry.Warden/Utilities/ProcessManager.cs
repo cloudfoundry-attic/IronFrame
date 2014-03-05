@@ -87,12 +87,11 @@
         private void process_Exited(object sender, EventArgs e)
         {
             var process = (IProcess)sender;
-            int pid = process.Id;
             process.Exited -= process_Exited;
 
             log.Trace("Process exited PID '{0}' exit code '{1}'", process.Id, process.ExitCode);
 
-            RemoveProcess(pid);
+            RemoveProcess(process.Id);
         }
 
         private void RemoveProcess(int pid)
@@ -116,20 +115,17 @@
 
         class RealProcessWrapper : IProcess
         {
-            Process process;
+            private readonly Process process;
             public event EventHandler Exited;
 
             public RealProcessWrapper(Process process)
             {
                 this.process = process;
-                process.Exited += (o, e) => { this.OnExited(); };
+                Id = process.Id;
+                process.Exited += (o, e) => this.OnExited();
             }
 
-            public int Id
-            {
-                get { return process.Id; }
-            }
-
+            public int Id { get; private set; }
 
             public int ExitCode
             {
