@@ -150,6 +150,11 @@
             return port;
         }
 
+        public ProcessStats GetProcessStatistics()
+        {
+            return processManager.GetProcessStats();
+        }
+
         public IEnumerable<string> ConvertToPathsWithin(string[] arguments)
         {
             foreach (string arg in arguments)

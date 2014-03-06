@@ -11,90 +11,125 @@ namespace IronFoundry.Warden.Test
 {
     public class ProcessManagerTests
     {
-
-        [Fact]
-        public void WhenManagingNoProcess_ReturnsDefaultInitializedStats()
+        public class WhenManagingNoProcess
         {
-            var manager = new ProcessManager("TestUser");
-            var stats = manager.GetStats();
+            ProcessManager manager;
+            ProcessStats stats;
 
-            Assert.Equal(new TimeSpan(0), stats.TotalProcessorTime);
+            public WhenManagingNoProcess()
+            {
+                manager = new ProcessManager("TestUser");
+                stats = manager.GetProcessStats();
+            }
+
+            [Fact]
+            public void ReturnsDefaultTotalProcessorStats()
+            {
+                Assert.Equal(new TimeSpan(0), stats.TotalProcessorTime);
+            }
+
+            [Fact]
+            public void ReturnsDefaultTotalUserProcessorStats()
+            {
+                Assert.Equal(new TimeSpan(0), stats.TotalUserProcessorTime);
+            }
+
+            [Fact]
+            public void ReturnsDefaultWorkingSet()
+            {
+                Assert.Equal(0, stats.WorkingSet);
+            }
         }
 
-        [Fact]
-        public void WhenManagingOneProcess_ReturnsTotalProcessorTime()
+
+        public class WhenManagingOneProcess
         {
-            var manager = new ProcessManager("TestUser");
-            var expectedTimepan = new TimeSpan(1500);
-            
-            var mockProcess = Substitute.For<IProcess>();            
-            mockProcess.TotalProcessorTime.Returns(expectedTimepan);
+            ProcessStats stats;
+            TimeSpan expectedTotalProcess = new TimeSpan(2048);
+            TimeSpan expectedTotalUserProcess = new TimeSpan(1024);
+            long expectedWorkingSet = 4096;
 
-            manager.AddProcess(mockProcess);
+            public WhenManagingOneProcess()
+            {
+                var manager = new ProcessManager("TestUser");
 
-            var stats = manager.GetStats();
+                var mockProcess = Substitute.For<IProcess>();
+                mockProcess.TotalProcessorTime.Returns(expectedTotalProcess);
+                mockProcess.TotalUserProcessorTime.Returns(expectedTotalUserProcess);
+                mockProcess.WorkingSet.Returns(expectedWorkingSet);
 
-            Assert.Equal(expectedTimepan, stats.TotalProcessorTime);
+                manager.AddProcess(mockProcess);
+
+                stats = manager.GetProcessStats();
+            }
+
+            [Fact]
+            public void ReturnsTotalProcessorTime()
+            {
+                Assert.Equal(expectedTotalProcess, stats.TotalProcessorTime);
+            }
+
+            [Fact]
+            public void ReturnsTotalUserProcessorTime()
+            {
+                Assert.Equal(expectedTotalUserProcess, stats.TotalUserProcessorTime);
+            }
+
+            [Fact]
+            public void ReturnsExpectedWorkingSetInfo()
+            {
+                Assert.Equal(expectedWorkingSet, stats.WorkingSet);
+            }
         }
 
-        [Fact]
-        public void WhenManagingMultipleProcesses_ReturnsAggregateTotalProcessorTime()
+        public class WhenManagingMultipleProcesses
         {
-            var manager = new ProcessManager("TestUser");
-            var expectedTimepan = new TimeSpan(1500);
+            ProcessStats stats;
+            TimeSpan expectedTotalProcess = new TimeSpan(2048);
+            TimeSpan expectedTotalUserProcess = new TimeSpan(1024);
+            long expectedWorkingSet = 4096;
 
-            var firstProcess = Substitute.For<IProcess>();
-            firstProcess.TotalProcessorTime.Returns(expectedTimepan);
-            firstProcess.Id.Returns(0);
+            List<IProcess> processes = new List<IProcess>();
 
-            var secondProcess = Substitute.For<IProcess>();
-            secondProcess.TotalProcessorTime.Returns(expectedTimepan);
-            secondProcess.Id.Returns(1);
+            public WhenManagingMultipleProcesses()
+            {
+                var manager = new ProcessManager("TestUser");
 
-            manager.AddProcess(firstProcess);
-            manager.AddProcess(secondProcess);
+                var firstProcess = Substitute.For<IProcess>();
+                firstProcess.Id.Returns(0);
+                firstProcess.TotalProcessorTime.Returns(expectedTotalProcess);
+                firstProcess.TotalUserProcessorTime.Returns(expectedTotalUserProcess);
+                firstProcess.WorkingSet.Returns(expectedWorkingSet);
+                processes.Add(firstProcess);
+                manager.AddProcess(firstProcess);
 
-            var stats = manager.GetStats();
+                var secondProcess = Substitute.For<IProcess>();
+                secondProcess.Id.Returns(1);
+                secondProcess.TotalProcessorTime.Returns(expectedTotalProcess);
+                secondProcess.TotalUserProcessorTime.Returns(expectedTotalUserProcess);
+                secondProcess.WorkingSet.Returns(expectedWorkingSet);
+                processes.Add(secondProcess);
+                manager.AddProcess(secondProcess);
 
-            Assert.Equal(firstProcess.TotalProcessorTime + secondProcess.TotalProcessorTime, stats.TotalProcessorTime);
-        }
+                stats = manager.GetProcessStats();
+            }
 
-        [Fact]
-        public void WhenManagingOneProcess_ReturnsTotalUserProcessorTime()
-        {
-            var manager = new ProcessManager("TestUser");
-            var expectedTimepan = new TimeSpan(1500);
+            [Fact]
+            public void ReturnsAggregateTotalProcessorTime()
+            {
+                Assert.Equal(processes.Sum(p => p.TotalProcessorTime.Ticks), stats.TotalProcessorTime.Ticks);
+            }
 
-            var mockProcess = Substitute.For<IProcess>();
-            mockProcess.TotalUserProcessorTime.Returns(expectedTimepan);
+            [Fact]
+            public void ReturnsAggregateTotalUserProcessorTime()
+            {
+                Assert.Equal(processes.Sum(p => p.TotalUserProcessorTime.Ticks), stats.TotalUserProcessorTime.Ticks);
+            }
 
-            manager.AddProcess(mockProcess);
-
-            var stats = manager.GetStats();
-
-            Assert.Equal(expectedTimepan, stats.TotalUserProcessorTime);
-        }
-
-        [Fact]
-        public void WhenManagingMultipleProcesses_ReturnsAggregateTotalUserProcessorTime()
-        {
-            var manager = new ProcessManager("TestUser");
-            var expectedTimepan = new TimeSpan(1500);
-
-            var firstProcess = Substitute.For<IProcess>();
-            firstProcess.TotalUserProcessorTime.Returns(expectedTimepan);
-            firstProcess.Id.Returns(0);
-
-            var secondProcess = Substitute.For<IProcess>();
-            secondProcess.TotalUserProcessorTime.Returns(expectedTimepan);
-            secondProcess.Id.Returns(1);
-
-            manager.AddProcess(firstProcess);
-            manager.AddProcess(secondProcess);
-
-            var stats = manager.GetStats();
-
-            Assert.Equal(firstProcess.TotalUserProcessorTime + secondProcess.TotalUserProcessorTime, stats.TotalUserProcessorTime);
+            [Fact] void ReturnsAggregateWorkingSet()
+            {
+                Assert.Equal(processes.Sum(p => p.WorkingSet), stats.WorkingSet);
+            }
         }
     }
 }

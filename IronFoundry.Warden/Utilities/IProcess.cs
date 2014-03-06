@@ -14,9 +14,12 @@ namespace IronFoundry.Warden.Utilities
         
         TimeSpan TotalProcessorTime { get;  }
         TimeSpan TotalUserProcessorTime { get; }
+        long WorkingSet { get; }
 
         event EventHandler Exited;
 
         void Kill();
+
+        
     }
 }

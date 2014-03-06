@@ -57,8 +57,7 @@
 
         public void RestoreProcesses()
         {
-            var allProcesses = Process.GetProcesses();
-            allProcesses.Foreach(log, (p) => processMatchesUser(p),
+            GetMatchingUserProcesses().Foreach(log,
                 (p) =>
                 {
                     var wrappedProcess = new RealProcessWrapper(p);
@@ -80,8 +79,13 @@
             processList.Foreach(log, (p) => !p.HasExited, (p) => p.Kill());
             processList.Foreach(log, (p) => RemoveProcess(p.Id));
 
+            GetMatchingUserProcesses().Foreach(log, p => p.Kill());
+        }
+
+        public IEnumerable<Process> GetMatchingUserProcesses()
+        {
             var allProcesses = Process.GetProcesses();
-            allProcesses.Foreach(log, (p) => processMatchesUser(p), (p) => p.Kill());
+            return allProcesses.Where(p => processMatchesUser(p));
         }
 
         private void process_Exited(object sender, EventArgs e)
@@ -103,10 +107,10 @@
             }
         }
 
-        public ProcessStats GetStats()
+        public ProcessStats GetProcessStats()
         {
             var results = new ProcessStats();
-            if ( processes.Count == 0 ) { return results; }
+            if (processes.Count == 0) { return results; }
 
             results = processes.Values
                 .Select(p => StatsFromProcess(p))
@@ -121,6 +125,7 @@
             {
                 TotalProcessorTime = process.TotalProcessorTime,
                 TotalUserProcessorTime = process.TotalUserProcessorTime,
+                WorkingSet = process.WorkingSet,
             };
         }
 
@@ -171,6 +176,11 @@
                     handlers.Invoke(this, EventArgs.Empty);
                 }
             }
+
+            public long WorkingSet
+            {
+                get { return process.WorkingSet64; }
+            }
         }
     }
 
@@ -178,13 +188,15 @@
     {
         public TimeSpan TotalProcessorTime { get; set; }
         public TimeSpan TotalUserProcessorTime { get; set; }
+        public long WorkingSet { get; set; }
 
-        public static ProcessStats operator + (ProcessStats left, ProcessStats right)
+        public static ProcessStats operator +(ProcessStats left, ProcessStats right)
         {
             return new ProcessStats
             {
                 TotalProcessorTime = left.TotalProcessorTime + right.TotalProcessorTime,
                 TotalUserProcessorTime = left.TotalUserProcessorTime + right.TotalUserProcessorTime,
+                WorkingSet = left.WorkingSet + right.WorkingSet,
             };
         }
     }
