@@ -35,6 +35,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ContainerHandleTests.cs" />
+    <Compile Include="TestSupport\FactAdminRequired.cs" />
     <Compile Include="LocalPrincipalManagerTests.cs" />
     <Compile Include="ProcessManagerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -31,14 +31,14 @@ namespace IronFoundry.Warden.Test
             TryRemoveLocalUser(testUserName);
         }
 
-        [Fact]
+        [FactAdminRequired]
         void AddedUserCanBeRelocated()
         {
             manager.CreateUser(testUserName);
             Assert.Equal<string>(testUserName, manager.FindUser(testUserName));
         }
 
-        [Fact]
+        [FactAdminRequired]
         void DeletedUserCannotBeLocated()
         {
             manager.CreateUser(testUserName);
@@ -47,21 +47,21 @@ namespace IronFoundry.Warden.Test
             Assert.True(string.IsNullOrEmpty(manager.FindUser(testUserName)));
         }
 
-        [Fact]
+        [FactAdminRequired]
         void AddedUserAppearsInIISGroup()
         {
             manager.CreateUser(testUserName);
             AssertUserInGroup("IIS_IUSRS", testUserName);
         }
 
-        [Fact]
+        [FactAdminRequired]
         void UserAddedMultipleTimesThenThrows()
         {
             manager.CreateUser(testUserName);
             Assert.Throws<System.DirectoryServices.AccountManagement.PrincipalExistsException>(() => { manager.CreateUser(testUserName); });
         }
 
-        [Fact]
+        [FactAdminRequired]
         void WhenUserDeletedMultipleTimesDoesNotThrow()
         {
             manager.CreateUser(testUserName);
@@ -70,13 +70,13 @@ namespace IronFoundry.Warden.Test
             manager.DeleteUser(testUserName);
         }
 
-        [Fact]
+        [FactAdminRequired]
         void CanFindWellKnownUser()
         {
             Assert.Equal("Administrator", manager.FindUser("Administrator"));
         }
 
-        [Fact]
+        [FactAdminRequired]
         void FindReturnsNullOnUnlocatableUser()
         {
             Assert.Null(manager.FindUser("ThisUserShouldNeverExist"));
