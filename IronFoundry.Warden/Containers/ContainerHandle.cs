@@ -10,16 +10,9 @@
     /// </summary>
     public class ContainerHandle : IEquatable<ContainerHandle>
     {
-        private static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        private static readonly char[] chars = new[] {
-            '0','1','2','3','4','5','6','7','8','9',
-            'a','b','c','d','e','f','g','h','i','j',
-            'k','l','m','n','o','p','q','r','s','t',
-            'u','v'
-        };
-        private static readonly int targetBase = chars.Length;
-
-        private string value;
+        private static readonly string Alphabet = "abcdefghijklmnopqrstuvwyxz0123456789";
+        private static Random random = new Random();
+        private readonly string value;
 
         public ContainerHandle(string handle)
         {
@@ -35,22 +28,23 @@
 
             if (handle.Length > 15)
             {
-                this.value = handle.Substring(0, 15);
+                value = handle.Substring(0, 15);
             }
             else
             {
-                this.value = handle;
+                value = handle;
             }
         }
 
-        public ContainerHandle(long input)
-            : this(GenerateID(input))
+        public ContainerHandle()
         {
+            value = GenerateId();
         }
 
-        public ContainerHandle()
-            : this(SecondsSinceEpoch())
+        public ContainerHandle(Random random)
         {
+            ContainerHandle.random = random;
+            value = GenerateId();
         }
 
         public static bool operator ==(ContainerHandle x, ContainerHandle y)
@@ -80,22 +74,17 @@
 
         public bool Equals(ContainerHandle other)
         {
-            if (Object.ReferenceEquals(null, other))
+            if (ReferenceEquals(null, other))
             {
                 return false;
             }
 
-            if (Object.ReferenceEquals(this, other))
+            if (ReferenceEquals(this, other))
             {
                 return true;
             }
 
-            return this.GetHashCode() == other.GetHashCode();
-        }
-
-        public static implicit operator ContainerHandle(long input)
-        {
-            return new ContainerHandle(input);
+            return GetHashCode() == other.GetHashCode();
         }
 
         public static implicit operator string(ContainerHandle handle)
@@ -103,33 +92,18 @@
             return handle.value;
         }
 
-        private static string GenerateID(long input)
+        private static string GenerateId()
         {
-            var sb = new StringBuilder();
-            for (ushort i = 0; i < 11; ++i)
+            lock (random)
             {
-                var tmp = (input >> (55 - (i + 1) * 5)) & 31;
-                sb.Append(ToBase32(tmp));
+                var builder = new StringBuilder();
+                for (int i = 0; i < 11; i++)
+                {
+                    var character = Alphabet[random.Next(0, Alphabet.Length)];
+                    builder.Append(character);
+                }
+                return builder.ToString();
             }
-            return sb.ToString();
-        }
-
-        private static char[] ToBase32(long value)
-        {
-            var result = new LinkedList<char>();
-            do
-            {
-                result.AddFirst(chars[value % targetBase]);
-                value /= targetBase;
-            } 
-            while (value > 0);
-            return result.ToArray();
-        }
-
-        private static long SecondsSinceEpoch()
-        {
-            var sinceEpoch = DateTime.UtcNow.Subtract(epoch);
-            return (long)Math.Ceiling(sinceEpoch.TotalMilliseconds * 1000);
         }
     }
 }

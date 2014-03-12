@@ -3,16 +3,28 @@ using Xunit;
 
 namespace IronFoundry.Warden.Test
 {
+    using System;
+
     public class ContainerHandleTests
     {
         [Theory]
-        [InlineData(1369422213166305, "16tfdq90d71")]
-        [InlineData(1369422215826708, "16tfdqbhj8k")]
-        [InlineData(1369422411336831, "16tfe06033v")]
-        public void GivenInputData_GeneratesExpectedID(long input, string expectedID)
+        [InlineData(1, "idq1ypm7dyb")]
+        [InlineData(2, "1of9dl2qia1")]
+        public void GeneratesIdFromRandomGenerator(int input, string expectedId)
         {
-            var handle = new ContainerHandle(input);
-            Assert.Equal<string>(expectedID, handle);
+            var handle = new ContainerHandle(new Random(input));
+            Assert.Equal<string>(expectedId, handle);
+        }
+
+        [Fact]
+        public void GeneratesUniqueIds()
+        {
+            var handle1 = new ContainerHandle();
+            var handle2 = new ContainerHandle();
+
+            Assert.Equal(11, handle1.ToString().Length);
+            Assert.Equal(11, handle2.ToString().Length);
+            Assert.NotEqual(handle1, handle2);
         }
     }
 }
