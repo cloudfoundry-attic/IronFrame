@@ -43,12 +43,12 @@
 
         protected override TaskCommandResult DoExecute()
         {
-            var webRoot = Path.Combine(container.Directory, "app");
+            var webRoot = Path.Combine(container.Directory.FullName, "app");
             var args = String.Format(@"--webroot=""{0}"" --port={1}{2}", webRoot, port, runtimeVersion == null
                     ? String.Empty
                     : String.Concat(" --runtimeVersion=", runtimeVersion));
 
-            return RunProcess(container.Directory, Path.Combine(container.Directory, "iishost.exe"), args);
+            return RunProcess(container.Directory.FullName, Path.Combine(container.Directory.FullName, "iishost.exe"), args);
         }
     }
 }

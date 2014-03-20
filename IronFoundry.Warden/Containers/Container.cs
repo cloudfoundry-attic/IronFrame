@@ -3,19 +3,23 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
     using System.Net;
     using System.Threading;
+    using IronFoundry.Warden.Shared.Messaging;
     using NLog;
     using Protocol;
     using Utilities;
 
     public class Container
     {
+        private const string TEMP_PATH = "tmp";
+
         private readonly Logger log = LogManager.GetCurrentClassLogger();
         private readonly ReaderWriterLockSlim rwlock = new ReaderWriterLockSlim();
         private readonly ContainerHandle handle;
-        private readonly ContainerUser user;
-        private readonly ContainerDirectory directory;
+        private readonly IContainerUser user;
+        private readonly IContainerDirectory directory;
         private readonly ProcessManager processManager;
 
         private ContainerPort port;
@@ -23,35 +27,39 @@
 
         public static Container Restore(string handle, ContainerState containerState)
         {
-            return new Container(handle, containerState);
-        }
-
-        /// <summary>
-        /// Used for restore.
-        /// </summary>
-        private Container(string handle, ContainerState containerState)
-        {
             if (handle.IsNullOrWhiteSpace())
             {
                 throw new ArgumentNullException("handle");
             }
-            this.handle = new ContainerHandle(handle);
+
+            var containerHandle = new ContainerHandle(handle);
 
             if (containerState == null)
             {
                 throw new ArgumentNullException("containerState");
             }
-            this.state = containerState;
 
-            this.user = new ContainerUser(handle);
-            this.directory = new ContainerDirectory(this.handle, this.user);
+            var user = new ContainerUser(handle);
+            var directory = new ContainerDirectory(containerHandle, user);
 
-            this.processManager = new ProcessManager(this.user);
+            var container = new Container(containerHandle, user, directory, new ProcessManager(containerHandle));
+            container.State = containerState;
 
-            if (this.state == ContainerState.Active)
+            if (container.state == ContainerState.Active)
             {
-                this.RestoreProcesses();
+                container.RestoreProcesses();
             }
+
+            return container;
+        }
+
+        public Container(ContainerHandle handle, IContainerUser user, IContainerDirectory directory, ProcessManager manager)
+        {
+            this.handle = handle;
+            this.user = user;
+            this.directory = directory;
+            this.state = ContainerState.Born;
+            this.processManager = manager;
         }
 
         public Container()
@@ -61,7 +69,7 @@
             this.directory = new ContainerDirectory(this.handle, this.user, true);
             this.state = ContainerState.Born;
 
-            this.processManager = new ProcessManager(this.user);
+            this.processManager = new ProcessManager(handle);
         }
 
         public NetworkCredential GetCredential()
@@ -74,7 +82,7 @@
             get { return handle; }
         }
 
-        public ContainerUser User
+        public IContainerUser User
         {
             get { return user; }
         }
@@ -82,9 +90,10 @@
         public ContainerState State
         {
             get { return state; }
+            private set { state = value; }
         }
 
-        public ContainerDirectory Directory
+        public IContainerDirectory Directory
         {
             get { return directory; }
         }
@@ -163,7 +172,7 @@
 
                 if (arg.Contains("@ROOT@"))
                 {
-                    rv = arg.Replace("@ROOT@", this.Directory).ToWinPathString();
+                    rv = arg.Replace("@ROOT@", this.Directory.FullName).ToWinPathString();
                 }
                 else
                 {
@@ -179,7 +188,7 @@
             string pathTmp = path.Trim();
             if (pathTmp.StartsWith("@ROOT@"))
             {
-                return pathTmp.Replace("@ROOT@", this.Directory).ToWinPathString();
+                return pathTmp.Replace("@ROOT@", this.Directory.FullName).ToWinPathString();
             }
             else
             {
@@ -189,7 +198,7 @@
 
         public TempFile TempFileInContainer(string extension)
         {
-            return new TempFile(this.Directory, extension);
+            return new TempFile(this.Directory.FullName, extension);
         }
 
         public static void CleanUp(string handle)
@@ -204,7 +213,8 @@
             rwlock.EnterWriteLock();
             try
             {
-                processManager.StopProcesses(); // NB: do this first to unlock files.
+                processManager.StopProcesses();
+                processManager.Dispose();
 
                 if (port != null)
                 {
@@ -223,14 +233,49 @@
             }
         }
 
-        public void AddProcess(Process process, ResourceLimits rlimits)
-        {
-            processManager.AddProcess(process);
-        }
-
         private void RestoreProcesses()
         {
             processManager.RestoreProcesses();
+        }
+
+        public virtual IProcess CreateProcess(CreateProcessStartInfo startInfo)
+        {
+            if (startInfo.UserName != null)
+            {
+                startInfo.EnvironmentVariables.Clear();
+                CopyEnvVariableTo(startInfo.EnvironmentVariables, new[] {
+                    "Path", 
+                    "SystemRoot", 
+                    "SystemDrive",
+                    "windir",
+                    "PSModulePath",
+                    "ProgramData",
+                    "PATHEXT",
+                });
+
+                var tmpDir = Path.Combine(this.directory.FullName, TEMP_PATH);
+
+                startInfo.EnvironmentVariables["APPDATA"] = tmpDir;
+                startInfo.EnvironmentVariables["LOCALAPPDATA"] = tmpDir;
+                startInfo.EnvironmentVariables["USERPROFILE"] = tmpDir;
+                startInfo.EnvironmentVariables["TMP"] = tmpDir;
+                startInfo.EnvironmentVariables["TEMP"] = tmpDir;
+            }
+            
+            return processManager.CreateProcess(startInfo);
+        }
+
+        private void CopyEnvVariableTo(Dictionary<string, string> target, string[] sourceKeys)
+        {
+            var environment = Environment.GetEnvironmentVariables();
+
+            foreach (var key in sourceKeys)
+            {
+                if (environment.Contains(key))
+                {
+                    target[key.ToString()] = environment[key].ToString();
+                }
+            }
         }
 
         private void ChangeState(ContainerState containerState)

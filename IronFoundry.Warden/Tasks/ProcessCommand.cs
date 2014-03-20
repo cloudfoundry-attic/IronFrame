@@ -1,14 +1,15 @@
 ﻿namespace IronFoundry.Warden.Tasks
 {
     using System;
-    using System.Diagnostics;
-    using System.Net;
-    using System.Text;
-    using System.Threading.Tasks;
-    using Containers;
-    using NLog;
-    using Protocol;
-    using Utilities;
+using System.Diagnostics;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
+using Containers;
+using IronFoundry.Warden.Shared.Messaging;
+using NLog;
+using Protocol;
+using Utilities;
 
     public abstract class ProcessCommand : TaskCommand
     {
@@ -48,38 +49,27 @@
         {
             log.Trace("Running process{0}: {1} {2}", shouldImpersonate ? " (as warden user)" : String.Empty,  executable, processArguments);
 
-            using (var process = new BackgroundProcess(workingDirectory, executable, processArguments, GetImpersonatationCredential()))
-            {
-                process.ErrorDataReceived += process_ErrorDataReceived;
-                process.OutputDataReceived += process_OutputDataReceived;
+            var si = new CreateProcessStartInfo(executable, processArguments);
+            si.WorkingDirectory = workingDirectory;
 
-                Action<Process> postStartAction = (Process p) =>
-                    {
-                        log.Trace("Process ID: '{0}'", p.Id);
-                        container.AddProcess(p, rlimits);
-                    };
-                process.StartAndWait(asyncOutput: true, postStartAction: postStartAction);
-
-                process.ErrorDataReceived -= process_ErrorDataReceived;
-                process.OutputDataReceived -= process_OutputDataReceived;
-
-                string sout = stdout.ToString();
-                string serr = stderr.ToString();
-
-                log.Trace("Process ended with exit code: {0}", process.ExitCode);
-
-                return new TaskCommandResult(process.ExitCode, sout, serr);
-            }
-        }
-
-        private NetworkCredential GetImpersonatationCredential()
-        {
-            NetworkCredential impersonationCredential = null;
             if (shouldImpersonate)
             {
-                impersonationCredential = container.GetCredential();
+                var impersonationCredential = container.GetCredential();
+
+                si.UserName = impersonationCredential.UserName;
+                si.Password = impersonationCredential.SecurePassword;
             }
-            return impersonationCredential;
+
+            var process = container.CreateProcess(si);
+
+            log.Trace("Process ID: '{0}'", process.Id);
+
+            process.WaitForExit();
+
+            int exitCode = process.ExitCode;
+            log.Trace("Process ended with exit code: {0}", exitCode);
+
+            return new TaskCommandResult(exitCode, null, null);
         }
 
         private void process_OutputDataReceived(object sender, DataReceivedEventArgs e)

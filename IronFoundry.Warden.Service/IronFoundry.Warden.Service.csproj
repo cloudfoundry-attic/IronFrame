@@ -57,6 +57,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\IronFoundry.Warden.ContainerHost\IronFoundry.Warden.ContainerHost.csproj">
+      <Project>{586784cf-de8a-411f-ad99-18f00dc2a75b}</Project>
+      <Name>IronFoundry.Warden.ContainerHost</Name>
+    </ProjectReference>
     <ProjectReference Include="..\IronFoundry.Warden.Protocol\IronFoundry.Warden.Protocol.csproj">
       <Project>{ddd0537b-4afe-4beb-bf30-4df0a5367a18}</Project>
       <Name>IronFoundry.Warden.Protocol</Name>

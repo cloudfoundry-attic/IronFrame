@@ -7,15 +7,15 @@
     {
         private readonly ushort port;
 
-        public ContainerPort(ushort suggestedPort, ContainerUser user)
+        public ContainerPort(ushort suggestedPort, IContainerUser user)
         {
-            var localTcpPortManager = new LocalTcpPortManager(suggestedPort, user);
+            var localTcpPortManager = new LocalTcpPortManager(suggestedPort, user.UserName);
             this.port = localTcpPortManager.ReserveLocalPort();
         }
 
-        public void Delete(ContainerUser user)
+        public void Delete(IContainerUser user)
         {
-            var localTcpPortManager = new LocalTcpPortManager(port, user);
+            var localTcpPortManager = new LocalTcpPortManager(port, user.UserName);
             localTcpPortManager.ReleaseLocalPort();
         }
 

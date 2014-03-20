@@ -3,7 +3,7 @@
     using System.Runtime.InteropServices;
     using System.Text;
 
-    internal partial class NativeMethods
+    public partial class NativeMethods
     {
         [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern bool LookupAccountSid(

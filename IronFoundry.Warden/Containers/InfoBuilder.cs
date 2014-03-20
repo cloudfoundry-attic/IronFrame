@@ -20,11 +20,16 @@
         public InfoResponse GetInfoResponse()
         {
             var hostIp = IPUtilities.GetLocalIPAddress().ToString();
-            var info = new InfoResponse(hostIp, hostIp, container.Directory, container.State);
+            var info = new InfoResponse(hostIp, hostIp, container.Directory.FullName, container.State);
 
             var stats = container.GetProcessStatistics();
-            info.CpuStatInfo.Usage = (ulong)stats.TotalProcessorTime.Ticks;
-            info.MemoryStatInfo.TotalRss = (ulong)stats.WorkingSet;
+
+            // Convert TimeSpan to nanoseconds
+            info.CpuStatInfo.Usage = (ulong)stats.TotalProcessorTime.Ticks * 100;
+
+            // RSS is defined as memory + swap
+            // For now, report the private memory, which is more representative of how much memory an application is using.
+            info.MemoryStatInfo.TotalRss = (ulong)stats.PrivateMemory;
 
             return info;
         }

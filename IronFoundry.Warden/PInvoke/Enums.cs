@@ -2,7 +2,7 @@
 {
     using System;
 
-    internal partial class NativeMethods
+    public partial class NativeMethods
     {
         [Flags]
         public enum LogonType
@@ -50,6 +50,11 @@
             SidTypeInvalid,
             SidTypeUnknown,
             SidTypeComputer
+        }
+
+        public enum ProcessExitCode : uint
+        {
+            StillActive = 259u
         }
     }
 }

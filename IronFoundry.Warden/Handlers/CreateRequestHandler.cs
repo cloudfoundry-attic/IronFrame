@@ -44,7 +44,7 @@
         /// </summary>
         /// <param name="bindMounts"></param>
         /// <param name="containerUser"></param>
-        private void ProcessBindMounds(IEnumerable<CreateRequest.BindMount> bindMounts, ContainerUser containerUser)
+        private void ProcessBindMounds(IEnumerable<CreateRequest.BindMount> bindMounts, IContainerUser containerUser)
         {
             var inheritanceFlags = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
 
@@ -64,7 +64,7 @@
                             rights = FileSystemRights.FullControl;
                             break;
                     }
-                    var accessRule = new FileSystemAccessRule(containerUser, rights, inheritanceFlags, PropagationFlags.InheritOnly, AccessControlType.Allow);
+                    var accessRule = new FileSystemAccessRule(containerUser.UserName, rights, inheritanceFlags, PropagationFlags.InheritOnly, AccessControlType.Allow);
                     log.Trace("Adding access rule to SrcPath '{0}', DstPath '{1}'", bindMount.SrcPath, bindMount.DstPath);
                     AddAccessRuleTo(accessRule, bindMount.SrcPath);
                     AddAccessRuleTo(accessRule, bindMount.DstPath);

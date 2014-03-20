@@ -6,7 +6,16 @@
     using System.Text.RegularExpressions;
     using IronFoundry.Warden.Utilities;
 
-    public class ContainerUser : IEquatable<ContainerUser>
+    public interface IContainerUser
+    {
+
+        string UserName { get; }
+        NetworkCredential GetCredential();
+
+        void Delete();
+    }
+
+    public class ContainerUser : IEquatable<ContainerUser>, IContainerUser
     {
         private const string userPrefix = "warden_";
         private static readonly Regex uniqueIdValidator = new Regex(@"^\w{8,}$", RegexOptions.CultureInvariant | RegexOptions.Compiled);
@@ -76,6 +85,14 @@
                 var ntAccount = new NTAccount(userName);
                 var securityIdentifier = (SecurityIdentifier)ntAccount.Translate(typeof(SecurityIdentifier));
                 return securityIdentifier.ToString();
+            }
+        }
+
+        public string UserName
+        {
+            get 
+            {
+                return this.userName;
             }
         }
 

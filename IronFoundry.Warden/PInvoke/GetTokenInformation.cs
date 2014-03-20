@@ -3,7 +3,7 @@
     using System;
     using System.Runtime.InteropServices;
 
-    internal partial class NativeMethods
+    public partial class NativeMethods
     {
         [Serializable]
         public enum TokenInformationClass : uint

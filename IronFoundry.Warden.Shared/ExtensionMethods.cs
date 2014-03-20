@@ -1,4 +1,6 @@
+using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
@@ -21,6 +23,39 @@ namespace System
         public static string ToWinPathString(this string pathString)
         {
             return backslashCleanup.Replace(pathString.Replace('/', '\\'), @"\");
+        }
+
+        public static Security.SecureString ToSecureString(this string unsecuredString)
+        {
+            var securedString = new Security.SecureString();
+            foreach (var c in unsecuredString)
+            {
+                securedString.AppendChar(c);
+            }
+
+            securedString.MakeReadOnly();
+
+            return securedString;
+        }
+    }
+}
+
+public static class SecureStringExtensionMethod
+{
+    public static string ToUnsecureString(this System.Security.SecureString secureString)
+    {
+        if (secureString == null)
+            throw new ArgumentNullException("securePassword");
+
+        IntPtr unmanagedString = IntPtr.Zero;
+        try
+        {
+            unmanagedString = Marshal.SecureStringToGlobalAllocUnicode(secureString);
+            return Marshal.PtrToStringUni(unmanagedString);
+        }
+        finally
+        {
+            Marshal.ZeroFreeGlobalAllocUnicode(unmanagedString);
         }
     }
 }

@@ -5,11 +5,18 @@
     using System.Security.AccessControl;
     using IronFoundry.Warden.Configuration;
 
-    public class ContainerDirectory
+    public interface IContainerDirectory
+    {
+        string FullName { get; }
+
+        void Delete();
+    }
+
+    public class ContainerDirectory : IContainerDirectory
     {
         private readonly DirectoryInfo containerDirectory;
 
-        public ContainerDirectory(ContainerHandle handle, ContainerUser user, bool shouldCreate = false)
+        public ContainerDirectory(ContainerHandle handle, IContainerUser user, bool shouldCreate = false)
         {
             if (handle == null)
             {
@@ -48,15 +55,20 @@
 
         public override string ToString()
         {
-            return containerDirectory.FullName;
+            return FullName;
         }
 
-        private static DirectoryInfo CreateContainerDirectory(ContainerHandle handle, ContainerUser user)
+        public string FullName
+        {
+            get { return containerDirectory.FullName; }
+        }
+
+        private static DirectoryInfo CreateContainerDirectory(ContainerHandle handle, IContainerUser user)
         {
             var dirInfo = GetContainerDirectoryInfo(handle);
 
             var inheritanceFlags = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
-            var accessRule = new FileSystemAccessRule(user, FileSystemRights.FullControl, inheritanceFlags,
+            var accessRule = new FileSystemAccessRule(user.UserName, FileSystemRights.FullControl, inheritanceFlags,
                 PropagationFlags.None, AccessControlType.Allow);
 
             DirectoryInfo containerBaseInfo = dirInfo.Item1;

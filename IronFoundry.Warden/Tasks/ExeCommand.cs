@@ -34,7 +34,7 @@
 
         protected override TaskCommandResult DoExecute()
         {
-            return base.RunProcess(container.Directory, executable, args);
+            return base.RunProcess(container.Directory.FullName, executable, args);
         }
     }
 }
