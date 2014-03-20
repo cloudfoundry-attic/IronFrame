@@ -203,6 +203,10 @@ namespace IronFoundry.Warden.Containers
             {
             }
 
+            public void WaitForExit(int timeout)
+            {
+            }
+
             public void Dispose()
             {
             }
@@ -310,6 +314,11 @@ namespace IronFoundry.Warden.Containers
             public void WaitForExit()
             {
                 process.WaitForExit();
+            }
+
+            public void WaitForExit(int timeout)
+            {
+                process.WaitForExit(timeout);
             }
         }
     }

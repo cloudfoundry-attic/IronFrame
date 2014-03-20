@@ -99,6 +99,11 @@ namespace IronFoundry.Warden.Utilities
             {
                 process.WaitForExit();
             }
+
+            public void WaitForExit(int milliseconds)
+            {
+                process.WaitForExit(milliseconds);
+            }
         }
     }
 }
