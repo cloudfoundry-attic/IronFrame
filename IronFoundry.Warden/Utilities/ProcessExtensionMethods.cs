@@ -125,5 +125,18 @@
                 }
             }
         }
+
+        public static void SafeKill(this Process process)
+        {
+            try
+            {
+                process.Kill();
+            }
+            catch (Win32Exception)
+            {
+                // If the process is terminating and kill is invoked again you will get a Win32Exception for AccessDenied.
+                // http://msdn.microsoft.com/en-us/library/system.diagnostics.process.kill(v=vs.110).aspx
+            }
+        }
     }
 }

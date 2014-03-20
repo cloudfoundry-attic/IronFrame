@@ -26,7 +26,7 @@ namespace IronFoundry.Warden.Containers
             if (hostProcess != null)
             {
                 if (!hostProcess.HasExited)
-                    hostProcess.Kill();
+                    hostProcess.SafeKill();
 
                 hostProcess.Dispose();
                 hostProcess = null;
@@ -262,12 +262,12 @@ namespace IronFoundry.Warden.Containers
 
             public TimeSpan TotalProcessorTime
             {
-                get { return  process.HasExited ? TimeSpan.Zero : process.TotalProcessorTime; }
+                get { return process.HasExited ? TimeSpan.Zero : process.TotalProcessorTime; }
             }
 
             public TimeSpan TotalUserProcessorTime
             {
-                get { return  process.HasExited ? TimeSpan.Zero : process.UserProcessorTime; }
+                get { return process.HasExited ? TimeSpan.Zero : process.UserProcessorTime; }
             }
 
             public void Kill()
