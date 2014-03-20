@@ -150,6 +150,7 @@
     <Compile Include="Utilities\LocalTcpPortManager.cs" />
     <Compile Include="Utilities\LoggerExtensionMethods.cs" />
     <Compile Include="Utilities\MessageWriter.cs" />
+    <Compile Include="Utilities\ProcessHelper.cs" />
     <Compile Include="Utilities\ProcessManager.cs" />
     <Compile Include="Utilities\Statics.cs" />
     <Compile Include="Utilities\TempFile.cs" />

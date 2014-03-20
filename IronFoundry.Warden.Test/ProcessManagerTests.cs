@@ -13,7 +13,7 @@ namespace IronFoundry.Warden.Test
         public void StoppingProcessManager_StopsProcesses()
         {
             var launcher = new ProcessLauncher();
-            var manager = new ProcessManager(new JobObject(), launcher);
+            var manager = new ProcessManager(new JobObject(), new ProcessHelper(), launcher);
 
             var si = new CreateProcessStartInfo("cmd.exe");
             using (var process = manager.CreateProcess(si))

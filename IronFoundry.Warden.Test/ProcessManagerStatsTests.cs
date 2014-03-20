@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using IronFoundry.Warden.Utilities;
-using Xunit;
-using NSubstitute;
 using IronFoundry.Warden.Containers;
+using IronFoundry.Warden.Utilities;
+using NSubstitute;
+using Xunit;
 
 namespace IronFoundry.Warden.Test
 {
@@ -26,7 +24,9 @@ namespace IronFoundry.Warden.Test
                 });
                 jobObject.GetProcessIds().Returns(new int[0]);
 
-                var manager = Substitute.For<ProcessManager>(jobObject, new ProcessLauncher());
+                var processHelper = Substitute.For<ProcessHelper>();
+
+                var manager = Substitute.For<ProcessManager>(jobObject, processHelper, new ProcessLauncher());
                 
                 stats = manager.GetProcessStats();
             }
@@ -50,12 +50,6 @@ namespace IronFoundry.Warden.Test
             }
 
             [Fact]
-            public void ReturnsDefaultPagedMemory()
-            {
-                Assert.Equal(0, stats.PagedMemory);
-            }
-
-            [Fact]
             public void ReturnsDefaultWorkingSet()
             {
                 Assert.Equal(0, stats.WorkingSet);
@@ -69,7 +63,6 @@ namespace IronFoundry.Warden.Test
             TimeSpan expectedTotalUserTime = TimeSpan.FromSeconds(8);
             TimeSpan expectedTotalProcessorTime = TimeSpan.FromSeconds(10);
             long expectedPrivateMemoryBytes = 2048;
-            long expectedPagedMemoryBytes = 1024;
             long expectedWorkingSet = 4096;
 
             public WhenManagingOneProcess()
@@ -86,11 +79,12 @@ namespace IronFoundry.Warden.Test
                 process.TotalProcessorTime.Returns(expectedTotalProcessorTime);
                 process.TotalUserProcessorTime.Returns(expectedTotalUserTime);
                 process.PrivateMemoryBytes.Returns(expectedPrivateMemoryBytes);
-                process.PagedMemoryBytes.Returns(expectedPagedMemoryBytes);
                 process.WorkingSet.Returns(expectedWorkingSet);
 
-                var manager = Substitute.For<ProcessManager>(jobObject, new ProcessLauncher());
-                manager.GetProcessById(1234).Returns(process);
+                var processHelper = Substitute.For<ProcessHelper>();
+                processHelper.GetProcesses(null).ReturnsForAnyArgs(new [] { process });
+
+                var manager = Substitute.For<ProcessManager>(jobObject, processHelper, new ProcessLauncher());
 
                 stats = manager.GetProcessStats();
             }
@@ -114,12 +108,6 @@ namespace IronFoundry.Warden.Test
             }
 
             [Fact]
-            public void ReturnsExpectedPagedMemoryBytes()
-            {
-                Assert.Equal(expectedPagedMemoryBytes, stats.PagedMemory);
-            }
-
-            [Fact]
             public void ReturnsExpectedWorkingSet()
             {
                 Assert.Equal(expectedWorkingSet, stats.WorkingSet);
@@ -133,7 +121,6 @@ namespace IronFoundry.Warden.Test
             TimeSpan expectedTotalUserTime = TimeSpan.FromSeconds(8);
             TimeSpan expectedTotalProcessorTime = TimeSpan.FromSeconds(10);
             long expectedPrivateMemoryBytes = 2048;
-            long expectedPagedMemoryBytes = 1024;
             long expectedWorkingSet = 4096;
 
             List<IProcess> processes = new List<IProcess>();
@@ -145,7 +132,6 @@ namespace IronFoundry.Warden.Test
                 firstProcess.TotalProcessorTime.Returns(expectedTotalProcessorTime);
                 firstProcess.TotalUserProcessorTime.Returns(expectedTotalUserTime);
                 firstProcess.PrivateMemoryBytes.Returns(expectedPrivateMemoryBytes);
-                firstProcess.PagedMemoryBytes.Returns(expectedPagedMemoryBytes);
                 firstProcess.WorkingSet.Returns(expectedWorkingSet);
                 processes.Add(firstProcess);
 
@@ -154,7 +140,6 @@ namespace IronFoundry.Warden.Test
                 secondProcess.TotalProcessorTime.Returns(expectedTotalProcessorTime);
                 secondProcess.TotalUserProcessorTime.Returns(expectedTotalUserTime);
                 secondProcess.PrivateMemoryBytes.Returns(expectedPrivateMemoryBytes);
-                secondProcess.PagedMemoryBytes.Returns(expectedPagedMemoryBytes);
                 secondProcess.WorkingSet.Returns(expectedWorkingSet);
                 processes.Add(secondProcess);
 
@@ -166,9 +151,10 @@ namespace IronFoundry.Warden.Test
                 });
                 jobObject.GetProcessIds().Returns(new int[] { 12, 34 });
 
-                var manager = Substitute.For<ProcessManager>(jobObject, new ProcessLauncher());
-                manager.GetProcessById(12).Returns(firstProcess);
-                manager.GetProcessById(34).Returns(secondProcess);
+                var processHelper = Substitute.For<ProcessHelper>();
+                processHelper.GetProcesses(null).ReturnsForAnyArgs(new[] { firstProcess, secondProcess });
+
+                var manager = Substitute.For<ProcessManager>(jobObject, processHelper, new ProcessLauncher());
 
                 stats = manager.GetProcessStats();
             }
@@ -189,12 +175,6 @@ namespace IronFoundry.Warden.Test
             public void ReturnsAggregatePrivateMemoryBytes()
             {
                 Assert.Equal(processes.Sum(p => p.PrivateMemoryBytes), stats.PrivateMemory);
-            }
-
-            [Fact]
-            public void ReturnsAggregatePagedMemoryBytes()
-            {
-                Assert.Equal(processes.Sum(p => p.PagedMemoryBytes), stats.PagedMemory);
             }
 
             [Fact] void ReturnsAggregateWorkingSet()

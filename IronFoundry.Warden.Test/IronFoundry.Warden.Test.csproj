@@ -40,6 +40,7 @@
     <Compile Include="Messaging\MessagingClientTest.cs" />
     <Compile Include="Messaging\SecureStringJsonConverterTest.cs" />
     <Compile Include="ProcessCommandTests.cs" />
+    <Compile Include="ProcessHelperTest.cs" />
     <Compile Include="ProcessManagerStartProcessTest.cs" />
     <Compile Include="ProcessManagerTests.cs" />
     <Compile Include="TestSupport\FactAdminRequired.cs" />

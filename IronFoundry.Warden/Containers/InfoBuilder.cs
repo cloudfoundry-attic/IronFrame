@@ -27,8 +27,7 @@
             // Convert TimeSpan to nanoseconds
             info.CpuStatInfo.Usage = (ulong)stats.TotalProcessorTime.Ticks * 100;
 
-            // RSS is defined as memory + swap
-            // For now, report the private memory, which is more representative of how much memory an application is using.
+            // RSS is defined as memory + swap. This is the equivalent of "private memory" on Windows.
             info.MemoryStatInfo.TotalRss = (ulong)stats.PrivateMemory;
 
             return info;

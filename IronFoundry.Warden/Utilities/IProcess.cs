@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IronFoundry.Warden.Utilities
 {
@@ -17,7 +13,6 @@ namespace IronFoundry.Warden.Utilities
         TimeSpan TotalUserProcessorTime { get; }
         long WorkingSet { get; }
         long PrivateMemoryBytes { get; }
-        long PagedMemoryBytes { get; }
 
         event EventHandler Exited;
 
