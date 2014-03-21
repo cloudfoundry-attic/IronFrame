@@ -38,7 +38,7 @@
 
             log.Trace("SrcPath: '{0}' DstPath: '{1}'", request.SrcPath, request.DstPath);
 
-            Container container = GetContainer();
+            IContainer container = GetContainer();
             if (container == null)
             {
                 return copyResponse;

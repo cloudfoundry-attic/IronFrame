@@ -20,7 +20,7 @@
                 throw new ArgumentNullException("request");
             }
 
-            Container container = GetContainer();
+            var container = GetContainer();
             return new TaskRunner(container, request);
         }
     }

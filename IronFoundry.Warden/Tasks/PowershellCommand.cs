@@ -6,12 +6,13 @@
     using System.Text;
     using Containers;
     using Protocol;
+    using Warden.Utilities;
 
     public class PowershellCommand : ProcessCommand
     {
         private const string powershellArgFmt = "-NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -File \"{0}\"";
 
-        public PowershellCommand(Container container, string[] arguments, bool shouldImpersonate, ResourceLimits rlimits)
+        public PowershellCommand(IContainer container, string[] arguments, bool shouldImpersonate, ResourceLimits rlimits)
             : base(container, arguments, shouldImpersonate, rlimits)
         {
             if (base.arguments.IsNullOrEmpty())

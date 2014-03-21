@@ -26,13 +26,12 @@
                     // before
 
                     // do
-                    var container = new Container();
+                    IContainer container = new Container();
                     containerManager.AddContainer(container);
 
-                    // after
-                    container.AfterCreate();
+                    container.Initialize();
 
-                    ProcessBindMounds(request.BindMounts, container.User);
+                    ProcessBindMounts(request.BindMounts, container.ContainerUserName);
 
                     return new CreateResponse { Handle = container.Handle };
                 });
@@ -44,7 +43,7 @@
         /// </summary>
         /// <param name="bindMounts"></param>
         /// <param name="containerUser"></param>
-        private void ProcessBindMounds(IEnumerable<CreateRequest.BindMount> bindMounts, IContainerUser containerUser)
+        private void ProcessBindMounts(IEnumerable<CreateRequest.BindMount> bindMounts, string containerUser)
         {
             var inheritanceFlags = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
 
@@ -64,7 +63,7 @@
                             rights = FileSystemRights.FullControl;
                             break;
                     }
-                    var accessRule = new FileSystemAccessRule(containerUser.UserName, rights, inheritanceFlags, PropagationFlags.InheritOnly, AccessControlType.Allow);
+                    var accessRule = new FileSystemAccessRule(containerUser, rights, inheritanceFlags, PropagationFlags.InheritOnly, AccessControlType.Allow);
                     log.Trace("Adding access rule to SrcPath '{0}', DstPath '{1}'", bindMount.SrcPath, bindMount.DstPath);
                     AddAccessRuleTo(accessRule, bindMount.SrcPath);
                     AddAccessRuleTo(accessRule, bindMount.DstPath);
@@ -74,7 +73,7 @@
 
         private void AddAccessRuleTo(FileSystemAccessRule accessRule, string path)
         {
-            var pathInfo = new DirectoryInfo(path);
+            var pathInfo = new DirectoryInfo(path); 
             if (pathInfo.Exists)
             {
                 log.Trace("Adding access rule to path '{0}'", pathInfo.FullName);

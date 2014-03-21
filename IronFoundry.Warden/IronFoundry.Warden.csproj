@@ -46,7 +46,6 @@
     <Compile Include="Containers\ContainerDirectory.cs" />
     <Compile Include="Containers\ContainerHandle.cs" />
     <Compile Include="Containers\ContainerManager.cs" />
-    <Compile Include="Containers\ContainerPort.cs" />
     <Compile Include="Containers\ContainerUser.cs" />
     <Compile Include="Containers\ContainerState.cs" />
     <Compile Include="Containers\IContainerManager.cs" />
@@ -93,6 +92,7 @@
     <Compile Include="PInvoke\GetThreadDesktop.cs" />
     <Compile Include="PInvoke\LogonUser.cs" />
     <Compile Include="PInvoke\NativeMethods.cs" />
+    <Compile Include="Utilities\ContainerExtensions.cs" />
     <Compile Include="Utilities\IProcess.cs" />
     <Compile Include="Utilities\LocalPrincipalData.cs" />
     <Compile Include="Utilities\LoggedIEnumerableExtensionMethods.cs" />

@@ -10,8 +10,8 @@
 
     public class ContainerManager : IContainerManager
     {
-        private readonly ConcurrentDictionary<ContainerHandle, Container> containers =
-            new ConcurrentDictionary<ContainerHandle, Container>();
+        private readonly ConcurrentDictionary<ContainerHandle, IContainer> containers =
+            new ConcurrentDictionary<ContainerHandle, IContainer>();
 
         private readonly Logger log = LogManager.GetCurrentClassLogger();
 
@@ -20,7 +20,7 @@
             get { return containers.Keys; }
         }
 
-        public void AddContainer(Container container)
+        public void AddContainer(IContainer container)
         {
             if (!containers.TryAdd(container.Handle, container))
             {
@@ -28,10 +28,10 @@
             }
         }
 
-        public Container GetContainer(string handle)
+        public IContainer GetContainer(string handle)
         {
             var cHandle = new ContainerHandle(handle);
-            Container retrieved;
+            IContainer retrieved;
             if (!containers.TryGetValue(cHandle, out retrieved))
             {
                 // TODO: throw exception with message that matches ruby warden
@@ -77,7 +77,7 @@
 
         private void RemoveEmptyContainers()
         {
-            containers.Values.Foreach(log, (c) => !c.HasProcesses,
+            containers.Values.Foreach(log, (c) => c.State == ContainerState.Destroyed,
                 (c) =>
                 {
                     log.Info("Destroying stale container '{0}'", c.Handle);
@@ -85,7 +85,7 @@
                 });
         }
 
-        public void DestroyContainer(Container container)
+        public void DestroyContainer(IContainer container)
         {
             DestroyContainer(container.Handle);
         }
@@ -97,7 +97,7 @@
                 throw new ArgumentNullException("handle");
             }
 
-            Container removed;
+            IContainer removed;
             if (containers.TryRemove(handle, out removed))
             {
                 try

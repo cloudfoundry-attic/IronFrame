@@ -8,7 +8,6 @@
 
     public interface IContainerUser
     {
-
         string UserName { get; }
         NetworkCredential GetCredential();
 

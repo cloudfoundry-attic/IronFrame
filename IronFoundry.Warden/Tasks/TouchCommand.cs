@@ -5,12 +5,13 @@
     using System.Text;
     using IronFoundry.Warden.Configuration;
     using IronFoundry.Warden.Containers;
+    using Warden.Utilities;
 
     public class TouchCommand : PathCommand
     {
         private static readonly WardenConfig config = new WardenConfig();
 
-        public TouchCommand(Container container, string[] arguments)
+        public TouchCommand(IContainer container, string[] arguments)
             : base(container, arguments)
         {
         }

@@ -25,6 +25,7 @@ namespace IronFoundry.Warden.Tasks.Test
             handle = new ContainerHandle("TestContainerHandle");
             user = Substitute.For<IContainerUser>();
             user.UserName.Returns("TestUser");
+            user.GetCredential().ReturnsForAnyArgs(new System.Net.NetworkCredential("TestUser", "TestUserPassword"));
 
             directory = Substitute.For<IContainerDirectory>();
             process = Substitute.For<IProcess>();
@@ -43,13 +44,11 @@ namespace IronFoundry.Warden.Tasks.Test
         }
 
         [Fact]
-        public void WhenImpersonating_AssignsCredentials()
+        public void WhenImpersonatingSelected_ShoudlRequestImperonation()
         {
-            container.GetCredential().Returns(new System.Net.NetworkCredential("TestUser", "TestUserPassword"));
-
             CreateProcessStartInfo si  = null;
             container.CreateProcess(null).ReturnsForAnyArgs( c => 
-            {
+            {                
                 si = c.Arg<CreateProcessStartInfo>();
                 return process;
             });
@@ -57,8 +56,7 @@ namespace IronFoundry.Warden.Tasks.Test
             var cmd = new TestableProcessCommand(container, "C:\\temp", "some.exe", "some args", true);
             cmd.Execute();
 
-            Assert.Equal("TestUser", si.UserName);
-            Assert.Equal("TestUserPassword", si.Password.ToUnsecureString());
+            container.Received().CreateProcess(Arg.Any<CreateProcessStartInfo>(), Arg.Is<bool>(true));
         }
 
         [Fact]
@@ -87,8 +85,6 @@ namespace IronFoundry.Warden.Tasks.Test
         [Fact]
         public void SetsTheWorkingDirectoryInStartInfo()
         {
-            container.GetCredential().Returns(new System.Net.NetworkCredential("TestUser", "TestUserPassword"));
-
             CreateProcessStartInfo si = null;
             container.CreateProcess(null).ReturnsForAnyArgs(c =>
             {

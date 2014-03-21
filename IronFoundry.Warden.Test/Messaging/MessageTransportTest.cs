@@ -136,7 +136,7 @@ namespace IronFoundry.Warden.Test.ContainerHost
 
             inputSource.AddLine(@"!@#$%&*()");
 
-            Assert.Same(tcs.Task, await Task.WhenAny(tcs.Task, Task.Delay(1000)));
+            Assert.Same(tcs.Task, await Task.WhenAny(tcs.Task, Task.Delay(1500)));
         }
 
         [Fact]

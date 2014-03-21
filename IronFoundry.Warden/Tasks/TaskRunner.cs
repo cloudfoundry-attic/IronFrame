@@ -18,7 +18,7 @@
         private readonly Logger log = LogManager.GetCurrentClassLogger();
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
 
-        private readonly Container container;
+        private readonly IContainer container;
         private readonly ITaskRequest request;
         private readonly TaskCommandDTO[] commands;
 
@@ -26,7 +26,7 @@
 
         private bool runningAsync = false;
 
-        public TaskRunner(Container container, ITaskRequest request)
+        public TaskRunner(IContainer container, ITaskRequest request)
         {
             if (container == null)
             {
@@ -89,7 +89,6 @@
             bool shouldImpersonate = !request.Privileged;
 
             var commandFactory = new TaskCommandFactory(container, shouldImpersonate, request.Rlimits);
-            var credential = container.GetCredential();
             var results = new List<TaskCommandResult>();
 
             foreach (TaskCommandDTO cmd in commands)
@@ -111,7 +110,7 @@
                     }
                     else
                     {
-                        using (Impersonator.GetContext(credential, shouldImpersonate))
+                        using (container.GetExecutionContext(shouldImpersonate))
                         {
                             result = taskCommand.Execute();
                         }
@@ -135,7 +134,6 @@
             bool shouldImpersonate = !request.Privileged;
 
             var commandFactory = new TaskCommandFactory(container, shouldImpersonate, request.Rlimits);
-            var credential = container.GetCredential();
             var results = new List<TaskCommandResult>();
 
             foreach (TaskCommandDTO cmd in commands)
@@ -166,7 +164,7 @@
                     }
                     else
                     {
-                        using (Impersonator.GetContext(credential, shouldImpersonate))
+                        using (container.GetExecutionContext(shouldImpersonate))
                         {
                             results.Add(taskCommand.Execute());
                         }

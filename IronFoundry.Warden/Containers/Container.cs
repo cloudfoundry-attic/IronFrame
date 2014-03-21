@@ -10,8 +10,25 @@
     using NLog;
     using Protocol;
     using Utilities;
+    using System.Security.Principal;
 
-    public class Container
+    public interface IContainer
+    {
+        string ContainerDirectoryPath { get; }
+        string ContainerUserName { get; }
+        ContainerHandle Handle { get; }
+        ContainerState State { get; }
+
+        IProcess CreateProcess(CreateProcessStartInfo si, bool impersonate = false);
+        void Destroy();
+        WindowsImpersonationContext GetExecutionContext(bool shouldImpersonate = false);
+        ProcessStats GetProcessStatistics();
+        void Initialize();
+        int ReservePort(int requestedPort);
+        void Stop();
+    }
+
+    public class Container : IContainer
     {
         private const string TEMP_PATH = "tmp";
 
@@ -22,10 +39,10 @@
         private readonly IContainerDirectory directory;
         private readonly ProcessManager processManager;
 
-        private ContainerPort port;
+        private int? assignedPort;
         private ContainerState state;
 
-        public static Container Restore(string handle, ContainerState containerState)
+        public static IContainer Restore(string handle, ContainerState containerState)
         {
             if (handle.IsNullOrWhiteSpace())
             {
@@ -72,9 +89,19 @@
             this.processManager = new ProcessManager(handle);
         }
 
-        public NetworkCredential GetCredential()
+        private NetworkCredential GetCredential()
         {
             return user.GetCredential();
+        }
+
+        public string ContainerDirectoryPath
+        {
+            get { return directory.FullName; }
+        }
+
+        public string ContainerUserName
+        {
+            get { return user.UserName; }
         }
 
         public ContainerHandle Handle
@@ -82,7 +109,7 @@
             get { return handle; }
         }
 
-        public IContainerUser User
+        private IContainerUser User
         {
             get { return user; }
         }
@@ -114,7 +141,7 @@
             }
         }
 
-        public void AfterCreate()
+        public void Initialize()
         {
             ChangeState(ContainerState.Active);
         }
@@ -122,41 +149,23 @@
         public void Stop()
         {
             processManager.StopProcesses();
-        }
-
-        public void AfterStop()
-        {
             ChangeState(ContainerState.Stopped);
         }
 
-        public ContainerPort ReservePort(ushort suggestedPort)
+        public WindowsImpersonationContext GetExecutionContext(bool shouldImpersonate = false)
         {
-            rwlock.EnterUpgradeableReadLock();
-            try
+            return Impersonator.GetContext(this.GetCredential(), shouldImpersonate);
+        }
+
+        public int ReservePort(int port)
+        {
+            if (!assignedPort.HasValue)
             {
-                if (port == null)
-                {
-                    rwlock.EnterWriteLock();
-                    try
-                    {
-                        port = new ContainerPort(suggestedPort, this.user);
-                    }
-                    finally
-                    {
-                        rwlock.ExitWriteLock();
-                    }
-                }
-                else
-                {
-                    log.Trace("Container '{0}' already assigned port '{1}'", handle, port);
-                }
-            }
-            finally
-            {
-                rwlock.ExitUpgradeableReadLock();
+                var localTcpPortManager = new LocalTcpPortManager((ushort)port, this.ContainerUserName);
+                assignedPort = localTcpPortManager.ReserveLocalPort();
             }
 
-            return port;
+            return assignedPort.Value;
         }
 
         public ProcessStats GetProcessStatistics()
@@ -164,48 +173,11 @@
             return processManager.GetProcessStats();
         }
 
-        public IEnumerable<string> ConvertToPathsWithin(string[] arguments)
-        {
-            foreach (string arg in arguments)
-            {
-                string rv = null;
-
-                if (arg.Contains("@ROOT@"))
-                {
-                    rv = arg.Replace("@ROOT@", this.Directory.FullName).ToWinPathString();
-                }
-                else
-                {
-                    rv = arg;
-                }
-
-                yield return rv;
-            }
-        }
-
-        public string ConvertToPathWithin(string path)
-        {
-            string pathTmp = path.Trim();
-            if (pathTmp.StartsWith("@ROOT@"))
-            {
-                return pathTmp.Replace("@ROOT@", this.Directory.FullName).ToWinPathString();
-            }
-            else
-            {
-                return pathTmp;
-            }
-        }
-
-        public TempFile TempFileInContainer(string extension)
-        {
-            return new TempFile(this.Directory.FullName, extension);
-        }
 
         public static void CleanUp(string handle)
         {
             ContainerUser.CleanUp(handle);
             ContainerDirectory.CleanUp(handle);
-            ContainerPort.CleanUp(handle, 0); // TODO
         }
 
         public void Destroy()
@@ -216,9 +188,10 @@
                 processManager.StopProcesses();
                 processManager.Dispose();
 
-                if (port != null)
+                if (assignedPort.HasValue)
                 {
-                    port.Delete(user);
+                    var portManager = new LocalTcpPortManager((ushort)assignedPort.Value, this.ContainerUserName);
+                    portManager.ReleaseLocalPort();
                 }
 
                 directory.Delete();
@@ -238,10 +211,14 @@
             processManager.RestoreProcesses();
         }
 
-        public virtual IProcess CreateProcess(CreateProcessStartInfo startInfo)
+        public virtual IProcess CreateProcess(CreateProcessStartInfo startInfo, bool shouldImpersonate = false)
         {
-            if (startInfo.UserName != null)
+
+            if (shouldImpersonate)
             {
+                startInfo.UserName = this.User.UserName;
+                startInfo.Password = this.User.GetCredential().SecurePassword;
+
                 startInfo.EnvironmentVariables.Clear();
                 CopyEnvVariableTo(startInfo.EnvironmentVariables, new[] {
                     "Path", 
@@ -261,7 +238,7 @@
                 startInfo.EnvironmentVariables["TMP"] = tmpDir;
                 startInfo.EnvironmentVariables["TEMP"] = tmpDir;
             }
-            
+
             return processManager.CreateProcess(startInfo);
         }
 

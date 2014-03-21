@@ -11,7 +11,7 @@
         private readonly string executable;
         private readonly string args;
 
-        public ExeCommand(Container container, string[] arguments, bool shouldImpersonate, ResourceLimits rlimits)
+        public ExeCommand(IContainer container, string[] arguments, bool shouldImpersonate, ResourceLimits rlimits)
             : base(container, arguments, shouldImpersonate, rlimits)
         {
             if (arguments.IsNullOrEmpty())
@@ -34,7 +34,7 @@
 
         protected override TaskCommandResult DoExecute()
         {
-            return base.RunProcess(container.Directory.FullName, executable, args);
+            return base.RunProcess(container.ContainerDirectoryPath, executable, args);
         }
     }
 }

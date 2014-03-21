@@ -5,6 +5,7 @@
     using Containers;
     using ICSharpCode.SharpZipLib.GZip;
     using ICSharpCode.SharpZipLib.Tar;
+    using Warden.Utilities;
 
     public class TarCommand : TaskCommand
     {
@@ -14,7 +15,7 @@
         private readonly string directory;
         private readonly string tarFile;
 
-        public TarCommand(Container container, string[] arguments)
+        public TarCommand(IContainer container, string[] arguments)
             : base(container, arguments)
         {
             if (arguments.Length != 3)

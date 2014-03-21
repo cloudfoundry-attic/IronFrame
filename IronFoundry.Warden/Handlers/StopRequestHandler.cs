@@ -22,13 +22,11 @@
                 {
                     // before
                     log.Trace("Handle: '{0}' Background: '{1}' Kill: '{2}'", request.Handle, request.Background, request.Kill);
-                    Container c = GetContainer();
+                    var c = GetContainer();
 
                     // do
                     c.Stop();
 
-                    // after
-                    c.AfterStop();
                     return new StopResponse();
                 });
         }

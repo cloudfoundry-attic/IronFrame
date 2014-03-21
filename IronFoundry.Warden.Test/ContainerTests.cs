@@ -22,6 +22,8 @@ namespace IronFoundry.Warden.Test
         {
             var containerHandle = new ContainerHandle("TestContainerHandle");
             var containerUser = Substitute.For<IContainerUser>();
+            containerUser.GetCredential().ReturnsForAnyArgs(new System.Net.NetworkCredential("TestUser", "TestUserPassword"));
+
             var containerDirectory = Substitute.For<IContainerDirectory>();
             containerDirectory.FullName.Returns(containerDirectoryPath);
 
@@ -41,7 +43,7 @@ namespace IronFoundry.Warden.Test
             });
 
             var si = new CreateProcessStartInfo("some.ext", "some arguments");
-            var process = container.CreateProcess(si);
+            var process = container.CreateProcess(si, true);
 
             Assert.Same(returnedProcess, process);
         }
@@ -97,7 +99,7 @@ namespace IronFoundry.Warden.Test
 
             si.EnvironmentVariables["One"] = "Alpha";
 
-            container.CreateProcess(si);
+            container.CreateProcess(si, true);
 
             Assert.False(capturedStartInfo.EnvironmentVariables.ContainsKey("One"));
         }
@@ -120,10 +122,8 @@ namespace IronFoundry.Warden.Test
             });
 
             var si = new CreateProcessStartInfo("some.ext", "some arguments");
-            si.UserName = "TestUser";
-            si.Password = "TestUserPassword".ToSecureString();
 
-            container.CreateProcess(si);
+            container.CreateProcess(si, true);
 
             Assert.Equal(Environment.GetEnvironmentVariables()[environmentKey], capturedStartInfo.EnvironmentVariables[environmentKey]);
         }
@@ -148,7 +148,7 @@ namespace IronFoundry.Warden.Test
             si.UserName = "TestUser";
             si.Password = "TestUserPassword".ToSecureString();
 
-            container.CreateProcess(si);
+            container.CreateProcess(si, true);
 
             var expectedPath = System.IO.Path.Combine(containerDirectoryPath, "tmp");
 

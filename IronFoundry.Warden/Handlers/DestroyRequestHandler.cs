@@ -30,7 +30,7 @@
 
                 return Task.Run<Response>(() =>
                     {
-                        Container container = GetContainer();
+                        var container = GetContainer();
                         if (container != null)
                         {
                             if (container.State != ContainerState.Stopped)

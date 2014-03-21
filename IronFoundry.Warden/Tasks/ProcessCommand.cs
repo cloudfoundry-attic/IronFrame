@@ -20,7 +20,7 @@ using Utilities;
         private readonly ResourceLimits rlimits;
 
         private readonly Logger log = LogManager.GetCurrentClassLogger();
-        public ProcessCommand(Container container, string[] arguments, bool shouldImpersonate, ResourceLimits rlimits)
+        public ProcessCommand(IContainer container, string[] arguments, bool shouldImpersonate, ResourceLimits rlimits)
 
             : base(container, arguments)
         {
@@ -52,15 +52,7 @@ using Utilities;
             var si = new CreateProcessStartInfo(executable, processArguments);
             si.WorkingDirectory = workingDirectory;
 
-            if (shouldImpersonate)
-            {
-                var impersonationCredential = container.GetCredential();
-
-                si.UserName = impersonationCredential.UserName;
-                si.Password = impersonationCredential.SecurePassword;
-            }
-
-            var process = container.CreateProcess(si);
+            var process = container.CreateProcess(si, shouldImpersonate);
 
             log.Trace("Process ID: '{0}'", process.Id);
 

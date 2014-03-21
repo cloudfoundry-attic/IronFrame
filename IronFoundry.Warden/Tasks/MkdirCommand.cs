@@ -5,10 +5,11 @@
     using System.IO;
     using System.Text;
     using IronFoundry.Warden.Containers;
+    using Warden.Utilities;
 
     public class MkdirCommand : PathCommand
     {
-        public MkdirCommand(Container container, string[] arguments)
+        public MkdirCommand(IContainer container, string[] arguments)
             : base(container, arguments)
         {
             if (base.arguments.IsNullOrEmpty())

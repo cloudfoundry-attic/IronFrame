@@ -5,10 +5,10 @@
 
     public abstract class TaskCommand
     {
-        protected readonly Container container;
+        protected readonly IContainer container;
         protected readonly string[] arguments;
 
-        public TaskCommand(Container container, string[] arguments)
+        public TaskCommand(IContainer container, string[] arguments)
         {
             if (container == null)
             {

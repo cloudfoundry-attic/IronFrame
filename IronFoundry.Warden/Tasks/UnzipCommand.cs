@@ -6,13 +6,14 @@
     using Containers;
     using ICSharpCode.SharpZipLib.Zip;
     using Properties;
+    using Warden.Utilities;
 
     public class UnzipCommand : TaskCommand
     {
         private readonly FileInfo zipFile;
         private readonly DirectoryInfo destDir;
 
-        public UnzipCommand(Container container, string[] arguments)
+        public UnzipCommand(IContainer container, string[] arguments)
             : base(container, arguments)
         {
             if (arguments.IsNullOrEmpty() || arguments.Length != 2)

@@ -4,6 +4,7 @@
     using Containers;
     using NLog;
     using Protocol;
+    using IronFoundry.Warden.Utilities;
 
     public class NetInRequestHandler : ContainerRequestHandler
     {
@@ -43,9 +44,10 @@
 
             return Task.Run<Response>(() =>
                 {
-                    Container container = GetContainer();
-                    ushort reservedPort = container.ReservePort(port);
-                    return new NetInResponse { HostPort = reservedPort, ContainerPort = reservedPort };
+                    var container = GetContainer();                    
+                    var reservedPort = container.ReservePort(port);
+
+                    return new NetInResponse { HostPort = (uint)reservedPort, ContainerPort = (uint)reservedPort };
                 });
         }
     }

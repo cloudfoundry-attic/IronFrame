@@ -7,7 +7,7 @@
 
     public abstract class PathCommand : TaskCommand
     {
-        public PathCommand(Container container, string[] arguments)
+        public PathCommand(IContainer container, string[] arguments)
             : base(container, arguments)
         {
             if (base.arguments.IsNullOrEmpty())

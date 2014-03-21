@@ -14,7 +14,7 @@
         private readonly string port;
         private readonly string runtimeVersion;
 
-        public WebApplicationCommand(Container container, string[] arguments, bool shouldImpersonate, ResourceLimits rlimits)
+        public WebApplicationCommand(IContainer container, string[] arguments, bool shouldImpersonate, ResourceLimits rlimits)
             : base(container, arguments, shouldImpersonate, rlimits)
         {
             if (arguments.IsNullOrEmpty())
@@ -43,12 +43,12 @@
 
         protected override TaskCommandResult DoExecute()
         {
-            var webRoot = Path.Combine(container.Directory.FullName, "app");
+            var webRoot = Path.Combine(container.ContainerDirectoryPath, "app");
             var args = String.Format(@"--webroot=""{0}"" --port={1}{2}", webRoot, port, runtimeVersion == null
                     ? String.Empty
                     : String.Concat(" --runtimeVersion=", runtimeVersion));
 
-            return RunProcess(container.Directory.FullName, Path.Combine(container.Directory.FullName, "iishost.exe"), args);
+            return RunProcess(container.ContainerDirectoryPath, Path.Combine(container.ContainerDirectoryPath, "iishost.exe"), args);
         }
     }
 }

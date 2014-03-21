@@ -6,11 +6,11 @@
 
     public class TaskCommandFactory
     {
-        private readonly Container container;
+        private readonly IContainer container;
         private readonly bool shouldImpersonate;
         private readonly ResourceLimits rlimits;
 
-        public TaskCommandFactory(Container container, bool shouldImpersonate, ResourceLimits rlimits)
+        public TaskCommandFactory(IContainer container, bool shouldImpersonate, ResourceLimits rlimits)
         {
             if (container == null)
             {

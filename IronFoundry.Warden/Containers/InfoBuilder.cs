@@ -6,9 +6,9 @@
 
     public class InfoBuilder
     {
-        private readonly Container container;
+        private readonly IContainer container;
 
-        public InfoBuilder(Container container)
+        public InfoBuilder(IContainer container)
         {
             if (container == null)
             {
@@ -20,7 +20,7 @@
         public InfoResponse GetInfoResponse()
         {
             var hostIp = IPUtilities.GetLocalIPAddress().ToString();
-            var info = new InfoResponse(hostIp, hostIp, container.Directory.FullName, container.State);
+            var info = new InfoResponse(hostIp, hostIp, container.ContainerDirectoryPath, container.State);
 
             var stats = container.GetProcessStatistics();
 
