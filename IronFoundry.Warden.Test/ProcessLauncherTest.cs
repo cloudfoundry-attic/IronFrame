@@ -84,10 +84,13 @@
         {
             var tempFile = Path.Combine(tempDirectory, Guid.NewGuid().ToString());
 
-            var si = new CreateProcessStartInfo("cmd.exe", string.Format(@"/K echo Boomerang > {0}", tempFile));
+            var si = new CreateProcessStartInfo("cmd.exe", string.Format(@"/C echo Boomerang > {0}", tempFile));
 
             using (var p = launcher.LaunchProcess(si, jobObject))
             {
+                p.WaitForExit(3000);
+                p.Kill();
+
                 var output = File.ReadAllText(tempFile);
                 Assert.Contains("Boomerang", output);
             }
@@ -98,11 +101,14 @@
         {
             var tempFile = Path.Combine(tempDirectory, Guid.NewGuid().ToString());
 
-            var si = new CreateProcessStartInfo("cmd.exe", string.Format(@"/K echo %FOO% > {0}", tempFile));
+            var si = new CreateProcessStartInfo("cmd.exe", string.Format(@"/C echo %FOO% > {0}", tempFile));
             si.EnvironmentVariables["FOO"] = "BAR";
 
             using (var p = launcher.LaunchProcess(si, jobObject))
             {
+                p.WaitForExit(3000);
+                p.Kill();
+
                 var output = File.ReadAllText(tempFile);
                 Assert.Contains("BAR", output);
             }
@@ -187,7 +193,7 @@
 
                 var tempFile = Path.Combine(tempDirectory, Guid.NewGuid().ToString());
 
-                var si = new CreateProcessStartInfo("cmd.exe", string.Format(@"/K echo %USERNAME% > {0}", tempFile))
+                var si = new CreateProcessStartInfo("cmd.exe", string.Format(@"/C echo %USERNAME% > {0}", tempFile))
                 {
                     UserName = testUserName,
                     Password = testUser.Password.ToSecureString()
@@ -195,6 +201,9 @@
 
                 using (var p = launcher.LaunchProcess(si, jobObject))
                 {
+                    p.WaitForExit(3000);
+                    p.Kill();
+
                     var output = File.ReadAllText(tempFile);
                     Assert.Contains(testUserName, output);
                 }

@@ -4,6 +4,8 @@ using IronFoundry.Warden.PInvoke;
 using IronFoundry.Warden.Shared.Messaging;
 using IronFoundry.Warden.Utilities;
 using Xunit;
+using System.Threading;
+using Microsoft.Win32.SafeHandles;
 
 namespace IronFoundry.Warden.Test
 {
@@ -20,6 +22,8 @@ namespace IronFoundry.Warden.Test
             {
                 IntPtr pInt = process.Handle;
                 manager.StopProcesses();
+
+                process.WaitForExit(2000);
                 
                 uint exitCode = 0;
                 NativeMethods.GetExitCodeProcess(pInt, out exitCode);
