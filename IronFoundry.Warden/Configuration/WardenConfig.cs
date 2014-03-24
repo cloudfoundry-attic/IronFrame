@@ -2,7 +2,13 @@
 {
     using System.Configuration;
 
-    public class WardenConfig
+    public interface IWardenConfig
+    {
+        string ContainerBasePath { get; }
+        ushort TcpPort { get; }
+    }
+
+    public class WardenConfig : IWardenConfig
     {
         private readonly WardenSection configSection;
 

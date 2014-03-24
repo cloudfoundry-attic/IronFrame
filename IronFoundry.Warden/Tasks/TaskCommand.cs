@@ -8,6 +8,11 @@
         protected readonly IContainer container;
         protected readonly string[] arguments;
 
+        public TaskCommand()
+        {
+
+        }
+
         public TaskCommand(IContainer container, string[] arguments)
         {
             if (container == null)

@@ -6,10 +6,10 @@
     public interface IContainerManager : IDisposable
     {
         void DestroyContainer(ContainerHandle handle);
-        void DestroyContainer(IContainer container);
-        void AddContainer(IContainer container);
+        void DestroyContainer(IContainerClient container);
+        void AddContainer(IContainerClient container);
         void RestoreContainers(string containerRoot);
         IEnumerable<ContainerHandle> Handles { get; }
-        IContainer GetContainer(string handle);
+        IContainerClient GetContainer(string handle);
     }
 }

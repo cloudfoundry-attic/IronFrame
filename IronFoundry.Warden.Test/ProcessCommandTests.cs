@@ -18,7 +18,7 @@ namespace IronFoundry.Warden.Tasks.Test
         private IContainerUser user;
         private IContainerDirectory directory;
         private IProcess process;
-        private Container container;
+        private IContainer container;
         
         public ProcessCommandTests()
         {
@@ -29,7 +29,7 @@ namespace IronFoundry.Warden.Tasks.Test
 
             directory = Substitute.For<IContainerDirectory>();
             process = Substitute.For<IProcess>();
-            container = Substitute.For<Container>(handle, user, directory, new ProcessManager(handle));
+            container = Substitute.For<IContainer>();
         }
 
         [Fact]
@@ -104,7 +104,8 @@ namespace IronFoundry.Warden.Tasks.Test
             private string exePath;
             private string exeArguments;
 
-            public TestableProcessCommand(Container container, string workingDirectory, string exePath, string exeArguments, bool impersonate = false) : base(container, null, impersonate, null)
+            public TestableProcessCommand(IContainer container, string workingDirectory, string exePath, string exeArguments, bool impersonate = false) 
+                : base(container, null, impersonate, null)
             {
                 this.workingDirectory = workingDirectory;
                 this.exePath = exePath;

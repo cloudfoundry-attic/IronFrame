@@ -42,16 +42,20 @@
     </Compile>
     <Compile Include="Configuration\WardenConfig.cs" />
     <Compile Include="Configuration\WardenSection.cs" />
-    <Compile Include="Containers\Container.cs" />
     <Compile Include="Containers\ContainerDirectory.cs" />
     <Compile Include="Containers\ContainerHandle.cs" />
     <Compile Include="Containers\ContainerManager.cs" />
+    <Compile Include="Containers\ContainerProxy.cs" />
+    <Compile Include="Containers\ContainerResourceHolder.cs" />
+    <Compile Include="Containers\ContainerStub.cs" />
     <Compile Include="Containers\ContainerUser.cs" />
     <Compile Include="Containers\ContainerState.cs" />
+    <Compile Include="Containers\IContainer.cs" />
+    <Compile Include="Containers\IContainerClient.cs" />
     <Compile Include="Containers\IContainerManager.cs" />
     <Compile Include="Containers\InfoBuilder.cs" />
     <Compile Include="Containers\JobObject.cs" />
-    <Compile Include="Containers\ProcessLauncher\ProcessLauncher.cs" />
+    <Compile Include="Containers\ContainerHostLauncher.cs" />
     <Compile Include="Containers\SafeJobObjectHandle.cs" />
     <Compile Include="Handlers\ContainerRequestHandler.cs" />
     <Compile Include="Handlers\CopyRequestHandler.cs" />
@@ -94,8 +98,15 @@
     <Compile Include="PInvoke\GetThreadDesktop.cs" />
     <Compile Include="PInvoke\LogonUser.cs" />
     <Compile Include="PInvoke\NativeMethods.cs" />
+    <Compile Include="Tasks\CommandResult.cs" />
+    <Compile Include="Tasks\CommandRunner.cs" />
+    <Compile Include="Tasks\ICommandRunner.cs" />
+    <Compile Include="Tasks\RemoteCommand.cs" />
     <Compile Include="Utilities\ContainerExtensions.cs" />
+    <Compile Include="Utilities\IFileManager.cs" />
+    <Compile Include="Utilities\IFilePermissionManager.cs" />
     <Compile Include="Utilities\IProcess.cs" />
+    <Compile Include="Utilities\IUserManager.cs" />
     <Compile Include="Utilities\LocalPrincipalData.cs" />
     <Compile Include="Utilities\LoggedIEnumerableExtensionMethods.cs" />
     <Compile Include="Utilities\FirewallManager.cs" />
@@ -153,16 +164,12 @@
     <Compile Include="Utilities\LoggerExtensionMethods.cs" />
     <Compile Include="Utilities\MessageWriter.cs" />
     <Compile Include="Utilities\ProcessHelper.cs" />
-    <Compile Include="Utilities\ProcessManager.cs" />
+    <Compile Include="Utilities\ProcessStats.cs" />
     <Compile Include="Utilities\Statics.cs" />
     <Compile Include="Utilities\TempFile.cs" />
     <Compile Include="Server\Buffer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\IronFoundry.Warden.ContainerHost\IronFoundry.Warden.ContainerHost.csproj">
-      <Project>{586784cf-de8a-411f-ad99-18f00dc2a75b}</Project>
-      <Name>IronFoundry.Warden.ContainerHost</Name>
-    </ProjectReference>
     <ProjectReference Include="..\IronFoundry.Warden.Protocol\IronFoundry.Warden.Protocol.csproj">
       <Project>{ddd0537b-4afe-4beb-bf30-4df0a5367a18}</Project>
       <Name>IronFoundry.Warden.Protocol</Name>

@@ -5,12 +5,12 @@
     using System.Security.Principal;
     using System.Text.RegularExpressions;
     using IronFoundry.Warden.Utilities;
+using System.Security;
 
     public interface IContainerUser
     {
         string UserName { get; }
         NetworkCredential GetCredential();
-
         void Delete();
     }
 
@@ -45,7 +45,7 @@
                 throw new ArgumentException("uniqueId must be 8 or more word characters.");
             }
 
-            var principalManager = new LocalPrincipalManager();
+            var principalManager = new LocalPrincipalManager(new DesktopPermissionManager());
             if (shouldCreate)
             {
                 /*
@@ -75,6 +75,13 @@
             }
 
             AddDesktopPermission(this.userName);
+        }
+
+        // Recovers from UID and password
+        public ContainerUser(string userName, SecureString password)
+        {
+            this.userName = userName;
+            this.password = password.ToUnsecureString();
         }
 
         public string SID
@@ -164,14 +171,14 @@
         {
             if (Environment.UserInteractive == false)
             {
-                var desktopPermissionManager = new DesktopPermissionManager(userName);
-                desktopPermissionManager.AddDesktopPermission();
+                var desktopPermissionManager = new DesktopPermissionManager();
+                desktopPermissionManager.AddDesktopPermission(userName);
             }
         }
 
         private static void DeleteUser(string userName)
         {
-            var principalManager = new LocalPrincipalManager();
+            var principalManager = new LocalPrincipalManager(new DesktopPermissionManager());
             principalManager.DeleteUser(userName);
         }
 
@@ -179,8 +186,8 @@
         {
             if (Environment.UserInteractive == false)
             {
-                var desktopPermissionManager = new DesktopPermissionManager(userName);
-                desktopPermissionManager.RemoveDesktopPermission();
+                var desktopPermissionManager = new DesktopPermissionManager();
+                desktopPermissionManager.RemoveDesktopPermission(userName);
             }
         }
 

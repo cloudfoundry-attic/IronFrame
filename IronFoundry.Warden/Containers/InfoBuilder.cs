@@ -6,9 +6,9 @@
 
     public class InfoBuilder
     {
-        private readonly IContainer container;
+        private readonly IContainerClient container;
 
-        public InfoBuilder(IContainer container)
+        public InfoBuilder(IContainerClient container)
         {
             if (container == null)
             {

@@ -109,7 +109,7 @@ namespace IronFoundry.Warden.Shared.Messaging
                 }
                 else
                 {
-                    var rpcResponse = new JsonRpcResponse(arg["id"].ToString());
+                    var rpcResponse = new JsonRpcResponse<string>(arg["id"].ToString(), arg["result"].ToString());
                     tcs.SetResult(rpcResponse);
                 }
             }

@@ -6,14 +6,18 @@ using System.Threading.Tasks;
 
 namespace IronFoundry.Warden.Shared.Messaging
 {
-    public class JsonRpcResponse
+    /// <summary>
+    /// Represents a JsonRpcResponse but must have either a result filed so derive from JsonRcpResponse<TResult>
+    /// or from JsonRpcErrorResponse.
+    /// </summary>
+    public abstract class JsonRpcResponse
     {
-        public JsonRpcResponse()
+        private JsonRpcResponse()
         {
             this.jsonrpc = "2.0";
         }
 
-        public JsonRpcResponse(string id) : this()
+        protected JsonRpcResponse(string id) : this()
         {
             this.id = id;
         }
@@ -24,10 +28,6 @@ namespace IronFoundry.Warden.Shared.Messaging
 
     public class JsonRpcResponse<TResult> : JsonRpcResponse
     {
-        public JsonRpcResponse() : base()
-        {
-        }
-
         public JsonRpcResponse(string id, TResult result) : base(id)
         {
             this.result = result;
@@ -46,10 +46,6 @@ namespace IronFoundry.Warden.Shared.Messaging
 
     public class JsonRpcErrorResponse : JsonRpcResponse
     {
-        public JsonRpcErrorResponse() : base()
-        {
-        }
-
         public JsonRpcErrorResponse(string id) : base (id)
         {
             error = new JsonRpcErrorInfo();

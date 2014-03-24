@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using IronFoundry.Warden.Utilities;
 using Xunit;
 using System.Collections;
+using NSubstitute;
 
 namespace IronFoundry.Warden.Test
 {
@@ -19,10 +20,14 @@ namespace IronFoundry.Warden.Test
     public class LocalPrincipalManagerTests : IDisposable
     {
         private const string testUserName = "IFTestUserName";
-        private LocalPrincipalManager manager = new LocalPrincipalManager();
+        private LocalPrincipalManager manager;
+        private IDesktopPermissionManager permissionManager;
 
         public LocalPrincipalManagerTests()
         {
+            permissionManager = Substitute.For<IDesktopPermissionManager>();
+            manager = new LocalPrincipalManager(permissionManager);
+
             TryRemoveLocalUser(testUserName);
         }
 
@@ -80,6 +85,14 @@ namespace IronFoundry.Warden.Test
         void FindReturnsNullOnUnlocatableUser()
         {
             Assert.Null(manager.FindUser("ThisUserShouldNeverExist"));
+        }
+
+        [FactAdminRequired]
+        void WhenUserCreatedAddsDesktopPermissions()
+        {
+            ((IUserManager)manager).CreateUser(testUserName);
+
+            this.permissionManager.Received().AddDesktopPermission(testUserName);
         }
 
         #region Test Helpers

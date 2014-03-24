@@ -8,15 +8,14 @@ using Xunit;
 
 namespace IronFoundry.Warden.Test
 {
-    public class ProcessManagerStatsTests
+    public class ContainerStubStatsTests
     {
-        public class WhenManagingNoProcess
+        public class WhenManagingNoProcess : ContainerStubContext
         {
             ProcessStats stats;
 
-            public WhenManagingNoProcess()
+            public WhenManagingNoProcess() 
             {
-                var jobObject = Substitute.For<JobObject>();
                 jobObject.GetCpuStatistics().Returns(new CpuStatistics
                 {
                     TotalKernelTime = TimeSpan.Zero,
@@ -24,11 +23,7 @@ namespace IronFoundry.Warden.Test
                 });
                 jobObject.GetProcessIds().Returns(new int[0]);
 
-                var processHelper = Substitute.For<ProcessHelper>();
-
-                var manager = Substitute.For<ProcessManager>(jobObject, processHelper, new ProcessLauncher());
-                
-                stats = manager.GetProcessStats();
+                stats = containerStub.GetProcessStatistics();
             }
 
             [Fact]
@@ -56,7 +51,7 @@ namespace IronFoundry.Warden.Test
             }
         }
 
-        public class WhenManagingOneProcess
+        public class WhenManagingOneProcess : ContainerStubContext
         {
             ProcessStats stats;
             TimeSpan expectedTotalKernelTime = TimeSpan.FromSeconds(2);
@@ -67,7 +62,6 @@ namespace IronFoundry.Warden.Test
 
             public WhenManagingOneProcess()
             {
-                var jobObject = Substitute.For<JobObject>();
                 jobObject.GetCpuStatistics().Returns(new CpuStatistics
                 {
                     TotalKernelTime = expectedTotalKernelTime,
@@ -80,13 +74,10 @@ namespace IronFoundry.Warden.Test
                 process.TotalUserProcessorTime.Returns(expectedTotalUserTime);
                 process.PrivateMemoryBytes.Returns(expectedPrivateMemoryBytes);
                 process.WorkingSet.Returns(expectedWorkingSet);
+                
+                processHelper.GetProcesses(null).ReturnsForAnyArgs(new[] { process });
 
-                var processHelper = Substitute.For<ProcessHelper>();
-                processHelper.GetProcesses(null).ReturnsForAnyArgs(new [] { process });
-
-                var manager = Substitute.For<ProcessManager>(jobObject, processHelper, new ProcessLauncher());
-
-                stats = manager.GetProcessStats();
+                stats = containerStub.GetProcessStatistics();
             }
 
             [Fact]
@@ -114,7 +105,7 @@ namespace IronFoundry.Warden.Test
             }
         }
 
-        public class WhenManagingMultipleProcesses
+        public class WhenManagingMultipleProcesses : ContainerStubContext
         {
             ProcessStats stats;
             TimeSpan expectedTotalKernelTime = TimeSpan.FromSeconds(2);
@@ -143,7 +134,6 @@ namespace IronFoundry.Warden.Test
                 secondProcess.WorkingSet.Returns(expectedWorkingSet);
                 processes.Add(secondProcess);
 
-                var jobObject = Substitute.For<JobObject>();
                 jobObject.GetCpuStatistics().Returns(new CpuStatistics
                 {
                     TotalKernelTime = expectedTotalKernelTime + expectedTotalKernelTime,
@@ -151,12 +141,9 @@ namespace IronFoundry.Warden.Test
                 });
                 jobObject.GetProcessIds().Returns(new int[] { 12, 34 });
 
-                var processHelper = Substitute.For<ProcessHelper>();
                 processHelper.GetProcesses(null).ReturnsForAnyArgs(new[] { firstProcess, secondProcess });
 
-                var manager = Substitute.For<ProcessManager>(jobObject, processHelper, new ProcessLauncher());
-
-                stats = manager.GetProcessStats();
+                stats = containerStub.GetProcessStatistics();
             }
 
             [Fact]
@@ -177,7 +164,8 @@ namespace IronFoundry.Warden.Test
                 Assert.Equal(processes.Sum(p => p.PrivateMemoryBytes), stats.PrivateMemory);
             }
 
-            [Fact] void ReturnsAggregateWorkingSet()
+            [Fact]
+            void ReturnsAggregateWorkingSet()
             {
                 Assert.Equal(processes.Sum(p => p.WorkingSet), stats.WorkingSet);
             }

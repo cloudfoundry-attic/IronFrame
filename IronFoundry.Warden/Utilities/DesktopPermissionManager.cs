@@ -5,7 +5,13 @@
     using System.Security.AccessControl;
     using Asprosys.Security.AccessControl;
 
-    public class DesktopPermissionManager
+    public interface IDesktopPermissionManager
+    {
+        void AddDesktopPermission(string userName);
+        void RemoveDesktopPermission(string userName);
+    }
+
+    public class DesktopPermissionManager : IDesktopPermissionManager
     {
         // No need to close handle.
         // http://msdn.microsoft.com/en-us/library/windows/desktop/ms683225(v=vs.85).aspx
@@ -20,18 +26,11 @@
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern int GetCurrentThreadId();
 
-        private readonly string userName;
-
-        public DesktopPermissionManager(string userName)
+        public DesktopPermissionManager()
         {
-            if (userName.IsNullOrWhiteSpace())
-            {
-                throw new ArgumentNullException("userName");
-            }
-            this.userName = userName;
         }
 
-        public void AddDesktopPermission()
+        public void AddDesktopPermission(string userName)
         {
             IntPtr hWindowStation = GetProcessWindowStation();
             var ws = new WindowStationSecurity(hWindowStation, AccessControlSections.Access);
@@ -44,7 +43,7 @@
             ds.AcceptChanges();
         }
 
-        public void RemoveDesktopPermission()
+        public void RemoveDesktopPermission(string userName)
         {
             IntPtr hWindowStation = GetProcessWindowStation();
             var ws = new WindowStationSecurity(hWindowStation, AccessControlSections.Access);

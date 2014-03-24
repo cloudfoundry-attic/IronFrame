@@ -21,7 +21,7 @@
             this.containerRequest = (IContainerRequest)request;
         }
 
-        protected IContainer GetContainer()
+        protected IContainerClient GetContainer()
         {
             return containerManager.GetContainer(containerRequest.Handle);
         }
@@ -31,7 +31,7 @@
             // TODO complete info
             InfoResponse infoResponse = null;
 
-            IContainer container = GetContainer();
+            IContainerClient container = GetContainer();
             if (container == null)
             {
                 infoResponse = new InfoResponse();

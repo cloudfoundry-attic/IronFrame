@@ -34,23 +34,26 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="CommandRunnerTests.cs" />
     <Compile Include="ContainerHandleTests.cs" />
-    <Compile Include="ContainerTests.cs" />
+    <Compile Include="ContainerProxyTest.cs" />
+    <Compile Include="ContainerResourceHolderTest.cs" />
+    <Compile Include="ContainerStubTests.cs" />
     <Compile Include="Messaging\MessageTransportTest.cs" />
     <Compile Include="Messaging\MessagingClientTest.cs" />
     <Compile Include="Messaging\SecureStringJsonConverterTest.cs" />
     <Compile Include="ProcessCommandTests.cs" />
     <Compile Include="ProcessHelperTest.cs" />
-    <Compile Include="ProcessManagerStartProcessTest.cs" />
-    <Compile Include="ProcessManagerTests.cs" />
+    <Compile Include="ProcessHostLauncherTests.cs" />
+    <Compile Include="TestSupport\Asserts.cs" />
     <Compile Include="TestSupport\FactAdminRequired.cs" />
     <Compile Include="Messaging\MessageDispatcherTest.cs" />
-    <Compile Include="ProcessLauncherTest.cs" />
     <Compile Include="JobObjectTests.cs" />
     <Compile Include="LocalPrincipalManagerTests.cs" />
-    <Compile Include="ProcessManagerStatsTests.cs" />
+    <Compile Include="ContainerStubStatsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestSupport\InputSource.cs" />
+    <Compile Include="TestSupport\NSubstituteExtensions.cs" />
     <Compile Include="TestSupport\TestUserHolder.cs" />
   </ItemGroup>
   <ItemGroup>

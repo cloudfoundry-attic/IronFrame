@@ -10,8 +10,8 @@
 
     public class ContainerManager : IContainerManager
     {
-        private readonly ConcurrentDictionary<ContainerHandle, IContainer> containers =
-            new ConcurrentDictionary<ContainerHandle, IContainer>();
+        private readonly ConcurrentDictionary<ContainerHandle, IContainerClient> containers =
+            new ConcurrentDictionary<ContainerHandle, IContainerClient>();
 
         private readonly Logger log = LogManager.GetCurrentClassLogger();
 
@@ -20,7 +20,7 @@
             get { return containers.Keys; }
         }
 
-        public void AddContainer(IContainer container)
+        public void AddContainer(IContainerClient container)
         {
             if (!containers.TryAdd(container.Handle, container))
             {
@@ -28,10 +28,10 @@
             }
         }
 
-        public IContainer GetContainer(string handle)
+        public IContainerClient GetContainer(string handle)
         {
             var cHandle = new ContainerHandle(handle);
-            IContainer retrieved;
+            IContainerClient retrieved;
             if (!containers.TryGetValue(cHandle, out retrieved))
             {
                 // TODO: throw exception with message that matches ruby warden
@@ -53,12 +53,12 @@
                             var handle = Path.GetFileName(dirPath);
                             try
                             {
-                                var container = Container.Restore(handle, ContainerState.Active);
+                                var container = ContainerProxy.Restore(handle, ContainerState.Active);
                                 containers.TryAdd(container.Handle, container);
                             }
                             catch (Exception ex)
                             {
-                                Container.CleanUp(handle);
+                                ContainerProxy.CleanUp(handle);
                                 log.ErrorException(ex);
                             }
                         }
@@ -85,7 +85,7 @@
                 });
         }
 
-        public void DestroyContainer(IContainer container)
+        public void DestroyContainer(IContainerClient container)
         {
             DestroyContainer(container.Handle);
         }
@@ -97,7 +97,7 @@
                 throw new ArgumentNullException("handle");
             }
 
-            IContainer removed;
+            IContainerClient removed;
             if (containers.TryRemove(handle, out removed))
             {
                 try

@@ -7,7 +7,7 @@
     using NLog;
     using System.Runtime.InteropServices;
 
-    public class LocalPrincipalManager
+    public class LocalPrincipalManager : IronFoundry.Warden.Utilities.IUserManager
     {
         private const uint COM_EXCEPT_UNKNOWN_DIRECTORY_OBJECT = 0x80005004;
 
@@ -17,6 +17,12 @@
         private const string IIS_IUSRS_NAME = "IIS_IUSRS";
 
         private readonly string directoryPath = String.Format("WinNT://{0}", Environment.MachineName);
+        private IDesktopPermissionManager permissionManager;
+
+        public LocalPrincipalManager(IDesktopPermissionManager permissionManager)
+        {
+            this.permissionManager = permissionManager;
+        }
 
         public string FindUser(string userName)
         {
@@ -126,6 +132,13 @@
             }
 
             return null;
+        }
+
+        System.Net.NetworkCredential IUserManager.CreateUser(string userName)
+        {
+            var data = this.CreateUser(userName);
+            this.permissionManager.AddDesktopPermission(userName);
+            return new System.Net.NetworkCredential(data.UserName, data.Password);
         }
     }
 }

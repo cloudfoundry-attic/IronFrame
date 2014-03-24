@@ -46,6 +46,9 @@
       <Link>CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="Messaging\ContainerDestroyMessage.cs" />
+    <Compile Include="Messaging\ContainerInitializeMessage.cs" />
+    <Compile Include="Messaging\ContainerStateMessage.cs" />
     <Compile Include="Messaging\CreateProcessMessage.cs" />
     <Compile Include="Messaging\CreateProcessStartInfo.cs" />
     <Compile Include="Messaging\JsonRpcRequest.cs" />
@@ -54,6 +57,7 @@
     <Compile Include="Messaging\MessageTransport.cs" />
     <Compile Include="Messaging\MessagingClient.cs" />
     <Compile Include="Messaging\MessagingException.cs" />
+    <Compile Include="Messaging\RunCommandMessage.cs" />
     <Compile Include="Messaging\SecureStringJsonConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

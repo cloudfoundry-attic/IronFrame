@@ -61,7 +61,7 @@
 
             if (states.Contains(containerState))
             {
-                state = containerState;
+                state = new ContainerState(containerState);
             }
             else
             {

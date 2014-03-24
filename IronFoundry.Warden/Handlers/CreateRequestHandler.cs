@@ -7,6 +7,7 @@
     using Containers;
     using NLog;
     using Protocol;
+    using IronFoundry.Warden.Configuration;
 
     public class CreateRequestHandler : ContainerRequestHandler
     {
@@ -23,13 +24,12 @@
         {
             return Task.Run<Response>(() =>
                 {
-                    // before
+                    var resources = ContainerResourceHolder.Create(new WardenConfig());
 
-                    // do
-                    IContainer container = new Container();
+                    var container = new ContainerProxy(new ContainerHostLauncher());
+                    container.Initialize(resources);
+                    
                     containerManager.AddContainer(container);
-
-                    container.Initialize();
 
                     ProcessBindMounts(request.BindMounts, container.ContainerUserName);
 

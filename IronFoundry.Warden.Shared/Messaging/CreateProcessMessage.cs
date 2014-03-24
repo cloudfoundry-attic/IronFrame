@@ -6,10 +6,13 @@ using Newtonsoft.Json;
 
 namespace IronFoundry.Warden.Shared.Messaging
 {
+    [Obsolete]
     public class CreateProcessRequest : JsonRpcRequest<CreateProcessStartInfo>
     {
+        public static string MethodName = "CreateProcess";
+
         public CreateProcessRequest()
-            : base("CreateProcess")
+            : base(MethodName)
         {
         }
 
@@ -20,6 +23,7 @@ namespace IronFoundry.Warden.Shared.Messaging
         }
     }
 
+    [Obsolete]
     public class CreateProcessResult
     {
         public int Id { get; set; }
@@ -27,24 +31,22 @@ namespace IronFoundry.Warden.Shared.Messaging
         public int ExitCode { get; set; }
     }
 
+    [Obsolete]
     public class CreateProcessResponse : JsonRpcResponse<CreateProcessResult>
     {
-        public CreateProcessResponse()
-            : base()
-        {
-        }
-
         public CreateProcessResponse(string id, CreateProcessResult result)
             : base(id, result)
         {
         }
     }
 
+    [Obsolete]
     public class GetProcessExitInfoParams
     {
         public int Id { get; set; }
     }
 
+    [Obsolete]
     public class GetProcessExitInfoResult
     {
         public int ExitCode { get; set; }
@@ -53,27 +55,26 @@ namespace IronFoundry.Warden.Shared.Messaging
         public string StandardOutputTail { get; set; }
     }
 
+    [Obsolete]
     public class GetProcessExitInfoRequest : JsonRpcRequest<GetProcessExitInfoParams>
     {
+        public static string MethodName = "GetProcessExitInfo";
         public GetProcessExitInfoRequest()
-            : base("GetProcessExitInfo")
+            : base(MethodName)
         {
         }
 
         public GetProcessExitInfoRequest(GetProcessExitInfoParams @params)
-            : base("GetProcessExitInfo")
+            : base(MethodName)
         {
             this.@params = @params;
         }
     }
 
+    [Obsolete]
     public class GetProcessExitInfoResponse : JsonRpcResponse<GetProcessExitInfoResult>
     {
-        public GetProcessExitInfoResponse()
-            : base()
-        {
-        }
-
+       
         public GetProcessExitInfoResponse(string id, GetProcessExitInfoResult result)
             : base(id, result)
         {

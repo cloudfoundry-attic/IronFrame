@@ -6,6 +6,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using IronFoundry.Warden.Shared.Messaging;
+using IronFoundry.Warden.Containers;
+using IronFoundry.Warden.Tasks;
+using IronFoundry.Warden.Utilities;
 
 namespace IronFoundry.Warden.ContainerHost
 {
@@ -48,16 +51,62 @@ namespace IronFoundry.Warden.ContainerHost
     {
         static ManualResetEvent exitEvent = new ManualResetEvent(false);
         static ConcurrentDictionary<int, ProcessContext> processContexts = new ConcurrentDictionary<int, ProcessContext>();
+        static ContainerStub container;
 
         static void Main(string[] args)
         {
             var input = Console.In;
             var output = Console.Out;
+
+            var jobObject = new JobObject(args[0]);
+
+            container = new ContainerStub(jobObject, BuildCommandRunner(), new ProcessHelper());
+
             using (var transport = new MessageTransport(input, output))
             {
                 var dispatcher = new MessageDispatcher();
-                dispatcher.RegisterMethod<CreateProcessRequest>("CreateProcess", CreateProcessHandler);
-                dispatcher.RegisterMethod<GetProcessExitInfoRequest>("GetProcessExitInfo", GetProcessExitInfoHandler);
+
+                dispatcher.RegisterMethod<ContainerInitializeRequest>(ContainerInitializeRequest.MethodName, (r) => 
+                {
+                    var containerUser = new ContainerUser(r.@params.userName, r.@params.userPassword);
+
+                    container.Initialize(
+                        r.@params.containerDirectoryPath,
+                        r.@params.containerHandle,
+                        containerUser);
+
+                    return Task.FromResult<object>(new ContainerInitializeResponse(r.id));
+                });
+
+                dispatcher.RegisterMethod<ContainerStateRequest>(ContainerStateRequest.MethodName, (r) => 
+                {
+                    return Task.FromResult<object>(
+                        new ContainerStateResponse(r.id, container.State.ToString()));
+                });
+
+                dispatcher.RegisterMethod<RunCommandRequest>(RunCommandRequest.MethodName, async (r) =>
+                {
+                    var remoteCommand = new RemoteCommand(r.@params.impersonate, r.@params.command, r.@params.arguments);
+                    var result = await container.RunCommandAsync(remoteCommand);
+
+                    return new RunCommandResponse(
+                        r.id, 
+                        new RunCommandResponseData()
+                        {
+                            exitCode = result.ExitCode,
+                            stdErr = result.StdErr,
+                            stdOut = result.StdOut,
+                        });
+                    
+                });
+
+                dispatcher.RegisterMethod<ContainerDestroyRequest>(ContainerDestroyRequest.MethodName, (r) =>
+                {
+                    container.Destroy();
+                    container = null;
+
+                    return Task.FromResult<object>(new ContainerDestroyResponse(r.id));
+                });
 
                 transport.SubscribeRequest(
                     async (request) =>
@@ -70,94 +119,19 @@ namespace IronFoundry.Warden.ContainerHost
             }
         }
 
-        private static Task<object> CreateProcessHandler(CreateProcessRequest request)
+        private static CommandRunner BuildCommandRunner()
         {
-            //Debug.Assert(false);
+            var commandRunner = new CommandRunner();
 
-            var createProcessStartInfo = request.@params;
-            var processContext = new ProcessContext();
-            var process = new Process();
-
-            process.StartInfo = ToProcessStartInfo(createProcessStartInfo);
-            process.ErrorDataReceived += processContext.HandleErrorData;
-            process.OutputDataReceived += processContext.HandleOutputData;
-            process.Exited += processContext.HandleProcessExit;
-
-            process.EnableRaisingEvents = true;
-
-            process.Start();
-
-            process.BeginErrorReadLine();
-            process.BeginOutputReadLine();
-            
-            // Through much debugging we discovered that the combination of the ruby.exe process
-            // and the DEA staging scripts require a new-line in order to run the script successfully.
-            // This is a total hack and we should determine if we can work around the problem another way.
-            process.StandardInput.WriteLine(Environment.NewLine);
-            
-            processContexts[process.Id] = processContext;
-
-            return Task.FromResult<object>(
-                new CreateProcessResponse(
-                    request.id,
-                    new CreateProcessResult
-                    {
-                        Id = process.Id,
-                    }));
+            commandRunner.RegisterCommand("exe", (shouldImpersonate, arguments) => { return new ExeCommand(container, arguments, shouldImpersonate, null); });
+            commandRunner.RegisterCommand("mkdir", (shouldImpersonate, arguments) => { return new MkdirCommand(container, arguments); });
+            commandRunner.RegisterCommand("iis", (shouldImpersonate, arguments) => { return new WebApplicationCommand(container, arguments, shouldImpersonate, null); });
+            commandRunner.RegisterCommand("ps1", (shouldImpersonate, arguments) => { return new PowershellCommand(container, arguments, shouldImpersonate, null); });
+            commandRunner.RegisterCommand("replace-tokens", (shouldImpersonate, arguments) => { return new ReplaceTokensCommand(container, arguments); });
+            commandRunner.RegisterCommand("tar", (shouldImpersonate, arguments) => { return new TarCommand(container, arguments); });
+            commandRunner.RegisterCommand("touch", (shouldImpersonate, arguments) => { return new TouchCommand(container, arguments); });
+            commandRunner.RegisterCommand("unzip", (shouldImpersonate, arguments) => { return new UnzipCommand(container, arguments); });
+            return commandRunner;
         }
-
-        private static Task<object> GetProcessExitInfoHandler(GetProcessExitInfoRequest request)
-        {
-            //Debug.Assert(false);
-
-            ProcessContext processContext;
-            if (processContexts.TryGetValue(request.@params.Id, out processContext))
-            {
-                return Task.FromResult<object>(
-                    new GetProcessExitInfoResponse(
-                        request.id,
-                        new GetProcessExitInfoResult
-                        {
-                            ExitCode = processContext.ExitCode,
-                            HasExited = processContext.HasExited,
-                            StandardError = processContext.StandardError.ToString(),
-                            StandardOutputTail = String.Join("\n", processContext.StandardOutputTail),
-                        }));
-            }
-            else
-            {
-                throw new Exception("The process doesn't exist.");
-            }
-        }
-
-        private static ProcessStartInfo ToProcessStartInfo(CreateProcessStartInfo createProcessStartInfo)
-        {
-            var si = new ProcessStartInfo()
-            {
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                LoadUserProfile = false,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                RedirectStandardInput = true,
-                WorkingDirectory = createProcessStartInfo.WorkingDirectory,
-                FileName = createProcessStartInfo.FileName,
-                Arguments = createProcessStartInfo.Arguments,
-                UserName = createProcessStartInfo.UserName,
-                Password = createProcessStartInfo.Password,
-            };
-
-            if (createProcessStartInfo.EnvironmentVariables.Count > 0)
-            {
-                si.EnvironmentVariables.Clear();
-                foreach (string key in createProcessStartInfo.EnvironmentVariables.Keys)
-                {
-                    si.EnvironmentVariables[key] = createProcessStartInfo.EnvironmentVariables[key];
-                }
-            }
-
-            return si;
-        }
-
     }
 }

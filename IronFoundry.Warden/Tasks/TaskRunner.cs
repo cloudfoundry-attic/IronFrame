@@ -18,15 +18,13 @@
         private readonly Logger log = LogManager.GetCurrentClassLogger();
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
 
-        private readonly IContainer container;
+        private readonly IContainerClient container;
         private readonly ITaskRequest request;
         private readonly TaskCommandDTO[] commands;
 
         private ConcurrentQueue<TaskCommandStatus> jobStatusQueue;
 
-        private bool runningAsync = false;
-
-        public TaskRunner(IContainer container, ITaskRequest request)
+        public TaskRunner(IContainerClient container, ITaskRequest request)
         {
             if (container == null)
             {
@@ -72,9 +70,17 @@
 
         public event EventHandler<JobStatusEventArgs> JobStatusAvailable;
 
+        protected virtual void OnJobStatusAvailable(JobStatusEventArgs e)
+        {
+            var handlers = JobStatusAvailable;
+            if (handlers != null)
+            {
+                handlers(this, e);
+            }
+        }
+
         public Task<IJobResult> RunAsync()
         {
-            runningAsync = true;
             jobStatusQueue = new ConcurrentQueue<TaskCommandStatus>();
             return DoRunAsync();
         }
@@ -86,56 +92,14 @@
 
         public IJobResult Run()
         {
-            bool shouldImpersonate = !request.Privileged;
-
-            var commandFactory = new TaskCommandFactory(container, shouldImpersonate, request.Rlimits);
-            var results = new List<TaskCommandResult>();
-
-            foreach (TaskCommandDTO cmd in commands)
-            {
-                if (cts.IsCancellationRequested)
-                {
-                    break;
-                }
-
-                TaskCommand taskCommand = commandFactory.Create(cmd.Command, cmd.Args);
-                try
-                {
-                    TaskCommandResult result = null;
-
-                    if (taskCommand is ProcessCommand)
-                    {
-                        // NB: ProcessCommands take care of their own impersonation
-                        result = taskCommand.Execute();
-                    }
-                    else
-                    {
-                        using (container.GetExecutionContext(shouldImpersonate))
-                        {
-                            result = taskCommand.Execute();
-                        }
-                    }
-
-                    results.Add(result);
-                }
-                catch (Exception ex)
-                {
-                    log.TraceException("Error running command", ex);
-                    results.Add(new TaskCommandResult(1, null, ex.Message));
-                    break;
-                }
-            }
-
-            return FlattenResults(results);
+            return DoRunAsync().GetAwaiter().GetResult();
         }
 
         private async Task<IJobResult> DoRunAsync()
         {
             bool shouldImpersonate = !request.Privileged;
 
-            var commandFactory = new TaskCommandFactory(container, shouldImpersonate, request.Rlimits);
-            var results = new List<TaskCommandResult>();
-
+            var results = new List<CommandResult>();
             foreach (TaskCommandDTO cmd in commands)
             {
                 if (cts.IsCancellationRequested)
@@ -143,36 +107,14 @@
                     break;
                 }
 
-                TaskCommand taskCommand = commandFactory.Create(cmd.Command, cmd.Args);
-
                 try
                 {
-                    var processCommand = taskCommand as ProcessCommand;
-                    if (runningAsync && processCommand != null)
-                    {
-                        // NB: ProcessCommands take care of their own impersonation
-                        processCommand.StatusAvailable += processCommand_StatusAvailable;
-                        try
-                        {
-                            TaskCommandResult result = await processCommand.ExecuteAsync();
-                            results.Add(result);
-                        }
-                        finally
-                        {
-                            processCommand.StatusAvailable -= processCommand_StatusAvailable;
-                        }
-                    }
-                    else
-                    {
-                        using (container.GetExecutionContext(shouldImpersonate))
-                        {
-                            results.Add(taskCommand.Execute());
-                        }
-                    }
+                    var commandResult = await container.RunCommandAsync( new RemoteCommand(shouldImpersonate, cmd.Command, cmd.Args));
+                    results.Add(commandResult);
                 }
                 catch (Exception ex)
                 {
-                    results.Add(new TaskCommandResult(1, null, ex.Message));
+                    results.Add(new CommandResult() { ExitCode = 1, StdOut = null, StdErr = ex.Message });
                     break;
                 }
             }
@@ -180,30 +122,7 @@
             return FlattenResults(results);
         }
 
-        private void processCommand_StatusAvailable(object sender, TaskCommandStatusEventArgs e)
-        {
-            TaskCommandStatus status = e.Status;
-            if (status == null)
-            {
-                throw new InvalidOperationException("status");
-            }
-
-            if (JobStatusAvailable == null)
-            {
-                jobStatusQueue.Enqueue(status); // TODO: what if too much status?
-            }
-            else
-            {
-                jobStatusQueue.Enqueue(status);
-                TaskCommandStatus queued;
-                while ((!jobStatusQueue.IsEmpty) && jobStatusQueue.TryDequeue(out queued))
-                {
-                    JobStatusAvailable(this, new JobStatusEventArgs(status));
-                }
-            }
-        }
-
-        private static IJobResult FlattenResults(IEnumerable<TaskCommandResult> results)
+        private static IJobResult FlattenResults(IEnumerable<CommandResult> results)
         {
             var stdout = new StringBuilder();
             var stderr = new StringBuilder();
@@ -211,8 +130,8 @@
             int lastExitCode = 0;
             foreach (var result in results)
             {
-                stdout.SmartAppendLine(result.Stdout);
-                stderr.SmartAppendLine(result.Stderr);
+                stdout.SmartAppendLine(result.StdOut);
+                stderr.SmartAppendLine(result.StdErr);
                 if (result.ExitCode != 0)
                 {
                     lastExitCode = result.ExitCode;
@@ -220,6 +139,7 @@
                 }
             }
 
+            //bb: Introduce new result type to keep IJobResult and TaskCommandXXX separate
             return new TaskCommandResult(lastExitCode, stdout.ToString(), stderr.ToString());
         }
     }

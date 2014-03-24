@@ -1,0 +1,133 @@
+﻿using IronFoundry.Warden.Configuration;
+using IronFoundry.Warden.Containers;
+using IronFoundry.Warden.PInvoke;
+using NSubstitute;
+using System;
+using System.Collections.Generic;
+using System.DirectoryServices.AccountManagement;
+using System.IO;
+using System.Linq;
+using System.Security.Principal;
+using System.Text;
+using System.Threading.Tasks;
+using Xunit;
+
+namespace IronFoundry.Warden.Test
+{
+    public class ContainerResourceHolderTest
+    {
+        public class ResourceHolderContext : IDisposable
+        {
+            protected readonly IWardenConfig wardenConfig;
+            protected string tempDir;
+
+            public ResourceHolderContext()
+            {
+                wardenConfig = Substitute.For<IWardenConfig>();
+                tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+                Directory.CreateDirectory(tempDir);
+                wardenConfig.ContainerBasePath.Returns(tempDir);
+            }
+
+            virtual public void Dispose()
+            {
+                if (Directory.Exists(tempDir))
+                {
+                    Directory.Delete(tempDir, true);
+                }
+            }
+        }
+
+        public class WhenCreatingHolder : ResourceHolderContext
+        {
+            private IResourceHolder containerResources;
+            public WhenCreatingHolder()
+            {
+                containerResources = ContainerResourceHolder.Create(wardenConfig);
+            }
+
+            public override void Dispose()
+            {
+                var principal = UserPrincipal.FindByIdentity(new PrincipalContext(ContextType.Machine), containerResources.User.UserName);
+                if (principal != null)
+                {
+                    principal.Delete();
+                }
+
+                base.Dispose();
+            }
+
+            [Fact]
+            public void CreateProducesContainerResourcesReference()
+            {
+                
+                Assert.NotNull(containerResources);
+            }
+
+            [Fact]
+            public void CreatesContainerHandle()
+            {
+                Assert.NotEmpty(containerResources.Handle.ToString());
+            }
+
+            [Fact]
+            public void CreatesUserBasedOnHandle()
+            {
+                Assert.Equal("warden_" + containerResources.Handle.ToString(), containerResources.User.UserName);
+            }
+
+            [Fact]
+            public void CreateDirectoryForContainer()
+            {
+                Assert.Equal(Path.Combine(tempDir, containerResources.Handle.ToString()), containerResources.Directory.FullName);
+            }
+
+            [Fact]
+            public void CreatesJobObjectBasedOnHandle()
+            {
+                using (var jobObjectHandle = new SafeJobObjectHandle(NativeMethods.OpenJobObject(NativeMethods.JobObjectAccessRights.AllAccess, false, containerResources.Handle.ToString())))
+                {
+                    Assert.False(jobObjectHandle.IsInvalid);
+                }
+            }
+        }
+
+        public class GivenDestroyedHolder
+        {
+            private ContainerHandle handle;
+            private IContainerUser user;
+            private IContainerDirectory directory;
+            private JobObject jobObject;
+            private ContainerResourceHolder resourceHolder;
+
+            public GivenDestroyedHolder()
+            {
+                handle = Substitute.For<ContainerHandle>();
+                user = Substitute.For<IContainerUser>();
+                directory = Substitute.For<IContainerDirectory>();
+                jobObject = Substitute.For<JobObject>();
+
+                resourceHolder = new ContainerResourceHolder(handle, user, directory, jobObject);
+                resourceHolder.Destroy();
+            }
+
+            [Fact]
+            public void DisposesJobObject()
+            {
+                jobObject.Received().Dispose();
+            }
+
+            [Fact]
+            public void RequestsRemoveUser()
+            {
+                user.Received().Delete();
+            }
+
+            [Fact]
+            public void RequestsDeleteDirectory()
+            {
+                directory.Received().Delete();
+            }
+        }
+    }
+}

@@ -284,6 +284,10 @@ namespace IronFoundry.Warden.Test.ContainerHost
 
         class CustomResponse : JsonRpcResponse<string>
         {
+            public CustomResponse() : base("", "")
+            {
+
+            }
         }
 
     }

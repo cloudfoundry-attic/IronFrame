@@ -15,21 +15,28 @@
     public class ContainerDirectory : IContainerDirectory
     {
         private readonly DirectoryInfo containerDirectory;
+        private readonly IWardenConfig wardenConfig;
 
-        public ContainerDirectory(ContainerHandle handle, IContainerUser user, bool shouldCreate = false)
+        public ContainerDirectory(ContainerHandle handle, IContainerUser user, bool shouldCreate = false) : this(handle, user, shouldCreate, new WardenConfig()) 
+        {
+        }
+
+        public ContainerDirectory(ContainerHandle handle, IContainerUser user, bool shouldCreate, IWardenConfig wardenConfig)
         {
             if (handle == null)
             {
                 throw new ArgumentNullException("handle");
             }
 
+            this.wardenConfig = wardenConfig;
+
             if (shouldCreate)
             {
-                this.containerDirectory = CreateContainerDirectory(handle, user);
+                this.containerDirectory = CreateContainerDirectory(wardenConfig, handle, user);
             }
             else
             {
-                this.containerDirectory = FindContainerDirectory(handle);
+                this.containerDirectory = FindContainerDirectory(wardenConfig, handle);
             }
         }
 
@@ -42,7 +49,8 @@
         {
             try
             {
-                var items = GetContainerDirectoryInfo(new ContainerHandle(handle));
+                var config = new WardenConfig();
+                var items = GetContainerDirectoryInfo(config, new ContainerHandle(handle));
                 Directory.Delete(items.Item2, true);
             }
             catch { }
@@ -63,9 +71,9 @@
             get { return containerDirectory.FullName; }
         }
 
-        private static DirectoryInfo CreateContainerDirectory(ContainerHandle handle, IContainerUser user)
+        private static DirectoryInfo CreateContainerDirectory(IWardenConfig config, ContainerHandle handle, IContainerUser user)
         {
-            var dirInfo = GetContainerDirectoryInfo(handle);
+            var dirInfo = GetContainerDirectoryInfo(config, handle);
 
             var inheritanceFlags = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
             var accessRule = new FileSystemAccessRule(user.UserName, FileSystemRights.FullControl, inheritanceFlags,
@@ -79,9 +87,9 @@
             return Directory.CreateDirectory(containerDirectory, security);
         }
 
-        private static DirectoryInfo FindContainerDirectory(ContainerHandle handle)
+        private static DirectoryInfo FindContainerDirectory(IWardenConfig config, ContainerHandle handle)
         {
-            var dirInfo = GetContainerDirectoryInfo(handle);
+            var dirInfo = GetContainerDirectoryInfo(config, handle);
             if (Directory.Exists(dirInfo.Item2))
             {
                 return new DirectoryInfo(dirInfo.Item2);
@@ -92,10 +100,8 @@
             }
         }
 
-        private static Tuple<DirectoryInfo, string> GetContainerDirectoryInfo(ContainerHandle handle)
+        private static Tuple<DirectoryInfo, string> GetContainerDirectoryInfo(IWardenConfig config, ContainerHandle handle)
         {
-            var config = new WardenConfig();
-
             string containerBasePath = config.ContainerBasePath;
             string containerDirectory = Path.Combine(containerBasePath, handle);
 
