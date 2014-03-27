@@ -117,7 +117,7 @@ namespace IronFoundry.Warden.Containers
 
         public System.Security.Principal.WindowsImpersonationContext GetExecutionContext(bool shouldImpersonate = false)
         {
-            throw new NotImplementedException();
+            return Impersonator.GetContext(user, shouldImpersonate);
         }
 
         public ProcessStats GetProcessStatistics()
@@ -143,12 +143,6 @@ namespace IronFoundry.Warden.Containers
                 PrivateMemory = privateMemory,
                 WorkingSet = workingSet,
             };
-        }
-
-        // Deprecating
-        public void Initialize()
-        {
-            throw new NotImplementedException();
         }
 
         public void Initialize(string containerDirectory, string containerHandle, IContainerUser userInfo)

@@ -25,7 +25,6 @@ namespace IronFoundry.Warden.Containers
         void Initialize(string containerDirectory, string containerHandle, IContainerUser userInfo);
         void Stop();
 
-        void Initialize(); // Deprecating
-        int ReservePort(int requestedPort); // Deprecating
+        int ReservePort(int requestedPort); 
     }
 }
