@@ -62,5 +62,13 @@ namespace IronFoundry.Warden.Test.TestSupport
                 }
             }
         }
+
+        public override string ReadLine()
+        {
+            lock (syncRoot)
+            {
+                return ReadLineAsync().GetAwaiter().GetResult();
+            }
+        }
     }
 }

@@ -31,10 +31,10 @@ namespace IronFoundry.Warden.Test.ContainerHost
         {
             var outputSink = new TaskCompletionSource<string>();
             var outputWriter = Substitute.For<TextWriter>();
-            outputWriter.WriteLineAsync("").ReturnsForAnyArgs(callInfo =>
+            outputWriter.When(x => x.WriteLine(Arg.Any<string>())).Do(callInfo =>
             {
                 outputSink.SetResult(callInfo.Arg<string>());
-                return Task.FromResult(0);
+                return;
             });
 
             using (var transporter = new MessageTransport(inputSource, outputWriter))

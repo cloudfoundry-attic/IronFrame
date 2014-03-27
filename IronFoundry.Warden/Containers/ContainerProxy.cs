@@ -41,8 +41,7 @@ namespace IronFoundry.Warden.Containers
         {
             get
             {
-                string state = GetRemoteContainerState().GetAwaiter().GetResult();
-                return state;
+                return GetRemoteContainerState().GetAwaiter().GetResult();
             }
         }
 

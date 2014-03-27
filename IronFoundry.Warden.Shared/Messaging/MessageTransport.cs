@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using IronFoundry.Warden.Shared.Concurrency;
 
 namespace IronFoundry.Warden.Shared.Messaging
 {
@@ -17,6 +18,7 @@ namespace IronFoundry.Warden.Shared.Messaging
         private List<Action<Exception>> errorSubscribers = new List<Action<Exception>>();
         private CancellationTokenSource tokenSource = new CancellationTokenSource();
         private volatile Task readTask;
+        private readonly AsyncLock writeLock = new AsyncLock();
 
         public MessageTransport(TextReader reader, TextWriter writer)
         {
@@ -120,10 +122,13 @@ namespace IronFoundry.Warden.Shared.Messaging
             }
         }
 
-        public Task PublishAsync(JObject message)
+        public async Task PublishAsync(JObject message)
         {
             string text = message.ToString(Formatting.None);
-            return writer.WriteLineAsync(text);
+            using(var releaser = await writeLock.LockAsync())
+            {
+                writer.WriteLine(text);
+            }
         }
 
         public void Start()
