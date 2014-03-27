@@ -45,6 +45,7 @@
     <Compile Include="..\shared\CommonAssemblyInfo.cs">
       <Link>CommonAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Concurrency\AsyncLock.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Messaging\ContainerDestroyMessage.cs" />
     <Compile Include="Messaging\ContainerInitializeMessage.cs" />
