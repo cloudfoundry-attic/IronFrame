@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IronFoundry.Warden.Utilities
+namespace IronFoundry.Warden.Shared.Data
 {
     public struct ProcessStats
     {

@@ -61,7 +61,7 @@ namespace IronFoundry.Warden.Test
 
     public class ContainerStubTests 
     {
-        public class WhenCreated : ContainerStubContext
+        public class BeforeInitialized : ContainerStubContext
         {
             [Fact]
             public void StateIsBorn()
@@ -86,7 +86,6 @@ namespace IronFoundry.Warden.Test
                 Assert.Throws<NotImplementedException>(() => containerStub.ReservePort(100));
             }
         }
-
 
         public class WhenInitialzed : ContainerStubContext
         {

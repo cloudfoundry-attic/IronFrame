@@ -22,7 +22,7 @@
         {
             log.Trace("Handle: '{0}' JobId: '{1}'", request.Handle, request.JobId);
 
-            return Task.Run<Response>(() =>
+            return Task.Run<Response>(async () =>
                 {
                     LinkResponse response = null;
 
@@ -47,7 +47,7 @@
                         };
                     }
 
-                    response.Info = BuildInfoResponse();
+                    response.Info = await BuildInfoResponse();
 
                     return response;
                 });

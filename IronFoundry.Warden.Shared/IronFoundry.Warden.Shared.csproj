@@ -46,10 +46,12 @@
       <Link>CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Concurrency\AsyncLock.cs" />
+    <Compile Include="Data\ProcessStats.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Messaging\ContainerDestroyMessage.cs" />
     <Compile Include="Messaging\ContainerInitializeMessage.cs" />
     <Compile Include="Messaging\ContainerStateMessage.cs" />
+    <Compile Include="Messaging\ContainerStatisticsMessage.cs" />
     <Compile Include="Messaging\CreateProcessMessage.cs" />
     <Compile Include="Messaging\CreateProcessStartInfo.cs" />
     <Compile Include="Messaging\JsonRpcRequest.cs" />
@@ -65,6 +67,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

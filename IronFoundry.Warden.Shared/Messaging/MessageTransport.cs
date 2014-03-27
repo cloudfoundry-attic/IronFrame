@@ -44,7 +44,7 @@ namespace IronFoundry.Warden.Shared.Messaging
                 if (line == null)
                     return;
 
-                await InvokeCallbackAsync(line);
+                var unused = Task.Run(() => InvokeCallbackAsync(line));
 
                 if (token.IsCancellationRequested)
                     return;

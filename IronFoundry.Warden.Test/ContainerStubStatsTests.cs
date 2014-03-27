@@ -5,6 +5,7 @@ using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Utilities;
 using NSubstitute;
 using Xunit;
+using IronFoundry.Warden.Shared.Data;
 
 namespace IronFoundry.Warden.Test
 {

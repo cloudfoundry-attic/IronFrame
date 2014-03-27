@@ -3,6 +3,7 @@
     using System;
     using Protocol;
     using Utilities;
+    using System.Threading.Tasks;
 
     public class InfoBuilder
     {
@@ -17,12 +18,12 @@
             this.container = container;
         }
 
-        public InfoResponse GetInfoResponse()
+        public async Task<InfoResponse> GetInfoResponse()
         {
             var hostIp = IPUtilities.GetLocalIPAddress().ToString();
             var info = new InfoResponse(hostIp, hostIp, container.ContainerDirectoryPath, container.State);
 
-            var stats = container.GetProcessStatistics();
+            var stats = await container.GetProcessStatisticsAsync();
 
             // Convert TimeSpan to nanoseconds
             info.CpuStatInfo.Usage = (ulong)stats.TotalProcessorTime.Ticks * 100;

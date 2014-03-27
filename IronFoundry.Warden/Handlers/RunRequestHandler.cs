@@ -23,7 +23,7 @@
 
             IJobRunnable runnable = base.GetRunnableFor(request);
 
-            return Task.Run<Response>(() =>
+            return Task.Run<Response>(async () =>
                 {
                     IJobResult result = runnable.Run(); // run synchronously
                     return new RunResponse
@@ -31,7 +31,7 @@
                             ExitStatus = (uint)result.ExitCode,
                             Stdout = result.Stdout,
                             Stderr = result.Stderr,
-                            Info = BuildInfoResponse()
+                            Info = await BuildInfoResponse()
                         };
                 });
         }

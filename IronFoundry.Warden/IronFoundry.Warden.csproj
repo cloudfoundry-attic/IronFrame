@@ -164,7 +164,6 @@
     <Compile Include="Utilities\LoggerExtensionMethods.cs" />
     <Compile Include="Utilities\MessageWriter.cs" />
     <Compile Include="Utilities\ProcessHelper.cs" />
-    <Compile Include="Utilities\ProcessStats.cs" />
     <Compile Include="Utilities\Statics.cs" />
     <Compile Include="Utilities\TempFile.cs" />
     <Compile Include="Server\Buffer.cs" />

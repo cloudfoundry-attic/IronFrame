@@ -139,7 +139,6 @@
                 }
             }
 
-            //bb: Introduce new result type to keep IJobResult and TaskCommandXXX separate
             return new TaskCommandResult(lastExitCode, stdout.ToString(), stderr.ToString());
         }
     }

@@ -1,4 +1,5 @@
-﻿using IronFoundry.Warden.Shared.Messaging;
+﻿using IronFoundry.Warden.Shared.Data;
+using IronFoundry.Warden.Shared.Messaging;
 using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Utilities;
 using System;
@@ -16,6 +17,7 @@ namespace IronFoundry.Warden.Containers
     {
         private ContainerHostLauncher launcher;
         private IResourceHolder containerResources;
+        private ushort? assignedPort;
 
         public ContainerProxy(ContainerHostLauncher launcher)
         {
@@ -41,8 +43,16 @@ namespace IronFoundry.Warden.Containers
         {
             get
             {
-                return GetRemoteContainerState().GetAwaiter().GetResult();
+                if (IsRemoteActive)
+                    return GetRemoteContainerState().GetAwaiter().GetResult();
+                return
+                    ContainerState.Born;
             }
+        }
+
+        private bool IsRemoteActive
+        {
+            get { return launcher != null && launcher.IsActive; }
         }
 
         private async Task<string> GetRemoteContainerState()
@@ -53,6 +63,8 @@ namespace IronFoundry.Warden.Containers
 
         public async Task<CommandResult> RunCommandAsync(RemoteCommand command)
         {
+            if (!IsRemoteActive) throw new InvalidOperationException();
+
             var response = await launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(
                 new RunCommandRequest(
                     new RunCommandData()
@@ -70,28 +82,29 @@ namespace IronFoundry.Warden.Containers
             };
         }
 
-        public async void Destroy()
+        public async Task DestoryAsync()
         {
-            var request = new ContainerDestroyRequest();
-            var response = await launcher.SendMessageAsync<ContainerDestroyRequest, ContainerDestroyResponse>(request);
+            if (IsRemoteActive)
+            {
+                var request = new ContainerDestroyRequest();
+                var response = await launcher.SendMessageAsync<ContainerDestroyRequest, ContainerDestroyResponse>(request);
+            }
 
-            containerResources.Destroy();
+            if (containerResources != null)
+            {
+                containerResources.Destroy();
+            }
         }
 
-        public System.Security.Principal.WindowsImpersonationContext GetExecutionContext(bool shouldImpersonate = false)
+        public async Task<ProcessStats> GetProcessStatisticsAsync()
         {
-            throw new NotImplementedException();
-        }
+            if (IsRemoteActive)
+            {
+                var statsResponse = await launcher.SendMessageAsync<ContainerStatisticsRequest, ContainerStatisticsResponse>(new ContainerStatisticsRequest());
+                return statsResponse.result;
+            }
 
-        public Utilities.ProcessStats GetProcessStatistics()
-        {
             return new ProcessStats();
-        }
-
-        // Deprecating
-        public void Initialize()
-        {
-            throw new NotImplementedException();
         }
 
         public void Initialize(IResourceHolder resources)
@@ -118,12 +131,18 @@ namespace IronFoundry.Warden.Containers
 
         public int ReservePort(int requestedPort)
         {
-            throw new NotImplementedException();
+            if (!assignedPort.HasValue)
+            {
+                var localTcpPortManager = new LocalTcpPortManager((ushort)requestedPort, this.ContainerUserName);
+                assignedPort = localTcpPortManager.ReserveLocalPort();
+            }
+
+            return assignedPort.Value;
         }
 
         public void Stop()
         {
-            throw new NotImplementedException();
+            //bb: What should be done with stop?
         }
 
         public void Dispose()

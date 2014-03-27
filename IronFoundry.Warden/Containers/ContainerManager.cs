@@ -102,7 +102,7 @@
             {
                 try
                 {
-                    removed.Destroy();
+                    removed.DestoryAsync();
                 }
                 catch
                 {

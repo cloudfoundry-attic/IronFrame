@@ -16,10 +16,10 @@
             this.request = (InfoRequest)request;
         }
 
-        public override Task<Response> HandleAsync()
+        public override async Task<Response> HandleAsync()
         {
             log.Trace("Handle: '{0}'", request.Handle);
-            return Task.FromResult<Response>(BuildInfoResponse());
+            return await BuildInfoResponse();
         }
     }
 }

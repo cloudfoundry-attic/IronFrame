@@ -1,4 +1,5 @@
-﻿using IronFoundry.Warden.Tasks;
+﻿using IronFoundry.Warden.Shared.Data;
+using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Utilities;
 using System;
 using System.Security;
@@ -11,8 +12,8 @@ namespace IronFoundry.Warden.Containers
         ContainerHandle Handle { get; }
         ContainerState State { get; }
 
-        void Destroy();
-        ProcessStats GetProcessStatistics();
+        Task DestoryAsync();
+        Task<ProcessStats> GetProcessStatisticsAsync();
         void Initialize(IResourceHolder containerResources);
         int ReservePort(int port);
         Task<CommandResult> RunCommandAsync(RemoteCommand command);        

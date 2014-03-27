@@ -1,6 +1,8 @@
 ﻿using IronFoundry.Warden.Containers;
+using IronFoundry.Warden.Shared.Data;
 using IronFoundry.Warden.Shared.Messaging;
 using IronFoundry.Warden.Tasks;
+using IronFoundry.Warden.Test.TestSupport;
 using IronFoundry.Warden.Utilities;
 using NSubstitute;
 using System;
@@ -61,10 +63,53 @@ namespace IronFoundry.Warden.Test
             }
         }
 
+        public class BeforeInitialized : ProxyContainerContext
+        {
+            public BeforeInitialized()
+            {
+                launcher.IsActive.Returns(false);
+            }
+
+            [Fact]
+            public async void GetStatisticsDoestNotCallHostStub()
+            {                
+                var response = await proxy.GetProcessStatisticsAsync();
+                this.launcher.DidNotReceive(x => x.SendMessageAsync<ContainerStatisticsRequest, ContainerStatisticsResponse>(Arg.Any<ContainerStatisticsRequest>()));
+            }
+
+            [Fact]
+            public async void GetStatisticsReturnsDefaultStats()
+            {
+                var response = await proxy.GetProcessStatisticsAsync();
+                Assert.Equal(new ProcessStats(), response);
+            }
+
+            [Fact]
+            public void RetrievingStateReturnsBorn()
+            {
+                ContainerState state = proxy.State;
+                Assert.Equal(ContainerState.Born, state);
+            }
+
+            [Fact]
+            public void RunCommandThrows()
+            {
+                var ex = ExceptionAssert.RecordThrowsAsync(async () => { await proxy.RunCommandAsync(new RemoteCommand(false, "blah")); });
+                Assert.IsType<InvalidOperationException>(ex.Result);
+            }
+
+            [Fact]
+            public async void DestroyDoesNotSendToStub()
+            {
+                await proxy.DestoryAsync();
+                this.launcher.DidNotReceive(x => x.SendMessageAsync<ContainerDestroyRequest, ContainerDestroyResponse>(Arg.Any<ContainerDestroyRequest>()));
+            }
+        }
         public class WhenInitialized : ProxyContainerContext
         {
             public WhenInitialized() : base()
             {
+                launcher.IsActive.Returns(true);
                 proxy.Initialize(resourceHolder);
             }
 
@@ -158,20 +203,34 @@ namespace IronFoundry.Warden.Test
             [Fact]
             public void RemovesResourcesOnDestroy()
             {
-                proxy.Destroy();
+                proxy.DestoryAsync();
                 this.resourceHolder.Received(x => x.Destroy());
             }
 
             [Fact]
             public void SendsDestroyMessageToStubOnDestroy()
             {
-                proxy.Destroy();
+                proxy.DestoryAsync();
                 launcher.Received(x => x.SendMessageAsync<ContainerDestroyRequest, ContainerDestroyResponse>(Arg.Any<ContainerDestroyRequest>()));
+            }
+
+            [Fact]
+            public async void GetStatisticsSendsMessageToHost()
+            {
+                this.launcher.SendMessageAsync<ContainerStatisticsRequest, ContainerStatisticsResponse>(Arg.Any<ContainerStatisticsRequest>()).ReturnsTask(new ContainerStatisticsResponse("", new Shared.Data.ProcessStats()));
+                var response = await proxy.GetProcessStatisticsAsync();
+
+                this.launcher.Received(x => x.SendMessageAsync<ContainerStatisticsRequest, ContainerStatisticsResponse>(Arg.Any<ContainerStatisticsRequest>()));
             }
         }
 
         public class WhenQueryingContainerState : ProxyContainerContext
         {
+            public WhenQueryingContainerState()
+            {
+                launcher.IsActive.Returns(true);
+            }
+
             [Fact]
             public void WhenQueryingContainerState_ShouldQueryContainerHost()
             {
@@ -197,6 +256,7 @@ namespace IronFoundry.Warden.Test
         {
             public WhenRunningCommand()
             {
+                launcher.IsActive.Returns(true);
             }
 
             [Fact]

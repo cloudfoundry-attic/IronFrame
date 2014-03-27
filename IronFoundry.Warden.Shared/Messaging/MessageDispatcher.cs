@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using IronFoundry.Warden.Shared.Messaging;
 using Newtonsoft.Json.Linq;
+using System.Threading;
 
 namespace IronFoundry.Warden.Shared.Messaging
 {
@@ -70,9 +71,9 @@ namespace IronFoundry.Warden.Shared.Messaging
         }
 
         public void RegisterMethod<T>(string methodName, Func<T, Task<object>> callback)
-            where T: JsonRpcRequest
+            where T : JsonRpcRequest
         {
-            methods.Add(methodName, (r) => 
+            methods.Add(methodName, (r) =>
             {
                 return callback((T)r.ToObject<T>());
             });

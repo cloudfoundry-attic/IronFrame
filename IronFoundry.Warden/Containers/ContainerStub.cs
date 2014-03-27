@@ -1,4 +1,5 @@
-﻿using IronFoundry.Warden.Tasks;
+﻿using IronFoundry.Warden.Shared.Data;
+using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Utilities;
 using System;
 using System.Collections.Generic;
@@ -119,7 +120,7 @@ namespace IronFoundry.Warden.Containers
             throw new NotImplementedException();
         }
 
-        public Utilities.ProcessStats GetProcessStatistics()
+        public ProcessStats GetProcessStatistics()
         {
             var cpuStatistics = jobObject.GetCpuStatistics();
             var processIds = jobObject.GetProcessIds();

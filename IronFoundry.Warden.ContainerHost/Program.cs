@@ -58,6 +58,9 @@ namespace IronFoundry.Warden.ContainerHost
             var input = Console.In;
             var output = Console.Out;
 
+            if (args.Length < 1)
+                throw new InvalidOperationException("Cannot start host, missing JobObject name.");
+
             var jobObject = new JobObject(args[0]);
 
             container = new ContainerStub(jobObject, BuildCommandRunner(), new ProcessHelper());
@@ -98,6 +101,11 @@ namespace IronFoundry.Warden.ContainerHost
                             stdOut = result.StdOut,
                         });
                     
+                });
+
+                dispatcher.RegisterMethod<ContainerStatisticsRequest>(ContainerStatisticsRequest.MethodName, (r) =>
+                {
+                    return Task.FromResult<object>(new ContainerStatisticsResponse(r.id, container.GetProcessStatistics()));
                 });
 
                 dispatcher.RegisterMethod<ContainerDestroyRequest>(ContainerDestroyRequest.MethodName, (r) =>

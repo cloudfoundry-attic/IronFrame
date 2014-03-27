@@ -14,7 +14,7 @@ namespace IronFoundry.Warden.Test
     {
         private ContainerHostLauncher launcher;
         private string tempDirectory;
-        
+
         public ProcessHostLauncherTests()
         {
             this.launcher = new ContainerHostLauncher();
@@ -25,17 +25,19 @@ namespace IronFoundry.Warden.Test
 
         public void Dispose()
         {
-            using (var p = Process.GetProcessById(launcher.HostProcessId))
+            if (launcher != null && launcher.HostProcessId != 0)
             {
-                p.Kill();
-                p.WaitForExit(3000);
-                launcher.Dispose();
+                using (var p = Process.GetProcessById(launcher.HostProcessId))
+                {
+                    p.Kill();
+                    p.WaitForExit(3000);
+                    launcher.Dispose();
+                }
             }
 
             if (Directory.Exists(tempDirectory))
                 Directory.Delete(tempDirectory);
         }
-
 
         [Fact]
         public void CanLaunchHostProcess()
@@ -45,6 +47,34 @@ namespace IronFoundry.Warden.Test
             using (var p = Process.GetProcessById(launcher.HostProcessId))
             {
                 Assert.False(p.HasExited);
+            }
+        }
+
+        [Fact]
+        public void WhenLaunchedReturnsActive()
+        {
+            launcher.Start(tempDirectory, "JobObjectName");
+
+            using (var p = Process.GetProcessById(launcher.HostProcessId))
+            {
+                Assert.True(launcher.IsActive);
+            }
+        }
+
+        [Fact]
+        public void WhenStoppedReportsInactive()
+        {
+            using (var localLauncher = new ContainerHostLauncher())
+            {
+                localLauncher.Start(tempDirectory, "JobObjectName");
+
+                using (var p = Process.GetProcessById(localLauncher.HostProcessId))
+                {
+                    p.Kill();
+                    p.WaitForExit(3000);
+
+                    Assert.False(launcher.IsActive);
+                }
             }
         }
     }

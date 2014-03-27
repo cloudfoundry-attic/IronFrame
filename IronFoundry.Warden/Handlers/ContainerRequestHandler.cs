@@ -3,6 +3,7 @@
     using System;
     using Containers;
     using Protocol;
+    using System.Threading.Tasks;
 
     public abstract class ContainerRequestHandler : RequestHandler
     {
@@ -26,7 +27,7 @@
             return containerManager.GetContainer(containerRequest.Handle);
         }
 
-        protected InfoResponse BuildInfoResponse()
+        protected async Task<InfoResponse> BuildInfoResponse()
         {
             // TODO complete info
             InfoResponse infoResponse = null;
@@ -39,7 +40,7 @@
             else
             {
                 var infoBuilder = new InfoBuilder(container);
-                infoResponse = infoBuilder.GetInfoResponse();
+                infoResponse = await infoBuilder.GetInfoResponse();
             }
 
             return infoResponse;
