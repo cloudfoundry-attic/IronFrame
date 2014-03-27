@@ -42,7 +42,10 @@
 
         public void Delete()
         {
-            containerDirectory.Delete(true);
+            if (wardenConfig.DeleteContainerDirectories)
+            {
+                containerDirectory.Delete(true);
+            }
         }
 
         public static void CleanUp(string handle)

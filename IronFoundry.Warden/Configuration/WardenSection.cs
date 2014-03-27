@@ -8,6 +8,7 @@
 
         private const string ContainerBasePathPropName = "container-basepath";
         private const string TcpPortPropName = "tcp-port";
+        private const string DeleteContainerDirectoriesPropName = "delete-container-directories";
 
         [ConfigurationProperty(ContainerBasePathPropName, DefaultValue = "C:\\IronFoundry\\warden\\containers", IsRequired = false)]
         public string ContainerBasePath
@@ -32,6 +33,19 @@
             set
             {
                 this[TcpPortPropName] = value;
+            }
+        }
+
+        [ConfigurationProperty(DeleteContainerDirectoriesPropName, DefaultValue = true, IsRequired = false)]
+        public bool DeleteContainerDirectories
+        {
+            get
+            {
+                return (bool)this[DeleteContainerDirectoriesPropName];
+            }
+            set
+            {
+                this[DeleteContainerDirectoriesPropName] = value;
             }
         }
     }

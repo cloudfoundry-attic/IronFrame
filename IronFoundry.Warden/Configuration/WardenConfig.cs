@@ -6,6 +6,7 @@
     {
         string ContainerBasePath { get; }
         ushort TcpPort { get; }
+        bool DeleteContainerDirectories { get; }
     }
 
     public class WardenConfig : IWardenConfig
@@ -25,6 +26,11 @@
         public ushort TcpPort
         {
             get { return configSection.TcpPort; }
+        }
+
+        public bool DeleteContainerDirectories
+        {
+            get { return configSection.DeleteContainerDirectories; }
         }
     }
 }
