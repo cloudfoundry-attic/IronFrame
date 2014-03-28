@@ -116,11 +116,5 @@
   <ItemGroup>
     <Content Include="Readme.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\IronFoundry.Warden.Shared\IronFoundry.Warden.Shared.csproj">
-      <Project>{cb7ba555-21fd-4c57-a629-a925b6a83a31}</Project>
-      <Name>IronFoundry.Warden.Shared</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

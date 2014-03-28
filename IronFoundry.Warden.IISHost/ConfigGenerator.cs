@@ -23,7 +23,7 @@ namespace IronFoundry.Warden.IISHost
 
         public ConfigGenerator(string webRoot)
         {
-            if (webRoot.IsNullOrWhiteSpace())
+            if (string.IsNullOrWhiteSpace(webRoot))
             {
                 throw new ArgumentNullException("webRoot");
             }
@@ -112,7 +112,7 @@ namespace IronFoundry.Warden.IISHost
             pool.Add(new XAttribute("autoStart", true));
             pool.Add(new XAttribute("startMode", "AlwaysRunning"));
 
-            if (!(userName.IsNullOrWhiteSpace() || password.IsNullOrWhiteSpace()))
+            if (!(string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(password)))
             {
                 var processModel = new XElement("processModel");
                 processModel.Add(new XAttribute("identityType", "SpecificUser"));
