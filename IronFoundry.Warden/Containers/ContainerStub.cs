@@ -111,7 +111,6 @@ namespace IronFoundry.Warden.Containers
 
         public void Destroy()
         {
-            jobObject.TerminateProcesses();
             this.currentState = ContainerState.Destroyed;
         }
 
@@ -165,7 +164,6 @@ namespace IronFoundry.Warden.Containers
 
         public void Dispose()
         {
-            jobObject.TerminateProcesses();
             jobObject.Dispose();
         }
 

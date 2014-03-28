@@ -47,7 +47,7 @@
             get { return handle; }
         }
 
-        public void Dispose()
+        virtual public void Dispose()
         {
             if (handle == null) { return; }
             handle.Dispose();
@@ -169,10 +169,19 @@
             } while (true);
         }
 
-        public void TerminateProcesses()
+        virtual public void TerminateProcesses()
         {
             if (handle == null) { throw new ObjectDisposedException("JobObject"); }
             NativeMethods.TerminateJobObject(handle, 0);
+        }
+
+        virtual public void TerminateProcessesAndWait(int milliseconds = System.Threading.Timeout.Infinite)
+        {
+            TerminateProcesses();
+            using (var waitHandle = new JobObjectWaitHandle(handle))
+            {
+                waitHandle.WaitOne(milliseconds);
+            }
         }
     }
 }

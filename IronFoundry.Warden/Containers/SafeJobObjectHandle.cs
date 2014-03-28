@@ -17,4 +17,12 @@ namespace IronFoundry.Warden.Containers
             return NativeMethods.CloseHandle(handle);
         }
     }
+
+    public class JobObjectWaitHandle : System.Threading.WaitHandle
+    {
+        public JobObjectWaitHandle(SafeJobObjectHandle jobObject) 
+        {
+            SafeWaitHandle = new SafeWaitHandle(jobObject.DangerousGetHandle(), false);
+        }
+    }
 }

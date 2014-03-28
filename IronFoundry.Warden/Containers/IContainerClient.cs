@@ -12,7 +12,7 @@ namespace IronFoundry.Warden.Containers
         ContainerHandle Handle { get; }
         ContainerState State { get; }
 
-        Task DestoryAsync();
+        Task DestroyAsync();
         Task<ProcessStats> GetProcessStatisticsAsync();
         void Initialize(IResourceHolder containerResources);
         int ReservePort(int port);

@@ -62,6 +62,8 @@ namespace IronFoundry.Warden.ContainerHost
                 throw new InvalidOperationException("Cannot start host, missing JobObject name.");
 
             var jobObject = new JobObject(args[0]);
+            var hostProcess = System.Diagnostics.Process.GetCurrentProcess();
+            jobObject.AssignProcessToJob(hostProcess);
 
             container = new ContainerStub(jobObject, BuildCommandRunner(), new ProcessHelper());
 

@@ -257,31 +257,6 @@ namespace IronFoundry.Warden.Test
 
                 commandRunner.Received(x => x.RunCommandAsync(Arg.Any<bool>(), Arg.Is<string>(y => y == "tar"), Arg.Is<string[]>(y => y[0] == "c:\temp")));
             }
-
-            [Fact]
-            public void DisposeShouldTerminateProcessUnderJob()
-            {
-                var si = new CreateProcessStartInfo("cmd.exe");
-                var p = containerStub.CreateProcess(si);
-
-                containerStub.Dispose();
-
-                p.WaitForExit(3000);
-                Assert.True(p.HasExited);
-            }
-
-            [Fact]
-            public void ProcessesAreHalted()
-            {
-                var si = new CreateProcessStartInfo("cmd.exe");
-
-                var p = containerStub.CreateProcess(si, false);
-
-                containerStub.Destroy();
-
-                p.WaitForExit(3000);
-                Assert.True(p.HasExited);
-            }
         }
 
         public class WhenDestroyed : ContainerStubContext
@@ -291,6 +266,21 @@ namespace IronFoundry.Warden.Test
             {
                 containerStub.Destroy();
                 Assert.Equal(ContainerState.Destroyed, containerStub.State);
+            }
+        }
+
+        public class WhenDisposed : ContainerStubContext
+        {
+            public WhenDisposed()
+            {
+                containerStub.Initialize(tempDirectory, containerHandle, userInfo);
+            }
+
+            [Fact]
+            public void DisposesJobObject()
+            {
+                containerStub.Dispose();
+                jobObject.Received().Dispose();
             }
         }
       

@@ -19,6 +19,8 @@ namespace IronFoundry.Warden.Containers
 
     public class ContainerResourceHolder : IResourceHolder
     {
+        private static int TerminateWaitTimeout = 2000; // ms
+
         public ContainerResourceHolder(ContainerHandle handle, IContainerUser user, IContainerDirectory directory, JobObject jobObject)
         {
             this.Handle = handle;
@@ -50,6 +52,9 @@ namespace IronFoundry.Warden.Containers
 
         public void Destroy()
         {
+            JobObject.TerminateProcessesAndWait(TerminateWaitTimeout);
+            JobObject.Dispose();
+            
             Directory.Delete();
             User.Delete();
         }

@@ -112,6 +112,12 @@ namespace IronFoundry.Warden.Test
             }
 
             [Fact]
+            public void TerminatesJobObjectProcesses()
+            {
+                jobObject.ReceivedWithAnyArgs().TerminateProcessesAndWait();
+            }
+
+            [Fact]
             public void DisposesJobObject()
             {
                 jobObject.Received().Dispose();

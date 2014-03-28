@@ -101,10 +101,11 @@ namespace IronFoundry.Warden.Test
             [Fact]
             public async void DestroyDoesNotSendToStub()
             {
-                await proxy.DestoryAsync();
+                await proxy.DestroyAsync();
                 this.launcher.DidNotReceive(x => x.SendMessageAsync<ContainerDestroyRequest, ContainerDestroyResponse>(Arg.Any<ContainerDestroyRequest>()));
             }
         }
+        
         public class WhenInitialized : ProxyContainerContext
         {
             public WhenInitialized() : base()
@@ -201,17 +202,25 @@ namespace IronFoundry.Warden.Test
             }
 
             [Fact]
-            public void RemovesResourcesOnDestroy()
+            public async void RemovesResourcesOnDestroy()
             {
-                proxy.DestoryAsync();
+                await proxy.DestroyAsync();
                 this.resourceHolder.Received(x => x.Destroy());
             }
 
             [Fact]
-            public void SendsDestroyMessageToStubOnDestroy()
+            public async void SendsDestroyMessageToStubOnDestroy()
             {
-                proxy.DestoryAsync();
+                await proxy.DestroyAsync();
                 launcher.Received(x => x.SendMessageAsync<ContainerDestroyRequest, ContainerDestroyResponse>(Arg.Any<ContainerDestroyRequest>()));
+            }
+
+            [Fact]
+            public async void DestroySetsStateToDestroy()
+            {
+                launcher.IsActive.Returns(false);
+                await proxy.DestroyAsync();
+                Assert.Equal(ContainerState.Destroyed, proxy.State);
             }
 
             [Fact]
@@ -317,12 +326,11 @@ namespace IronFoundry.Warden.Test
         public class WhenDisposed : ProxyContainerContext
         {
             [Fact]
-            public void WhenDisposed_DisposesLauncher()
+            public void DisposesLauncher()
             {
                 proxy.Dispose();
                 launcher.Received().Dispose();
             }
-        
         }
     }
 }

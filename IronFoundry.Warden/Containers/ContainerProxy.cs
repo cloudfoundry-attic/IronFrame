@@ -18,10 +18,12 @@ namespace IronFoundry.Warden.Containers
         private ContainerHostLauncher launcher;
         private IResourceHolder containerResources;
         private ushort? assignedPort;
+        private ContainerState cachedContainerState;
 
         public ContainerProxy(ContainerHostLauncher launcher)
         {
             this.launcher = launcher;
+            this.cachedContainerState = ContainerState.Born;
         }
 
         public string ContainerDirectoryPath
@@ -44,9 +46,11 @@ namespace IronFoundry.Warden.Containers
             get
             {
                 if (IsRemoteActive)
-                    return GetRemoteContainerState().GetAwaiter().GetResult();
-                return
-                    ContainerState.Born;
+                {
+                    cachedContainerState = GetRemoteContainerState().GetAwaiter().GetResult();
+                }
+
+                return cachedContainerState;
             }
         }
 
@@ -82,7 +86,7 @@ namespace IronFoundry.Warden.Containers
             };
         }
 
-        public async Task DestoryAsync()
+        public async Task DestroyAsync()
         {
             if (IsRemoteActive)
             {
@@ -94,6 +98,8 @@ namespace IronFoundry.Warden.Containers
             {
                 containerResources.Destroy();
             }
+
+            this.cachedContainerState = ContainerState.Destroyed;
         }
 
         public async Task<ProcessStats> GetProcessStatisticsAsync()
