@@ -56,9 +56,7 @@ namespace IronFoundry.Warden.IISHost
             };
 
             var clrConfigPath = Path.Combine(configPath, "aspnet.config"); // TODO: might need to just -> runtime version aspnet.config file
-            var redirectConfigPath = Path.Combine(configPath, "redirection.config"); // TODO: might need to just -> runtime version redirection.config file
 
-            File.WriteAllText(redirectConfigPath, Resources.redirection);
             File.WriteAllText(clrConfigPath, Resources.aspnet);
             File.WriteAllText(settings.AppConfigPath, runtimeVersion == Constants.RuntimeVersion.VersionFourDotZero ? Resources.applicationhost : Resources.v2_0AppHost);
 

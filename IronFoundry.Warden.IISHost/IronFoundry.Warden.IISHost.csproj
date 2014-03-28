@@ -77,7 +77,6 @@
     <None Include="Resources\applicationhost.config" />
     <None Include="Resources\aspnet.config" />
     <None Include="Resources\v2.0AppHost.config" />
-    <None Include="Resources\redirection.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="CommandLine">
