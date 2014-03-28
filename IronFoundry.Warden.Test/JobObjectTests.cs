@@ -89,6 +89,8 @@ namespace IronFoundry.Warden.Containers
 
                 jobObject.TerminateProcesses();
 
+                p.WaitForExit(1000);
+
                 Assert.True(p.HasExited);
             }
             finally
