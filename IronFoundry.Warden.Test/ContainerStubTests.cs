@@ -59,7 +59,7 @@ namespace IronFoundry.Warden.Test
         }
     }
 
-    public class ContainerStubTests 
+    public class ContainerStubTests
     {
         public class BeforeInitialized : ContainerStubContext
         {
@@ -220,34 +220,6 @@ namespace IronFoundry.Warden.Test
                 var ex = Assert.Throws<System.ComponentModel.Win32Exception>(() => containerStub.CreateProcess(si));
             }
 
-            [FactAdminRequired(Skip = "Runs unreliably on build server, review build server setup.")]            
-            public void CanLaunchProcessAsAlternateUser()
-            {
-                string shortId = this.GetType().GetHashCode().ToString();
-                string testUserName = "IFTest_" + shortId;
-
-                using (var testUser = TestUserHolder.CreateUser(testUserName))
-                {
-                    AddFileSecurity(tempDirectory, testUser.Principal.Name, FileSystemRights.FullControl, AccessControlType.Allow);
-
-                    var tempFile = Path.Combine(tempDirectory, Guid.NewGuid().ToString());
-
-                    var si = new CreateProcessStartInfo("cmd.exe", string.Format(@"/C echo %USERNAME% > {0}", tempFile))
-                    {
-                        UserName = testUserName,
-                        Password = testUser.Password.ToSecureString()
-                    };
-
-                    using (var p = containerStub.CreateProcess(si))
-                    {
-                        WaitForGoodExit(p);
-
-                        var output = File.ReadAllText(tempFile);
-                        Assert.Contains(testUserName, output);
-                    }
-                }
-            }
-
             [Fact]
             public async void WhenRecievingRunCommand_ShouldDispatchToCommandRunner()
             {
@@ -256,6 +228,64 @@ namespace IronFoundry.Warden.Test
                 var result = await containerStub.RunCommandAsync(new RemoteCommand(false, "tar", "c:\temp"));
 
                 commandRunner.Received(x => x.RunCommandAsync(Arg.Any<bool>(), Arg.Is<string>(y => y == "tar"), Arg.Is<string[]>(y => y[0] == "c:\temp")));
+            }
+        }
+
+        public class WhenInitializedWithTestUserAccount : ContainerStubContext
+        {
+            protected string shortUserName;
+            protected TestUserHolder userHolder;
+            private string tempFilePath;
+
+            public WhenInitializedWithTestUserAccount()
+            {
+                this.shortUserName = "IF_" + this.GetHashCode().ToString();
+                this.userHolder = TestUserHolder.CreateUser(shortUserName);
+
+                userInfo.GetCredential().Returns(new System.Net.NetworkCredential(userHolder.UserName, userHolder.Password));
+                AddFileSecurity(tempDirectory, userHolder.Principal.Name, FileSystemRights.FullControl, AccessControlType.Allow);
+
+                tempFilePath = Path.Combine(tempDirectory, Guid.NewGuid().ToString());
+
+                containerStub.Initialize(tempDirectory, containerHandle, userInfo);
+            }
+
+            public override void Dispose()
+            {
+                userHolder.Dispose();
+                base.Dispose();
+            }
+
+            [FactAdminRequired(Skip = "Unreliable on build server, review build server settings")]
+            public void WhenImpersonationRequested_LaunchesProcessImpersonated()
+            {
+                var si = new CreateProcessStartInfo("cmd.exe", string.Format(@"/C echo %USERNAME% > {0}", tempFilePath));
+
+                using (var p = containerStub.CreateProcess(si, true))
+                {
+                    WaitForGoodExit(p);
+
+                    var output = File.ReadAllText(tempFilePath);
+                    Assert.Contains(userHolder.UserName, output);
+                }
+            }
+
+            [FactAdminRequired(Skip = "Unreliable on build server, review build server settings")]
+            public void CanLaunchProcessAsAlternateUser()
+            {
+                var si = new CreateProcessStartInfo("cmd.exe", string.Format(@"/C echo %USERNAME% > {0}", tempFilePath))
+                {
+                    UserName = userHolder.UserName,
+                    Password = userHolder.Password.ToSecureString()
+                };
+
+                using (var p = containerStub.CreateProcess(si))
+                {
+                    WaitForGoodExit(p);
+
+                    var output = File.ReadAllText(tempFilePath);
+                    Assert.Contains(userHolder.UserName, output);
+                }
             }
         }
 
@@ -283,7 +313,7 @@ namespace IronFoundry.Warden.Test
                 jobObject.Received().Dispose();
             }
         }
-      
+
         internal static void WaitForGoodExit(Utilities.IProcess p)
         {
             p.WaitForExit(2000);

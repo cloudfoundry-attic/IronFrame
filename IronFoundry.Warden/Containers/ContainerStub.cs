@@ -21,7 +21,7 @@ namespace IronFoundry.Warden.Containers
         private ProcessHelper processHelper;
 
         public ContainerStub(
-            JobObject jobObject, 
+            JobObject jobObject,
             ICommandRunner commandRunner,
             ProcessHelper processHelper)
         {
@@ -33,7 +33,7 @@ namespace IronFoundry.Warden.Containers
 
         public string ContainerDirectoryPath
         {
-            get { return containerDirectory;  }
+            get { return containerDirectory; }
         }
 
         public string ContainerUserName
@@ -57,7 +57,7 @@ namespace IronFoundry.Warden.Containers
 
             Process p = new Process()
             {
-                StartInfo = ToProcessStartInfo(si),
+                StartInfo = ToProcessStartInfo(si, impersonate),
             };
 
             p.Start();
@@ -65,7 +65,7 @@ namespace IronFoundry.Warden.Containers
 
             return new RealProcessWrapper(p);
         }
-        
+
         public async Task<CommandResult> RunCommandAsync(RemoteCommand remoteCommand)
         {
             var result = await commandRunner.RunCommandAsync(remoteCommand.ShouldImpersonate, remoteCommand.Command, remoteCommand.Arguments);
@@ -80,7 +80,7 @@ namespace IronFoundry.Warden.Containers
             }
         }
 
-        private ProcessStartInfo ToProcessStartInfo(Shared.Messaging.CreateProcessStartInfo createProcessStartInfo)
+        private ProcessStartInfo ToProcessStartInfo(Shared.Messaging.CreateProcessStartInfo createProcessStartInfo, bool impersonate)
         {
             var si = new ProcessStartInfo()
             {
@@ -93,8 +93,8 @@ namespace IronFoundry.Warden.Containers
                 WorkingDirectory = createProcessStartInfo.WorkingDirectory,
                 FileName = createProcessStartInfo.FileName,
                 Arguments = createProcessStartInfo.Arguments,
-                UserName = createProcessStartInfo.UserName,
-                Password = createProcessStartInfo.Password,
+                UserName = impersonate ? user.UserName : createProcessStartInfo.UserName,
+                Password = impersonate ? user.SecurePassword : createProcessStartInfo.Password
             };
 
             if (createProcessStartInfo.EnvironmentVariables.Count > 0)
@@ -205,12 +205,12 @@ namespace IronFoundry.Warden.Containers
 
             public TimeSpan TotalUserProcessorTime
             {
-                get { return this.wrappedProcess.UserProcessorTime;  }
+                get { return this.wrappedProcess.UserProcessorTime; }
             }
 
             public long WorkingSet
             {
-                get { return this.wrappedProcess.WorkingSet64;  }
+                get { return this.wrappedProcess.WorkingSet64; }
             }
 
             public long PrivateMemoryBytes
