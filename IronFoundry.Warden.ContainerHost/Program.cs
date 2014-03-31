@@ -65,7 +65,7 @@ namespace IronFoundry.Warden.ContainerHost
             var hostProcess = System.Diagnostics.Process.GetCurrentProcess();
             jobObject.AssignProcessToJob(hostProcess);
 
-            container = new ContainerStub(jobObject, BuildCommandRunner(), new ProcessHelper());
+            container = new ContainerStub(jobObject, BuildCommandRunner(), new ProcessHelper(), new ProcessMonitor());
 
             using (var transport = new MessageTransport(input, output))
             {

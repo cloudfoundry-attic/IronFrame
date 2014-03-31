@@ -1,4 +1,5 @@
 ﻿using IronFoundry.Warden.Containers;
+using IronFoundry.Warden.Logging;
 using IronFoundry.Warden.PInvoke;
 using IronFoundry.Warden.Shared.Messaging;
 using IronFoundry.Warden.Tasks;
@@ -28,6 +29,7 @@ namespace IronFoundry.Warden.Test
         protected string tempDirectory;
         protected IContainerUser userInfo;
         protected ProcessHelper processHelper;
+        protected ProcessMonitor processMonitor;
 
         public ContainerStubContext()
         {
@@ -35,8 +37,9 @@ namespace IronFoundry.Warden.Test
 
             jobObject = Substitute.For<JobObject>();
             processHelper = Substitute.For<ProcessHelper>();
+            processMonitor = new ProcessMonitor();
 
-            containerStub = new ContainerStub(jobObject, commandRunner, processHelper);
+            containerStub = new ContainerStub(jobObject, commandRunner, processHelper, processMonitor);
 
             this.tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             Directory.CreateDirectory(tempDirectory);
@@ -66,14 +69,14 @@ namespace IronFoundry.Warden.Test
             [Fact]
             public void StateIsBorn()
             {
-                var container = new ContainerStub(null, null, null);
+                var container = new ContainerStub(null, null, null, new ProcessMonitor());
                 Assert.Equal(ContainerState.Born, container.State);
             }
 
             [Fact]
             public void CannotLaunchProcessIfContainerIsNonActive()
             {
-                var containerStub = new ContainerStub(null, null, null);
+                var containerStub = new ContainerStub(null, null, null, new ProcessMonitor());
                 var si = new CreateProcessStartInfo("cmd.exe");
 
                 // Not initialized ==> not active
@@ -229,6 +232,36 @@ namespace IronFoundry.Warden.Test
 
                 commandRunner.Received(x => x.RunCommandAsync(Arg.Any<bool>(), Arg.Is<string>(y => y == "tar"), Arg.Is<string[]>(y => y[0] == "c:\temp")));
             }
+
+            [Fact]
+            public void WhenAttachingLogEmitter_ForwardsOutputToEmitter()
+            {
+                var emitter = Substitute.For<ILogEmitter>();
+                containerStub.AttachEmitter(emitter);
+
+                var si = new CreateProcessStartInfo("cmd.exe", @"/C ping 127.0.0.1 -n 2 && echo Boomerang");
+
+                using (var p = containerStub.CreateProcess(si))
+                {
+                    WaitForGoodExit(p);
+                    emitter.Received().EmitLogMessage(logmessage.LogMessage.MessageType.OUT, "Boomerang");
+                }
+            }
+
+            [Fact]
+            public void WhenAttachingLogEmitter_ForwardsErrorsToEmitter()
+            {
+                var emitter = Substitute.For<ILogEmitter>();
+                containerStub.AttachEmitter(emitter);
+
+                var si = new CreateProcessStartInfo("cmd.exe", @"/C ping 127.0.0.1 -n 2 && echo Boomerang>&2");
+
+                using (var p = containerStub.CreateProcess(si))
+                {
+                    WaitForGoodExit(p);
+                    emitter.Received().EmitLogMessage(logmessage.LogMessage.MessageType.ERR, "Boomerang");
+                }
+            }
         }
 
         public class WhenInitializedWithTestUserAccount : ContainerStubContext
@@ -313,6 +346,8 @@ namespace IronFoundry.Warden.Test
                 jobObject.Received().Dispose();
             }
         }
+
+        
 
         internal static void WaitForGoodExit(Utilities.IProcess p)
         {

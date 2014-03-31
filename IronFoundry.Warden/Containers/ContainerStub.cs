@@ -19,16 +19,23 @@ namespace IronFoundry.Warden.Containers
         private System.Net.NetworkCredential user;
         private readonly ICommandRunner commandRunner;
         private ProcessHelper processHelper;
+        private ILogEmitter logEmitter;
+        private ProcessMonitor processMonitor;
 
         public ContainerStub(
             JobObject jobObject,
             ICommandRunner commandRunner,
-            ProcessHelper processHelper)
+            ProcessHelper processHelper,
+            ProcessMonitor processMonitor)
         {
             this.jobObject = jobObject;
             this.currentState = ContainerState.Born;
             this.commandRunner = commandRunner;
             this.processHelper = processHelper;
+            this.processMonitor = processMonitor;
+
+            this.processMonitor.OutputDataReceived += LogOutputData;
+            this.processMonitor.ErrorDataReceived += LogErrorData;
         }
 
         public string ContainerDirectoryPath
@@ -60,16 +67,42 @@ namespace IronFoundry.Warden.Containers
                 StartInfo = ToProcessStartInfo(si, impersonate),
             };
 
-            p.Start();
+            p.EnableRaisingEvents = true;
+
+            var wrapped = new RealProcessWrapper(p);
+            processMonitor.TryAdd(wrapped);
+
+            bool started = p.Start();
+            Debug.Assert(started);
+
+            p.BeginOutputReadLine();
+            p.BeginErrorReadLine();
+
             jobObject.AssignProcessToJob(p);
 
-            return new RealProcessWrapper(p);
+            return wrapped;
         }
 
         public async Task<CommandResult> RunCommandAsync(RemoteCommand remoteCommand)
         {
             var result = await commandRunner.RunCommandAsync(remoteCommand.ShouldImpersonate, remoteCommand.Command, remoteCommand.Arguments);
             return new CommandResult { ExitCode = result.ExitCode };
+        }
+
+        private void LogErrorData(object sender, ProcessDataReceivedEventArgs e)
+        {
+            if (logEmitter != null)
+            {
+                logEmitter.EmitLogMessage(logmessage.LogMessage.MessageType.ERR, e.Data);
+            }
+        }
+
+        private void LogOutputData(object sender, ProcessDataReceivedEventArgs e)
+        {
+            if (logEmitter != null)
+            {
+                logEmitter.EmitLogMessage(logmessage.LogMessage.MessageType.OUT, e.Data);
+            }
         }
 
         private void ThrowIfNotActive()
@@ -176,6 +209,8 @@ namespace IronFoundry.Warden.Containers
                 this.wrappedProcess = process;
 
                 this.wrappedProcess.Exited += (o, e) => { this.OnExited(o, e); };
+                this.wrappedProcess.OutputDataReceived += WrappedOutputDataReceived;
+                this.wrappedProcess.ErrorDataReceived += WrappedErrorDataRecevied;
             }
 
             public int ExitCode
@@ -227,6 +262,9 @@ namespace IronFoundry.Warden.Containers
                 {
                     handlers(this, eventArgs);
                 }
+
+                this.wrappedProcess.ErrorDataReceived -= WrappedErrorDataRecevied;
+                this.wrappedProcess.OutputDataReceived -= WrappedOutputDataReceived;
             }
 
             public void Kill()
@@ -249,11 +287,42 @@ namespace IronFoundry.Warden.Containers
             {
                 this.wrappedProcess.Dispose();
             }
+
+            private void WrappedErrorDataRecevied(object sender, DataReceivedEventArgs e)
+            {
+                OnErrorDataReceived(this, new ProcessDataReceivedEventArgs(e.Data));
+            }
+
+            private void WrappedOutputDataReceived(object sender, DataReceivedEventArgs e)
+            {
+                OnOutputDataReceived(this, new ProcessDataReceivedEventArgs(e.Data));
+            }
+
+            public event EventHandler<ProcessDataReceivedEventArgs> OutputDataReceived;
+            protected virtual void OnOutputDataReceived(object sender, ProcessDataReceivedEventArgs e)
+            {
+                var handlers = OutputDataReceived;
+                if (handlers != null)
+                {
+                    handlers(this, e);
+                }
+            }
+
+            public event EventHandler<ProcessDataReceivedEventArgs> ErrorDataReceived;
+            protected virtual void OnErrorDataReceived(object sender, ProcessDataReceivedEventArgs e)
+            {
+                var handlers = ErrorDataReceived;
+                if (handlers != null)
+                {
+                    handlers(this, e);
+                }
+            }
+
         }
 
-
-
-
-
+        public void AttachEmitter(ILogEmitter emitter)
+        {
+            this.logEmitter = emitter;
+        }
     }
 }

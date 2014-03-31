@@ -45,6 +45,7 @@
     <Compile Include="ProcessCommandTests.cs" />
     <Compile Include="ProcessHelperTest.cs" />
     <Compile Include="ProcessHostLauncherTests.cs" />
+    <Compile Include="ProcessMonitorTests.cs" />
     <Compile Include="TestSupport\Asserts.cs" />
     <Compile Include="TestSupport\FactAdminRequired.cs" />
     <Compile Include="Messaging\MessageDispatcherTest.cs" />

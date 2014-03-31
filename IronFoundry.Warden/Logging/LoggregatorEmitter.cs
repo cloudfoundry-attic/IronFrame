@@ -9,7 +9,7 @@ using ProtoBuf;
 
 namespace IronFoundry.Warden.Logging
 {
-    public class LoggregatorEmitter
+    public class LoggregatorEmitter 
     {
         private readonly string loggeratorAddress;
         private readonly int port;

@@ -104,6 +104,27 @@ namespace IronFoundry.Warden.Utilities
             {
                 process.WaitForExit(milliseconds);
             }
+
+
+            public event EventHandler<ProcessDataReceivedEventArgs> OutputDataReceived;
+            protected virtual void OnOutputDataReceived(object sender, ProcessDataReceivedEventArgs e)
+            {
+                var handlers = OutputDataReceived;
+                if (handlers != null)
+                {
+                    handlers(this, e);
+                }
+            }
+
+            public event EventHandler<ProcessDataReceivedEventArgs> ErrorDataReceived;
+            protected virtual void OnErrorDataReceived(object sender, ProcessDataReceivedEventArgs e)
+            {
+                var handlers = ErrorDataReceived;
+                if (handlers != null)
+                {
+                    handlers(this, e);
+                }
+            }
         }
     }
 }

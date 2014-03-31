@@ -44,6 +44,7 @@
     <Compile Include="Configuration\WardenSection.cs" />
     <Compile Include="Containers\ContainerDirectory.cs" />
     <Compile Include="Containers\ContainerHandle.cs" />
+    <Compile Include="Containers\ContainerLogEmitter.cs" />
     <Compile Include="Containers\ContainerManager.cs" />
     <Compile Include="Containers\ContainerProxy.cs" />
     <Compile Include="Containers\ContainerResourceHolder.cs" />
@@ -56,6 +57,8 @@
     <Compile Include="Containers\InfoBuilder.cs" />
     <Compile Include="Containers\JobObject.cs" />
     <Compile Include="Containers\ContainerHostLauncher.cs" />
+    <Compile Include="Containers\ProcessMonitor.cs" />
+    <Compile Include="Utilities\ProcessDataReceivedEventArgs.cs" />
     <Compile Include="Containers\SafeJobObjectHandle.cs" />
     <Compile Include="Handlers\ContainerRequestHandler.cs" />
     <Compile Include="Handlers\CopyRequestHandler.cs" />

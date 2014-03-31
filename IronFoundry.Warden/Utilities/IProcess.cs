@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace IronFoundry.Warden.Utilities
 {
@@ -15,6 +16,8 @@ namespace IronFoundry.Warden.Utilities
         long PrivateMemoryBytes { get; }
 
         event EventHandler Exited;
+        event EventHandler<ProcessDataReceivedEventArgs> OutputDataReceived;
+        event EventHandler<ProcessDataReceivedEventArgs> ErrorDataReceived;
 
         void Kill();
         void WaitForExit();
