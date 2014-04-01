@@ -36,6 +36,7 @@
   <ItemGroup>
     <Compile Include="CommandRunnerTests.cs" />
     <Compile Include="ContainerHandleTests.cs" />
+    <Compile Include="ContainerLogEmitterTest.cs" />
     <Compile Include="ContainerProxyTest.cs" />
     <Compile Include="ContainerResourceHolderTest.cs" />
     <Compile Include="ContainerStubTests.cs" />

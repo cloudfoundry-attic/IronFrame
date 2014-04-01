@@ -1,4 +1,5 @@
-﻿using IronFoundry.Warden.Shared.Data;
+﻿using IronFoundry.Warden.Containers.Messages;
+using IronFoundry.Warden.Shared.Data;
 using IronFoundry.Warden.Shared.Messaging;
 using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Utilities;
@@ -111,6 +112,14 @@ namespace IronFoundry.Warden.Containers
             }
 
             return new ProcessStats();
+        }
+
+        public async Task EnableLoggingAsync(InstanceLoggingInfo loggingInfo)
+        {
+            if (IsRemoteActive)
+            {
+                var enableResponse = await launcher.SendMessageAsync<EnableLoggingRequest, EnableLoggingResponse>(new EnableLoggingRequest() { @params = loggingInfo });
+            }
         }
 
         public void Initialize(IResourceHolder resources)

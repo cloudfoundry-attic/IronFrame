@@ -57,6 +57,7 @@
     <Compile Include="Containers\InfoBuilder.cs" />
     <Compile Include="Containers\JobObject.cs" />
     <Compile Include="Containers\ContainerHostLauncher.cs" />
+    <Compile Include="Containers\Messages\EnableLoggingMessage.cs" />
     <Compile Include="Containers\ProcessMonitor.cs" />
     <Compile Include="Utilities\ProcessDataReceivedEventArgs.cs" />
     <Compile Include="Containers\SafeJobObjectHandle.cs" />

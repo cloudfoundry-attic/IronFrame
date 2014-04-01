@@ -9,6 +9,7 @@ using IronFoundry.Warden.Shared.Messaging;
 using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Utilities;
+using IronFoundry.Warden.Containers.Messages;
 
 namespace IronFoundry.Warden.ContainerHost
 {
@@ -116,6 +117,14 @@ namespace IronFoundry.Warden.ContainerHost
                     container = null;
 
                     return Task.FromResult<object>(new ContainerDestroyResponse(r.id));
+                });
+
+                dispatcher.RegisterMethod<EnableLoggingRequest>(EnableLoggingRequest.MethodName, (r) =>
+                {
+                    var containerEmitter = new ContainerLogEmitter(r.@params);
+                    container.AttachEmitter(containerEmitter);
+
+                    return Task.FromResult<object>(new EnableLoggingResponse(r.id));
                 });
 
                 transport.SubscribeRequest(

@@ -1,4 +1,5 @@
 ﻿using IronFoundry.Warden.Containers;
+using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Shared.Data;
 using IronFoundry.Warden.Shared.Messaging;
 using IronFoundry.Warden.Tasks;
@@ -230,6 +231,15 @@ namespace IronFoundry.Warden.Test
                 var response = await proxy.GetProcessStatisticsAsync();
 
                 this.launcher.Received(x => x.SendMessageAsync<ContainerStatisticsRequest, ContainerStatisticsResponse>(Arg.Any<ContainerStatisticsRequest>()));
+            }
+
+            [Fact]
+            public async void EnableLoggingAsyncSendsMessageToHost()
+            {
+                this.launcher.SendMessageAsync<EnableLoggingRequest, EnableLoggingResponse>(Arg.Any<EnableLoggingRequest>()).ReturnsTask(new EnableLoggingResponse(""));
+                await proxy.EnableLoggingAsync(new InstanceLoggingInfo());
+
+                this.launcher.Received(x => x.SendMessageAsync<EnableLoggingRequest, EnableLoggingResponse>(Arg.Any<EnableLoggingRequest>()));
             }
         }
 
