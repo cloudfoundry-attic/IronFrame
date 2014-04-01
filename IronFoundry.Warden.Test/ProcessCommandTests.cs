@@ -9,6 +9,7 @@ using IronFoundry.Warden.Protocol;
 using NSubstitute;
 using Xunit;
 using IronFoundry.Warden.Utilities;
+using IronFoundry.Warden.Containers.Messages;
 
 namespace IronFoundry.Warden.Tasks.Test
 {

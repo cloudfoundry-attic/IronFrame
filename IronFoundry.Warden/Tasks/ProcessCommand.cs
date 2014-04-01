@@ -10,6 +10,7 @@ using IronFoundry.Warden.Shared.Messaging;
 using NLog;
 using Protocol;
 using Utilities;
+    using IronFoundry.Warden.Containers.Messages;
 
     public abstract class ProcessCommand : TaskCommand
     {

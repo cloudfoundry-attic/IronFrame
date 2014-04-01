@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Security;
 using Newtonsoft.Json;
+using IronFoundry.Warden.Shared.Messaging;
 
-namespace IronFoundry.Warden.Shared.Messaging
+namespace IronFoundry.Warden.Containers.Messages
 {
     [Obsolete]
     public class CreateProcessRequest : JsonRpcRequest<CreateProcessStartInfo>

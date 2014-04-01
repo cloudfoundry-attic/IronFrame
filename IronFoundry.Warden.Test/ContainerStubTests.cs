@@ -1,4 +1,5 @@
 ﻿using IronFoundry.Warden.Containers;
+using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Logging;
 using IronFoundry.Warden.PInvoke;
 using IronFoundry.Warden.Shared.Messaging;

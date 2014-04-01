@@ -1,10 +1,11 @@
-﻿using System;
+﻿using IronFoundry.Warden.Shared.Messaging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IronFoundry.Warden.Shared.Messaging
+namespace IronFoundry.Warden.Containers.Messages
 {
     public class ContainerDestroyRequest : JsonRpcRequest
     {

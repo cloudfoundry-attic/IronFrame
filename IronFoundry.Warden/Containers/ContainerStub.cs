@@ -1,4 +1,5 @@
-﻿using IronFoundry.Warden.Shared.Data;
+﻿using IronFoundry.Warden.Containers.Messages;
+using IronFoundry.Warden.Shared.Data;
 using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Utilities;
 using System;
@@ -58,7 +59,7 @@ namespace IronFoundry.Warden.Containers
             get { return this.currentState; }
         }
 
-        public Utilities.IProcess CreateProcess(Shared.Messaging.CreateProcessStartInfo si, bool impersonate = false)
+        public Utilities.IProcess CreateProcess(CreateProcessStartInfo si, bool impersonate = false)
         {
             ThrowIfNotActive();
 
@@ -113,7 +114,7 @@ namespace IronFoundry.Warden.Containers
             }
         }
 
-        private ProcessStartInfo ToProcessStartInfo(Shared.Messaging.CreateProcessStartInfo createProcessStartInfo, bool impersonate)
+        private ProcessStartInfo ToProcessStartInfo(CreateProcessStartInfo createProcessStartInfo, bool impersonate)
         {
             var si = new ProcessStartInfo()
             {
