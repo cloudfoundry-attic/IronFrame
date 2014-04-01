@@ -1,0 +1,29 @@
+// Logging from a container.
+//
+// A logging request provides information for a container instance to use when logging.
+//
+// ### Request
+//
+// * `handle`: Container handle.
+// * `job_id`: Job ID.
+//
+// ### Response
+//
+// ### Errors
+//
+// ### Definition
+//
+
+package IronFoundry.Warden.Protocol;
+
+message LoggingRequest {
+  required string handle = 1;
+  required string application_id = 2;
+  required string instance_index = 3;
+  required string loggregator_router = 4;
+  required string loggregator_secret = 5;
+  repeated string drain_uris = 6;
+}
+
+message LoggingResponse {
+}

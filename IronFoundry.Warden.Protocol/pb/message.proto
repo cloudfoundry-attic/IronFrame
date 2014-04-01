@@ -30,6 +30,8 @@ message Message {
     Ping = 91;
     List = 92;
     Echo = 93;
+
+    Logging = 1001;
   }
 
   required Type message_type = 1;

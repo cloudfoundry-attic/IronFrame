@@ -2043,6 +2043,72 @@ namespace IronFoundry.Warden.Protocol
   }
   
 }
+// Generated from: logging.proto
+namespace IronFoundry.Warden.Protocol
+{
+  [global::System.Serializable, global::ProtoBuf.ProtoContract(Name=@"LoggingRequest")]
+  public partial class LoggingRequest : global::ProtoBuf.IExtensible
+  {
+    public LoggingRequest() {}
+    
+    private string _handle;
+    [global::ProtoBuf.ProtoMember(1, IsRequired = true, Name=@"handle", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public string Handle
+    {
+      get { return _handle; }
+      set { _handle = value; }
+    }
+    private string _applicationId;
+    [global::ProtoBuf.ProtoMember(2, IsRequired = true, Name=@"application_id", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public string ApplicationId
+    {
+      get { return _applicationId; }
+      set { _applicationId = value; }
+    }
+    private string _instanceIndex;
+    [global::ProtoBuf.ProtoMember(3, IsRequired = true, Name=@"instance_index", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public string InstanceIndex
+    {
+      get { return _instanceIndex; }
+      set { _instanceIndex = value; }
+    }
+    private string _loggregatorRouter;
+    [global::ProtoBuf.ProtoMember(4, IsRequired = true, Name=@"loggregator_router", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public string LoggregatorRouter
+    {
+      get { return _loggregatorRouter; }
+      set { _loggregatorRouter = value; }
+    }
+    private string _loggregatorSecret;
+    [global::ProtoBuf.ProtoMember(5, IsRequired = true, Name=@"loggregator_secret", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public string LoggregatorSecret
+    {
+      get { return _loggregatorSecret; }
+      set { _loggregatorSecret = value; }
+    }
+    private readonly global::System.Collections.Generic.List<string> _drainUris = new global::System.Collections.Generic.List<string>();
+    [global::ProtoBuf.ProtoMember(6, Name=@"drain_uris", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public global::System.Collections.Generic.List<string> DrainUris
+    {
+      get { return _drainUris; }
+    }
+  
+    private global::ProtoBuf.IExtension extensionObject;
+    global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+      { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
+  }
+  
+  [global::System.Serializable, global::ProtoBuf.ProtoContract(Name=@"LoggingResponse")]
+  public partial class LoggingResponse : global::ProtoBuf.IExtensible
+  {
+    public LoggingResponse() {}
+    
+    private global::ProtoBuf.IExtension extensionObject;
+    global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+      { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
+  }
+  
+}
 // Generated from: message.proto
 namespace IronFoundry.Warden.Protocol
 {
@@ -2127,7 +2193,10 @@ namespace IronFoundry.Warden.Protocol
       List = 92,
             
       [global::ProtoBuf.ProtoEnum(Name=@"Echo", Value=93)]
-      Echo = 93
+      Echo = 93,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"Logging", Value=1001)]
+      Logging = 1001
     }
   
     private global::ProtoBuf.IExtension extensionObject;
