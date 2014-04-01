@@ -1,4 +1,5 @@
-﻿using IronFoundry.Warden.Shared.Data;
+﻿using IronFoundry.Warden.Containers.Messages;
+using IronFoundry.Warden.Shared.Data;
 using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Utilities;
 using System;
@@ -14,6 +15,8 @@ namespace IronFoundry.Warden.Containers
 
         Task DestroyAsync();
         Task<ProcessStats> GetProcessStatisticsAsync();
+        Task EnableLoggingAsync(InstanceLoggingInfo loggingInfo);
+
         void Initialize(IResourceHolder containerResources);
         int ReservePort(int port);
         Task<CommandResult> RunCommandAsync(RemoteCommand command);        

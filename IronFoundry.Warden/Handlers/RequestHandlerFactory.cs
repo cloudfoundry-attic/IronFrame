@@ -99,6 +99,9 @@
                 case Message.Type.Stream:
                     handler = new StreamRequestHandler(containerManager, jobManager, request);
                     break;
+                case Message.Type.Logging:
+                    handler = new LoggingRequestHandler(containerManager, request);
+                    break;
                 default:
                     throw new WardenException("Unknown request type '{0}' passed to handler factory.", requestType);
             }

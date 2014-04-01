@@ -82,6 +82,9 @@
                 case Message.Type.Stream:
                     request = Deserialize<StreamRequest>(message.Payload);
                     break;
+                case Message.Type.Logging:
+                    request = Deserialize<LoggingRequest>(message.Payload);
+                    break;
                 default:
                     throw new WardenException("Can't unwrap message type '{0}'", message.MessageType);
             }

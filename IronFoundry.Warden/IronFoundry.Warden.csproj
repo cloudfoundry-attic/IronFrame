@@ -66,6 +66,7 @@
     <Compile Include="Containers\Messages\EnableLoggingMessage.cs" />
     <Compile Include="Containers\Messages\RunCommandMessage.cs" />
     <Compile Include="Containers\ProcessMonitor.cs" />
+    <Compile Include="Handlers\LoggingRequestHandler.cs" />
     <Compile Include="Utilities\ProcessDataReceivedEventArgs.cs" />
     <Compile Include="Containers\SafeJobObjectHandle.cs" />
     <Compile Include="Handlers\ContainerRequestHandler.cs" />

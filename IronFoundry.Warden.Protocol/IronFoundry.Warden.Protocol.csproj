@@ -45,6 +45,8 @@
     <Compile Include="Messages\ICopyRequest.cs" />
     <Compile Include="Messages\LimitCpuRequest.cs" />
     <Compile Include="Messages\LimitCpuResponse.cs" />
+    <Compile Include="Messages\LoggingRequest.cs" />
+    <Compile Include="Messages\LoggingResponse.cs" />
     <Compile Include="Messages\ResourceLimits.cs" />
     <Compile Include="MessageUnwrapper.cs" />
     <Compile Include="Messages\StreamRequest.cs" />
