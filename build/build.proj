@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <VersionFile Include="$(SolutionDir)\src\shared\CommonAssemblyInfo.cs" />
+    <VersionFile Include="$(SolutionDir)\shared\CommonAssemblyInfo.cs" />
   </ItemGroup>
 
   <Target Name="ResolveTestAssemblies">

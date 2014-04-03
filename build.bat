@@ -11,14 +11,10 @@ if not exist %MSBUILD% goto Error_NoMsBuild
 set TARGET=%1
 if (%TARGET%)==() set TARGET=Default
 
-set VERBOSITY=%2
-if (%VERBOSITY%)==() set VERBOSITY=minimal
+for /F "tokens=1* delims= " %%a in ("%*") do set BUILDARGS=%%b
+if "%BUILDARGS%"=="" set BUILDARGS=/verbosity:minimal
 
-FOR /F "tokens=1,2* delims= " %%a in ("%*") do set BUILDARGS=%%c
-
-echo %BUILDARGS%
-
-%MSBUILD% /verbosity:%VERBOSITY% /nologo /m /t:%TARGET% %BUILDARGS% %~dp0build/build.proj
+%MSBUILD% /nologo /m /t:%TARGET% %BUILDARGS% %~dp0build/build.proj
 
 if errorlevel 1 goto Error_BuildFailed
 
