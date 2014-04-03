@@ -57,32 +57,32 @@ namespace IronFoundry.Warden.Test
                 base.Dispose();
             }
 
-            [Fact]
+            [FactAdminRequired]
             public void CreateProducesContainerResourcesReference()
             {
                 
                 Assert.NotNull(containerResources);
             }
 
-            [Fact]
+            [FactAdminRequired]
             public void CreatesContainerHandle()
             {
                 Assert.NotEmpty(containerResources.Handle.ToString());
             }
 
-            [Fact]
+            [FactAdminRequired]
             public void CreatesUserBasedOnHandle()
             {
                 Assert.Equal("warden_" + containerResources.Handle.ToString(), containerResources.User.UserName);
             }
 
-            [Fact]
+            [FactAdminRequired]
             public void CreateDirectoryForContainer()
             {
                 Assert.Equal(Path.Combine(tempDir, containerResources.Handle.ToString()), containerResources.Directory.FullName);
             }
 
-            [Fact]
+            [FactAdminRequired]
             public void CreatesJobObjectBasedOnHandle()
             {
                 using (var jobObjectHandle = new SafeJobObjectHandle(NativeMethods.OpenJobObject(NativeMethods.JobObjectAccessRights.AllAccess, false, containerResources.Handle.ToString())))
