@@ -52,6 +52,9 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="install.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>

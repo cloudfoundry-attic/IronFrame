@@ -9,13 +9,13 @@ namespace IronFoundry.Warden.Service
     {
         static readonly Logger log = LogManager.GetCurrentClassLogger();
 
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 
             log.Info("Current directory is: '{0}'", Directory.GetCurrentDirectory());
 
-            HostFactory.Run(x =>
+            var exitCode = HostFactory.Run(x =>
                 {
                     x.Service<WinService>();
                     x.SetDescription(Constants.DisplayName);
@@ -26,6 +26,8 @@ namespace IronFoundry.Warden.Service
                     x.RunAsPrompt();
                     x.UseNLog();
                 });
+
+            return (int)exitCode;
         }
     }
 }
