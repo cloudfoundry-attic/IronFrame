@@ -14,7 +14,11 @@ if (%TARGET%)==() set TARGET=Default
 set VERBOSITY=%2
 if (%VERBOSITY%)==() set VERBOSITY=minimal
 
-%MSBUILD% /verbosity:%VERBOSITY% /nologo /m /t:%TARGET% %~dp0build/build.proj
+FOR /F "tokens=1,2* delims= " %%a in ("%*") do set BUILDARGS=%%c
+
+echo %BUILDARGS%
+
+%MSBUILD% /verbosity:%VERBOSITY% /nologo /m /t:%TARGET% %BUILDARGS% %~dp0build/build.proj
 
 if errorlevel 1 goto Error_BuildFailed
 
