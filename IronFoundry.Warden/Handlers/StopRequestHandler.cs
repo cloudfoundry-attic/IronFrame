@@ -1,10 +1,10 @@
-﻿namespace IronFoundry.Warden.Handlers
-{
-    using System.Threading.Tasks;
-    using Containers;
-    using NLog;
-    using Protocol;
+﻿using System.Threading.Tasks;
+using IronFoundry.Warden.Containers;
+using IronFoundry.Warden.Protocol;
+using NLog;
 
+namespace IronFoundry.Warden.Handlers
+{
     public class StopRequestHandler : ContainerRequestHandler
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();
@@ -13,22 +13,29 @@
         public StopRequestHandler(IContainerManager containerManager, Request request)
             : base(containerManager, request)
         {
-            this.request = (StopRequest)request;
+            this.request = (StopRequest) request;
         }
 
         public override Task<Response> HandleAsync()
         {
-            return Task.Run<Response>(() =>
-                {
-                    // before
-                    log.Trace("Handle: '{0}' Background: '{1}' Kill: '{2}'", request.Handle, request.Background, request.Kill);
-                    var c = GetContainer();
+            return Task.Run<Response>(async () =>
+                    {
+                        // before
+                        log.Trace("Handle: '{0}' Background: '{1}' Kill: '{2}'", request.Handle, request.Background, request.Kill);
+                        var c = GetContainer();
 
-                    // do
-                    c.Stop();
+                        // do
+                        if (c != null)
+                        {
+                            await c.StopAsync();
+                        }
+                        else
+                        {
+                            log.Info("Handle: '{0}' could not be found.", request.Handle);
+                        }
 
-                    return new StopResponse();
-                });
+                        return new StopResponse();
+                    });
         }
     }
 }

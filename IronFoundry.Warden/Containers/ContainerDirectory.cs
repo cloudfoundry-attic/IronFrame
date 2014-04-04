@@ -48,17 +48,6 @@
             }
         }
 
-        public static void CleanUp(string handle)
-        {
-            try
-            {
-                var config = new WardenConfig();
-                var items = GetContainerDirectoryInfo(config, new ContainerHandle(handle));
-                Directory.Delete(items.Item2, true);
-            }
-            catch { }
-        }
-
         public static implicit operator string(ContainerDirectory containerDirectory)
         {
             return containerDirectory.ToString();

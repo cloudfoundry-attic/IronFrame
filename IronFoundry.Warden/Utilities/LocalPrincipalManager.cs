@@ -1,27 +1,49 @@
-﻿namespace IronFoundry.Warden.Utilities
-{
-    using System;
-    using System.DirectoryServices;
-    using System.DirectoryServices.AccountManagement;
-    using System.Web.Security;
-    using NLog;
-    using System.Runtime.InteropServices;
+﻿using System;
+using System.DirectoryServices;
+using System.DirectoryServices.AccountManagement;
+using System.Net;
+using System.Runtime.InteropServices;
+using System.Web.Security;
+using NLog;
 
-    public class LocalPrincipalManager : IronFoundry.Warden.Utilities.IUserManager
+namespace IronFoundry.Warden.Utilities
+{
+    public class LocalPrincipalManager : IUserManager
     {
         private const uint COM_EXCEPT_UNKNOWN_DIRECTORY_OBJECT = 0x80005004;
-
-        private readonly Logger log = LogManager.GetCurrentClassLogger();
 
         // IIS_IUSRS_SID = "S-1-5-32-568";
         private const string IIS_IUSRS_NAME = "IIS_IUSRS";
 
         private readonly string directoryPath = String.Format("WinNT://{0}", Environment.MachineName);
-        private IDesktopPermissionManager permissionManager;
+        private readonly Logger log = LogManager.GetCurrentClassLogger();
+        private readonly IDesktopPermissionManager permissionManager;
 
         public LocalPrincipalManager(IDesktopPermissionManager permissionManager)
         {
             this.permissionManager = permissionManager;
+        }
+
+        public void DeleteUser(string userName)
+        {
+            using (var localDirectory = new DirectoryEntry(directoryPath))
+            {
+                DirectoryEntries users = localDirectory.Children;
+                // users.Find(userName) throws, rather than be exception based we enumerate this outselves                
+                var user = AnyEntry(users, de => de.Name == userName);
+                if (user != null)
+                {
+                    permissionManager.RemoveDesktopPermission(userName);
+                    users.Remove(user);
+                }
+            }
+        }
+
+        NetworkCredential IUserManager.CreateUser(string userName)
+        {
+            var data = CreateUser(userName);
+            permissionManager.AddDesktopPermission(userName);
+            return new NetworkCredential(data.UserName, data.Password);
         }
 
         public string FindUser(string userName)
@@ -44,7 +66,10 @@
                 catch (COMException ex)
                 {
                     // Exception indicates the requested item could not be found, in which case we should return the default value
-                    if ((uint)ex.ErrorCode != COM_EXCEPT_UNKNOWN_DIRECTORY_OBJECT) { throw; }
+                    if ((uint) ex.ErrorCode != COM_EXCEPT_UNKNOWN_DIRECTORY_OBJECT)
+                    {
+                        throw;
+                    }
                 }
             }
 
@@ -79,8 +104,7 @@
                     }
 
                     ++tries;
-                }
-                while (userSaved == false && tries < 5);
+                } while (userSaved == false && tries < 5);
 
                 if (userSaved)
                 {
@@ -94,7 +118,7 @@
                     // invoking 'Add' with the DN of the user.
                     var groupAsDirectoryEntry = iisUsersGroup.GetUnderlyingObject() as DirectoryEntry;
                     var userAsDirectoryEntry = user.GetUnderlyingObject() as DirectoryEntry;
-                    groupAsDirectoryEntry.Invoke("Add", new object[] { userAsDirectoryEntry.Path });
+                    groupAsDirectoryEntry.Invoke("Add", new object[] {userAsDirectoryEntry.Path});
 
                     iisUsersGroup.Save();
 
@@ -103,20 +127,6 @@
             }
 
             return rv;
-        }
-
-        public void DeleteUser(string userName)
-        {
-            using (var localDirectory = new DirectoryEntry(directoryPath))
-            {
-                DirectoryEntries users = localDirectory.Children;
-                // users.Find(userName) throws, rather than be exception based we enumerate this outselves                
-                var user = AnyEntry(users, de => de.Name == userName);
-                if (user != null)
-                {
-                    users.Remove(user);
-                }
-            }
         }
 
         private DirectoryEntry AnyEntry(DirectoryEntries entries, Func<DirectoryEntry, bool> eval)
@@ -132,13 +142,6 @@
             }
 
             return null;
-        }
-
-        System.Net.NetworkCredential IUserManager.CreateUser(string userName)
-        {
-            var data = this.CreateUser(userName);
-            this.permissionManager.AddDesktopPermission(userName);
-            return new System.Net.NetworkCredential(data.UserName, data.Password);
         }
     }
 }

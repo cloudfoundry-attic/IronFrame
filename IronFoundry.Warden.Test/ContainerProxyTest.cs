@@ -225,6 +225,28 @@ namespace IronFoundry.Warden.Test
             }
 
             [Fact]
+            public async void StopSendsDestroyMessageToStubOnDestroy()
+            {
+                await proxy.StopAsync();
+                launcher.Received(x => x.SendMessageAsync<ContainerDestroyRequest, ContainerDestroyResponse>(Arg.Any<ContainerDestroyRequest>()));
+            }
+
+            [Fact]
+            public async void StopDestorysResourceHolder()
+            {
+                await proxy.StopAsync();
+                resourceHolder.Received(x => x.Destroy());
+            }
+
+            [Fact]
+            public async void StopDestroySetsStateToDestroy()
+            {
+                launcher.IsActive.Returns(false);
+                await proxy.StopAsync();
+                Assert.Equal(ContainerState.Destroyed, proxy.State);
+            }
+
+            [Fact]
             public async void GetStatisticsSendsMessageToHost()
             {
                 this.launcher.SendMessageAsync<ContainerStatisticsRequest, ContainerStatisticsResponse>(Arg.Any<ContainerStatisticsRequest>()).ReturnsTask(new ContainerStatisticsResponse("", new Shared.Data.ProcessStats()));

@@ -1,87 +1,44 @@
-﻿namespace IronFoundry.Warden.Containers
-{
-    using System;
-    using System.Net;
-    using System.Security.Principal;
-    using System.Text.RegularExpressions;
-    using IronFoundry.Warden.Utilities;
+﻿using System;
+using System.Net;
 using System.Security;
+using System.Security.Principal;
+using System.Text.RegularExpressions;
+using IronFoundry.Warden.Utilities;
 
-    public interface IContainerUser
-    {
-        string UserName { get; }
-        NetworkCredential GetCredential();
-        void Delete();
-    }
-
+namespace IronFoundry.Warden.Containers
+{
     public class ContainerUser : IEquatable<ContainerUser>, IContainerUser
     {
-        private const string userPrefix = "warden_";
+        private const string UserPrefix = "warden_";
         private static readonly Regex uniqueIdValidator = new Regex(@"^\w{8,}$", RegexOptions.CultureInvariant | RegexOptions.Compiled);
-
-        private readonly string uniqueId;
+        private readonly IUserManager userManager;
         private readonly string userName;
-        private readonly string password;
+        private string password;
 
-        public NetworkCredential GetCredential()
-        {
-            return new NetworkCredential(userName, password);
-        }
-
-        public ContainerUser(string uniqueId, bool shouldCreate = false)
+        private ContainerUser(string uniqueId, IUserManager userManager)
         {
             if (uniqueId.IsNullOrWhiteSpace())
             {
                 throw new ArgumentNullException("uniqueId");
             }
-            this.uniqueId = uniqueId;
+
+            this.userManager = userManager;
 
             if (uniqueIdValidator.IsMatch(uniqueId))
             {
-                this.userName = CreateUserName(uniqueId);
+                userName = CreateUserName(uniqueId);
             }
             else
             {
                 throw new ArgumentException("uniqueId must be 8 or more word characters.");
             }
-
-            var principalManager = new LocalPrincipalManager(new DesktopPermissionManager());
-            if (shouldCreate)
-            {
-                /*
-                 * TODO: this means that we can't retrieve a user's password if restoring a container.
-                 * This should be OK when we move to the "separate process for container" model since the separate
-                 * process will be installed as a service and the password will only need to be known at install
-                 * time.
-                 */
-                var userData = principalManager.CreateUser(this.userName);
-                if (userData == null)
-                {
-                    throw new ArgumentException(String.Format("Could not create user '{0}'", this.userName));
-                }
-                else
-                {
-                    this.userName = userData.UserName;
-                    this.password = userData.Password;
-                }
-            }
-            else
-            {
-                string foundUser = principalManager.FindUser(this.userName);
-                if (foundUser == null)
-                {
-                    throw new ArgumentException(String.Format("Could not find user '{0}'", this.userName));
-                }
-            }
-
-            AddDesktopPermission(this.userName);
         }
 
-        // Recovers from UID and password
         public ContainerUser(string userName, SecureString password)
         {
             this.userName = userName;
             this.password = password.ToUnsecureString();
+            userManager = new LocalPrincipalManager(new DesktopPermissionManager());
         }
 
         public string SID
@@ -89,33 +46,51 @@ using System.Security;
             get
             {
                 var ntAccount = new NTAccount(userName);
-                var securityIdentifier = (SecurityIdentifier)ntAccount.Translate(typeof(SecurityIdentifier));
+                var securityIdentifier = (SecurityIdentifier) ntAccount.Translate(typeof (SecurityIdentifier));
                 return securityIdentifier.ToString();
             }
         }
 
-        public string UserName
+        public NetworkCredential GetCredential()
         {
-            get 
-            {
-                return this.userName;
-            }
+            return new NetworkCredential(userName, password);
         }
 
-        public static void CleanUp(string uniqueId)
+        public string UserName
         {
-            try
-            {
-                string userName = CreateUserName(uniqueId);
-                DeleteUser(userName);
-                RemoveDesktopPermission(userName);
-            }
-            catch { }
+            get { return userName; }
         }
 
         public void Delete()
         {
-            DeleteUser(userName);
+            userManager.DeleteUser(userName);
+        }
+
+        public bool Equals(ContainerUser other)
+        {
+            if (ReferenceEquals(null, other))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
+            return GetHashCode() == other.GetHashCode();
+        }
+
+        public static ContainerUser CreateUser(string uniqueId, IUserManager userManager)
+        {
+            var user = new ContainerUser(uniqueId, userManager);
+            var userData = userManager.CreateUser(user.UserName);
+            if (userData == null)
+            {
+                throw new ArgumentException(String.Format("Could not create user '{0}'", user.UserName));
+            }
+            user.password = userData.Password;
+            return user;
         }
 
         public static implicit operator string(ContainerUser containerUser)
@@ -125,9 +100,9 @@ using System.Security;
 
         public static bool operator ==(ContainerUser x, ContainerUser y)
         {
-            if (Object.ReferenceEquals(x, null))
+            if (ReferenceEquals(x, null))
             {
-                return Object.ReferenceEquals(y, null);
+                return ReferenceEquals(y, null);
             }
             return x.Equals(y);
         }
@@ -152,48 +127,9 @@ using System.Security;
             return Equals(obj as ContainerUser);
         }
 
-        public bool Equals(ContainerUser other)
-        {
-            if (Object.ReferenceEquals(null, other))
-            {
-                return false;
-            }
-
-            if (Object.ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            return this.GetHashCode() == other.GetHashCode();
-        }
-
-        private static void AddDesktopPermission(string userName)
-        {
-            if (Environment.UserInteractive == false)
-            {
-                var desktopPermissionManager = new DesktopPermissionManager();
-                desktopPermissionManager.AddDesktopPermission(userName);
-            }
-        }
-
-        private static void DeleteUser(string userName)
-        {
-            var principalManager = new LocalPrincipalManager(new DesktopPermissionManager());
-            principalManager.DeleteUser(userName);
-        }
-
-        private static void RemoveDesktopPermission(string userName)
-        {
-            if (Environment.UserInteractive == false)
-            {
-                var desktopPermissionManager = new DesktopPermissionManager();
-                desktopPermissionManager.RemoveDesktopPermission(userName);
-            }
-        }
-
         private static string CreateUserName(string uniqueId)
         {
-            return String.Concat(userPrefix, uniqueId);
+            return String.Concat(UserPrefix, uniqueId);
         }
     }
 }

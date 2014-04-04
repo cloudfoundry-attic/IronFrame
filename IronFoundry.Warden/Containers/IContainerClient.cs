@@ -20,6 +20,6 @@ namespace IronFoundry.Warden.Containers
         void Initialize(IResourceHolder containerResources);
         int ReservePort(int port);
         Task<CommandResult> RunCommandAsync(RemoteCommand command);        
-        void Stop();        
+        Task StopAsync();        
     }
 }

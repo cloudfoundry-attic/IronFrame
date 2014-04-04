@@ -1,10 +1,12 @@
-﻿using IronFoundry.Warden.Containers;
+﻿using System.Web.UI.WebControls;
+using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Containers.Messages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using logmessage;
 using Xunit;
 
 
@@ -40,6 +42,21 @@ namespace IronFoundry.Warden.Test
 
             var ex = Record.Exception(() => { var emitter = new ContainerLogEmitter(logData); });
             Assert.IsType<ArgumentException>(ex);
+        }
+
+        [Fact]
+        public void WhenNullDataIsLoggedDoesNotThrow()
+        {
+            var logData = new InstanceLoggingInfo()
+            {
+                ApplicationId = "0",
+                InstanceIndex = "0",
+                LoggregatorAddress = "192.168.1.1:5555",
+                LoggregatorSecret = "Secret",
+            };
+            var emitter = new ContainerLogEmitter(logData);
+
+            emitter.EmitLogMessage(LogMessage.MessageType.OUT, null);
         }
     }
 }

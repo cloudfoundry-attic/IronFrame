@@ -1,30 +1,32 @@
-﻿using IronFoundry.Warden.Containers.Messages;
-using IronFoundry.Warden.Shared.Data;
-using IronFoundry.Warden.Shared.Messaging;
-using IronFoundry.Warden.Tasks;
-using IronFoundry.Warden.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Security;
-using System.Text;
+﻿using System;
 using System.Threading.Tasks;
+using IronFoundry.Warden.Configuration;
+using IronFoundry.Warden.Containers.Messages;
+using IronFoundry.Warden.Shared.Data;
+using IronFoundry.Warden.Tasks;
 
 namespace IronFoundry.Warden.Containers
 {
     public class ContainerProxy : IDisposable, IContainerClient
     {
-        private ContainerHostLauncher launcher;
-        private IResourceHolder containerResources;
-        private ushort? assignedPort;
+        private readonly ContainerHostLauncher launcher;
         private ContainerState cachedContainerState;
+        private IResourceHolder containerResources;
 
         public ContainerProxy(ContainerHostLauncher launcher)
         {
             this.launcher = launcher;
-            this.cachedContainerState = ContainerState.Born;
+            cachedContainerState = ContainerState.Born;
+        }
+
+        public string ContainerUserName
+        {
+            get { return containerResources.User.UserName; }
+        }
+
+        private bool IsRemoteActive
+        {
+            get { return launcher != null && launcher.IsActive; }
         }
 
         public string ContainerDirectoryPath
@@ -35,11 +37,6 @@ namespace IronFoundry.Warden.Containers
         public ContainerHandle Handle
         {
             get { return containerResources.Handle; }
-        }
-
-        public string ContainerUserName
-        {
-            get { return containerResources.User.UserName; }
         }
 
         public ContainerState State
@@ -55,36 +52,25 @@ namespace IronFoundry.Warden.Containers
             }
         }
 
-        private bool IsRemoteActive
-        {
-            get { return launcher != null && launcher.IsActive; }
-        }
-
-        private async Task<string> GetRemoteContainerState()
-        {
-            var response = await launcher.SendMessageAsync<ContainerStateRequest, ContainerStateResponse>(new ContainerStateRequest());
-            return response.result;
-        }
-
         public async Task<CommandResult> RunCommandAsync(RemoteCommand command)
         {
             if (!IsRemoteActive) throw new InvalidOperationException();
 
             var response = await launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(
                 new RunCommandRequest(
-                    new RunCommandData()
+                    new RunCommandData
                     {
                         impersonate = command.ShouldImpersonate,
                         command = command.Command,
                         arguments = command.Arguments,
                     }));
 
-            return new CommandResult()
-            {
-                ExitCode = response.result.exitCode,
-                StdOut = response.result.stdOut,
-                StdErr = response.result.stdErr,
-            };
+            return new CommandResult
+                   {
+                       ExitCode = response.result.exitCode,
+                       StdOut = response.result.stdOut,
+                       StdErr = response.result.stdErr,
+                   };
         }
 
         public async Task DestroyAsync()
@@ -95,12 +81,12 @@ namespace IronFoundry.Warden.Containers
                 var response = await launcher.SendMessageAsync<ContainerDestroyRequest, ContainerDestroyResponse>(request);
             }
 
-            if (containerResources != null)
+            if (cachedContainerState != ContainerState.Destroyed && containerResources != null)
             {
                 containerResources.Destroy();
             }
 
-            this.cachedContainerState = ContainerState.Destroyed;
+            cachedContainerState = ContainerState.Destroyed;
         }
 
         public async Task<ProcessStats> GetProcessStatisticsAsync()
@@ -118,51 +104,56 @@ namespace IronFoundry.Warden.Containers
         {
             if (IsRemoteActive)
             {
-                var enableResponse = await launcher.SendMessageAsync<EnableLoggingRequest, EnableLoggingResponse>(new EnableLoggingRequest() { @params = loggingInfo });
+                var enableResponse = await launcher.SendMessageAsync<EnableLoggingRequest, EnableLoggingResponse>(new EnableLoggingRequest {@params = loggingInfo});
             }
         }
 
         public void Initialize(IResourceHolder resources)
         {
-            this.containerResources = resources;
-            launcher.Start(this.ContainerDirectoryPath, this.containerResources.Handle.ToString());
+            containerResources = resources;
+            launcher.Start(ContainerDirectoryPath, containerResources.Handle.ToString());
 
             InvokeRemoteInitialize();
         }
 
-        private async void InvokeRemoteInitialize()
-        {
-            var request = new ContainerInitializeRequest(
-                new ContainerInitializeParameters()
-                {
-                    containerDirectoryPath = ContainerDirectoryPath,
-                    containerHandle = Handle.ToString(),
-                    userName = this.containerResources.User.GetCredential().UserName,
-                    userPassword = this.containerResources.User.GetCredential().SecurePassword
-                });
-
-            var response = await launcher.SendMessageAsync<ContainerInitializeRequest, ContainerInitializeResponse>(request);
-        }
-
         public int ReservePort(int requestedPort)
         {
-            if (!assignedPort.HasValue)
+            if (!containerResources.AssignedPort.HasValue)
             {
-                var localTcpPortManager = new LocalTcpPortManager((ushort)requestedPort, this.ContainerUserName);
-                assignedPort = localTcpPortManager.ReserveLocalPort();
+                containerResources.AssignedPort = containerResources.LocalTcpPortManager.ReserveLocalPort((ushort) requestedPort, ContainerUserName);
             }
 
-            return assignedPort.Value;
+            return containerResources.AssignedPort.Value;
         }
 
-        public void Stop()
+        public async Task StopAsync()
         {
-            //bb: What should be done with stop?
+            await DestroyAsync();
         }
 
         public void Dispose()
         {
             launcher.Dispose();
+        }
+
+        private async Task<string> GetRemoteContainerState()
+        {
+            var response = await launcher.SendMessageAsync<ContainerStateRequest, ContainerStateResponse>(new ContainerStateRequest());
+            return response.result;
+        }
+
+        private async void InvokeRemoteInitialize()
+        {
+            var request = new ContainerInitializeRequest(
+                new ContainerInitializeParameters
+                {
+                    containerDirectoryPath = ContainerDirectoryPath,
+                    containerHandle = Handle.ToString(),
+                    userName = containerResources.User.GetCredential().UserName,
+                    userPassword = containerResources.User.GetCredential().SecurePassword
+                });
+
+            var response = await launcher.SendMessageAsync<ContainerInitializeRequest, ContainerInitializeResponse>(request);
         }
 
         public static IContainerClient Restore(string handle, ContainerState containerState)
@@ -172,7 +163,9 @@ namespace IronFoundry.Warden.Containers
 
         internal static void CleanUp(string handle)
         {
-            // bb: need to cleanup based on handle
+            // this creates a temporary set of resources to make sure we clean up
+            var holder = ContainerResourceHolder.Create(new WardenConfig(), new ContainerHandle(handle));
+            holder.Destroy();
         }
     }
 }

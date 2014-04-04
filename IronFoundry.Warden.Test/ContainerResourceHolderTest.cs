@@ -1,6 +1,7 @@
 ﻿using IronFoundry.Warden.Configuration;
 using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.PInvoke;
+using IronFoundry.Warden.Utilities;
 using NSubstitute;
 using System;
 using System.Collections.Generic;
@@ -99,6 +100,7 @@ namespace IronFoundry.Warden.Test
             private IContainerDirectory directory;
             private JobObject jobObject;
             private ContainerResourceHolder resourceHolder;
+            private ILocalTcpPortManager localTcpManager;
 
             public GivenDestroyedHolder()
             {
@@ -106,8 +108,9 @@ namespace IronFoundry.Warden.Test
                 user = Substitute.For<IContainerUser>();
                 directory = Substitute.For<IContainerDirectory>();
                 jobObject = Substitute.For<JobObject>();
-
-                resourceHolder = new ContainerResourceHolder(handle, user, directory, jobObject);
+                localTcpManager = Substitute.For<ILocalTcpPortManager>();
+                
+                resourceHolder = new ContainerResourceHolder(handle, user, directory, jobObject, localTcpManager);
                 resourceHolder.Destroy();
             }
 
@@ -133,6 +136,26 @@ namespace IronFoundry.Warden.Test
             public void RequestsDeleteDirectory()
             {
                 directory.Received().Delete();
+            }
+
+            [Fact]
+            public void RequestsReleasePortIfPortAssigned()
+            {   
+                var holder = new ContainerResourceHolder(handle, user, directory, jobObject, localTcpManager) {AssignedPort = 8888};
+
+                holder.Destroy();
+
+                localTcpManager.Received().ReleaseLocalPort(Arg.Any<ushort>(), Arg.Any<string>());
+            }
+
+            [Fact]
+            public void DoesNotTryToReleasePortIfNoPortAssigned()
+            {
+                var holder = new ContainerResourceHolder(handle, user, directory, jobObject, localTcpManager);
+
+                holder.Destroy();
+
+                localTcpManager.DidNotReceive().ReleaseLocalPort(Arg.Any<ushort>(), Arg.Any<string>());
             }
         }
     }

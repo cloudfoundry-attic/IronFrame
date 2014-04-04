@@ -52,10 +52,15 @@ namespace IronFoundry.Warden.Containers
 
         public void EmitLogMessage(LogMessage.MessageType type, string data)
         {
+            if (data.IsNullOrEmpty())
+            {
+                return;
+            }
+
             var message = new logmessage.LogMessage()
             {
                 message_type = type,
-                message = ASCIIEncoding.ASCII.GetBytes(data),
+                message = Encoding.ASCII.GetBytes(data),
                 app_id = instanceLoggingInfo.ApplicationId,
                 source_id = instanceLoggingInfo.InstanceIndex,
                 source_name = "App",

@@ -1,46 +1,43 @@
-﻿namespace IronFoundry.Warden.Utilities
+﻿using System;
+using NLog;
+
+namespace IronFoundry.Warden.Utilities
 {
-    using System;
-    using NLog;
-
-    public class LocalTcpPortManager
+    public class LocalTcpPortManager : ILocalTcpPortManager
     {
-        private static readonly string workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.System);
+        private readonly IFirewallManager firewallManager;
         private readonly Logger log = LogManager.GetCurrentClassLogger();
+        private readonly INetShRunner netShRunner;
 
-        private readonly ushort port;
-        private readonly string userName;
-        private readonly string firewallRuleName;
-
-        public LocalTcpPortManager(ushort port, string userName)
+        public LocalTcpPortManager(IFirewallManager firewallManager, INetShRunner netShRunner)
         {
-            this.port = port;
-            if (this.port == default(ushort))
-            {
-                this.port = IPUtilities.RandomFreePort();
-            }
+            this.netShRunner = netShRunner;
+            this.firewallManager = firewallManager;
+        }
 
+        /// <summary>
+        ///     netsh http add urlacl http://*:8888/ user=warden_094850238
+        /// </summary>
+        public ushort ReserveLocalPort(ushort port, string userName)
+        {   
             if (userName.IsNullOrWhiteSpace())
             {
                 throw new ArgumentNullException("userName");
             }
-            this.userName = userName;
 
-            this.firewallRuleName = String.Format("{0}-{1}", this.userName, this.port);
-        }
+            if (port == default(ushort))
+            {
+                port = IPUtilities.RandomFreePort();
+            }
 
-        /// <summary>
-        /// netsh http add urlacl http://*:8888/ user=warden_094850238
-        /// </summary>
-        public ushort ReserveLocalPort()
-        {
-            string arguments = String.Format("http add urlacl http://*:{0}/ user={1}", port, userName);
-            if (RunNetsh(arguments))
+            log.Info("Reserving port {0} for user {1}", port, userName);
+
+            //string arguments = String.Format("http add urlacl http://*:{0}/ user={1}", port, userName);
+            if (netShRunner.AddRule(port, userName))
             {
                 try
                 {
-                    var firewallManager = new FirewallManager(port, firewallRuleName);
-                    firewallManager.OpenPort();
+                    firewallManager.OpenPort(port, CreateFirewallRuleName(port, userName));
                 }
                 catch (Exception ex)
                 {
@@ -56,17 +53,22 @@
         }
 
         /// <summary>
-        /// netsh http delete urlacl http://*:8888/
+        ///     netsh http delete urlacl http://*:8888/
         /// </summary>
-        public void ReleaseLocalPort()
+        public void ReleaseLocalPort(ushort port, string userName)
         {
-            string arguments = String.Format("http delete urlacl http://*:{0}/", port);
-            if (RunNetsh(arguments))
+            if (userName.IsNullOrWhiteSpace())
+            {
+                throw new ArgumentNullException("userName");
+            }
+
+            log.Info("Releasing port {0} for user {1}", port, userName);
+
+            if (netShRunner.DeleteRule(port))
             {
                 try
                 {
-                    var firewallManager = new FirewallManager(port, firewallRuleName);
-                    firewallManager.ClosePort();
+                    firewallManager.ClosePort(CreateFirewallRuleName(port, userName));
                 }
                 catch (Exception ex)
                 {
@@ -79,17 +81,9 @@
             }
         }
 
-        private bool RunNetsh(string arguments)
+        private static string CreateFirewallRuleName(ushort port, string userName)
         {
-            bool success = false;
-
-            using (var process = new BackgroundProcess(workingDirectory, "netsh.exe", arguments))
-            {
-                process.StartAndWait(asyncOutput: false);
-                success = process.ExitCode == 0;
-            }
-
-            return success;
+            return String.Format("{0}-{1}", userName, port);
         }
     }
 }

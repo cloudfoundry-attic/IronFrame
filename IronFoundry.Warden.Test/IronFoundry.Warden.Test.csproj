@@ -40,6 +40,8 @@
     <Compile Include="ContainerProxyTest.cs" />
     <Compile Include="ContainerResourceHolderTest.cs" />
     <Compile Include="ContainerStubTests.cs" />
+    <Compile Include="ContainerUserTests.cs" />
+    <Compile Include="LocalTcpPortManagerTests.cs" />
     <Compile Include="LoggingRequestHandlerTest.cs" />
     <Compile Include="Messaging\MessageTransportTest.cs" />
     <Compile Include="Messaging\MessagingClientTest.cs" />
