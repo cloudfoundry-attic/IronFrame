@@ -28,7 +28,7 @@
             {
                 log.Trace("Destroying container with handle: '{0}'", request.Handle);
 
-                return Task.Run<Response>(() =>
+                return Task.Run<Response>(async () =>
                     {
                         var container = GetContainer();
                         if (container != null)
@@ -47,7 +47,7 @@
                                     log.WarnException(ex);
                                 }
                             }
-                            containerManager.DestroyContainer(container);
+                            await containerManager.DestroyContainerAsync(container);
                         }
                         return new DestroyResponse();
                     });

@@ -1,13 +1,13 @@
-﻿namespace IronFoundry.Warden.Containers
-{
-    using System;
-    using System.Collections.Concurrent;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Threading.Tasks;
-    using NLog;
-    using Utilities;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+using IronFoundry.Warden.Utilities;
+using NLog;
 
+namespace IronFoundry.Warden.Containers
+{
     public class ContainerManager : IContainerManager
     {
         private readonly ConcurrentDictionary<ContainerHandle, IContainerClient> containers =
@@ -44,53 +44,43 @@
         {
             if (Directory.Exists(containerRoot))
             {
-                Task.Run(() =>
-                    {
-                        // TODO: use snapshot rather than directories
-                        // when using separate container.exe check for that process' existence
-                        foreach (var dirPath in Directory.GetDirectories(containerRoot))
-                        {
-                            var handle = Path.GetFileName(dirPath);
-                            try
-                            {
-                                var container = ContainerProxy.Restore(handle, ContainerState.Active);
-                                containers.TryAdd(container.Handle, container);
-                            }
-                            catch (Exception ex)
-                            {
-                                ContainerProxy.CleanUp(handle);
-                                log.ErrorException(ex);
-                            }
-                        }
+                Task.Run(async () =>
+                               {
+                                   // TODO: use snapshot rather than directories
+                                   // when using separate container.exe check for that process' existence
+                                   foreach (var dirPath in Directory.GetDirectories(containerRoot))
+                                   {
+                                       var handle = Path.GetFileName(dirPath);
+                                       try
+                                       {
+                                           var container = ContainerProxy.Restore(handle, ContainerState.Active);
+                                           containers.TryAdd(container.Handle, container);
+                                       }
+                                       catch (Exception ex)
+                                       {
+                                           ContainerProxy.CleanUp(handle);
+                                           log.ErrorException(ex);
+                                       }
+                                   }
 
-                        try
-                        {
-                            RemoveEmptyContainers(); // TODO is this really what we should do on startup?
-                        }
-                        catch (Exception ex)
-                        {
-                            log.ErrorException(ex);
-                        }
-                    });
+                                   try
+                                   {
+                                       await RemoveAllContainersAsync();
+                                   }
+                                   catch (Exception ex)
+                                   {
+                                       log.ErrorException(ex);
+                                   }
+                               });
             }
         }
 
-        private void RemoveEmptyContainers()
+        public async Task DestroyContainerAsync(IContainerClient container)
         {
-            containers.Values.Foreach(log, (c) => c.State == ContainerState.Destroyed,
-                (c) =>
-                {
-                    log.Info("Destroying stale container '{0}'", c.Handle);
-                    DestroyContainer(c);
-                });
+            await DestroyContainerAsync(container.Handle);
         }
 
-        public void DestroyContainer(IContainerClient container)
-        {
-            DestroyContainer(container.Handle);
-        }
-
-        public void DestroyContainer(ContainerHandle handle)
+        public async Task DestroyContainerAsync(ContainerHandle handle)
         {
             if (handle == null)
             {
@@ -102,7 +92,7 @@
             {
                 try
                 {
-                    removed.DestroyAsync();
+                    await removed.DestroyAsync();
                 }
                 catch
                 {
@@ -120,6 +110,15 @@
         public void Dispose()
         {
             // TODO - serialize, clear collection
+        }
+
+        private async Task RemoveAllContainersAsync()
+        {
+            foreach (IContainerClient client in containers.Values)
+            {
+                log.Info("Destroying stale container '{0}'", client.Handle);
+                await DestroyContainerAsync(client);
+            }
         }
     }
 }

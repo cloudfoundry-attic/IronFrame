@@ -1,15 +1,16 @@
-﻿namespace IronFoundry.Warden.Containers
-{
-    using System;
-    using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
+namespace IronFoundry.Warden.Containers
+{
     public interface IContainerManager : IDisposable
     {
-        void DestroyContainer(ContainerHandle handle);
-        void DestroyContainer(IContainerClient container);
+        IEnumerable<ContainerHandle> Handles { get; }
+        Task DestroyContainerAsync(ContainerHandle handle);
+        Task DestroyContainerAsync(IContainerClient container);
         void AddContainer(IContainerClient container);
         void RestoreContainers(string containerRoot);
-        IEnumerable<ContainerHandle> Handles { get; }
         IContainerClient GetContainer(string handle);
     }
 }

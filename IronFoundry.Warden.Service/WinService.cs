@@ -1,4 +1,6 @@
-﻿namespace IronFoundry.Warden.Service
+﻿using System.Collections.Generic;
+
+namespace IronFoundry.Warden.Service
 {
     using System;
     using System.Threading;
@@ -33,6 +35,7 @@
 
         public bool Stop(HostControl hostControl)
         {
+            log.Info("Stopping Warden");
             try
             {
                 cancellationTokenSource.Cancel();
@@ -44,6 +47,20 @@
                     log.ErrorException(wardenServer.ClientListenException);
                 }
 
+                var destroyTasks = new List<Task>();
+                foreach (ContainerHandle handle in containerManager.Handles)
+                {
+                    try
+                    {
+                        log.Info("Destroying container handle {0}", handle.ToString());
+                        destroyTasks.Add(containerManager.DestroyContainerAsync(handle));
+                    }
+                    catch (Exception e)
+                    {
+                        log.ErrorException(e);
+                    }
+                }
+                Task.WaitAll(destroyTasks.ToArray(), 2000);
                 containerManager.Dispose();
             }
             catch (Exception ex)
