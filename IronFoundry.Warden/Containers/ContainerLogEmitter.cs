@@ -2,6 +2,7 @@
 using logmessage;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -27,7 +28,7 @@ namespace IronFoundry.Warden.Containers
             IPEndPoint endpoint = null;
             if (!TryParseEndpoint(instanceLoggingInfo.LoggregatorAddress, out endpoint))
             {
-                throw new ArgumentException("Unable to parse supplied Loggregator address");
+                throw new ArgumentException("Unable to parse and resolve the supplied Loggregator address");
             }
 
             logEmitter = new LoggregatorEmitter(endpoint.Address.ToString(), endpoint.Port, instanceLoggingInfo.LoggregatorSecret);
@@ -36,13 +37,26 @@ namespace IronFoundry.Warden.Containers
         private bool TryParseEndpoint(string endpoint, out IPEndPoint result)
         {
             Uri url;
-            IPAddress ip;
             result = null;
+            IPAddress v4IPAddress = null;
 
-            if (Uri.TryCreate(String.Format("http://{0}", endpoint), UriKind.Absolute, out url) &&
-               IPAddress.TryParse(url.Host, out ip))
+            Debug.WriteLine("Trying to parse: {0}", endpoint);
+            
+            if (Uri.TryCreate(String.Format("http://{0}", endpoint), UriKind.Absolute, out url))
             {
-                result = new IPEndPoint(ip, url.Port);
+                try
+                {
+                    var hostIPAddress = Dns.GetHostEntry(url.DnsSafeHost);
+                    v4IPAddress = hostIPAddress.AddressList.FirstOrDefault(e => e.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+                    if (v4IPAddress == null)
+                        return false;
+                }
+                catch (System.Net.Sockets.SocketException)
+                {
+                    return false;
+                }
+
+                result = new IPEndPoint(v4IPAddress, url.Port);
                 return true;
             }
 

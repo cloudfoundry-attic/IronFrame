@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using logmessage;
 using Xunit;
+using System.Net;
 
 
 namespace IronFoundry.Warden.Test
@@ -21,7 +22,7 @@ namespace IronFoundry.Warden.Test
             {
                 ApplicationId = "0",
                 InstanceIndex = "0",
-                LoggregatorAddress = "192.168.1.1:5555",
+                LoggregatorAddress = "127.0.0.1:5555",
                 LoggregatorSecret = "Secret",
             };
 
@@ -43,6 +44,37 @@ namespace IronFoundry.Warden.Test
             var ex = Record.Exception(() => { var emitter = new ContainerLogEmitter(logData); });
             Assert.IsType<ArgumentException>(ex);
         }
+        
+        [Fact]
+        public void InitializesWithValidName()
+        {
+            var logData = new InstanceLoggingInfo()
+            {
+                ApplicationId = "0",
+                InstanceIndex = "0",
+                LoggregatorAddress = "localhost:5555",
+                LoggregatorSecret = "Secret",
+            };
+
+            var emitter = new ContainerLogEmitter(logData);
+            Assert.NotNull(emitter);
+        }
+
+        [Fact]
+        public void ThrowsWithInvalidHostName()
+        {
+            var logData = new InstanceLoggingInfo()
+            {
+                ApplicationId = "0",
+                InstanceIndex = "0",
+                LoggregatorAddress = "SomeInvalid-HostName",
+                LoggregatorSecret = "Secret",
+            };
+
+            var ex = Record.Exception(() => { var emitter = new ContainerLogEmitter(logData); });
+            Assert.IsType<ArgumentException>(ex);
+        }
+        
 
         [Fact]
         public void WhenNullDataIsLoggedDoesNotThrow()
@@ -51,12 +83,14 @@ namespace IronFoundry.Warden.Test
             {
                 ApplicationId = "0",
                 InstanceIndex = "0",
-                LoggregatorAddress = "192.168.1.1:5555",
+                LoggregatorAddress = "127.0.0.1:5555",
                 LoggregatorSecret = "Secret",
             };
             var emitter = new ContainerLogEmitter(logData);
 
             emitter.EmitLogMessage(LogMessage.MessageType.OUT, null);
         }
+
+        
     }
 }
