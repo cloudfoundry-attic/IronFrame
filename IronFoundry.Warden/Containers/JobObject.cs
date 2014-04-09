@@ -17,15 +17,17 @@
     {
         SafeJobObjectHandle handle;
 
-        public JobObject() : this(null)
+        public JobObject()
+            : this(null)
         {
         }
 
-        public JobObject(string name) : this(name, false)
+        public JobObject(string name)
+            : this(name, false)
         {
         }
 
-        public JobObject(string name, bool openExisting)
+        public JobObject(string name, bool openExisting, bool terminateOnLastHandleClose = true)
         {
             if (openExisting)
             {
@@ -34,6 +36,7 @@
             else
             {
                 handle = new SafeJobObjectHandle(NativeMethods.CreateJobObject(IntPtr.Zero, name));
+                SetJobLimits(NativeMethods.JobObjectLimit.KillOnJobClose);
             }
 
             if (handle.IsInvalid)
@@ -41,6 +44,8 @@
                 throw new Exception("Unable to create job object.");
             }
         }
+
+
 
         public SafeJobObjectHandle Handle
         {
@@ -131,7 +136,7 @@
 
                     Marshal.WriteInt32(infoPtr, numberOfAssignedProcessesOffset, numberOfProcessesInJob);
                     Marshal.WriteInt32(infoPtr, numberOfProcessIdsInListOffset, 0);
-                    
+
 
                     if (!NativeMethods.QueryInformationJobObject(
                         handle,
@@ -167,6 +172,42 @@
                 }
 
             } while (true);
+        }
+
+        private void SetJobLimits(NativeMethods.JobObjectLimit limitFlag)
+        {
+            var extendedLimit = new NativeMethods.JobObjectExtendedLimitInformation();
+
+            int length = Marshal.SizeOf(typeof(NativeMethods.JobObjectExtendedLimitInformation));
+            IntPtr extendedInfoPtr = IntPtr.Zero;
+            try
+            {
+                extendedInfoPtr = Marshal.AllocHGlobal(length);
+
+                if (!NativeMethods.QueryInformationJobObject(
+                        handle,
+                        NativeMethods.JobObjectInfoClass.ExtendedLimitInformation,
+                        extendedInfoPtr,
+                        length,
+                        IntPtr.Zero))
+                    throw new Win32Exception(Marshal.GetLastWin32Error());
+
+                extendedLimit = (NativeMethods.JobObjectExtendedLimitInformation)Marshal.PtrToStructure(extendedInfoPtr, typeof(NativeMethods.JobObjectExtendedLimitInformation));
+
+                extendedLimit.BasicLimitInformation.LimitFlags |= limitFlag;
+
+                Marshal.StructureToPtr(extendedLimit, extendedInfoPtr, false);
+
+                if (!NativeMethods.SetInformationJobObject(handle, NativeMethods.JobObjectInfoClass.ExtendedLimitInformation, extendedInfoPtr, (uint)length))
+                {
+                    throw new Exception(string.Format("Unable to set information.  Error: {0}", Marshal.GetLastWin32Error()));
+                }
+            }
+            finally
+            {
+                if (extendedInfoPtr != IntPtr.Zero)
+                    Marshal.FreeHGlobal(extendedInfoPtr);
+            }
         }
 
         virtual public void TerminateProcesses()

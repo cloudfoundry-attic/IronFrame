@@ -75,6 +75,29 @@ namespace IronFoundry.Warden.Containers
         }
 
         [Fact]
+        public void ClosingLastHandleKillsProcess()
+        {
+            JobObject jobObject = new JobObject();
+
+            Process p = null;
+            try
+            {
+                p = Process.Start("cmd.exe");
+                jobObject.AssignProcessToJob(p);
+
+                jobObject.Dispose();
+
+                p.WaitForExit(2000);
+                Assert.True(p.HasExited);
+            }
+            finally
+            {
+                if (!p.HasExited)
+                    p.Kill();
+            }
+        }
+     
+        [Fact]
         public void CanTerminateObjectsUnderJobObject()
         {
             JobObject jobObject = new JobObject();
