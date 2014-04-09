@@ -142,7 +142,7 @@ namespace IronFoundry.Warden.Shared.Messaging
                 if (IsErrorResponse(response))
                 {
                     var error = BuildErrorResponse(response);
-                    tcs.SetException(new MessagingException() { ErrorResponse = error });
+                    tcs.SetException(new MessagingException(error.error.Message) { ErrorResponse = error });
                 }
                 else
                 {

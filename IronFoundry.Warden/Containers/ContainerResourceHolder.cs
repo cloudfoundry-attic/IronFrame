@@ -1,4 +1,5 @@
-﻿using IronFoundry.Warden.Configuration;
+﻿using System.Net;
+using IronFoundry.Warden.Configuration;
 using IronFoundry.Warden.Utilities;
 
 namespace IronFoundry.Warden.Containers
@@ -67,7 +68,7 @@ namespace IronFoundry.Warden.Containers
 
         public static IResourceHolder Create(IWardenConfig config, ContainerHandle handle)
         {
-            var user = ContainerUser.CreateUser(handle, new LocalPrincipalManager(new DesktopPermissionManager()));
+            var user = new TempUser(handle, new LocalPrincipalManager(new DesktopPermissionManager()));
             var directory = new ContainerDirectory(handle, user, true, config);
             var localPortManager = new LocalTcpPortManager(new FirewallManager(), new NetShRunner());
             var resoureHolder = new ContainerResourceHolder(
@@ -79,6 +80,29 @@ namespace IronFoundry.Warden.Containers
                 );
 
             return resoureHolder;
+        }
+
+        class TempUser : IContainerUser
+        {
+            private readonly IUserManager userManager;
+
+            public TempUser(string uniqueId, IUserManager userManager)
+            {
+                this.userManager = userManager;
+                UserName = ContainerUser.CreateUserName(uniqueId);
+            }
+
+            public string UserName { get; private set; }
+
+            public NetworkCredential GetCredential()
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public void Delete()
+            {
+                userManager.DeleteUser(UserName);
+            }
         }
     }
 }

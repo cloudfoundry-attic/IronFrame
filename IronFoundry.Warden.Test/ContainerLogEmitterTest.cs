@@ -31,6 +31,23 @@ namespace IronFoundry.Warden.Test
         }
 
         [Fact]
+        public void InitializesWithLocalAddress()
+        {
+            var hostIPAddress = Dns.GetHostEntry(Dns.GetHostName());
+            var v4IPAddress = hostIPAddress.AddressList.First(e => e.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+            var logData = new InstanceLoggingInfo()
+            {
+                ApplicationId = "0",
+                InstanceIndex = "0",
+                LoggregatorAddress = v4IPAddress.ToString() + ":5555",
+                LoggregatorSecret = "Secret",
+            };
+
+            var emitter = new ContainerLogEmitter(logData);
+            Assert.NotNull(emitter);
+        }
+
+        [Fact]
         public void ThrowsWithInvalidAddress()
         {
             var logData = new InstanceLoggingInfo()
@@ -74,7 +91,6 @@ namespace IronFoundry.Warden.Test
             var ex = Record.Exception(() => { var emitter = new ContainerLogEmitter(logData); });
             Assert.IsType<ArgumentException>(ex);
         }
-        
 
         [Fact]
         public void WhenNullDataIsLoggedDoesNotThrow()
@@ -90,7 +106,5 @@ namespace IronFoundry.Warden.Test
 
             emitter.EmitLogMessage(LogMessage.MessageType.OUT, null);
         }
-
-        
     }
 }

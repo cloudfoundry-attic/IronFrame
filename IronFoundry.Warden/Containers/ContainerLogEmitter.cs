@@ -38,29 +38,40 @@ namespace IronFoundry.Warden.Containers
         {
             Uri url;
             result = null;
-            IPAddress v4IPAddress = null;
 
-            Debug.WriteLine("Trying to parse: {0}", endpoint);
-            
             if (Uri.TryCreate(String.Format("http://{0}", endpoint), UriKind.Absolute, out url))
             {
+                IPAddress ipAddress;
                 try
                 {
-                    var hostIPAddress = Dns.GetHostEntry(url.DnsSafeHost);
-                    v4IPAddress = hostIPAddress.AddressList.FirstOrDefault(e => e.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
-                    if (v4IPAddress == null)
-                        return false;
+                    if (!GetIPAddressFromUri(url, out ipAddress)) return false;
                 }
                 catch (System.Net.Sockets.SocketException)
                 {
                     return false;
                 }
 
-                result = new IPEndPoint(v4IPAddress, url.Port);
+                result = new IPEndPoint(ipAddress, url.Port);
                 return true;
             }
 
             return false;
+        }
+
+        private static bool GetIPAddressFromUri(Uri url, out IPAddress ipAddress)
+        {
+            if (url.HostNameType == UriHostNameType.Dns)
+            {
+                var hostIPAddress = Dns.GetHostEntry(url.DnsSafeHost);
+                ipAddress = hostIPAddress.AddressList.FirstOrDefault(e => e.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+                if (ipAddress == null)
+                    return false;
+            }
+            else
+            {
+                ipAddress = IPAddress.Parse(url.Host);
+            }
+            return true;
         }
 
 

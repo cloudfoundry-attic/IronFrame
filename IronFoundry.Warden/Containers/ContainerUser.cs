@@ -127,7 +127,7 @@ namespace IronFoundry.Warden.Containers
             return Equals(obj as ContainerUser);
         }
 
-        private static string CreateUserName(string uniqueId)
+        public static string CreateUserName(string uniqueId)
         {
             return String.Concat(UserPrefix, uniqueId);
         }
