@@ -10,8 +10,8 @@ namespace IronFoundry.Warden.Shared.Messaging
     public class MessagingClient : IDisposable
     {
         private Action<JObject> transportHandler;
-        private ConcurrentDictionary<string, ResponsePublisher> awaitingResponse =
-            new ConcurrentDictionary<string, ResponsePublisher>();
+        private ConcurrentDictionary<JToken, ResponsePublisher> awaitingResponse =
+            new ConcurrentDictionary<JToken, ResponsePublisher>();
 
         public MessagingClient(Action<JObject> transportHandler)
         {

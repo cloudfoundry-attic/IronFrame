@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Warden.Shared.Messaging
 {
@@ -17,18 +13,18 @@ namespace IronFoundry.Warden.Shared.Messaging
             this.jsonrpc = "2.0";
         }
 
-        protected JsonRpcResponse(string id) : this()
+        protected JsonRpcResponse(JToken id) : this()
         {
             this.id = id;
         }
 
         public string jsonrpc { get; set; }
-        public string id { get; set; }
+        public JToken id { get; set; }
     }
 
     public class JsonRpcResponse<TResult> : JsonRpcResponse
     {
-        public JsonRpcResponse(string id, TResult result) : base(id)
+        public JsonRpcResponse(JToken id, TResult result) : base(id)
         {
             this.result = result;
         }
@@ -46,7 +42,7 @@ namespace IronFoundry.Warden.Shared.Messaging
 
     public class JsonRpcErrorResponse : JsonRpcResponse
     {
-        public JsonRpcErrorResponse(string id) : base (id)
+        public JsonRpcErrorResponse(JToken id) : base (id)
         {
             error = new JsonRpcErrorInfo();
         }

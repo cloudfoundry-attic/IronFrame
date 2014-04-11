@@ -1,10 +1,6 @@
 ﻿using IronFoundry.Warden.Shared.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using IronFoundry.Warden.Shared.Messaging;
+using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Warden.Containers.Messages
 {
@@ -19,7 +15,8 @@ namespace IronFoundry.Warden.Containers.Messages
 
     public class ContainerStatisticsResponse : JsonRpcResponse<ProcessStats>
     {
-        public ContainerStatisticsResponse(string id, ProcessStats stats) : base(id, stats)
+        public ContainerStatisticsResponse(JToken id, ProcessStats stats)
+            : base(id, stats)
         {
         }
     }

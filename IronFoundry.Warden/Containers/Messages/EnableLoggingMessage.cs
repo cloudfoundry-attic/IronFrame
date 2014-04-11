@@ -1,9 +1,6 @@
-﻿using IronFoundry.Warden.Shared.Messaging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using IronFoundry.Warden.Shared.Messaging;
+using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Warden.Containers.Messages
 {
@@ -34,7 +31,7 @@ namespace IronFoundry.Warden.Containers.Messages
 
     public class EnableLoggingResponse : JsonRpcResponse<bool>
     {
-        public EnableLoggingResponse(string id)
+        public EnableLoggingResponse(JToken id)
             : base(id, true)
         {
 

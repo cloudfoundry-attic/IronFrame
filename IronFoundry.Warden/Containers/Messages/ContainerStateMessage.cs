@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using IronFoundry.Warden.Shared.Messaging;
+﻿using IronFoundry.Warden.Shared.Messaging;
+using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Warden.Containers.Messages
 {
@@ -19,7 +15,7 @@ namespace IronFoundry.Warden.Containers.Messages
 
     public class ContainerStateResponse : JsonRpcResponse<string>
     {
-        public ContainerStateResponse(string id, string state) : base(id, state)
+        public ContainerStateResponse(JToken id, string state) : base(id, state)
         {
 
         }

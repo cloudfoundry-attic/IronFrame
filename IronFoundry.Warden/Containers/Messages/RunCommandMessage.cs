@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using IronFoundry.Warden.Shared.Messaging;
+﻿using IronFoundry.Warden.Shared.Messaging;
+using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Warden.Containers.Messages
 {
@@ -33,7 +29,7 @@ namespace IronFoundry.Warden.Containers.Messages
 
     public class RunCommandResponse : JsonRpcResponse<RunCommandResponseData>
     {
-        public RunCommandResponse(string id, RunCommandResponseData result)
+        public RunCommandResponse(JToken id, RunCommandResponseData result)
             : base(id, result)
         {
         }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using IronFoundry.Warden.Shared.Messaging;
+using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Warden.Containers.Messages
 {
@@ -32,7 +33,7 @@ namespace IronFoundry.Warden.Containers.Messages
 
     public class LimitMemoryResponse : JsonRpcResponse
     {
-        public LimitMemoryResponse(string id) : base(id)
+        public LimitMemoryResponse(JToken id) : base(id)
         {
         }
     }
