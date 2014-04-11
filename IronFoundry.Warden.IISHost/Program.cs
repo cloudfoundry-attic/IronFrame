@@ -47,9 +47,9 @@ namespace IronFoundry.Warden.IISHost
                 var options = new Options();
                 if (Parser.Default.ParseArguments(args, options))
                 {
-                    log.Info("Port:", options.Port);
-                    log.Info("Webroot:", options.WebRoot);
-                    log.Info("Runtime:", options.RuntimeVersion);
+                    log.Info("Port:{0}", options.Port);
+                    log.Info("Webroot:{0}", options.WebRoot);
+                    log.Info("Runtime:{0}", options.RuntimeVersion);
                 }
                 else
                 {
