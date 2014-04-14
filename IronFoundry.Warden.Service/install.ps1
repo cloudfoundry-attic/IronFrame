@@ -12,6 +12,7 @@ Write-Host "Installing warden service"
 
 $wardenService = join-path $InstallPath "IronFoundry.Warden.Service.exe"
 
+. $wardenService stop
 . $wardenService uninstall
         
 . $wardenService install -username:"$env:computername\$ServiceAccount" -password:"$ServicePassword" --autostart
