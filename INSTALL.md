@@ -16,7 +16,7 @@ Installing .NET Warden Service
     	PS> Set-ExecutionPolicy RemoteSigned
     	```
 
-Be sure to update your Cloud Controller's `config/stacks.yml` to recognize the `mswin-clr` stack:
+Be sure to update your Cloud Controller's `config/stacks.yml` to recognize the `windows2012` stack:
 
 ```
 vagrant@precise64:/vagrant$ cat cloud_controller_ng/config/stacks.yml 
