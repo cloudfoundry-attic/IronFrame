@@ -25,7 +25,7 @@ default: lucid64
 stacks:
   - name: lucid64
     description: Ubuntu Lucid 64-bit
-  - name: mswin-clr
+  - name: windows2012
     description: Microsoft .NET / Windows 64-bit
 ```
 
