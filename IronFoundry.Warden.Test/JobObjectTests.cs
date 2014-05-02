@@ -206,33 +206,6 @@ namespace IronFoundry.Warden.Containers
                 await AssertHelper.CompletesWithinTimeoutAsync(1000, tcs.Task);
                 Assert.Equal(1, tcs.Task.Result);
             }
-
-            [Fact]
-            public async void CanGetMultipleMemoryLimitNotifications()
-            {
-                ulong limitInBytes = DefaultMemoryLimit;
-
-                var tcs = new TaskCompletionSource<int>();
-                int memoryLimitedCalled = 0;
-                jobObject.MemoryLimited += (sender, e) =>
-                {
-                    memoryLimitedCalled++;
-                    if (memoryLimitedCalled == 3)
-                        tcs.SetResult(memoryLimitedCalled);
-                };
-
-                for (uint i = 1; i <= 3; i++)
-                {
-                    jobObject.SetMemoryLimit(limitInBytes * i);
-
-                    ulong allocateBytes = (limitInBytes * i) * 2;
-
-                    IFTestHelper.ExecuteInJob(jobObject, "allocate-memory", "--bytes", allocateBytes);
-                }
-
-                await AssertHelper.CompletesWithinTimeoutAsync(1000, tcs.Task);
-                Assert.Equal(3, tcs.Task.Result);
-            }
         }
 
         public class CpuStatistics : IDisposable
