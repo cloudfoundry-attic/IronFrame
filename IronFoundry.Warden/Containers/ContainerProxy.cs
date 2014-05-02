@@ -116,6 +116,16 @@ namespace IronFoundry.Warden.Containers
             InvokeRemoteInitialize();
         }
 
+        public async Task LimitMemoryAsync(ulong bytes)
+        {
+            if (IsRemoteActive)
+            {
+                var info = new LimitMemoryInfo(bytes);
+
+                await launcher.SendMessageAsync<LimitMemoryRequest, LimitMemoryResponse>(new LimitMemoryRequest(info));
+            }
+        }
+
         public int ReservePort(int requestedPort)
         {
             if (!containerResources.AssignedPort.HasValue)

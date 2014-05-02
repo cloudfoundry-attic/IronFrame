@@ -186,6 +186,11 @@ namespace IronFoundry.Warden.Containers
             this.containerHandle = new ContainerHandle(containerHandle);
         }
 
+        public void LimitMemory(LimitMemoryInfo info)
+        {
+            jobObject.SetMemoryLimit(info.LimitInBytes);
+        }
+
         public int ReservePort(int requestedPort)
         {
             throw new NotImplementedException();

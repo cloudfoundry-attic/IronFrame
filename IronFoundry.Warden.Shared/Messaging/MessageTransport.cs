@@ -64,15 +64,15 @@ namespace IronFoundry.Warden.Shared.Messaging
                 return;
             }
 
-            if (IsResponseMessage(message))
-                await InvokeResponseCallbackAsync(message);
-            else
+            if (IsRequestMessage(message))
                 await InvokeRequestCallbackAsync(message);
+            else
+                await InvokeResponseCallbackAsync(message);
         }
 
-        private bool IsResponseMessage(JObject message)
+        private bool IsRequestMessage(JObject message)
         {
-            return (message["result"] != null || message["error"] != null);
+            return (message["method"] != null);
         }
 
         private async Task InvokeRequestCallbackAsync(JObject message)

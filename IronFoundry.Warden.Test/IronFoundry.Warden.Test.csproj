@@ -34,6 +34,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AssertHelper.cs" />
     <Compile Include="CommandRunnerTests.cs" />
     <Compile Include="ContainerHandleTests.cs" />
     <Compile Include="ContainerLogEmitterTest.cs" />
@@ -42,6 +43,8 @@
     <Compile Include="ContainerResourceHolderTest.cs" />
     <Compile Include="ContainerStubTests.cs" />
     <Compile Include="ContainerUserTests.cs" />
+    <Compile Include="IFTestHelper.cs" />
+    <Compile Include="LimitMemoryRequestHandlerTest.cs" />
     <Compile Include="LocalTcpPortManagerTests.cs" />
     <Compile Include="LoggingRequestHandlerTest.cs" />
     <Compile Include="Messaging\MessageTransportTest.cs" />
@@ -74,6 +77,10 @@
     <ProjectReference Include="..\IronFoundry.Warden.Shared\IronFoundry.Warden.Shared.csproj">
       <Project>{cb7ba555-21fd-4c57-a629-a925b6a83a31}</Project>
       <Name>IronFoundry.Warden.Shared</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\IronFoundry.Warden.TestHelper\IronFoundry.Warden.TestHelper.csproj">
+      <Project>{ab96da85-8c4e-490b-b552-3fe9f0e0e9bf}</Project>
+      <Name>IronFoundry.Warden.TestHelper</Name>
     </ProjectReference>
     <ProjectReference Include="..\IronFoundry.Warden\IronFoundry.Warden.csproj">
       <Project>{cc1c255a-a120-4d7f-b40f-c4cb3cdb193b}</Project>

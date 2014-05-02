@@ -1,17 +1,10 @@
 ﻿namespace IronFoundry.Warden.PInvoke
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using System.Runtime.InteropServices;
-    using System.Text;
-    using System.Threading.Tasks;
 
     public partial class NativeMethods
     {
-        public const uint ERROR_MORE_DATA = 0x000000EA;
-
-
         [Flags]
         public enum JobObjectAccessRights : uint
         {
@@ -60,9 +53,24 @@
             RateControl = 0x00040000,
         }
 
+        public enum JobObjectNotification : uint
+        {
+            EndOfJobTime = 1,
+            EndOfProcessTime = 2,
+            ActiveProcessLimit = 3,
+            ActiveProcessInfo = 4,
+            NewProcess = 6,
+            ExitProcess = 7,
+            AbnormalExitProcess = 8,
+            ProcessMemoryLimit = 9,
+            JobMemoryLimit = 10,
+            NotificationLimit = 11,
+            JobCycleTimeLimit = 12,
+        }
+
         public enum JobObjectInfoClass : uint
         {
-            JobObjectBasicAccountingInformation = 1,                        
+            JobObjectBasicAccountingInformation = 1,
             BasicLimitInformation = 2,
             JobObjectBasicProcessIdList = 3,
             BasicUIRestrictions = 4,
@@ -71,6 +79,13 @@
             ExtendedLimitInformation = 9,
             SecurityLimitInformation = 5,
             GroupInformation = 11
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct JobObjectAssociateCompletionPort
+        {
+            public IntPtr CompletionKey;
+            public IntPtr CompletionPortHandle;
         }
 
         [StructLayout(LayoutKind.Sequential)]

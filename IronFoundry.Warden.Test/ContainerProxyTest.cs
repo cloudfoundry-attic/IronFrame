@@ -105,6 +105,13 @@ namespace IronFoundry.Warden.Test
                 await proxy.DestroyAsync();
                 this.launcher.DidNotReceive(x => x.SendMessageAsync<ContainerDestroyRequest, ContainerDestroyResponse>(Arg.Any<ContainerDestroyRequest>()));
             }
+
+            [Fact]
+            public async void LimitMemoryDoesNotSendToStub()
+            {
+                await proxy.LimitMemoryAsync(1024);
+                this.launcher.DidNotReceive(x => x.SendMessageAsync<LimitMemoryRequest, LimitMemoryResponse>(Arg.Any<LimitMemoryRequest>()));
+            }
         }
         
         public class WhenInitialized : ProxyContainerContext
@@ -262,6 +269,19 @@ namespace IronFoundry.Warden.Test
                 await proxy.EnableLoggingAsync(new InstanceLoggingInfo());
 
                 this.launcher.Received(x => x.SendMessageAsync<EnableLoggingRequest, EnableLoggingResponse>(Arg.Any<EnableLoggingRequest>()));
+            }
+
+            [Fact]
+            public async void LimitMemorySendsMessageToHost()
+            {
+                this.launcher.SendMessageAsync<LimitMemoryRequest, LimitMemoryResponse>(Arg.Any<LimitMemoryRequest>()).ReturnsTask(new LimitMemoryResponse(""));
+                await proxy.LimitMemoryAsync(1024);
+
+                this.launcher.Received(
+                    1, 
+                    x => x.SendMessageAsync<LimitMemoryRequest, LimitMemoryResponse>(
+                        Arg.Is<LimitMemoryRequest>(
+                            request => request.@params.LimitInBytes == 1024)));
             }
         }
 

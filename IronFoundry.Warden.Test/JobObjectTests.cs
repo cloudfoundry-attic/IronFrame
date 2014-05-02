@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace IronFoundry.Warden.Containers
@@ -17,8 +18,8 @@ namespace IronFoundry.Warden.Containers
         [Fact]
         public void CreatingJobObjectBySameNameGivesEquivalentJobObject()
         {
-            using(var jobObject = new JobObject("TestJobObjectName"))
-            using(var otherJobObject = new JobObject("TestJobObjectName"))
+            using (var jobObject = new JobObject("TestJobObjectName"))
+            using (var otherJobObject = new JobObject("TestJobObjectName"))
             using (Process p = Process.Start("cmd.exe"))
             {
                 jobObject.AssignProcessToJob(p);
@@ -96,7 +97,7 @@ namespace IronFoundry.Warden.Containers
                     p.Kill();
             }
         }
-     
+
         [Fact]
         public void CanTerminateObjectsUnderJobObject()
         {
@@ -156,11 +157,13 @@ namespace IronFoundry.Warden.Containers
             Assert.Throws<ObjectDisposedException>(() => jobObject.TerminateProcesses());
         }
 
-        public class WhenManagingNoProcesses : IDisposable
+        public class JobLimits : IDisposable
         {
+            const int DefaultMemoryLimit = 1024 * 1024 * 25; // 25MB
+
             JobObject jobObject;
 
-            public WhenManagingNoProcesses()
+            public JobLimits()
             {
                 jobObject = new JobObject();
             }
@@ -171,7 +174,86 @@ namespace IronFoundry.Warden.Containers
             }
 
             [Fact]
-            public void ReturnsDefaultCpuStatistics()
+            public void CanLimitMemory()
+            {
+                ulong limitInBytes = DefaultMemoryLimit;
+                ulong allocateBytes = limitInBytes * 2;
+
+                jobObject.SetMemoryLimit(limitInBytes);
+
+                var process = IFTestHelper.ExecuteInJob(jobObject, "allocate-memory", "--bytes", allocateBytes);
+
+                Assert.True(IFTestHelper.Failed(process));
+            }
+
+            [Fact]
+            public async void CanGetMemoryLimitNotification()
+            {
+                ulong limitInBytes = DefaultMemoryLimit;
+
+                var tcs = new TaskCompletionSource<int>();
+                int memoryLimitedCalled = 0;
+                jobObject.MemoryLimited += (sender, e) =>
+                {
+                    memoryLimitedCalled++;
+                    if (memoryLimitedCalled == 1)
+                        tcs.SetResult(memoryLimitedCalled);
+                };
+
+                jobObject.SetMemoryLimit(limitInBytes);
+
+                ulong allocateBytes = limitInBytes * 2;
+
+                IFTestHelper.ExecuteInJob(jobObject, "allocate-memory", "--bytes", allocateBytes);
+
+                await AssertHelper.CompletesWithinTimeoutAsync(500, tcs.Task);
+                Assert.Equal(1, tcs.Task.Result);
+            }
+
+            [Fact]
+            public async void CanGetMultipleMemoryLimitNotifications()
+            {
+                ulong limitInBytes = DefaultMemoryLimit;
+
+                var tcs = new TaskCompletionSource<int>();
+                int memoryLimitedCalled = 0;
+                jobObject.MemoryLimited += (sender, e) =>
+                {
+                    memoryLimitedCalled++;
+                    if (memoryLimitedCalled == 3)
+                        tcs.SetResult(memoryLimitedCalled);
+                };
+
+                for (uint i = 1; i <= 3; i++)
+                {
+                    jobObject.SetMemoryLimit(limitInBytes * i);
+
+                    ulong allocateBytes = (limitInBytes * i) * 2;
+
+                    IFTestHelper.ExecuteInJob(jobObject, "allocate-memory", "--bytes", allocateBytes);
+                }
+
+                await AssertHelper.CompletesWithinTimeoutAsync(500, tcs.Task);
+                Assert.Equal(3, tcs.Task.Result);
+            }
+        }
+
+        public class CpuStatistics : IDisposable
+        {
+            JobObject jobObject;
+
+            public CpuStatistics()
+            {
+                jobObject = new JobObject();
+            }
+
+            public void Dispose()
+            {
+                jobObject.Dispose();
+            }
+
+            [Fact]
+            public void WhenNotManagingProcesses_ReturnsDefaultCpuStatistics()
             {
                 var stats = jobObject.GetCpuStatistics();
 
@@ -180,104 +262,80 @@ namespace IronFoundry.Warden.Containers
             }
 
             [Fact]
-            public void ReturnsEmptyListOfProcesses()
+            public void WhenManagingOneProcess_ReturnsCpuStatistics()
+            {
+                IFTestHelper.ExecuteInJob(jobObject, "consume-cpu", "--duration 250");
+
+                var stats = jobObject.GetCpuStatistics();
+
+                Assert.NotEqual(TimeSpan.Zero, stats.TotalKernelTime + stats.TotalUserTime);
+            }
+        }
+
+        public class ProcessIds : IDisposable
+        {
+            JobObject jobObject;
+            Process[] processes;
+
+            public ProcessIds()
+            {
+                jobObject = new JobObject();
+            }
+
+            public void Dispose()
+            {
+                if (processes != null)
+                {
+                    foreach (var process in processes)
+                    {
+                        IFTestHelper.ContinueAndWait(process);
+                    }
+                }
+
+                jobObject.Dispose();
+            }
+
+            [Fact]
+            public void WhenNotManagingProcesses_ReturnsEmptyListOfProcessIds()
             {
                 var processIds = jobObject.GetProcessIds();
 
                 Assert.Empty(processIds);
             }
-        }
-
-        public class WhenManagingOneProcess : IDisposable
-        {
-            JobObject jobObject;
-            Process process;
-
-            public WhenManagingOneProcess()
-            {
-                jobObject = new JobObject();
-
-                var batch = @"for /L %i in (1,1,10000000) do @echo %i";
-                process = Process.Start("cmd.exe", "/K " + batch);
-
-                jobObject.AssignProcessToJob(process);
-            }
-
-            public void Dispose()
-            {
-                process.Kill();
-                jobObject.Dispose();
-            }
-
-            [Fact(Skip = "Success is inconsistent on this test, review.")]
-            public void ReturnsCpuStatistics()
-            {
-                // Give the process some time to execute
-                Thread.Sleep(500);
-
-                var stats = jobObject.GetCpuStatistics();
-
-                Assert.NotEqual(TimeSpan.Zero, stats.TotalKernelTime + stats.TotalUserTime);
-            }
 
             [Fact]
-            public void ReturnsProcess()
+            public void WhenManagingOneProcess_ReturnsSingleProcessId()
             {
+                processes = new[]
+                {
+                    IFTestHelper.ExecuteWithWait("nop"),
+                };
+
+                jobObject.AssignProcessToJob(processes[0]);
+
                 var processIds = jobObject.GetProcessIds();
 
                 Assert.Collection(processIds,
-                    x => Assert.Equal(process.Id, x)
+                    x => Assert.Equal(processes[0].Id, x)
                 );
             }
-        }
 
-        public class WhenManagingMultipleProcesses : IDisposable
-        {
-            JobObject jobObject;
-            Process[] processes;
-
-            public WhenManagingMultipleProcesses()
+            [Fact]
+            public void WhenManagingManyProcesses_ReturnsAllProcessIds()
             {
-                jobObject = new JobObject();
-
-                var batch = @"for /L %i in (1,1,100) do @echo %i";
-
                 processes = new[]
                 {
-                    Process.Start("cmd.exe", "/K " + batch),
-                    Process.Start("cmd.exe", "/K " + batch),
-                    Process.Start("cmd.exe", "/K " + batch),
-                    Process.Start("cmd.exe", "/K " + batch),
-                    Process.Start("cmd.exe", "/K " + batch),
-                    Process.Start("cmd.exe", "/K " + batch),
+                    IFTestHelper.ExecuteWithWait("nop"),
+                    IFTestHelper.ExecuteWithWait("nop"),
+                    IFTestHelper.ExecuteWithWait("nop"),
+                    IFTestHelper.ExecuteWithWait("nop"),
+                    IFTestHelper.ExecuteWithWait("nop"),
+                    IFTestHelper.ExecuteWithWait("nop"),
                 };
 
                 foreach (var process in processes)
                     jobObject.AssignProcessToJob(process);
-            }
 
-            public void Dispose()
-            {
-                foreach (var process in processes)
-                    process.Kill();
-
-                jobObject.Dispose();
-            }
-
-            [Fact(Skip = "Success is inconsistent on this test, review.")]
-            public void ReturnsCpuStatistics()
-            {
-                // Give the processes some time to execute
-                Thread.Sleep(250);
-
-                var stats = jobObject.GetCpuStatistics();
-
-                Assert.NotEqual(TimeSpan.Zero, stats.TotalKernelTime + stats.TotalUserTime);
-            }
-
-            [Fact]
-            public void ReturnsProcesses()
-            {
                 var processIds = jobObject.GetProcessIds();
 
                 Assert.Collection(processIds,

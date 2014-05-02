@@ -27,8 +27,11 @@
                 TOKEN_ADJUST_PRIVILEGES | TOKEN_ADJUST_GROUPS | TOKEN_ADJUST_DEFAULT |
                 TOKEN_ADJUST_SESSIONID);
 
+            public static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
+
             public const uint ERROR_ACCESS_DENIED = 5u;
             public const uint ERROR_INSUFFICIENT_BUFFER = 122u;
+            public const uint ERROR_MORE_DATA = 0x000000EA;
         }
     }
 }

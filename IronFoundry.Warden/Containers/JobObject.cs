@@ -5,7 +5,9 @@
     using System.Diagnostics;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Threading;
     using IronFoundry.Warden.PInvoke;
+    using Microsoft.Win32.SafeHandles;
 
     public class CpuStatistics
     {
@@ -16,6 +18,9 @@
     public class JobObject : IDisposable
     {
         SafeJobObjectHandle handle;
+        volatile SafeFileHandle completionPortHandle;
+
+        EventHandler memoryLimitedEvent;
 
         public JobObject()
             : this(null)
@@ -44,19 +49,35 @@
                 throw new Exception("Unable to create job object.");
             }
         }
-
-
-
+        
         public SafeJobObjectHandle Handle
         {
             get { return handle; }
         }
 
-        virtual public void Dispose()
+        public event EventHandler MemoryLimited
         {
-            if (handle == null) { return; }
-            handle.Dispose();
-            handle = null;
+            add
+            {
+                EnsureNotifications();
+                memoryLimitedEvent += value; 
+            }
+            remove { memoryLimitedEvent -= value; }
+        }
+
+        public virtual void Dispose()
+        {
+            if (completionPortHandle != null)
+            {
+                completionPortHandle.Dispose();
+                completionPortHandle = null;
+            }
+
+            if (handle != null)
+            {
+                handle.Dispose();
+                handle = null;
+            }
         }
 
         public void AssignProcessToJob(IntPtr processHandle)
@@ -67,6 +88,19 @@
         public void AssignProcessToJob(Process process)
         {
             AssignProcessToJob(process.Handle);
+        }
+
+        void EnsureNotifications()
+        {
+            if (completionPortHandle == null)
+            {
+                completionPortHandle = NativeMethods.CreateIoCompletionPort(NativeMethods.Constants.INVALID_HANDLE_VALUE, IntPtr.Zero, IntPtr.Zero, 0);
+                if (completionPortHandle.IsInvalid)
+                    throw new Win32Exception(Marshal.GetLastWin32Error(), "Unable to create IO completion port for JobObject.");
+
+                SetCompletionPort(completionPortHandle);
+                ThreadPool.QueueUserWorkItem(ProcessNotifications);
+            }
         }
 
         public virtual CpuStatistics GetCpuStatistics()
@@ -103,7 +137,7 @@
                     IntPtr.Zero))
                 {
                     var error = Marshal.GetLastWin32Error();
-                    if (error != NativeMethods.ERROR_MORE_DATA)
+                    if (error != NativeMethods.Constants.ERROR_MORE_DATA)
                         throw new Win32Exception(error);
                 }
 
@@ -113,6 +147,35 @@
             {
                 if (infoPtr != IntPtr.Zero)
                     Marshal.FreeHGlobal(infoPtr);
+            }
+        }
+
+        private NativeMethods.JobObjectExtendedLimitInformation GetJobLimits()
+        {
+            int length = Marshal.SizeOf(typeof(NativeMethods.JobObjectExtendedLimitInformation));
+            IntPtr extendedInfoPtr = IntPtr.Zero;
+            try
+            {
+                extendedInfoPtr = Marshal.AllocHGlobal(length);
+
+                if (!NativeMethods.QueryInformationJobObject(
+                        handle,
+                        NativeMethods.JobObjectInfoClass.ExtendedLimitInformation,
+                        extendedInfoPtr,
+                        length,
+                        IntPtr.Zero))
+                {
+                    throw new Win32Exception(Marshal.GetLastWin32Error());
+                }
+
+                var extendedLimit = (NativeMethods.JobObjectExtendedLimitInformation)Marshal.PtrToStructure(extendedInfoPtr, typeof(NativeMethods.JobObjectExtendedLimitInformation));
+
+                return extendedLimit;
+            }
+            finally
+            {
+                if (extendedInfoPtr != IntPtr.Zero)
+                    Marshal.FreeHGlobal(extendedInfoPtr);
             }
         }
 
@@ -146,7 +209,7 @@
                         IntPtr.Zero))
                     {
                         var error = Marshal.GetLastWin32Error();
-                        if (error == NativeMethods.ERROR_MORE_DATA)
+                        if (error == NativeMethods.Constants.ERROR_MORE_DATA)
                         {
                             numberOfProcessesInJob += JobCountIncrement;
                             continue;
@@ -174,27 +237,93 @@
             } while (true);
         }
 
+        void OnMemoryLimited()
+        {
+            EventHandler handler = memoryLimitedEvent;
+            if (handler != null)
+                handler(this, EventArgs.Empty);
+        }
+
+        void ProcessNotifications(object state)
+        {
+            // This method is called unpredictably in the ThreadPool, therefore it's possible that it will be called after the JobObject has been Disposed.
+            SafeFileHandle cachedCompletionPortHandle = completionPortHandle;
+            if (cachedCompletionPortHandle == null)
+                return;
+
+            uint numberOfBytes = 0;
+            IntPtr completionKey = IntPtr.Zero;
+            IntPtr overlappedPtr = IntPtr.Zero;
+            uint timeoutInMS = 200;
+
+            try
+            {
+                //
+                // Process as many JobObject notifications as we can, then queue this method to run again.
+                //
+                while (!cachedCompletionPortHandle.IsInvalid &&
+                       NativeMethods.GetQueuedCompletionStatus(cachedCompletionPortHandle, ref numberOfBytes, ref completionKey, ref overlappedPtr, timeoutInMS))
+                {
+                    // TODO: Consider using another ThreadPool thread (via QueueUserWorkItem) to raise the notification events, so that misbehaving event handlers
+                    // can't delay the processing of notifications from the JobObject.  Doing so may cause events to be processed out of order though.
+                    switch (numberOfBytes)
+                    {
+                        case (uint)NativeMethods.JobObjectNotification.JobMemoryLimit:
+                            OnMemoryLimited();
+                            break;
+                    }
+                }
+
+                ThreadPool.QueueUserWorkItem(ProcessNotifications);
+            }
+            catch (ObjectDisposedException)
+            {
+                // The SafeHandle has been closed, so stop processing notifications.
+            }
+        }
+
+        private void SetCompletionPort(SafeFileHandle completionPortHandle)
+        {
+            int length = Marshal.SizeOf(typeof(NativeMethods.JobObjectAssociateCompletionPort));
+            IntPtr completionPortPtr = IntPtr.Zero;
+            try
+            {
+                var completionPort = new NativeMethods.JobObjectAssociateCompletionPort
+                {
+                    CompletionKey = IntPtr.Zero,
+                    CompletionPortHandle = completionPortHandle.DangerousGetHandle(),
+                };
+
+                completionPortPtr = Marshal.AllocHGlobal(length);
+
+                Marshal.StructureToPtr(completionPort, completionPortPtr, false);
+
+                if (!NativeMethods.SetInformationJobObject(handle, NativeMethods.JobObjectInfoClass.AssociateCompletionPortInformation, completionPortPtr, (uint)length))
+                {
+                    throw new Win32Exception(Marshal.GetLastWin32Error());
+                }
+            }
+            finally
+            {
+                if (completionPortPtr != IntPtr.Zero)
+                    Marshal.FreeHGlobal(completionPortPtr);
+            }
+        }
+
         private void SetJobLimits(NativeMethods.JobObjectLimit limitFlag)
         {
-            var extendedLimit = new NativeMethods.JobObjectExtendedLimitInformation();
+            var extendedLimit = GetJobLimits();
+            extendedLimit.BasicLimitInformation.LimitFlags |= limitFlag;
+            SetJobLimits(extendedLimit);
+        }
 
+        private void SetJobLimits(NativeMethods.JobObjectExtendedLimitInformation extendedLimit)
+        {
             int length = Marshal.SizeOf(typeof(NativeMethods.JobObjectExtendedLimitInformation));
             IntPtr extendedInfoPtr = IntPtr.Zero;
             try
             {
                 extendedInfoPtr = Marshal.AllocHGlobal(length);
-
-                if (!NativeMethods.QueryInformationJobObject(
-                        handle,
-                        NativeMethods.JobObjectInfoClass.ExtendedLimitInformation,
-                        extendedInfoPtr,
-                        length,
-                        IntPtr.Zero))
-                    throw new Win32Exception(Marshal.GetLastWin32Error());
-
-                extendedLimit = (NativeMethods.JobObjectExtendedLimitInformation)Marshal.PtrToStructure(extendedInfoPtr, typeof(NativeMethods.JobObjectExtendedLimitInformation));
-
-                extendedLimit.BasicLimitInformation.LimitFlags |= limitFlag;
 
                 Marshal.StructureToPtr(extendedLimit, extendedInfoPtr, false);
 
@@ -210,13 +339,23 @@
             }
         }
 
-        virtual public void TerminateProcesses()
+        public virtual void SetMemoryLimit(ulong jobMemoryLimitInBytes)
+        {
+            var extendedLimit = new NativeMethods.JobObjectExtendedLimitInformation();
+
+            extendedLimit.BasicLimitInformation.LimitFlags = NativeMethods.JobObjectLimit.JobMemory;
+            extendedLimit.JobMemoryLimit = new UIntPtr(jobMemoryLimitInBytes);
+
+            SetJobLimits(extendedLimit);
+        }
+
+        public virtual void TerminateProcesses()
         {
             if (handle == null) { throw new ObjectDisposedException("JobObject"); }
             NativeMethods.TerminateJobObject(handle, 0);
         }
 
-        virtual public void TerminateProcessesAndWait(int milliseconds = System.Threading.Timeout.Infinite)
+        public virtual void TerminateProcessesAndWait(int milliseconds = System.Threading.Timeout.Infinite)
         {
             TerminateProcesses();
             using (var waitHandle = new JobObjectWaitHandle(handle))

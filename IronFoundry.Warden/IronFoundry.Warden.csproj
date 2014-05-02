@@ -65,9 +65,11 @@
     <Compile Include="Containers\Messages\CreateProcessMessage.cs" />
     <Compile Include="Containers\Messages\CreateProcessStartInfo.cs" />
     <Compile Include="Containers\Messages\EnableLoggingMessage.cs" />
+    <Compile Include="Containers\Messages\LimitMemoryMessage.cs" />
     <Compile Include="Containers\Messages\RunCommandMessage.cs" />
     <Compile Include="Containers\ProcessMonitor.cs" />
     <Compile Include="Handlers\LoggingRequestHandler.cs" />
+    <Compile Include="PInvoke\IoCompletionPort.cs" />
     <Compile Include="Utilities\IFirewallManager.cs" />
     <Compile Include="Utilities\ILocalTcpPortManager.cs" />
     <Compile Include="Utilities\INetShRunner.cs" />

@@ -263,6 +263,14 @@ namespace IronFoundry.Warden.Test
                     emitter.Received().EmitLogMessage(logmessage.LogMessage.MessageType.ERR, "Boomerang");
                 }
             }
+
+            [Fact]
+            public void WhenLimitingMemory_SetsJobObjectMemoryLimit()
+            {
+                containerStub.LimitMemory(new LimitMemoryInfo(1024));
+
+                jobObject.Received(1, x => x.SetMemoryLimit(1024));
+            }
         }
 
         public class WhenInitializedWithTestUserAccount : ContainerStubContext

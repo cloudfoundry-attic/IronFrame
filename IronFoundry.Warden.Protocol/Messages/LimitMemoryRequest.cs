@@ -1,6 +1,6 @@
 ﻿namespace IronFoundry.Warden.Protocol
 {
-    public partial class LimitMemoryRequest : Request
+    public partial class LimitMemoryRequest : Request, IContainerRequest
     {
     }
 }

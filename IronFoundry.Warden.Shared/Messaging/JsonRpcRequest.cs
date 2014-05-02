@@ -26,6 +26,12 @@ namespace IronFoundry.Warden.Shared.Messaging
         {
         }
 
+        public JsonRpcRequest(string method, T @params)
+            : base(method)
+        {
+            this.@params = @params;
+        }
+
         public T @params { get; set; }
     }
 }

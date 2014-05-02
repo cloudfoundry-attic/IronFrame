@@ -70,7 +70,7 @@
                     handler = new LimitCpuRequestHandler(request);
                     break;
                 case Message.Type.LimitMemory:
-                    handler = new LimitMemoryRequestHandler(request);
+                    handler = new LimitMemoryRequestHandler(containerManager, request);
                     break;
                 case Message.Type.Link:
                     handler = new LinkRequestHandler(containerManager, jobManager, request);
