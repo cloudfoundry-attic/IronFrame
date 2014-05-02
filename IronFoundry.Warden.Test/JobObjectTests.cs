@@ -107,14 +107,12 @@ namespace IronFoundry.Warden.Containers
 
             try
             {
-                p = Process.Start("cmd.exe");
-
+                p = IFTestHelper.ExecuteWithWait("nop");
                 jobObject.AssignProcessToJob(p);
 
                 jobObject.TerminateProcesses();
 
-                p.WaitForExit(1000);
-
+                IFTestHelper.ContinueAndWait(p, timeout: 1000);
                 Assert.True(p.HasExited);
             }
             finally
@@ -130,15 +128,14 @@ namespace IronFoundry.Warden.Containers
             JobObject jobObject = new JobObject();
 
             Process p = null;
-
             try
             {
-                p = Process.Start("cmd.exe");
-
+                p = IFTestHelper.ExecuteWithWait("nop");
                 jobObject.AssignProcessToJob(p);
 
                 jobObject.TerminateProcessesAndWait(1000);
 
+                IFTestHelper.ContinueAndWait(p, timeout: 1000);
                 Assert.True(p.HasExited);
             }
             finally
@@ -206,7 +203,7 @@ namespace IronFoundry.Warden.Containers
 
                 IFTestHelper.ExecuteInJob(jobObject, "allocate-memory", "--bytes", allocateBytes);
 
-                await AssertHelper.CompletesWithinTimeoutAsync(500, tcs.Task);
+                await AssertHelper.CompletesWithinTimeoutAsync(1000, tcs.Task);
                 Assert.Equal(1, tcs.Task.Result);
             }
 
@@ -233,7 +230,7 @@ namespace IronFoundry.Warden.Containers
                     IFTestHelper.ExecuteInJob(jobObject, "allocate-memory", "--bytes", allocateBytes);
                 }
 
-                await AssertHelper.CompletesWithinTimeoutAsync(500, tcs.Task);
+                await AssertHelper.CompletesWithinTimeoutAsync(1000, tcs.Task);
                 Assert.Equal(3, tcs.Task.Result);
             }
         }

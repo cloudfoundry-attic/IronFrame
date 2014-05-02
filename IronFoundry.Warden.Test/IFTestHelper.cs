@@ -56,10 +56,10 @@ public static class IFTestHelper
         return Execute(command, args.ToList().Concat(new[] { "--wait" }));
     }
 
-    public static int ContinueAndWait(Process process, bool throwOnError = true)
+    public static int ContinueAndWait(Process process, bool throwOnError = true, int? timeout = null)
     {
         process.StandardInput.WriteLine();
-        process.WaitForExit();
+        process.WaitForExit(timeout ?? Int32.MaxValue);
 
         var error = process.StandardError.ReadToEnd();
         if (process.ExitCode == FATAL || !String.IsNullOrWhiteSpace(error))
