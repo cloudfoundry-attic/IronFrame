@@ -4,6 +4,7 @@ using IronFoundry.Warden.Configuration;
 using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Shared.Data;
 using IronFoundry.Warden.Tasks;
+using System.Collections.Generic;
 
 namespace IronFoundry.Warden.Containers
 {
@@ -26,7 +27,12 @@ namespace IronFoundry.Warden.Containers
 
         private bool IsRemoteActive
         {
-            get { return launcher != null && launcher.IsActive; }
+            get { return launcher.IsActive; }
+        }
+
+        private bool RemoteHalted
+        {
+            get { return !launcher.IsActive && launcher.WasActive; }
         }
 
         public string ContainerDirectoryPath
@@ -43,9 +49,13 @@ namespace IronFoundry.Warden.Containers
         {
             get
             {
-                if (IsRemoteActive)
+                if (RemoteHalted)
                 {
-                    cachedContainerState = GetRemoteContainerState().GetAwaiter().GetResult();
+                    cachedContainerState = ContainerState.Stopped;
+                }
+                else if (IsRemoteActive)
+                {
+                    cachedContainerState = GetRemoteContainerState().GetAwaiter().GetResult();                
                 }
 
                 return cachedContainerState;
@@ -104,7 +114,7 @@ namespace IronFoundry.Warden.Containers
         {
             if (IsRemoteActive)
             {
-                var enableResponse = await launcher.SendMessageAsync<EnableLoggingRequest, EnableLoggingResponse>(new EnableLoggingRequest {@params = loggingInfo});
+                var enableResponse = await launcher.SendMessageAsync<EnableLoggingRequest, EnableLoggingResponse>(new EnableLoggingRequest { @params = loggingInfo });
             }
         }
 
@@ -130,7 +140,7 @@ namespace IronFoundry.Warden.Containers
         {
             if (!containerResources.AssignedPort.HasValue)
             {
-                containerResources.AssignedPort = containerResources.LocalTcpPortManager.ReserveLocalPort((ushort) requestedPort, ContainerUserName);
+                containerResources.AssignedPort = containerResources.LocalTcpPortManager.ReserveLocalPort((ushort)requestedPort, ContainerUserName);
             }
 
             return containerResources.AssignedPort.Value;

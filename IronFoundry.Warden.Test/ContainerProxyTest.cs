@@ -75,6 +75,7 @@ namespace IronFoundry.Warden.Test
             public async void GetStatisticsDoestNotCallHostStub()
             {                
                 var response = await proxy.GetProcessStatisticsAsync();
+
                 this.launcher.DidNotReceive(x => x.SendMessageAsync<ContainerStatisticsRequest, ContainerStatisticsResponse>(Arg.Any<ContainerStatisticsRequest>()));
             }
 
@@ -239,7 +240,7 @@ namespace IronFoundry.Warden.Test
             }
 
             [Fact]
-            public async void StopDestorysResourceHolder()
+            public async void StopDestroysResourceHolder()
             {
                 await proxy.StopAsync();
                 resourceHolder.Received(x => x.Destroy());
@@ -375,6 +376,31 @@ namespace IronFoundry.Warden.Test
             }
         }
 
+        public class WhenLauncherEndsAfterInitialize : ProxyContainerContext
+        {
+            public WhenLauncherEndsAfterInitialize()
+            {
+                launcher.IsActive.Returns(true);
+                
+                launcher.SendMessageAsync<ContainerStateRequest, ContainerStateResponse>(Arg.Any<ContainerStateRequest>()).ReturnsTask(new ContainerStateResponse("foo", ContainerState.Active.ToString()));
+
+                proxy.Initialize(resourceHolder);
+            }
+
+            [Fact]
+            public void ShouldReportStoppedStatus()
+            {
+                var state = proxy.State;
+                Assert.Equal(ContainerState.Active, state);
+
+                launcher.IsActive.Returns(false);
+                launcher.WasActive.Returns(true);
+
+                state = proxy.State;
+                Assert.Equal(ContainerState.Stopped, state);
+            }
+
+        }
         public class WhenDisposed : ProxyContainerContext
         {
             [Fact]

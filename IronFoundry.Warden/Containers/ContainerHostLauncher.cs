@@ -26,6 +26,11 @@ namespace IronFoundry.Warden.Containers
             get { return hostProcess != null && hostProcess.HasExited == false; }
         }
 
+        public virtual bool WasActive
+        {
+            get { return hostProcess != null; }
+        }
+
         public virtual void Dispose()
         {
             if (hostProcess != null)
