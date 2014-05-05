@@ -273,7 +273,6 @@ namespace IronFoundry.Warden.Test.ContainerHost
             Assert.IsType<OperationCanceledException>(((AggregateException)exception).InnerExceptions[0]);
         }
 
-
         class CustomRequest : JsonRpcRequest
         {
             public CustomRequest()

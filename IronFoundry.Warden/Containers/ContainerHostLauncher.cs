@@ -33,6 +33,8 @@ namespace IronFoundry.Warden.Containers
 
         public virtual void Dispose()
         {
+            DisposeMessageHandling();
+
             if (hostProcess != null)
             {
                 if (!hostProcess.HasExited)
@@ -55,7 +57,11 @@ namespace IronFoundry.Warden.Containers
                 hostStartInfo.RedirectStandardError = true;
                 hostStartInfo.UseShellExecute = false;
 
-                hostProcess = Process.Start(hostStartInfo);
+                hostProcess = new Process();
+                hostProcess.StartInfo = hostStartInfo;
+                hostProcess.EnableRaisingEvents = true;
+                hostProcess.Exited += (o, e) => { DisposeMessageHandling(); };
+                hostProcess.Start();
 
                 messageTransport = new MessageTransport(hostProcess.StandardOutput, hostProcess.StandardInput);
                 messagingClient = new MessagingClient(message =>
@@ -67,6 +73,21 @@ namespace IronFoundry.Warden.Containers
                     messagingClient.PublishResponse(message);
                     return Task.FromResult(0);
                 });
+            }
+        }
+
+        private void DisposeMessageHandling()
+        {
+            if (this.messagingClient != null)
+            {
+                this.messagingClient.Dispose();
+                this.messagingClient = null;
+            }
+
+            if (this.messageTransport != null)
+            {
+                this.messageTransport.Dispose();
+                this.messageTransport = null;
             }
         }
 
