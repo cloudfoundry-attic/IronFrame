@@ -10,13 +10,22 @@ namespace IronFoundry.Warden.Containers
 {
     public class ContainerProxy : IDisposable, IContainerClient
     {
-        private readonly ContainerHostLauncher launcher;
+        private readonly IContainerHostLauncher launcher;
         private ContainerState cachedContainerState;
         private IResourceHolder containerResources;
+        private readonly List<string> events = new List<string>();
+        private object eventLock = new object();
 
-        public ContainerProxy(ContainerHostLauncher launcher)
+        private static readonly Dictionary<int, string> exitMessageMap = new Dictionary<int, string>()
+        {
+            { -2, "Application exceeded memory limits and was stopped." }
+        };
+
+        public ContainerProxy(IContainerHostLauncher launcher)
         {
             this.launcher = launcher;
+            this.launcher.HostStopped += HostStoppedHandler;
+
             cachedContainerState = ContainerState.Born;
         }
 
@@ -151,15 +160,43 @@ namespace IronFoundry.Warden.Containers
             await DestroyAsync();
         }
 
+        public IEnumerable<string> DrainEvents()
+        {
+            lock (eventLock)
+            {
+                var clone = events.ToArray();
+                events.Clear();
+                return clone;
+            }
+        }
+
         public void Dispose()
         {
-            launcher.Dispose();
+            var disposable = launcher as IDisposable;
+            if (disposable != null)
+                disposable.Dispose();
         }
 
         private async Task<string> GetRemoteContainerState()
         {
             var response = await launcher.SendMessageAsync<ContainerStateRequest, ContainerStateResponse>(new ContainerStateRequest());
             return response.result;
+        }
+
+        private void HostStoppedHandler(object sender, int exitCode)
+        {
+            if (exitCode == 0) return;
+
+            string msg = null;
+            if (!exitMessageMap.TryGetValue(exitCode, out msg))
+            {
+                msg = string.Format("Application's ContainerHost stopped with exit code: {0}.", exitCode);
+            }
+
+            lock (eventLock)
+            {
+                events.Add(msg);
+            }
         }
 
         private async void InvokeRemoteInitialize()
@@ -187,5 +224,9 @@ namespace IronFoundry.Warden.Containers
             var holder = ContainerResourceHolder.Create(new WardenConfig(), new ContainerHandle(handle));
             holder.Destroy();
         }
+
+
+
+   
     }
 }

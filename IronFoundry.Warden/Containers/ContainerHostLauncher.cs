@@ -9,12 +9,28 @@ using IronFoundry.Warden.Utilities;
 
 namespace IronFoundry.Warden.Containers
 {
-    public class ContainerHostLauncher : IDisposable
+    public interface IContainerHostLauncher
+    {
+        event EventHandler<int> HostStopped;
+
+        int HostProcessId { get; }
+        bool IsActive { get; }
+        bool WasActive { get; }
+        int? LastExitCode { get; }
+        void Start(string workingDirectory, string jobObjectName);
+        Task<TResult> SendMessageAsync<T, TResult>(T request)
+            where T : JsonRpcRequest
+            where TResult : JsonRpcResponse;
+    }
+
+    public class ContainerHostLauncher : IDisposable, IContainerHostLauncher
     {
         string hostExe = "IronFoundry.Warden.ContainerHost.exe";
         Process hostProcess;
         MessageTransport messageTransport;
         MessagingClient messagingClient;
+
+        public event EventHandler<int> HostStopped;
 
         public int HostProcessId
         {
@@ -45,13 +61,24 @@ namespace IronFoundry.Warden.Containers
             }
         }
 
+        public virtual int? LastExitCode
+        {
+            get
+            {
+                if (hostProcess != null && hostProcess.HasExited)
+                    return hostProcess.ExitCode;
+
+                return null;
+            }
+        }
+
         public virtual void Start(string workingDirectory, string jobObjectName)
         {
             if (hostProcess == null)
             {
                 var hostFullPath = Path.Combine(Directory.GetCurrentDirectory(), hostExe);
                 var hostStartInfo = new ProcessStartInfo(hostFullPath, jobObjectName);
-                
+
                 hostStartInfo.RedirectStandardInput = true;
                 hostStartInfo.RedirectStandardOutput = true;
                 hostStartInfo.RedirectStandardError = true;
@@ -60,7 +87,12 @@ namespace IronFoundry.Warden.Containers
                 hostProcess = new Process();
                 hostProcess.StartInfo = hostStartInfo;
                 hostProcess.EnableRaisingEvents = true;
-                hostProcess.Exited += (o, e) => { DisposeMessageHandling(); };
+                hostProcess.Exited += (o, e) => 
+                    {
+                        OnHostStopped(hostProcess != null && hostProcess.HasExited ? hostProcess.ExitCode : 0);
+                        DisposeMessageHandling(); 
+                    };
+
                 hostProcess.Start();
 
                 messageTransport = new MessageTransport(hostProcess.StandardOutput, hostProcess.StandardInput);
@@ -73,6 +105,15 @@ namespace IronFoundry.Warden.Containers
                     messagingClient.PublishResponse(message);
                     return Task.FromResult(0);
                 });
+            }
+        }
+
+        protected virtual void OnHostStopped(int exitCode)
+        {
+            var handlers = HostStopped;
+            if (handlers != null)
+            {
+                handlers(this, exitCode);
             }
         }
 
@@ -97,5 +138,5 @@ namespace IronFoundry.Warden.Containers
         {
             return await messagingClient.SendMessageAsync<T, TResult>(request);
         }
-    }       
+    }
 }

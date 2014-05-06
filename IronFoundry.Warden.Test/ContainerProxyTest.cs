@@ -26,14 +26,14 @@ namespace IronFoundry.Warden.Test
             protected readonly string containerHandle = "ContainerHandle";
 
             protected ContainerProxy proxy;
-            protected ContainerHostLauncher launcher;
+            protected IContainerHostLauncher launcher;
             protected string tempDirectory;
             protected IResourceHolder resourceHolder;
 
             public ProxyContainerContext()
             {
-                this.launcher = Substitute.For<ContainerHostLauncher>();
-                this.launcher.When(x => x.Start(null, null)).DoNotCallBase();
+                this.launcher = Substitute.For<IContainerHostLauncher>();
+                this.launcher.When(x => x.Start(null, null));
 
                 var userInfo = Substitute.For<IContainerUser>();
                 userInfo.UserName.ReturnsForAnyArgs(testUserName);
@@ -286,6 +286,47 @@ namespace IronFoundry.Warden.Test
             }
         }
 
+        public class WhenLauncherExits : ProxyContainerContext
+        {
+            [Fact]
+            public void OutOfMemoryExitResultsInEventEntry()
+            {
+                var exitCode =-2;
+                this.launcher.HostStopped += Raise.Event<EventHandler<int>>(new object(), exitCode);
+
+                Assert.Equal(new[] { "Application exceeded memory limits and was stopped." }, proxy.DrainEvents());
+            }
+
+            [Fact]
+            public void ExitWithoutErrorResultsInNoEvents()
+            {
+                var exitCode = 0;
+                this.launcher.HostStopped += Raise.Event<EventHandler<int>>(new object(), exitCode);
+
+                Assert.Equal(new string[] { }, proxy.DrainEvents());
+            }
+
+            [Fact]
+            public void ExitWithUnmappedCodeResultsInGenericMessage()
+            {
+                var exitCode = 9000;
+                this.launcher.HostStopped += Raise.Event<EventHandler<int>>(new object(), exitCode);
+
+                Assert.Equal(new[] { string.Format("Application's ContainerHost stopped with exit code: {0}.", exitCode) }, proxy.DrainEvents());
+            }
+
+            [Fact]
+            public void EventsClearedAfterDrain()
+            {
+                var exitCode = 9000;
+                this.launcher.HostStopped += Raise.Event<EventHandler<int>>(new object(), exitCode);
+
+                Assert.Equal(1, proxy.DrainEvents().Count());
+
+                Assert.Equal(0, proxy.DrainEvents().Count());
+            }
+        }
+
         public class WhenQueryingContainerState : ProxyContainerContext
         {
             public WhenQueryingContainerState()
@@ -311,8 +352,8 @@ namespace IronFoundry.Warden.Test
 
                 Assert.Equal(ContainerState.Active, state);
             }
-
         }
+
 
         public class WhenRunningCommand : ProxyContainerContext
         {
@@ -401,13 +442,12 @@ namespace IronFoundry.Warden.Test
             }
 
         }
-        public class WhenDisposed : ProxyContainerContext
+        
+        public class TestableContainerHostLauncher : ContainerHostLauncher
         {
-            [Fact]
-            public void DisposesLauncher()
+            public void RaiseOnHostStopped(int exitCode)
             {
-                proxy.Dispose();
-                launcher.Received().Dispose();
+                this.OnHostStopped(exitCode);
             }
         }
     }
