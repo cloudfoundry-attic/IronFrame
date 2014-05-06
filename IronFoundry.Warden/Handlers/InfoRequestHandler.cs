@@ -19,7 +19,7 @@
         public override async Task<Response> HandleAsync()
         {
             log.Trace("Handle: '{0}'", request.Handle);
-            return await BuildInfoResponse();
+            return await BuildInfoResponseAsync();
         }
     }
 }

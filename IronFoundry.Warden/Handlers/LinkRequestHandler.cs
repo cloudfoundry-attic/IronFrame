@@ -47,7 +47,7 @@
                         };
                     }
 
-                    response.Info = await BuildInfoResponse();
+                    response.Info = await BuildInfoResponseAsync();
 
                     return response;
                 });

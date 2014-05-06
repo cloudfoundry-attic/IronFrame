@@ -27,7 +27,7 @@
             return containerManager.GetContainer(containerRequest.Handle);
         }
 
-        protected async Task<InfoResponse> BuildInfoResponse()
+        protected async Task<InfoResponse> BuildInfoResponseAsync()
         {
             // TODO complete info
             InfoResponse infoResponse = null;
@@ -40,7 +40,7 @@
             else
             {
                 var infoBuilder = new InfoBuilder(container);
-                infoResponse = await infoBuilder.GetInfoResponse();
+                infoResponse = await infoBuilder.GetInfoResponseAsync();
             }
 
             return infoResponse;

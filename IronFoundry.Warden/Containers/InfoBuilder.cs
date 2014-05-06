@@ -18,10 +18,12 @@
             this.container = container;
         }
 
-        public async Task<InfoResponse> GetInfoResponse()
+        public async Task<InfoResponse> GetInfoResponseAsync()
         {
             var hostIp = IPUtilities.GetLocalIPAddress().ToString();
             var info = new InfoResponse(hostIp, hostIp, container.ContainerDirectoryPath, container.State);
+
+            info.Events.AddRange(container.DrainEvents());
 
             var stats = await container.GetProcessStatisticsAsync();
 

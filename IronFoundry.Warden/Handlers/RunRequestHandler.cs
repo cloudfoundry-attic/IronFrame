@@ -31,7 +31,7 @@
                             ExitStatus = (uint)result.ExitCode,
                             Stdout = result.Stdout,
                             Stderr = result.Stderr,
-                            Info = await BuildInfoResponse()
+                            Info = await BuildInfoResponseAsync()
                         };
                 });
         }

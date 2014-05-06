@@ -354,7 +354,6 @@ namespace IronFoundry.Warden.Test
             }
         }
 
-
         public class WhenRunningCommand : ProxyContainerContext
         {
             public WhenRunningCommand()
