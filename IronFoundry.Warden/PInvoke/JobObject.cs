@@ -74,11 +74,29 @@
             BasicLimitInformation = 2,
             JobObjectBasicProcessIdList = 3,
             BasicUIRestrictions = 4,
+            SecurityLimitInformation = 5,
             EndOfJobTimeInformation = 6,
             AssociateCompletionPortInformation = 7,
             ExtendedLimitInformation = 9,
-            SecurityLimitInformation = 5,
-            GroupInformation = 11
+            GroupInformation = 11,
+            NotificationLimitInformation = 12,
+            LimitViolationInformation = 13,
+        }
+
+        public enum JobObjectRateControlTolerance : uint
+        {
+            Unspecified = 0,
+            Low = 1,
+            Medium = 2,
+            High = 3,
+        }
+
+        public enum JobObjectRateControlToleranceInterval : uint
+        {
+            Unspecified = 0,
+            Short = 1,
+            Medium = 2,
+            Long = 3,
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -146,6 +164,35 @@
             public IntPtr FirstProcessId;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        public struct JobObjectNotificationLimitInformation
+        {
+            public ulong IoReadBytesLimit;
+            public ulong IoWriteBytesLimit;
+            public long PerJobUserTimeLimit;
+            public ulong JobMemoryLimit;
+            public JobObjectRateControlTolerance RateControlTolerance;
+            public JobObjectRateControlToleranceInterval RateControlToleranceInterval;
+            public JobObjectLimit LimitFlags;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct JobObjectLimitViolationInformation
+        {
+            public JobObjectLimit LimitFlags;
+            public JobObjectLimit ViolationLimitFlags;
+            public ulong IoReadBytes;
+            public ulong IoReadBytesLimit;
+            public ulong IoWriteBytes;
+            public ulong IoWriteBytesLimit;
+            public long PerJobUserTime;
+            public long PerJobUserTimeLimit;
+            public ulong JobMemory;
+            public ulong JobMemoryLimit;
+            public JobObjectRateControlTolerance RateControlTolerance;
+            public JobObjectRateControlTolerance RateControlToleranceLimit;
+        }
+
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool AssignProcessToJobObject(SafeHandle jobHandle, IntPtr processHandle);
@@ -175,7 +222,7 @@
             SafeHandle hJob,
             [MarshalAs(UnmanagedType.U4)] JobObjectInfoClass infoType,
             IntPtr lpJobObjectInfo,
-            [MarshalAs(UnmanagedType.U4)] uint cbJobObjectInfoLength);
+            [MarshalAs(UnmanagedType.U4)] int cbJobObjectInfoLength);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

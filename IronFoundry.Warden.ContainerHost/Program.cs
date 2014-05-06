@@ -50,9 +50,16 @@ namespace IronFoundry.Warden.ContainerHost
 
     class Program
     {
+        const int OutOfMemoryExitCode = -2;
+
         static ManualResetEvent exitEvent = new ManualResetEvent(false);
         static ConcurrentDictionary<int, ProcessContext> processContexts = new ConcurrentDictionary<int, ProcessContext>();
         static ContainerStub container;
+
+        static void HandleOutOfMemory(object sender, EventArgs e)
+        {
+            Environment.Exit(OutOfMemoryExitCode);
+        }
 
         static void Main(string[] args)
         {
@@ -63,10 +70,13 @@ namespace IronFoundry.Warden.ContainerHost
                 throw new InvalidOperationException("Cannot start host, missing JobObject name.");
 
             var jobObject = new JobObject(args[0]);
+            var jobObjectLimits = new JobObjectLimits(jobObject);
             var hostProcess = System.Diagnostics.Process.GetCurrentProcess();
             jobObject.AssignProcessToJob(hostProcess);
 
-            container = new ContainerStub(jobObject, BuildCommandRunner(), new ProcessHelper(), new ProcessMonitor());
+            container = new ContainerStub(jobObject, jobObjectLimits, BuildCommandRunner(), new ProcessHelper(), new ProcessMonitor());
+
+            container.OutOfMemory += HandleOutOfMemory;
 
             using (var transport = new MessageTransport(input, output))
             {

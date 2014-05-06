@@ -156,7 +156,7 @@ namespace IronFoundry.Warden.Containers
 
         public class JobLimits : IDisposable
         {
-            const int DefaultMemoryLimit = 1024 * 1024 * 25; // 25MB
+            const ulong DefaultMemoryLimit = 1024 * 1024 * 25; // 25MB
 
             JobObject jobObject;
 
@@ -176,7 +176,7 @@ namespace IronFoundry.Warden.Containers
                 ulong limitInBytes = DefaultMemoryLimit;
                 ulong allocateBytes = limitInBytes * 2;
 
-                jobObject.SetMemoryLimit(limitInBytes);
+                jobObject.SetJobMemoryLimit(limitInBytes);
 
                 var process = IFTestHelper.ExecuteInJob(jobObject, "allocate-memory", "--bytes", allocateBytes);
 
@@ -184,27 +184,37 @@ namespace IronFoundry.Warden.Containers
             }
 
             [Fact]
-            public async void CanGetMemoryLimitNotification()
+            public void CanGetMemoryLimit()
             {
-                ulong limitInBytes = DefaultMemoryLimit;
+                jobObject.SetJobMemoryLimit(DefaultMemoryLimit);
 
-                var tcs = new TaskCompletionSource<int>();
-                int memoryLimitedCalled = 0;
-                jobObject.MemoryLimited += (sender, e) =>
-                {
-                    memoryLimitedCalled++;
-                    if (memoryLimitedCalled == 1)
-                        tcs.SetResult(memoryLimitedCalled);
-                };
+                Assert.Equal(DefaultMemoryLimit, jobObject.GetJobMemoryLimit());
+            }
 
-                jobObject.SetMemoryLimit(limitInBytes);
+            [Fact]
+            public void WhenMemoryIsNotLimited_GetMemoryLimitReturnsZero()
+            {
+                Assert.Equal(0UL, jobObject.GetJobMemoryLimit());
+            }
 
-                ulong allocateBytes = limitInBytes * 2;
+            [Fact]
+            public void CanGetMemoryPeak()
+            {
+                jobObject.SetJobMemoryLimit(DefaultMemoryLimit);
 
+                ulong allocateBytes = DefaultMemoryLimit * 2;
                 IFTestHelper.ExecuteInJob(jobObject, "allocate-memory", "--bytes", allocateBytes);
 
-                await AssertHelper.CompletesWithinTimeoutAsync(1000, tcs.Task);
-                Assert.Equal(1, tcs.Task.Result);
+                Assert.True(DefaultMemoryLimit <= jobObject.GetPeakJobMemoryUsed());
+            }
+
+            [Fact]
+            public void WhenMemoryIsNotLimited_GetMemoryPeakReturnsZero()
+            {
+                ulong allocateBytes = DefaultMemoryLimit * 2;
+                IFTestHelper.ExecuteInJob(jobObject, "allocate-memory", "--bytes", allocateBytes);
+
+                Assert.Equal(0UL, jobObject.GetPeakJobMemoryUsed());
             }
         }
 

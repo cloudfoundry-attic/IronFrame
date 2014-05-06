@@ -25,6 +25,7 @@ namespace IronFoundry.Warden.Test
         protected readonly string containerHandle = "TestHandle";
 
         protected JobObject jobObject;
+        protected JobObjectLimits jobObjectLimits;
         protected ContainerStub containerStub;
         protected ICommandRunner commandRunner;
         protected string tempDirectory;
@@ -37,10 +38,11 @@ namespace IronFoundry.Warden.Test
             commandRunner = Substitute.For<ICommandRunner>();
 
             jobObject = Substitute.For<JobObject>();
+            jobObjectLimits = Substitute.For<JobObjectLimits>(jobObject, TimeSpan.FromMilliseconds(10));
             processHelper = Substitute.For<ProcessHelper>();
             processMonitor = new ProcessMonitor();
 
-            containerStub = new ContainerStub(jobObject, commandRunner, processHelper, processMonitor);
+            containerStub = new ContainerStub(jobObject, jobObjectLimits, commandRunner, processHelper, processMonitor);
 
             this.tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             Directory.CreateDirectory(tempDirectory);
@@ -70,14 +72,14 @@ namespace IronFoundry.Warden.Test
             [Fact]
             public void StateIsBorn()
             {
-                var container = new ContainerStub(null, null, null, new ProcessMonitor());
-                Assert.Equal(ContainerState.Born, container.State);
+                var containerStub = new ContainerStub(null, new JobObjectLimits(jobObject), null, null, new ProcessMonitor());
+                Assert.Equal(ContainerState.Born, containerStub.State);
             }
 
             [Fact]
             public void CannotLaunchProcessIfContainerIsNonActive()
             {
-                var containerStub = new ContainerStub(null, null, null, new ProcessMonitor());
+                var containerStub = new ContainerStub(null, new JobObjectLimits(jobObject), null, null, new ProcessMonitor());
                 var si = new CreateProcessStartInfo("cmd.exe");
 
                 // Not initialized ==> not active
@@ -91,9 +93,9 @@ namespace IronFoundry.Warden.Test
             }
         }
 
-        public class WhenInitialzed : ContainerStubContext
+        public class WhenInitialized : ContainerStubContext
         {
-            public WhenInitialzed()
+            public WhenInitialized()
             {
                 containerStub.Initialize(tempDirectory, containerHandle, userInfo);
             }
@@ -269,7 +271,21 @@ namespace IronFoundry.Warden.Test
             {
                 containerStub.LimitMemory(new LimitMemoryInfo(1024));
 
-                jobObject.Received(1, x => x.SetMemoryLimit(1024));
+                jobObjectLimits.Received(1, x => x.LimitMemory(1024));
+            }
+
+            [Fact]
+            public void WhenMemoryLimitIsReached_RaisesOutOfMemory()
+            {
+                bool eventRaised = false;
+                containerStub.OutOfMemory += (sender, e) =>
+                {
+                    eventRaised = true;
+                };
+
+                jobObjectLimits.MemoryLimitReached += Raise.Event();
+
+                Assert.True(eventRaised);
             }
         }
 

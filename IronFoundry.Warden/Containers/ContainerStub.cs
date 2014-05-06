@@ -13,7 +13,8 @@ namespace IronFoundry.Warden.Containers
 {
     public class ContainerStub : IContainer, IDisposable
     {
-        private JobObject jobObject;
+        private readonly JobObject jobObject;
+        private readonly JobObjectLimits jobObjectLimits;
         private ContainerState currentState;
         private string containerDirectory;
         private ContainerHandle containerHandle;
@@ -21,19 +22,24 @@ namespace IronFoundry.Warden.Containers
         private readonly ICommandRunner commandRunner;
         private ProcessHelper processHelper;
         private ILogEmitter logEmitter;
+        private EventHandler outOfMemoryHandler;
         private ProcessMonitor processMonitor;
 
         public ContainerStub(
             JobObject jobObject,
+            JobObjectLimits jobObjectLimits,
             ICommandRunner commandRunner,
             ProcessHelper processHelper,
             ProcessMonitor processMonitor)
         {
             this.jobObject = jobObject;
+            this.jobObjectLimits = jobObjectLimits;
             this.currentState = ContainerState.Born;
             this.commandRunner = commandRunner;
             this.processHelper = processHelper;
             this.processMonitor = processMonitor;
+
+            this.jobObjectLimits.MemoryLimitReached += MemoryLimitReached;
 
             this.processMonitor.OutputDataReceived += LogOutputData;
             this.processMonitor.ErrorDataReceived += LogErrorData;
@@ -57,6 +63,12 @@ namespace IronFoundry.Warden.Containers
         public ContainerState State
         {
             get { return this.currentState; }
+        }
+
+        public event EventHandler OutOfMemory
+        {
+            add { outOfMemoryHandler += value; }
+            remove { outOfMemoryHandler -= value; }
         }
 
         public Utilities.IProcess CreateProcess(CreateProcessStartInfo si, bool impersonate = false)
@@ -188,7 +200,14 @@ namespace IronFoundry.Warden.Containers
 
         public void LimitMemory(LimitMemoryInfo info)
         {
-            jobObject.SetMemoryLimit(info.LimitInBytes);
+            jobObjectLimits.LimitMemory(info.LimitInBytes);
+        }
+
+        private void MemoryLimitReached(object sender, EventArgs e)
+        {
+            var handler = outOfMemoryHandler;
+            if (handler != null)
+                handler(this, EventArgs.Empty);
         }
 
         public int ReservePort(int requestedPort)

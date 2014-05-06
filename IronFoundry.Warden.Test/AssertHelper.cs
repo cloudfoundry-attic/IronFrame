@@ -16,4 +16,19 @@ public static class AssertHelper
         var task = callback();
         return CompletesWithinTimeoutAsync(milliseconds, task);
     }
+
+    public static async Task DoesNotCompleteWithinTimeoutAsync(int milliseconds, Task task)
+    {
+        var timeoutTask = Task.Delay(milliseconds);
+        var completedTask = await Task.WhenAny(task, timeoutTask);
+
+        if (!Object.ReferenceEquals(timeoutTask, completedTask))
+            throw new Exception(String.Format("The task completed before the timeout period of {0}ms", milliseconds));
+    }
+
+    public static Task DoesNotCompleteWithinTimeoutAsync(int milliseconds, Func<Task> callback)
+    {
+        var task = callback();
+        return DoesNotCompleteWithinTimeoutAsync(milliseconds, task);
+    }
 }
