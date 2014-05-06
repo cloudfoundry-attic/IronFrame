@@ -203,9 +203,12 @@ namespace IronFoundry.Warden.Containers
                 jobObject.SetJobMemoryLimit(DefaultMemoryLimit);
 
                 ulong allocateBytes = DefaultMemoryLimit * 2;
-                IFTestHelper.ExecuteInJob(jobObject, "allocate-memory", "--bytes", allocateBytes);
+                var process = IFTestHelper.ExecuteInJob(jobObject, "allocate-memory", "--bytes", allocateBytes);
 
-                Assert.True(DefaultMemoryLimit <= jobObject.GetPeakJobMemoryUsed());
+                if (IFTestHelper.Succeeded(process))
+                    Assert.True(DefaultMemoryLimit <= jobObject.GetPeakJobMemoryUsed());
+                else
+                    Assert.NotEqual(0UL, jobObject.GetPeakJobMemoryUsed());
             }
 
             [Fact]
