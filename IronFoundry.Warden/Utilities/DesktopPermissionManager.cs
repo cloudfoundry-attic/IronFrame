@@ -1,9 +1,9 @@
 ﻿namespace IronFoundry.Warden.Utilities
 {
+    using IronFoundry.Warden.PInvoke;
     using System;
     using System.Runtime.InteropServices;
     using System.Security.AccessControl;
-    using Asprosys.Security.AccessControl;
 
     public interface IDesktopPermissionManager
     {
@@ -26,33 +26,53 @@
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern int GetCurrentThreadId();
 
-        public DesktopPermissionManager()
+        /// <summary>
+        /// Used to help provide SafeHandle conformance for
+        /// API's that need SafeHanle but those handles don't need 
+        /// actual releasing (e.g. GetProcessWindowStation)
+        /// </summary>
+        class NonReleasingSafeHandle : SafeHandle
         {
+            public NonReleasingSafeHandle(IntPtr handle, bool ownsHandle)
+                : base(handle, false)
+            {
+            }
+
+            public override bool IsInvalid
+            {
+                get { return handle == IntPtr.Zero; }
+            }
+
+            protected override bool ReleaseHandle()
+            {
+                // This SafeHandle doe snot need releasing.
+                return true;
+            }
         }
 
         public void AddDesktopPermission(string userName)
         {
-            IntPtr hWindowStation = GetProcessWindowStation();
-            var ws = new WindowStationSecurity(hWindowStation, AccessControlSections.Access);
-            ws.AddAccessRule(new WindowStationAccessRule(userName, WindowStationRights.AllAccess, AccessControlType.Allow));
+            SafeHandle shWindowStation = new NonReleasingSafeHandle(GetProcessWindowStation(), false);
+            var ws = new WindowStationSecurity(shWindowStation);
+            ws.AddAccessRule(new AccessRule<NativeMethods.WindowStationRights>(userName, NativeMethods.WindowStationRights.AllAccess, AccessControlType.Allow));
             ws.AcceptChanges();
 
-            IntPtr hDesktopThread = GetThreadDesktop(GetCurrentThreadId());
-            var ds = new DesktopSecurity(hDesktopThread, AccessControlSections.Access);
-            ds.AddAccessRule(new DesktopAccessRule(userName, DesktopRights.AllAccess, AccessControlType.Allow));
+            SafeHandle shDesktopThread = new NonReleasingSafeHandle(GetThreadDesktop(GetCurrentThreadId()), false);
+            var ds = new DesktopSecurity(shDesktopThread);
+            ds.AddAccessRule(new AccessRule<NativeMethods.DesktopRights>(userName, NativeMethods.DesktopRights.AllAccess, AccessControlType.Allow));
             ds.AcceptChanges();
         }
 
         public void RemoveDesktopPermission(string userName)
         {
-            IntPtr hWindowStation = GetProcessWindowStation();
-            var ws = new WindowStationSecurity(hWindowStation, AccessControlSections.Access);
-            ws.RemoveAccessRule(new WindowStationAccessRule(userName, WindowStationRights.AllAccess, AccessControlType.Allow));
+            SafeHandle shWindowStation = new NonReleasingSafeHandle(GetProcessWindowStation(), false);
+            var ws = new WindowStationSecurity(shWindowStation);
+            ws.AddAccessRule(new AccessRule<NativeMethods.WindowStationRights>(userName, NativeMethods.WindowStationRights.AllAccess, AccessControlType.Deny));
             ws.AcceptChanges();
 
-            IntPtr hDesktopThread = GetThreadDesktop(GetCurrentThreadId());
-            var ds = new DesktopSecurity(hDesktopThread, AccessControlSections.Access);
-            ds.RemoveAccessRule(new DesktopAccessRule(userName, DesktopRights.AllAccess, AccessControlType.Allow));
+            SafeHandle shDesktopThread = new NonReleasingSafeHandle(GetThreadDesktop(GetCurrentThreadId()), false);
+            var ds = new DesktopSecurity(shDesktopThread);
+            ds.AddAccessRule(new AccessRule<NativeMethods.DesktopRights>(userName, NativeMethods.DesktopRights.AllAccess, AccessControlType.Deny));
             ds.AcceptChanges();
         }
     }
