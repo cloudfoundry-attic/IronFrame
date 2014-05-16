@@ -2,14 +2,16 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using IronFoundry.Warden.Shared.Messaging;
+using IronFoundry.Warden.Configuration;
 using IronFoundry.Warden.Containers;
+using IronFoundry.Warden.Containers.Messages;
+using IronFoundry.Warden.Shared.Messaging;
 using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Utilities;
-using IronFoundry.Warden.Containers.Messages;
 
 namespace IronFoundry.Warden.ContainerHost
 {
@@ -48,6 +50,13 @@ namespace IronFoundry.Warden.ContainerHost
         }
     }
 
+    class ContainerHostConfig : IWardenConfig
+    {
+        public string ContainerBasePath { get; set; }
+        public ushort TcpPort { get; set; }
+        public bool DeleteContainerDirectories { get; set; }
+    }
+
     class Program
     {
         const int OutOfMemoryExitCode = -2;
@@ -63,13 +72,22 @@ namespace IronFoundry.Warden.ContainerHost
 
         static void Main(string[] args)
         {
+            //Debugger.Launch();
+
             var input = Console.In;
             var output = Console.Out;
+            string handle = null;
 
-            if (args.Length < 1)
-                throw new InvalidOperationException("Cannot start host, missing JobObject name.");
+            var options = new NDesk.Options.OptionSet {
+                { "handle=", v => handle = v },
+            };
 
-            var jobObject = new JobObject(args[0]);
+            options.Parse(args);
+
+            if (String.IsNullOrWhiteSpace(handle))
+                throw new InvalidOperationException("Cannot start host, missing container handle.");
+
+            var jobObject = new JobObject(handle);
             var jobObjectLimits = new JobObjectLimits(jobObject);
             var hostProcess = System.Diagnostics.Process.GetCurrentProcess();
             jobObject.AssignProcessToJob(hostProcess);
@@ -82,13 +100,31 @@ namespace IronFoundry.Warden.ContainerHost
             {
                 var dispatcher = new MessageDispatcher();
 
+                dispatcher.RegisterMethod<BindMountsRequest>(BindMountsRequest.MethodName, r =>
+                {
+                    container.BindMounts(r.@params.Mounts);
+
+                    return Task.FromResult<object>(new BindMountsResponse(r.id));
+                });
+
                 dispatcher.RegisterMethod<ContainerInitializeRequest>(ContainerInitializeRequest.MethodName, (r) => 
                 {
+                    var containerHandle = new ContainerHandle(r.@params.containerHandle);
                     var containerUser = new ContainerUser(r.@params.userName, r.@params.userPassword);
+                    
+                    // This is temporary until we can move the initialization of the container resources to ContainerHost
+                    var containerHostConfig = new ContainerHostConfig
+                    {
+                        ContainerBasePath = new DirectoryInfo(r.@params.containerDirectoryPath).Parent.FullName,
+                        DeleteContainerDirectories = true,
+                        TcpPort = 0,
+                    };
+                    
+                    var containerDirectory = new ContainerDirectory(containerHandle, containerUser, false, containerHostConfig);
 
                     container.Initialize(
-                        r.@params.containerDirectoryPath,
-                        r.@params.containerHandle,
+                        containerDirectory,
+                        containerHandle,
                         containerUser);
 
                     return Task.FromResult<object>(new ContainerInitializeResponse(r.id));

@@ -16,7 +16,7 @@ namespace IronFoundry.Warden.Containers
         private readonly JobObject jobObject;
         private readonly JobObjectLimits jobObjectLimits;
         private ContainerState currentState;
-        private string containerDirectory;
+        private IContainerDirectory containerDirectory;
         private ContainerHandle containerHandle;
         private System.Net.NetworkCredential user;
         private readonly ICommandRunner commandRunner;
@@ -47,7 +47,7 @@ namespace IronFoundry.Warden.Containers
 
         public string ContainerDirectoryPath
         {
-            get { return containerDirectory; }
+            get { return containerDirectory.FullName; }
         }
 
         public string ContainerUserName
@@ -69,6 +69,13 @@ namespace IronFoundry.Warden.Containers
         {
             add { outOfMemoryHandler += value; }
             remove { outOfMemoryHandler -= value; }
+        }
+
+        public void BindMounts(IEnumerable<BindMount> mounts)
+        {
+            ThrowIfNotActive();
+
+            containerDirectory.BindMounts(mounts);
         }
 
         public Utilities.IProcess CreateProcess(CreateProcessStartInfo si, bool impersonate = false)
@@ -190,12 +197,12 @@ namespace IronFoundry.Warden.Containers
             };
         }
 
-        public void Initialize(string containerDirectory, string containerHandle, IContainerUser userInfo)
+        public void Initialize(IContainerDirectory containerDirectory, ContainerHandle containerHandle, IContainerUser userInfo)
         {
             this.user = userInfo.GetCredential();
             this.currentState = ContainerState.Active;
             this.containerDirectory = containerDirectory;
-            this.containerHandle = new ContainerHandle(containerHandle);
+            this.containerHandle = containerHandle;
         }
 
         public void LimitMemory(LimitMemoryInfo info)

@@ -76,8 +76,11 @@ namespace IronFoundry.Warden.Containers
         {
             if (hostProcess == null)
             {
+                var argumentBuilder = new StringBuilder();
+                argumentBuilder.AppendFormat("--handle {0}", jobObjectName);
+
                 var hostFullPath = Path.Combine(Directory.GetCurrentDirectory(), hostExe);
-                var hostStartInfo = new ProcessStartInfo(hostFullPath, jobObjectName);
+                var hostStartInfo = new ProcessStartInfo(hostFullPath, argumentBuilder.ToString());
 
                 hostStartInfo.RedirectStandardInput = true;
                 hostStartInfo.RedirectStandardOutput = true;

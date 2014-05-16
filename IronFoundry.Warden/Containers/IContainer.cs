@@ -18,12 +18,13 @@ namespace IronFoundry.Warden.Containers
         ContainerHandle Handle { get; }
         ContainerState State { get; }
 
+        void BindMounts(IEnumerable<BindMount> mounts);
         IProcess CreateProcess(CreateProcessStartInfo si, bool impersonate = false);
         void Destroy();
         WindowsImpersonationContext GetExecutionContext(bool shouldImpersonate = false);
         ProcessStats GetProcessStatistics();
 
-        void Initialize(string containerDirectory, string containerHandle, IContainerUser userInfo);
+        void Initialize(IContainerDirectory containerDirectory, ContainerHandle containerHandle, IContainerUser userInfo);
         void Stop();
 
         int ReservePort(int requestedPort); 

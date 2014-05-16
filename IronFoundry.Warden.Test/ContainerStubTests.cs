@@ -22,19 +22,23 @@ namespace IronFoundry.Warden.Test
     {
         protected readonly string testUserName = "TestUser";
         protected readonly string testUserPassword = "TestUserPassword";
-        protected readonly string containerHandle = "TestHandle";
+        protected readonly string containerHandleString = "TestHandle";
 
+        protected ContainerHandle containerHandle;
         protected JobObject jobObject;
         protected JobObjectLimits jobObjectLimits;
         protected ContainerStub containerStub;
         protected ICommandRunner commandRunner;
         protected string tempDirectory;
+        protected IContainerDirectory containerDirectory;
         protected IContainerUser userInfo;
         protected ProcessHelper processHelper;
         protected ProcessMonitor processMonitor;
 
         public ContainerStubContext()
         {
+            containerHandle = new ContainerHandle(containerHandleString);
+
             commandRunner = Substitute.For<ICommandRunner>();
 
             jobObject = Substitute.For<JobObject>();
@@ -46,6 +50,9 @@ namespace IronFoundry.Warden.Test
 
             this.tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             Directory.CreateDirectory(tempDirectory);
+
+            this.containerDirectory = Substitute.For<IContainerDirectory>();
+            this.containerDirectory.FullName.Returns(this.tempDirectory);
 
             this.userInfo = Substitute.For<IContainerUser>();
             this.userInfo.UserName.Returns(testUserName);
@@ -87,6 +94,23 @@ namespace IronFoundry.Warden.Test
             }
 
             [Fact]
+            public void BindMountsThrows()
+            {
+                var containerStub = new ContainerStub(null, new JobObjectLimits(jobObject), null, null, new ProcessMonitor());
+                var mounts = new BindMount[]
+                {
+                    new BindMount
+                    {
+                        SourcePath = @"C:\Global\Path",
+                        DestinationPath = @"C:\Container\Path",
+                        Access = FileAccess.Read,
+                    },
+                };
+
+                Assert.Throws<InvalidOperationException>(() => containerStub.BindMounts(mounts));
+            }
+
+            [Fact]
             public void ReservePortThrowsNotImplemented()
             {
                 Assert.Throws<NotImplementedException>(() => containerStub.ReservePort(100));
@@ -97,13 +121,12 @@ namespace IronFoundry.Warden.Test
         {
             public WhenInitialized()
             {
-                containerStub.Initialize(tempDirectory, containerHandle, userInfo);
+                containerStub.Initialize(containerDirectory, containerHandle, userInfo);
             }
 
             [Fact]
             public void StateIsActive()
             {
-                containerStub.Initialize(tempDirectory, "TestContainerHandle", userInfo);
                 Assert.Equal(ContainerState.Active, containerStub.State);
             }
 
@@ -227,7 +250,7 @@ namespace IronFoundry.Warden.Test
             }
 
             [Fact]
-            public async void WhenRecievingRunCommand_ShouldDispatchToCommandRunner()
+            public async void WhenReceivingRunCommand_ShouldDispatchToCommandRunner()
             {
                 commandRunner.RunCommandAsync(false, null, null).ReturnsTaskForAnyArgs(new TaskCommandResult(0, null, null));
 
@@ -287,6 +310,24 @@ namespace IronFoundry.Warden.Test
 
                 Assert.True(eventRaised);
             }
+
+            [Fact]
+            public void BindMountsDelegatesToContainerDirectory()
+            {
+                var mounts = new BindMount[]
+                {
+                    new BindMount
+                    {
+                        SourcePath = @"C:\Global\Path",
+                        DestinationPath = @"C:\Container\Path",
+                        Access = FileAccess.Read,
+                    }
+                };
+
+                containerStub.BindMounts(mounts);
+
+                containerDirectory.Received(1, x => x.BindMounts(mounts));
+            }
         }
 
         public class WhenInitializedWithTestUserAccount : ContainerStubContext
@@ -297,15 +338,15 @@ namespace IronFoundry.Warden.Test
 
             public WhenInitializedWithTestUserAccount()
             {
+                this.tempFilePath = Path.Combine(tempDirectory, Guid.NewGuid().ToString());
+                
                 this.shortUserName = "IF_" + this.GetHashCode().ToString();
                 this.userHolder = TestUserHolder.CreateUser(shortUserName);
 
                 userInfo.GetCredential().Returns(new System.Net.NetworkCredential(userHolder.UserName, userHolder.Password));
                 AddFileSecurity(tempDirectory, userHolder.Principal.Name, FileSystemRights.FullControl, AccessControlType.Allow);
 
-                tempFilePath = Path.Combine(tempDirectory, Guid.NewGuid().ToString());
-
-                containerStub.Initialize(tempDirectory, containerHandle, userInfo);
+                containerStub.Initialize(containerDirectory, containerHandle, userInfo);
             }
 
             public override void Dispose()
@@ -361,7 +402,7 @@ namespace IronFoundry.Warden.Test
         {
             public WhenDisposed()
             {
-                containerStub.Initialize(tempDirectory, containerHandle, userInfo);
+                containerStub.Initialize(containerDirectory, containerHandle, userInfo);
             }
 
             [Fact]

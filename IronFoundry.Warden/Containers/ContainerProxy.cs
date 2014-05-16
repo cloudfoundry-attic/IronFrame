@@ -5,6 +5,7 @@ using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Shared.Data;
 using IronFoundry.Warden.Tasks;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace IronFoundry.Warden.Containers
 {
@@ -29,7 +30,7 @@ namespace IronFoundry.Warden.Containers
             cachedContainerState = ContainerState.Born;
         }
 
-        public string ContainerUserName
+        private string ContainerUserName
         {
             get { return containerResources.User.UserName; }
         }
@@ -71,9 +72,21 @@ namespace IronFoundry.Warden.Containers
             }
         }
 
+        public async Task BindMountsAsync(IEnumerable<BindMount> mounts)
+        {
+            if (!IsRemoteActive) throw NotActiveError();
+
+            await launcher.SendMessageAsync<BindMountsRequest, BindMountsResponse>(
+                new BindMountsRequest(
+                    new BindMountsParameters
+                    {
+                        Mounts = mounts.ToList(),
+                    }));
+        }
+
         public async Task<CommandResult> RunCommandAsync(RemoteCommand command)
         {
-            if (!IsRemoteActive) throw new InvalidOperationException();
+            if (!IsRemoteActive) throw NotActiveError();
 
             var response = await launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(
                 new RunCommandRequest(
@@ -127,12 +140,12 @@ namespace IronFoundry.Warden.Containers
             }
         }
 
-        public void Initialize(IResourceHolder resources)
+        public Task InitializeAsync(IResourceHolder resources)
         {
             containerResources = resources;
             launcher.Start(ContainerDirectoryPath, containerResources.Handle.ToString());
 
-            InvokeRemoteInitialize();
+            return InvokeRemoteInitializeAsync();
         }
 
         public async Task LimitMemoryAsync(ulong bytes)
@@ -143,6 +156,11 @@ namespace IronFoundry.Warden.Containers
 
                 await launcher.SendMessageAsync<LimitMemoryRequest, LimitMemoryResponse>(new LimitMemoryRequest(info));
             }
+        }
+
+        static Exception NotActiveError()
+        {
+            return new InvalidOperationException("The container proxy is not active.");
         }
 
         public int ReservePort(int requestedPort)
@@ -199,7 +217,7 @@ namespace IronFoundry.Warden.Containers
             }
         }
 
-        private async void InvokeRemoteInitialize()
+        private async Task InvokeRemoteInitializeAsync()
         {
             var request = new ContainerInitializeRequest(
                 new ContainerInitializeParameters

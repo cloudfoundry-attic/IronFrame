@@ -18,7 +18,7 @@ namespace IronFoundry.Warden.Containers
         IEnumerable<string> DrainEvents();
         Task EnableLoggingAsync(InstanceLoggingInfo loggingInfo);
         Task<ProcessStats> GetProcessStatisticsAsync();
-        void Initialize(IResourceHolder containerResources);
+        Task InitializeAsync(IResourceHolder containerResources);
         Task LimitMemoryAsync(ulong bytes);
         int ReservePort(int port);
         Task<CommandResult> RunCommandAsync(RemoteCommand command);
