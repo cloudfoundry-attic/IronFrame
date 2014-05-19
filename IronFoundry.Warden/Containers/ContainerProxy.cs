@@ -65,7 +65,7 @@ namespace IronFoundry.Warden.Containers
                 }
                 else if (IsRemoteActive)
                 {
-                    cachedContainerState = GetRemoteContainerState().GetAwaiter().GetResult();                
+                    cachedContainerState = GetRemoteContainerState().GetAwaiter().GetResult();
                 }
 
                 return cachedContainerState;
@@ -84,6 +84,31 @@ namespace IronFoundry.Warden.Containers
                     }));
         }
 
+        public async Task<ContainerInfo> GetInfoAsync()
+        {
+            ContainerInfo info = null;
+            if (IsRemoteActive)
+            {
+                var response = await launcher.SendMessageAsync<ContainerInfoRequest, ContainerInfoResponse>(new ContainerInfoRequest());
+                info = response.result;
+            }
+            else
+            {
+                info = new ContainerInfo();
+
+                if (RemoteHalted)
+                {
+                    cachedContainerState = ContainerState.Stopped;
+                }
+
+                info.State = cachedContainerState;
+            }
+
+            info.Events.AddRange(DrainEvents());
+            
+            return info;
+        }
+        
         public async Task<CommandResult> RunCommandAsync(RemoteCommand command)
         {
             if (!IsRemoteActive) throw NotActiveError();
@@ -119,17 +144,6 @@ namespace IronFoundry.Warden.Containers
             }
 
             cachedContainerState = ContainerState.Destroyed;
-        }
-
-        public async Task<ProcessStats> GetProcessStatisticsAsync()
-        {
-            if (IsRemoteActive)
-            {
-                var statsResponse = await launcher.SendMessageAsync<ContainerStatisticsRequest, ContainerStatisticsResponse>(new ContainerStatisticsRequest());
-                return statsResponse.result;
-            }
-
-            return new ProcessStats();
         }
 
         public async Task EnableLoggingAsync(InstanceLoggingInfo loggingInfo)

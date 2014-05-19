@@ -172,28 +172,49 @@ namespace IronFoundry.Warden.Containers
             return Impersonator.GetContext(user, shouldImpersonate);
         }
 
-        public ProcessStats GetProcessStatistics()
+        private ContainerCpuStat GetCpuStat()
         {
             var cpuStatistics = jobObject.GetCpuStatistics();
+            return new ContainerCpuStat
+            {
+                TotalProcessorTime = cpuStatistics.TotalKernelTime + cpuStatistics.TotalUserTime,
+            };
+        }
+
+        public ContainerInfo GetInfo()
+        {
+            ThrowIfNotActive();
+
+            var ipAddress = IPUtilities.GetLocalIPAddress();
+            var ipAddressString = ipAddress != null ? ipAddress.ToString() : "";
+
+            return new ContainerInfo
+            {
+                HostIPAddress = ipAddressString,
+                ContainerIPAddress = ipAddressString,
+                ContainerPath = containerDirectory.FullName,
+                State = currentState.ToString(),
+                CpuStat = GetCpuStat(),
+                MemoryStat = GetMemoryStat(),
+            };
+        }
+
+        private ContainerMemoryStat GetMemoryStat()
+        {
             var processIds = jobObject.GetProcessIds();
 
             var processes = processHelper.GetProcesses(processIds).ToList();
 
-            long privateMemory = 0;
-            long workingSet = 0;
+            ulong privateMemory = 0;
 
             foreach (var process in processes)
             {
-                privateMemory += process.PrivateMemoryBytes;
-                workingSet += process.WorkingSet;
+                privateMemory += (ulong)process.PrivateMemoryBytes;
             }
 
-            return new ProcessStats
+            return new ContainerMemoryStat
             {
-                TotalProcessorTime = cpuStatistics.TotalKernelTime + cpuStatistics.TotalUserTime,
-                TotalUserProcessorTime = cpuStatistics.TotalUserTime,
-                PrivateMemory = privateMemory,
-                WorkingSet = workingSet,
+                PrivateBytes = privateMemory,
             };
         }
 

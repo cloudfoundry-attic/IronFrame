@@ -107,6 +107,13 @@ namespace IronFoundry.Warden.ContainerHost
                     return Task.FromResult<object>(new BindMountsResponse(r.id));
                 });
 
+                dispatcher.RegisterMethod<ContainerInfoRequest>(ContainerInfoRequest.MethodName, r =>
+                {
+                    var info = container.GetInfo();
+
+                    return Task.FromResult<object>(new ContainerInfoResponse(r.id, info));
+                });
+
                 dispatcher.RegisterMethod<ContainerInitializeRequest>(ContainerInitializeRequest.MethodName, (r) => 
                 {
                     var containerHandle = new ContainerHandle(r.@params.containerHandle);
@@ -150,11 +157,6 @@ namespace IronFoundry.Warden.ContainerHost
                             stdOut = result.StdOut,
                         });
                     
-                });
-
-                dispatcher.RegisterMethod<ContainerStatisticsRequest>(ContainerStatisticsRequest.MethodName, (r) =>
-                {
-                    return Task.FromResult<object>(new ContainerStatisticsResponse(r.id, container.GetProcessStatistics()));
                 });
 
                 dispatcher.RegisterMethod<ContainerDestroyRequest>(ContainerDestroyRequest.MethodName, (r) =>

@@ -55,15 +55,14 @@
     <Compile Include="Containers\IContainerClient.cs" />
     <Compile Include="Containers\IContainerManager.cs" />
     <Compile Include="Containers\IContainerUser.cs" />
-    <Compile Include="Containers\InfoBuilder.cs" />
     <Compile Include="Containers\JobObject.cs" />
     <Compile Include="Containers\ContainerHostLauncher.cs" />
     <Compile Include="Containers\JobObjectLimits.cs" />
     <Compile Include="Containers\Messages\BindMountMessage.cs" />
     <Compile Include="Containers\Messages\ContainerDestroyMessage.cs" />
+    <Compile Include="Containers\Messages\ContainerInfoMessage.cs" />
     <Compile Include="Containers\Messages\ContainerInitializeMessage.cs" />
     <Compile Include="Containers\Messages\ContainerStateMessage.cs" />
-    <Compile Include="Containers\Messages\ContainerStatisticsMessage.cs" />
     <Compile Include="Containers\Messages\CreateProcessMessage.cs" />
     <Compile Include="Containers\Messages\CreateProcessStartInfo.cs" />
     <Compile Include="Containers\Messages\EnableLoggingMessage.cs" />

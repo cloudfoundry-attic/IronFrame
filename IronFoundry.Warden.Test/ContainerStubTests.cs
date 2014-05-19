@@ -1,19 +1,15 @@
-﻿using IronFoundry.Warden.Containers;
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Security.AccessControl;
+using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Containers.Messages;
-using IronFoundry.Warden.Logging;
 using IronFoundry.Warden.PInvoke;
-using IronFoundry.Warden.Shared.Messaging;
 using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Test.TestSupport;
 using IronFoundry.Warden.Utilities;
 using NSubstitute;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security.AccessControl;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace IronFoundry.Warden.Test
@@ -76,17 +72,20 @@ namespace IronFoundry.Warden.Test
     {
         public class BeforeInitialized : ContainerStubContext
         {
+            public BeforeInitialized()
+            {
+                containerStub = new ContainerStub(null, new JobObjectLimits(jobObject), null, null, new ProcessMonitor());
+            }
+
             [Fact]
             public void StateIsBorn()
             {
-                var containerStub = new ContainerStub(null, new JobObjectLimits(jobObject), null, null, new ProcessMonitor());
                 Assert.Equal(ContainerState.Born, containerStub.State);
             }
 
             [Fact]
             public void CannotLaunchProcessIfContainerIsNonActive()
             {
-                var containerStub = new ContainerStub(null, new JobObjectLimits(jobObject), null, null, new ProcessMonitor());
                 var si = new CreateProcessStartInfo("cmd.exe");
 
                 // Not initialized ==> not active
@@ -96,7 +95,6 @@ namespace IronFoundry.Warden.Test
             [Fact]
             public void BindMountsThrows()
             {
-                var containerStub = new ContainerStub(null, new JobObjectLimits(jobObject), null, null, new ProcessMonitor());
                 var mounts = new BindMount[]
                 {
                     new BindMount
@@ -108,6 +106,12 @@ namespace IronFoundry.Warden.Test
                 };
 
                 Assert.Throws<InvalidOperationException>(() => containerStub.BindMounts(mounts));
+            }
+
+            [Fact]
+            public void GetInfoThrows()
+            {
+                Assert.Throws<InvalidOperationException>(() => containerStub.GetInfo());
             }
 
             [Fact]
@@ -328,6 +332,83 @@ namespace IronFoundry.Warden.Test
 
                 containerDirectory.Received(1, x => x.BindMounts(mounts));
             }
+
+            public class GetInfo : WhenInitialized
+            {
+                protected ContainerInfo Info { get; private set; }
+                protected CpuStatistics CpuStatistics { get; private set; }
+                protected TestProcess[] Processes { get; private set; }
+
+                public GetInfo() : base()
+                {
+                    CpuStatistics = new Containers.CpuStatistics
+                    {
+                        TotalKernelTime = TimeSpan.FromSeconds(1),
+                        TotalUserTime = TimeSpan.FromSeconds(2),
+                    };
+                    jobObject.GetCpuStatistics().Returns(CpuStatistics);
+
+                    Processes = new TestProcess[]
+                    {
+                        new TestProcess { Id = 1, PrivateMemoryBytes = 1024 },
+                        new TestProcess { Id = 2, PrivateMemoryBytes = 4096 },
+                    };
+                    jobObject.GetProcessIds().Returns(new int[] { 1, 2 });
+                    processHelper.GetProcesses(ArgMatchers.IsSequence(1, 2)).Returns(Processes);
+
+                    Info = containerStub.GetInfo();
+                }
+
+                [Fact]
+                public void ReturnsHostIPAddress()
+                {
+                    var localIPAddress = GetLocalIPAddress();
+                    Assert.Equal(localIPAddress.ToString(), Info.HostIPAddress);
+                }
+
+                [Fact]
+                public void ReturnsContainerIPAddress()
+                {
+                    var localIPAddress = GetLocalIPAddress();
+                    Assert.Equal(localIPAddress.ToString(), Info.ContainerIPAddress);
+                }
+
+                [Fact]
+                public void ReturnsContainerPath()
+                {
+                    Assert.Equal(tempDirectory, Info.ContainerPath);
+                }
+
+                [Fact]
+                public void ReturnsEvents()
+                {
+                    Assert.Empty(Info.Events);
+                }
+
+                [Fact]
+                public void ReturnsState()
+                {
+                    Assert.Equal(containerStub.State.ToString(), Info.State);
+                }
+
+                [Fact]
+                public void ReturnsCpuStat()
+                {
+                    Assert.Equal(CpuStatistics.TotalKernelTime + CpuStatistics.TotalUserTime, Info.CpuStat.TotalProcessorTime);
+                }
+
+                [Fact]
+                public void ReturnsMemoryStat()
+                {
+                    Assert.Equal(1024UL + 4096UL, Info.MemoryStat.PrivateBytes);
+                }
+
+                private IPAddress GetLocalIPAddress()
+                {
+                    var address = Dns.GetHostAddresses(Dns.GetHostName());
+                    return address.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+                }
+            }
         }
 
         public class WhenInitializedWithTestUserAccount : ContainerStubContext
@@ -366,7 +447,7 @@ namespace IronFoundry.Warden.Test
 
                     var output = File.ReadAllText(tempFilePath);
                     Assert.Contains(userHolder.UserName, output);
-                }
+                } 
             }
 
             [FactAdminRequired(Skip = "Unreliable on build server, review build server settings")]
@@ -413,8 +494,6 @@ namespace IronFoundry.Warden.Test
             }
         }
 
-        
-
         internal static void WaitForGoodExit(Utilities.IProcess p)
         {
             p.WaitForExit(2000);
@@ -427,6 +506,55 @@ namespace IronFoundry.Warden.Test
             var fileSecurity = File.GetAccessControl(file);
             fileSecurity.AddAccessRule(new FileSystemAccessRule(account, rights, access));
             File.SetAccessControl(file, fileSecurity);
+        }
+
+        public class TestProcess : IProcess
+        {
+            public int ExitCode { get; set; }
+            public IntPtr Handle { get; set; }
+            public bool HasExited { get; set; }
+            public int Id { get; set; }
+            public long PrivateMemoryBytes { get; set; }
+            public TimeSpan TotalProcessorTime { get; set; }
+            public TimeSpan TotalUserProcessorTime { get; set; }
+            public long WorkingSet { get; set; }
+
+            EventHandler<ProcessDataReceivedEventArgs> errorDataReceivedHandler;
+            public event EventHandler<ProcessDataReceivedEventArgs> ErrorDataReceived
+            {
+                add { errorDataReceivedHandler += value; }
+                remove { errorDataReceivedHandler -= value; }
+            }
+
+            EventHandler exitedHandler;
+            public event EventHandler Exited
+            {
+                add { exitedHandler += value; }
+                remove { exitedHandler -= value; }
+            }
+
+            EventHandler<ProcessDataReceivedEventArgs> outputDataReceivedHandler;
+            public event EventHandler<ProcessDataReceivedEventArgs> OutputDataReceived
+            {
+                add { outputDataReceivedHandler += value; }
+                remove { outputDataReceivedHandler -= value; }
+            }
+
+            public void Dispose()
+            {
+            }
+
+            public void Kill()
+            {
+            }
+
+            public void WaitForExit()
+            {
+            }
+
+            public void WaitForExit(int milliseconds)
+            {
+            }
         }
     }
 }

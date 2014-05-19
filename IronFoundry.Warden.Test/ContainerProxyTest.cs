@@ -72,21 +72,6 @@ namespace IronFoundry.Warden.Test
             }
 
             [Fact]
-            public async void GetStatisticsDoestNotCallHostStub()
-            {                
-                var response = await proxy.GetProcessStatisticsAsync();
-
-                this.launcher.DidNotReceive(x => x.SendMessageAsync<ContainerStatisticsRequest, ContainerStatisticsResponse>(Arg.Any<ContainerStatisticsRequest>()));
-            }
-
-            [Fact]
-            public async void GetStatisticsReturnsDefaultStats()
-            {
-                var response = await proxy.GetProcessStatisticsAsync();
-                Assert.Equal(new ProcessStats(), response);
-            }
-
-            [Fact]
             public void RetrievingStateReturnsBorn()
             {
                 ContainerState state = proxy.State;
@@ -98,6 +83,33 @@ namespace IronFoundry.Warden.Test
             {
                 var ex = await ExceptionAssert.RecordThrowsAsync(async () => await proxy.BindMountsAsync(new BindMount[0]));
                 Assert.IsType<InvalidOperationException>(ex);
+            }
+
+            [Fact]
+            public async void GetInfoReturnsDefaultInfo()
+            {
+                var info = await proxy.GetInfoAsync();
+
+                Assert.Equal(new ContainerInfo(), info);
+            }
+
+            [Fact]
+            public async void GetInfoReturnsBornState()
+            {
+                var info = await proxy.GetInfoAsync();
+
+                Assert.Equal(ContainerState.Born.ToString(), info.State);
+            }
+
+            [Fact]
+            public async void WhenContainerHasEvents_GetInfoReturnsEvents()
+            {
+                launcher.HostStopped += Raise.Event<EventHandler<int>>(this, 100);
+
+                var info = await proxy.GetInfoAsync();
+
+                Assert.Collection(info.Events,
+                    x => Assert.Equal("Application's ContainerHost stopped with exit code: 100.", x));
             }
 
             [Fact]
@@ -287,17 +299,6 @@ namespace IronFoundry.Warden.Test
             }
 
             [Fact]
-            public async void GetStatisticsSendsMessageToHost()
-            {
-                await CompleteInitializationAsync();
-                this.launcher.SendMessageAsync<ContainerStatisticsRequest, ContainerStatisticsResponse>(Arg.Any<ContainerStatisticsRequest>()).ReturnsTask(new ContainerStatisticsResponse(0, new Shared.Data.ProcessStats()));
-
-                var response = await proxy.GetProcessStatisticsAsync();
-
-                this.launcher.Received(x => x.SendMessageAsync<ContainerStatisticsRequest, ContainerStatisticsResponse>(Arg.Any<ContainerStatisticsRequest>()));
-            }
-
-            [Fact]
             public async void EnableLoggingAsyncSendsMessageToHost()
             {
                 await CompleteInitializationAsync();
@@ -342,6 +343,36 @@ namespace IronFoundry.Warden.Test
                         Arg.Is<BindMountsRequest>(r => r.@params.Mounts.Single() == expectedBindMount)
                     )
                 );
+            }
+
+            [Fact]
+            public async void GetInfoSendsMessageToHost()
+            {
+                await CompleteInitializationAsync();
+                var expectedInfo = new ContainerInfo();
+                var expectedResponse = new ContainerInfoResponse(0, expectedInfo);
+                this.launcher.SendMessageAsync<ContainerInfoRequest, ContainerInfoResponse>(Arg.Any<ContainerInfoRequest>()).ReturnsTask(expectedResponse);
+
+                var info = await proxy.GetInfoAsync();
+
+                Assert.Same(expectedInfo, info);
+            }
+
+            [Fact]
+            public async void WhenContainerProxyHasEvents_MergesIntoResponseEvents()
+            {
+                await CompleteInitializationAsync();
+
+                launcher.HostStopped += Raise.Event<EventHandler<int>>(this, 100);
+
+                var expectedInfo = new ContainerInfo();
+                var expectedResponse = new ContainerInfoResponse(0, expectedInfo);
+                this.launcher.SendMessageAsync<ContainerInfoRequest, ContainerInfoResponse>(Arg.Any<ContainerInfoRequest>()).ReturnsTask(expectedResponse);
+
+                var info = await proxy.GetInfoAsync();
+
+                Assert.Collection(info.Events,
+                    x => Assert.Equal("Application's ContainerHost stopped with exit code: 100.", x));
             }
         }
 
@@ -504,6 +535,20 @@ namespace IronFoundry.Warden.Test
                 Assert.Equal(ContainerState.Stopped, state);
             }
 
+            [Fact]
+            public async void GetInfoShouldReportStopped()
+            {
+                await CompleteInitializationAsync();
+                var state = proxy.State;
+                Assert.Equal(ContainerState.Active, state);
+
+                launcher.IsActive.Returns(false);
+                launcher.WasActive.Returns(true);
+
+                var info = await proxy.GetInfoAsync();
+
+                Assert.Equal(ContainerState.Stopped.ToString(), info.State);
+            }
         }
         
         public class TestableContainerHostLauncher : ContainerHostLauncher

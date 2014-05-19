@@ -29,21 +29,33 @@
 
         protected async Task<InfoResponse> BuildInfoResponseAsync()
         {
-            // TODO complete info
-            InfoResponse infoResponse = null;
-
-            IContainerClient container = GetContainer();
+            var container = GetContainer();
             if (container == null)
-            {
-                infoResponse = new InfoResponse();
-            }
-            else
-            {
-                var infoBuilder = new InfoBuilder(container);
-                infoResponse = await infoBuilder.GetInfoResponseAsync();
-            }
+                return new InfoResponse();
 
-            return infoResponse;
+            var info = await container.GetInfoAsync();
+
+            var response = new InfoResponse
+            {
+                HostIp = info.HostIPAddress,
+                ContainerIp = info.ContainerIPAddress,
+                ContainerPath = info.ContainerPath,
+                State = info.State,
+                MemoryStatInfo = new InfoResponse.MemoryStat
+                {
+                    // RSS is defined as memory + swap. This is the equivalent of "private memory" on Windows.
+                    TotalRss = (ulong)info.MemoryStat.PrivateBytes,
+                },
+                CpuStatInfo = new InfoResponse.CpuStat
+                {
+                    // Convert TimeSpan to nanoseconds
+                    Usage = (ulong)info.CpuStat.TotalProcessorTime.Ticks * 100,
+                },
+            };
+
+            response.Events.AddRange(info.Events);
+            
+            return response;
         }
     }
 }

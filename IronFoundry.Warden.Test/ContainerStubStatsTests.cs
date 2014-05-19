@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using IronFoundry.Warden.Containers;
+using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Utilities;
 using NSubstitute;
 using Xunit;
-using IronFoundry.Warden.Shared.Data;
 
 namespace IronFoundry.Warden.Test
 {
@@ -13,7 +13,7 @@ namespace IronFoundry.Warden.Test
     {
         public class WhenManagingNoProcess : ContainerStubContext
         {
-            ProcessStats stats;
+            ContainerInfo info;
 
             public WhenManagingNoProcess() 
             {
@@ -24,42 +24,31 @@ namespace IronFoundry.Warden.Test
                 });
                 jobObject.GetProcessIds().Returns(new int[0]);
 
-                stats = containerStub.GetProcessStatistics();
+                containerStub.Initialize(containerDirectory, containerHandle, userInfo);
+
+                info = containerStub.GetInfo();
             }
 
             [Fact]
             public void ReturnsDefaultTotalProcessorStats()
             {
-                Assert.Equal(new TimeSpan(0), stats.TotalProcessorTime);
-            }
-
-            [Fact]
-            public void ReturnsDefaultTotalUserProcessorStats()
-            {
-                Assert.Equal(new TimeSpan(0), stats.TotalUserProcessorTime);
+                Assert.Equal(new TimeSpan(0), info.CpuStat.TotalProcessorTime);
             }
 
             [Fact]
             public void ReturnsDefaultPrivateMemory()
             {
-                Assert.Equal(0, stats.PrivateMemory);
-            }
-
-            [Fact]
-            public void ReturnsDefaultWorkingSet()
-            {
-                Assert.Equal(0, stats.WorkingSet);
+                Assert.Equal(0UL, info.MemoryStat.PrivateBytes);
             }
         }
 
         public class WhenManagingOneProcess : ContainerStubContext
         {
-            ProcessStats stats;
+            ContainerInfo info;
             TimeSpan expectedTotalKernelTime = TimeSpan.FromSeconds(2);
             TimeSpan expectedTotalUserTime = TimeSpan.FromSeconds(8);
             TimeSpan expectedTotalProcessorTime = TimeSpan.FromSeconds(10);
             long expectedPrivateMemoryBytes = 2048;
-            long expectedWorkingSet = 4096;
 
             public WhenManagingOneProcess()
             {
@@ -74,46 +63,34 @@ namespace IronFoundry.Warden.Test
                 process.TotalProcessorTime.Returns(expectedTotalProcessorTime);
                 process.TotalUserProcessorTime.Returns(expectedTotalUserTime);
                 process.PrivateMemoryBytes.Returns(expectedPrivateMemoryBytes);
-                process.WorkingSet.Returns(expectedWorkingSet);
                 
                 processHelper.GetProcesses(null).ReturnsForAnyArgs(new[] { process });
 
-                stats = containerStub.GetProcessStatistics();
+                containerStub.Initialize(containerDirectory, containerHandle, userInfo);
+
+                info = containerStub.GetInfo();
             }
 
             [Fact]
             public void ReturnsTotalProcessorTime()
             {
-                Assert.Equal(expectedTotalProcessorTime, stats.TotalProcessorTime);
-            }
-
-            [Fact]
-            public void ReturnsTotalUserProcessorTime()
-            {
-                Assert.Equal(expectedTotalUserTime, stats.TotalUserProcessorTime);
+                Assert.Equal(expectedTotalProcessorTime, info.CpuStat.TotalProcessorTime);
             }
 
             [Fact]
             public void ReturnsExpectedPrivateMemoryBytes()
             {
-                Assert.Equal(expectedPrivateMemoryBytes, stats.PrivateMemory);
-            }
-
-            [Fact]
-            public void ReturnsExpectedWorkingSet()
-            {
-                Assert.Equal(expectedWorkingSet, stats.WorkingSet);
+                Assert.Equal((ulong)expectedPrivateMemoryBytes, info.MemoryStat.PrivateBytes);
             }
         }
 
         public class WhenManagingMultipleProcesses : ContainerStubContext
         {
-            ProcessStats stats;
+            ContainerInfo info;
             TimeSpan expectedTotalKernelTime = TimeSpan.FromSeconds(2);
             TimeSpan expectedTotalUserTime = TimeSpan.FromSeconds(8);
             TimeSpan expectedTotalProcessorTime = TimeSpan.FromSeconds(10);
             long expectedPrivateMemoryBytes = 2048;
-            long expectedWorkingSet = 4096;
 
             List<IProcess> processes = new List<IProcess>();
 
@@ -124,7 +101,6 @@ namespace IronFoundry.Warden.Test
                 firstProcess.TotalProcessorTime.Returns(expectedTotalProcessorTime);
                 firstProcess.TotalUserProcessorTime.Returns(expectedTotalUserTime);
                 firstProcess.PrivateMemoryBytes.Returns(expectedPrivateMemoryBytes);
-                firstProcess.WorkingSet.Returns(expectedWorkingSet);
                 processes.Add(firstProcess);
 
                 var secondProcess = Substitute.For<IProcess>();
@@ -132,7 +108,6 @@ namespace IronFoundry.Warden.Test
                 secondProcess.TotalProcessorTime.Returns(expectedTotalProcessorTime);
                 secondProcess.TotalUserProcessorTime.Returns(expectedTotalUserTime);
                 secondProcess.PrivateMemoryBytes.Returns(expectedPrivateMemoryBytes);
-                secondProcess.WorkingSet.Returns(expectedWorkingSet);
                 processes.Add(secondProcess);
 
                 jobObject.GetCpuStatistics().Returns(new CpuStatistics
@@ -144,31 +119,21 @@ namespace IronFoundry.Warden.Test
 
                 processHelper.GetProcesses(null).ReturnsForAnyArgs(new[] { firstProcess, secondProcess });
 
-                stats = containerStub.GetProcessStatistics();
+                containerStub.Initialize(containerDirectory, containerHandle, userInfo);
+
+                info = containerStub.GetInfo();
             }
 
             [Fact]
             public void ReturnsAggregateTotalProcessorTime()
             {
-                Assert.Equal(processes.Sum(p => p.TotalProcessorTime.Ticks), stats.TotalProcessorTime.Ticks);
-            }
-
-            [Fact]
-            public void ReturnsAggregateTotalUserProcessorTime()
-            {
-                Assert.Equal(processes.Sum(p => p.TotalUserProcessorTime.Ticks), stats.TotalUserProcessorTime.Ticks);
+                Assert.Equal(processes.Sum(p => p.TotalProcessorTime.Ticks), info.CpuStat.TotalProcessorTime.Ticks);
             }
 
             [Fact]
             public void ReturnsAggregatePrivateMemoryBytes()
             {
-                Assert.Equal(processes.Sum(p => p.PrivateMemoryBytes), stats.PrivateMemory);
-            }
-
-            [Fact]
-            void ReturnsAggregateWorkingSet()
-            {
-                Assert.Equal(processes.Sum(p => p.WorkingSet), stats.WorkingSet);
+                Assert.Equal((ulong)processes.Sum(p => p.PrivateMemoryBytes), info.MemoryStat.PrivateBytes);
             }
         }
     }

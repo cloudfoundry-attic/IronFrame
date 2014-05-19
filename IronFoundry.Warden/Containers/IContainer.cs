@@ -22,7 +22,7 @@ namespace IronFoundry.Warden.Containers
         IProcess CreateProcess(CreateProcessStartInfo si, bool impersonate = false);
         void Destroy();
         WindowsImpersonationContext GetExecutionContext(bool shouldImpersonate = false);
-        ProcessStats GetProcessStatistics();
+        ContainerInfo GetInfo();
 
         void Initialize(IContainerDirectory containerDirectory, ContainerHandle containerHandle, IContainerUser userInfo);
         void Stop();
