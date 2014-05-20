@@ -40,7 +40,7 @@
                 HostIp = info.HostIPAddress,
                 ContainerIp = info.ContainerIPAddress,
                 ContainerPath = info.ContainerPath,
-                State = info.State,
+                State = info.State.ToString(),
                 MemoryStatInfo = new InfoResponse.MemoryStat
                 {
                     // RSS is defined as memory + swap. This is the equivalent of "private memory" on Windows.

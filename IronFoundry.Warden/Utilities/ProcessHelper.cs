@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
+using IronFoundry.Warden.PInvoke;
 
 namespace IronFoundry.Warden.Utilities
 {
@@ -27,19 +30,38 @@ namespace IronFoundry.Warden.Utilities
                 .Where(p => p != null);
         }
 
+        public static void SendSignal(int processId, bool kill)
+        {
+            var ctrlEvent = kill ? 
+                NativeMethods.ConsoleControlEvent.ControlBreak : 
+                NativeMethods.ConsoleControlEvent.ControlC;
+
+            if (!NativeMethods.GenerateConsoleCtrlEvent(ctrlEvent, processId))
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "Error sending signal to process (id " + processId + ").");
+        }
+
+        public IProcess WrapProcess(Process process)
+        {
+            return new RealProcessWrapper(process);
+        }
+
         class RealProcessWrapper : IProcess
         {
             private readonly Process process;
-            public event EventHandler Exited;
 
             public RealProcessWrapper(Process process)
             {
                 this.process = process;
-                Id = process.Id;
-                process.Exited += (o, e) => this.OnExited();
+
+                this.process.Exited += WrappedExited;
+                this.process.OutputDataReceived += WrappedOutputDataReceived;
+                this.process.ErrorDataReceived += WrappedErrorDataReceived;
             }
 
-            public int Id { get; private set; }
+            public int Id
+            {
+                get { return process.Id; }
+            }
 
             public int ExitCode
             {
@@ -66,20 +88,6 @@ namespace IronFoundry.Warden.Utilities
                 get { return process.UserProcessorTime; }
             }
 
-            public void Kill()
-            {
-                process.Kill();
-            }
-
-            protected virtual void OnExited()
-            {
-                var handlers = Exited;
-                if (handlers != null)
-                {
-                    handlers.Invoke(this, EventArgs.Empty);
-                }
-            }
-
             public long PrivateMemoryBytes
             {
                 get { return process.PrivateMemorySize64; }
@@ -95,6 +103,17 @@ namespace IronFoundry.Warden.Utilities
                 process.Dispose();
             }
 
+            public void Kill()
+            {
+                if (process.HasExited) return;
+                process.Kill();
+            }
+
+            public void RequestExit()
+            {
+                //ProcessHelper.SendSignal(process.Id, false);
+            }
+
             public void WaitForExit()
             {
                 process.WaitForExit();
@@ -105,6 +124,20 @@ namespace IronFoundry.Warden.Utilities
                 process.WaitForExit(milliseconds);
             }
 
+            private void WrappedErrorDataReceived(object sender, DataReceivedEventArgs e)
+            {
+                OnErrorDataReceived(this, new ProcessDataReceivedEventArgs(e.Data));
+            }
+
+            private void WrappedOutputDataReceived(object sender, DataReceivedEventArgs e)
+            {
+                OnOutputDataReceived(this, new ProcessDataReceivedEventArgs(e.Data));
+            }
+
+            private void WrappedExited(object sender, EventArgs e)
+            {
+                OnExited(sender, e);
+            }
 
             public event EventHandler<ProcessDataReceivedEventArgs> OutputDataReceived;
             protected virtual void OnOutputDataReceived(object sender, ProcessDataReceivedEventArgs e)
@@ -124,6 +157,19 @@ namespace IronFoundry.Warden.Utilities
                 {
                     handlers(this, e);
                 }
+            }
+
+            public event EventHandler Exited;
+            protected virtual void OnExited(object sender, EventArgs e)
+            {
+                var handlers = Exited;
+                if (handlers != null)
+                {
+                    handlers(this, e);
+                }
+
+                process.ErrorDataReceived -= WrappedErrorDataReceived;
+                process.OutputDataReceived -= WrappedOutputDataReceived;
             }
         }
     }

@@ -28,6 +28,14 @@ namespace IronFoundry.Warden.Containers.Messages
         }
     }
 
+    public enum ContainerState
+    {
+        Born,
+        Active,
+        Stopped,
+        Destroyed
+    }
+
     public class ContainerInfo : IEquatable<ContainerInfo>
     {
         public ContainerInfo()
@@ -35,7 +43,7 @@ namespace IronFoundry.Warden.Containers.Messages
             CpuStat = new ContainerCpuStat();
             Events = new List<string>();
             MemoryStat = new ContainerMemoryStat();
-            State = ContainerState.Born.ToString();
+            State = ContainerState.Born;
         }
 
         public ContainerCpuStat CpuStat { get; set; }
@@ -45,7 +53,7 @@ namespace IronFoundry.Warden.Containers.Messages
         public string HostIPAddress { get; set; }
         public ContainerMemoryStat MemoryStat { get; set; }
         //public List<int> ProcessIds { get; set; }
-        public string State { get; set; }
+        public ContainerState State { get; set; }
 
         public bool Equals(ContainerInfo other)
         {
@@ -56,7 +64,7 @@ namespace IronFoundry.Warden.Containers.Messages
                 this.Events.SequenceEqual(other.Events, StringComparer.OrdinalIgnoreCase) &&
                 String.Equals(HostIPAddress, other.HostIPAddress) &&
                 this.MemoryStat.Equals(other.MemoryStat) &&
-                String.Equals(State, other.State);
+                State.Equals(other.State);
         }
     }
 

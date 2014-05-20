@@ -72,13 +72,6 @@ namespace IronFoundry.Warden.Test
             }
 
             [Fact]
-            public void RetrievingStateReturnsBorn()
-            {
-                ContainerState state = proxy.State;
-                Assert.Equal(ContainerState.Born, state);
-            }
-
-            [Fact]
             public async void BindMountsThrows()
             {
                 var ex = await ExceptionAssert.RecordThrowsAsync(async () => await proxy.BindMountsAsync(new BindMount[0]));
@@ -98,7 +91,7 @@ namespace IronFoundry.Warden.Test
             {
                 var info = await proxy.GetInfoAsync();
 
-                Assert.Equal(ContainerState.Born.ToString(), info.State);
+                Assert.Equal(ContainerState.Born, info.State);
             }
 
             [Fact]
@@ -117,6 +110,13 @@ namespace IronFoundry.Warden.Test
             {
                 var ex = await ExceptionAssert.RecordThrowsAsync(async () => { await proxy.RunCommandAsync(new RemoteCommand(false, "blah")); });
                 Assert.IsType<InvalidOperationException>(ex);
+            }
+
+            [Fact]
+            public async void StopDoesNotSendToStub()
+            {
+                await proxy.StopAsync(false);
+                this.launcher.DidNotReceive(x => x.SendMessageAsync<StopRequest, StopResponse>(Arg.Any<StopRequest>()));
             }
 
             [Fact]
@@ -264,38 +264,19 @@ namespace IronFoundry.Warden.Test
 
                 await proxy.DestroyAsync();
 
-                Assert.Equal(ContainerState.Destroyed, proxy.State);
+                var info = await proxy.GetInfoAsync();
+
+                Assert.Equal(ContainerState.Destroyed, info.State);
             }
 
             [Fact]
-            public async void StopSendsDestroyMessageToStubOnDestroy()
+            public async void StopSendsStopMessageToStub()
             {
                 await CompleteInitializationAsync();
 
-                await proxy.StopAsync();
+                await proxy.StopAsync(false);
 
-                launcher.Received(x => x.SendMessageAsync<ContainerDestroyRequest, ContainerDestroyResponse>(Arg.Any<ContainerDestroyRequest>()));
-            }
-
-            [Fact]
-            public async void StopDestroysResourceHolder()
-            {
-                await CompleteInitializationAsync();
-
-                await proxy.StopAsync();
-
-                resourceHolder.Received(x => x.Destroy());
-            }
-
-            [Fact]
-            public async void StopDestroySetsStateToDestroy()
-            {
-                await CompleteInitializationAsync();
-                launcher.IsActive.Returns(false);
-
-                await proxy.StopAsync();
-
-                Assert.Equal(ContainerState.Destroyed, proxy.State);
+                launcher.Received(x => x.SendMessageAsync<StopRequest, StopResponse>(Arg.Any<StopRequest>()));
             }
 
             [Fact]
@@ -415,33 +396,8 @@ namespace IronFoundry.Warden.Test
 
                 Assert.Equal(0, proxy.DrainEvents().Count());
             }
-        }
 
-        public class WhenQueryingContainerState : ProxyContainerContext
-        {
-            public WhenQueryingContainerState()
-            {
-                launcher.IsActive.Returns(true);
-            }
-
-            [Fact]
-            public void WhenQueryingContainerState_ShouldQueryContainerHost()
-            {
-                this.launcher.SendMessageAsync<ContainerStateRequest, ContainerStateResponse>(Arg.Any<ContainerStateRequest>()).ReturnsTask(new ContainerStateResponse("",""));
-                ContainerState state = proxy.State;
-
-                this.launcher.Received(x => x.SendMessageAsync<ContainerStateRequest, ContainerStateResponse>(Arg.Any<ContainerStateRequest>()));
-            }
-
-            [Fact]
-            public void WhenQueryingContainerSate_ShouldReturnMatchingValueFromContainerHost()
-            {
-                this.launcher.SendMessageAsync<ContainerStateRequest, ContainerStateResponse>(Arg.Any<ContainerStateRequest>())
-                    .ReturnsTask(new ContainerStateResponse("", "Active"));
-                ContainerState state = proxy.State;
-
-                Assert.Equal(ContainerState.Active, state);
-            }
+          
         }
 
         public class WhenRunningCommand : ProxyContainerContext
@@ -520,34 +476,18 @@ namespace IronFoundry.Warden.Test
             {
                 await proxy.InitializeAsync(resourceHolder);
             }
-
-            [Fact]
-            public async void ShouldReportStoppedStatus()
-            {
-                await CompleteInitializationAsync();
-                var state = proxy.State;
-                Assert.Equal(ContainerState.Active, state);
-
-                launcher.IsActive.Returns(false);
-                launcher.WasActive.Returns(true);
-
-                state = proxy.State;
-                Assert.Equal(ContainerState.Stopped, state);
-            }
-
+       
             [Fact]
             public async void GetInfoShouldReportStopped()
             {
                 await CompleteInitializationAsync();
-                var state = proxy.State;
-                Assert.Equal(ContainerState.Active, state);
 
                 launcher.IsActive.Returns(false);
                 launcher.WasActive.Returns(true);
 
                 var info = await proxy.GetInfoAsync();
 
-                Assert.Equal(ContainerState.Stopped.ToString(), info.State);
+                Assert.Equal(ContainerState.Stopped, info.State);
             }
         }
         

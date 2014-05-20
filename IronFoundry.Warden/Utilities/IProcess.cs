@@ -22,5 +22,7 @@ namespace IronFoundry.Warden.Utilities
         void Kill();
         void WaitForExit();
         void WaitForExit(int milliseconds);
+
+        void RequestExit();
     }
 }

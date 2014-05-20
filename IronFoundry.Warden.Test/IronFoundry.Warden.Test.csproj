@@ -45,9 +45,10 @@
     <Compile Include="ContainerUserTests.cs" />
     <Compile Include="IFTestHelper.cs" />
     <Compile Include="JobObjectLimitsTests.cs" />
-    <Compile Include="LimitMemoryRequestHandlerTest.cs" />
+    <Compile Include="Handlers\DestroyRequestHandlerTests.cs" />
+    <Compile Include="Handlers\LimitMemoryRequestHandlerTest.cs" />
     <Compile Include="LocalTcpPortManagerTests.cs" />
-    <Compile Include="LoggingRequestHandlerTest.cs" />
+    <Compile Include="Handlers\LoggingRequestHandlerTest.cs" />
     <Compile Include="Messaging\MessageTransportTest.cs" />
     <Compile Include="Messaging\MessagingClientTest.cs" />
     <Compile Include="Messaging\SecureStringJsonConverterTest.cs" />

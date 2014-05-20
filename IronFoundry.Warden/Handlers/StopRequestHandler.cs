@@ -27,7 +27,7 @@ namespace IronFoundry.Warden.Handlers
                         // do
                         if (c != null)
                         {
-                            await c.StopAsync();
+                            await c.StopAsync(false);
                         }
                         else
                         {

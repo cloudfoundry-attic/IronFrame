@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading.Tasks;
 using IronFoundry.Warden.Utilities;
 using NLog;
+using IronFoundry.Warden.Containers.Messages;
 
 namespace IronFoundry.Warden.Containers
 {

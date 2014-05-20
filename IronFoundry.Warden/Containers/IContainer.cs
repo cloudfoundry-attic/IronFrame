@@ -25,7 +25,7 @@ namespace IronFoundry.Warden.Containers
         ContainerInfo GetInfo();
 
         void Initialize(IContainerDirectory containerDirectory, ContainerHandle containerHandle, IContainerUser userInfo);
-        void Stop();
+        void Stop(bool kill);
 
         int ReservePort(int requestedPort); 
     }

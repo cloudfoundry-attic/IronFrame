@@ -1,18 +1,18 @@
-﻿using IronFoundry.Warden.Containers.Messages;
-using IronFoundry.Warden.Shared.Data;
-using IronFoundry.Warden.Tasks;
-using IronFoundry.Warden.Utilities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using IronFoundry.Warden.Containers.Messages;
+using IronFoundry.Warden.Tasks;
+using IronFoundry.Warden.Utilities;
 
 namespace IronFoundry.Warden.Containers
 {
     public class ContainerStub : IContainer, IDisposable
     {
+        const int ExitTimeout = 10000;
+
         private readonly JobObject jobObject;
         private readonly JobObjectLimits jobObjectLimits;
         private ContainerState currentState;
@@ -89,7 +89,7 @@ namespace IronFoundry.Warden.Containers
 
             p.EnableRaisingEvents = true;
 
-            var wrapped = new RealProcessWrapper(p);
+            var wrapped = processHelper.WrapProcess(p);
             processMonitor.TryAdd(wrapped);
 
             bool started = p.Start();
@@ -193,7 +193,7 @@ namespace IronFoundry.Warden.Containers
                 HostIPAddress = ipAddressString,
                 ContainerIPAddress = ipAddressString,
                 ContainerPath = containerDirectory.FullName,
-                State = currentState.ToString(),
+                State = currentState,
                 CpuStat = GetCpuStat(),
                 MemoryStat = GetMemoryStat(),
             };
@@ -243,134 +243,50 @@ namespace IronFoundry.Warden.Containers
             throw new NotImplementedException();
         }
 
-        public void Stop()
+        public void Stop(bool kill)
         {
-            throw new NotImplementedException();
+            ThrowIfNotActive();
+
+            // Sends "term" signal to processes
+            var processIds = jobObject.GetProcessIds();
+            var processes = processHelper.GetProcesses(processIds);
+
+            var processTasks = processes.Select(p =>
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        try
+                        {
+                            if (!kill)
+                            {
+                                p.RequestExit();
+                                p.WaitForExit(ExitTimeout);
+                            }
+                        }
+                        catch
+                        {
+                            // TODO: We should probably log any exceptions for debugging purposes.
+                        }
+
+                        p.Kill();
+                    }
+                    catch
+                    {
+                        // TODO: We should probably log any exceptions for debugging purposes.
+                    }
+                }))
+                .ToArray();
+
+            Task.WaitAll(processTasks);
+
+            // Set state to Stopped
+            currentState = ContainerState.Stopped;
         }
 
         public void Dispose()
         {
             jobObject.Dispose();
-        }
-
-        class RealProcessWrapper : IProcess
-        {
-            private Process wrappedProcess;
-
-            public RealProcessWrapper(Process process)
-            {
-                this.wrappedProcess = process;
-
-                this.wrappedProcess.Exited += (o, e) => { this.OnExited(o, e); };
-                this.wrappedProcess.OutputDataReceived += WrappedOutputDataReceived;
-                this.wrappedProcess.ErrorDataReceived += WrappedErrorDataRecevied;
-            }
-
-            public int ExitCode
-            {
-                get { return this.wrappedProcess.ExitCode; }
-            }
-
-            public IntPtr Handle
-            {
-                get { return this.wrappedProcess.Handle; }
-            }
-
-            public bool HasExited
-            {
-                get { return this.wrappedProcess.HasExited; }
-            }
-
-            public int Id
-            {
-                get { return this.wrappedProcess.Id; }
-            }
-
-            public TimeSpan TotalProcessorTime
-            {
-                get { return this.wrappedProcess.TotalProcessorTime; }
-            }
-
-            public TimeSpan TotalUserProcessorTime
-            {
-                get { return this.wrappedProcess.UserProcessorTime; }
-            }
-
-            public long WorkingSet
-            {
-                get { return this.wrappedProcess.WorkingSet64; }
-            }
-
-            public long PrivateMemoryBytes
-            {
-                get { return this.wrappedProcess.PrivateMemorySize64; }
-            }
-
-            public event EventHandler Exited;
-
-            protected virtual void OnExited(object sender, EventArgs eventArgs)
-            {
-                var handlers = Exited;
-                if (handlers != null)
-                {
-                    handlers(this, eventArgs);
-                }
-
-                this.wrappedProcess.ErrorDataReceived -= WrappedErrorDataRecevied;
-                this.wrappedProcess.OutputDataReceived -= WrappedOutputDataReceived;
-            }
-
-            public void Kill()
-            {
-                if (this.wrappedProcess.HasExited) return;
-                this.wrappedProcess.Kill();
-            }
-
-            public void WaitForExit()
-            {
-                this.wrappedProcess.WaitForExit();
-            }
-
-            public void WaitForExit(int milliseconds)
-            {
-                this.wrappedProcess.WaitForExit(milliseconds);
-            }
-
-            public void Dispose()
-            {
-                this.wrappedProcess.Dispose();
-            }
-
-            private void WrappedErrorDataRecevied(object sender, DataReceivedEventArgs e)
-            {
-                OnErrorDataReceived(this, new ProcessDataReceivedEventArgs(e.Data));
-            }
-
-            private void WrappedOutputDataReceived(object sender, DataReceivedEventArgs e)
-            {
-                OnOutputDataReceived(this, new ProcessDataReceivedEventArgs(e.Data));
-            }
-
-            public event EventHandler<ProcessDataReceivedEventArgs> OutputDataReceived;
-            protected virtual void OnOutputDataReceived(object sender, ProcessDataReceivedEventArgs e)
-            {
-                var handlers = OutputDataReceived;
-                if (handlers != null)
-                {
-                    handlers(this, e);
-                }
-            }
-
-            public event EventHandler<ProcessDataReceivedEventArgs> ErrorDataReceived;
-            protected virtual void OnErrorDataReceived(object sender, ProcessDataReceivedEventArgs e)
-            {
-                var handlers = ErrorDataReceived;
-                if (handlers != null)
-                {
-                    handlers(this, e);
-                }
-            }
-
         }
 
         public void AttachEmitter(ILogEmitter emitter)

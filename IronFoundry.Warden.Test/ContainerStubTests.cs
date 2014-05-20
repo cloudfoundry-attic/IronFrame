@@ -119,6 +119,12 @@ namespace IronFoundry.Warden.Test
             {
                 Assert.Throws<NotImplementedException>(() => containerStub.ReservePort(100));
             }
+
+            [Fact]
+            public void StopThrows()
+            {
+                Assert.Throws<InvalidOperationException>(() => containerStub.Stop(false));
+            }
         }
 
         public class WhenInitialized : ContainerStubContext
@@ -337,7 +343,7 @@ namespace IronFoundry.Warden.Test
             {
                 protected ContainerInfo Info { get; private set; }
                 protected CpuStatistics CpuStatistics { get; private set; }
-                protected TestProcess[] Processes { get; private set; }
+                protected IProcess[] Processes { get; private set; }
 
                 public GetInfo() : base()
                 {
@@ -348,10 +354,10 @@ namespace IronFoundry.Warden.Test
                     };
                     jobObject.GetCpuStatistics().Returns(CpuStatistics);
 
-                    Processes = new TestProcess[]
+                    Processes = new IProcess[]
                     {
-                        new TestProcess { Id = 1, PrivateMemoryBytes = 1024 },
-                        new TestProcess { Id = 2, PrivateMemoryBytes = 4096 },
+                        CreateProcess(1, 1024),
+                        CreateProcess(2, 4096),
                     };
                     jobObject.GetProcessIds().Returns(new int[] { 1, 2 });
                     processHelper.GetProcesses(ArgMatchers.IsSequence(1, 2)).Returns(Processes);
@@ -388,7 +394,7 @@ namespace IronFoundry.Warden.Test
                 [Fact]
                 public void ReturnsState()
                 {
-                    Assert.Equal(containerStub.State.ToString(), Info.State);
+                    Assert.Equal(containerStub.State, Info.State);
                 }
 
                 [Fact]
@@ -407,6 +413,101 @@ namespace IronFoundry.Warden.Test
                 {
                     var address = Dns.GetHostAddresses(Dns.GetHostName());
                     return address.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+                }
+
+                static IProcess CreateProcess(int processId, long privateMemoryBytes)
+                {
+                    var process = Substitute.For<IProcess>();
+                    process.Id.Returns(processId);
+                    process.PrivateMemoryBytes.Returns(privateMemoryBytes);
+                    return process;
+                }
+            }
+
+            public class Stop : WhenInitialized
+            {
+                protected IProcess[] Processes { get; private set; }
+
+                public Stop()
+                {
+                    Processes = new IProcess[]
+                    {
+                        CreateProcess(1),
+                        CreateProcess(2),
+                    };
+                    jobObject.GetProcessIds().Returns(new int[] { 1, 2 });
+
+                    processHelper.GetProcesses(ArgMatchers.IsSequence(1, 2)).Returns(Processes);
+                }
+
+                [Fact]
+                public void WhenKillIsFalse_SendsSignalToProcesses()
+                {
+                    containerStub.Stop(false);
+
+                    Processes[0].Received(1, x => x.RequestExit());
+                    Processes[1].Received(1, x => x.RequestExit());
+                }
+
+                [Fact]
+                public void WhenKillIsFalse_GivesProcessAChanceToExit()
+                {
+                    containerStub.Stop(false);
+
+                    Processes[0].Received(1, x => x.WaitForExit(10000));
+                    Processes[1].Received(1, x => x.WaitForExit(10000));
+                }
+
+                [Fact]
+                public void WhenKillIsTrue_DoesNotSendSignalToProcesses()
+                {
+                    containerStub.Stop(true);
+
+                    Processes[0].DidNotReceive(x => x.RequestExit());
+                    Processes[1].DidNotReceive(x => x.RequestExit());
+                }
+
+                [Fact]
+                public void WhenRequestExitThrows_DoesNotPreventOtherProcessesFromReceivedRequestExit()
+                {
+                    Processes[0].Throws(x => x.RequestExit(), new InvalidTimeZoneException());
+
+                    containerStub.Stop(false);
+
+                    Processes[1].Received(1, x => x.RequestExit());
+                }
+
+                [Fact]
+                public void WhenKillIsFalse_ProcessKillInvoked()
+                {
+                    containerStub.Stop(false);
+
+                    Processes[0].Received(1, x => x.Kill());
+                    Processes[1].Received(1, x => x.Kill());
+                }
+
+                [Fact]
+                public void WhenKillIsTrue_ProcessKillInvoked()
+                {
+                    containerStub.Stop(true);
+
+                    Processes[0].Received(1, x => x.Kill());
+                    Processes[1].Received(1, x => x.Kill());
+                }
+
+                [Fact]
+                public void SetsStateToStopped()
+                {
+                    containerStub.Stop(false);
+
+                    Assert.Equal(ContainerState.Stopped, containerStub.State);
+                }
+
+                IProcess CreateProcess(int processId)
+                {
+                    var process = Substitute.For<IProcess>();
+                    process.Id.Returns(processId);
+                    return process;
                 }
             }
         }
@@ -506,55 +607,6 @@ namespace IronFoundry.Warden.Test
             var fileSecurity = File.GetAccessControl(file);
             fileSecurity.AddAccessRule(new FileSystemAccessRule(account, rights, access));
             File.SetAccessControl(file, fileSecurity);
-        }
-
-        public class TestProcess : IProcess
-        {
-            public int ExitCode { get; set; }
-            public IntPtr Handle { get; set; }
-            public bool HasExited { get; set; }
-            public int Id { get; set; }
-            public long PrivateMemoryBytes { get; set; }
-            public TimeSpan TotalProcessorTime { get; set; }
-            public TimeSpan TotalUserProcessorTime { get; set; }
-            public long WorkingSet { get; set; }
-
-            EventHandler<ProcessDataReceivedEventArgs> errorDataReceivedHandler;
-            public event EventHandler<ProcessDataReceivedEventArgs> ErrorDataReceived
-            {
-                add { errorDataReceivedHandler += value; }
-                remove { errorDataReceivedHandler -= value; }
-            }
-
-            EventHandler exitedHandler;
-            public event EventHandler Exited
-            {
-                add { exitedHandler += value; }
-                remove { exitedHandler -= value; }
-            }
-
-            EventHandler<ProcessDataReceivedEventArgs> outputDataReceivedHandler;
-            public event EventHandler<ProcessDataReceivedEventArgs> OutputDataReceived
-            {
-                add { outputDataReceivedHandler += value; }
-                remove { outputDataReceivedHandler -= value; }
-            }
-
-            public void Dispose()
-            {
-            }
-
-            public void Kill()
-            {
-            }
-
-            public void WaitForExit()
-            {
-            }
-
-            public void WaitForExit(int milliseconds)
-            {
-            }
         }
     }
 }

@@ -12,7 +12,6 @@ namespace IronFoundry.Warden.Containers
     {
         string ContainerDirectoryPath { get; }
         ContainerHandle Handle { get; }
-        ContainerState State { get; }
 
         Task DestroyAsync();
         IEnumerable<string> DrainEvents();
@@ -22,6 +21,6 @@ namespace IronFoundry.Warden.Containers
         Task LimitMemoryAsync(ulong bytes);
         int ReservePort(int port);
         Task<CommandResult> RunCommandAsync(RemoteCommand command);
-        Task StopAsync();
+        Task StopAsync(bool kill);
     }
 }

@@ -50,7 +50,6 @@
     <Compile Include="Containers\ContainerResourceHolder.cs" />
     <Compile Include="Containers\ContainerStub.cs" />
     <Compile Include="Containers\ContainerUser.cs" />
-    <Compile Include="Containers\ContainerState.cs" />
     <Compile Include="Containers\IContainer.cs" />
     <Compile Include="Containers\IContainerClient.cs" />
     <Compile Include="Containers\IContainerManager.cs" />
@@ -68,8 +67,10 @@
     <Compile Include="Containers\Messages\EnableLoggingMessage.cs" />
     <Compile Include="Containers\Messages\LimitMemoryMessage.cs" />
     <Compile Include="Containers\Messages\RunCommandMessage.cs" />
+    <Compile Include="Containers\Messages\StopMessage.cs" />
     <Compile Include="Containers\ProcessMonitor.cs" />
     <Compile Include="Handlers\LoggingRequestHandler.cs" />
+    <Compile Include="PInvoke\Console.cs" />
     <Compile Include="PInvoke\DesktopRights.cs" />
     <Compile Include="PInvoke\IoCompletionPort.cs" />
     <Compile Include="PInvoke\StandardRights.cs" />

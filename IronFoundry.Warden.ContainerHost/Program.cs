@@ -181,6 +181,12 @@ namespace IronFoundry.Warden.ContainerHost
                     return Task.FromResult<object>(new LimitMemoryResponse(r.id));
                 });
 
+                dispatcher.RegisterMethod<StopRequest>(StopRequest.MethodName, r => 
+                {
+                    container.Stop(r.@params.Kill);
+                    return Task.FromResult<object>(new StopResponse(r.id));
+                });
+
                 transport.SubscribeRequest(
                     async (request) =>
                     {

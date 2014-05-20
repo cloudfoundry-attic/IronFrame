@@ -20,38 +20,32 @@
 
         public override Task<Response> HandleAsync()
         {
-            if (request.Handle.IsNullOrWhiteSpace())
-            {
-                throw new WardenException("Container handle is required.");
-            }
-            else
-            {
-                log.Trace("Destroying container with handle: '{0}'", request.Handle);
+            if (request.Handle.IsNullOrWhiteSpace()) throw new WardenException("Container handle is required.");
 
-                return Task.Run<Response>(async () =>
+            log.Trace("Destroying container with handle: '{0}'", request.Handle);
+            
+            return Task.Run<Response>(async () =>
+                {
+                    var container = GetContainer();
+                    if (container != null)
                     {
-                        var container = GetContainer();
-                        if (container != null)
+                        var containerInfo = await container.GetInfoAsync();
+                        if (containerInfo.State != Containers.Messages.ContainerState.Stopped)
                         {
-                            if (container.State != ContainerState.Stopped)
+                            try
                             {
-                                try
-                                {
-                                    var stopRequest = new StopRequest { Handle = request.Handle };
-                                    var stopRequestHandler = new StopRequestHandler(containerManager, stopRequest);
-                                    var stopTask = stopRequestHandler.HandleAsync();
-                                    Response stopResponse = stopTask.Result;
-                                }
-                                catch (Exception ex)
-                                {
-                                    log.WarnException(ex);
-                                }
+                                await container.StopAsync(true);
                             }
-                            await containerManager.DestroyContainerAsync(container);
+                            catch (Exception ex)
+                            {
+                                log.WarnException(ex);
+                            }
                         }
-                        return new DestroyResponse();
-                    });
-            }
+                        await containerManager.DestroyContainerAsync(container);
+                    }
+                    return new DestroyResponse();
+                });
+
         }
     }
 }
