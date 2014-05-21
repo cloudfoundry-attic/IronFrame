@@ -74,6 +74,7 @@ namespace IronFoundry.Warden.Containers
             {
                 var response = await launcher.SendMessageAsync<ContainerInfoRequest, ContainerInfoResponse>(new ContainerInfoRequest());
                 info = response.result;
+
             }
             else
             {
@@ -88,10 +89,10 @@ namespace IronFoundry.Warden.Containers
             }
 
             info.Events.AddRange(DrainEvents());
-            
+
             return info;
         }
-        
+
         public async Task<CommandResult> RunCommandAsync(RemoteCommand command)
         {
             if (!IsRemoteActive) throw NotActiveError();
@@ -111,22 +112,6 @@ namespace IronFoundry.Warden.Containers
                        StdOut = response.result.stdOut,
                        StdErr = response.result.stdErr,
                    };
-        }
-
-        public async Task DestroyAsync()
-        {
-            if (IsRemoteActive)
-            {
-                var request = new ContainerDestroyRequest();
-                var response = await launcher.SendMessageAsync<ContainerDestroyRequest, ContainerDestroyResponse>(request);
-            }
-
-            if (cachedContainerState != ContainerState.Destroyed && containerResources != null)
-            {
-                containerResources.Destroy();
-            }
-
-            cachedContainerState = ContainerState.Destroyed;
         }
 
         public async Task EnableLoggingAsync(InstanceLoggingInfo loggingInfo)
@@ -173,7 +158,10 @@ namespace IronFoundry.Warden.Containers
         public async Task StopAsync(bool kill)
         {
             if (IsRemoteActive)
+            {
                 await launcher.SendMessageAsync<StopRequest, StopResponse>(new StopRequest(kill));
+                launcher.Stop();
+            }
 
             cachedContainerState = ContainerState.Stopped;
         }
@@ -235,16 +223,5 @@ namespace IronFoundry.Warden.Containers
         {
             throw new NotImplementedException();
         }
-
-        internal static void CleanUp(string handle)
-        {
-            // this creates a temporary set of resources to make sure we clean up
-            var holder = ContainerResourceHolder.Create(new WardenConfig(), new ContainerHandle(handle));
-            holder.Destroy();
-        }
-
-
-
-   
     }
 }

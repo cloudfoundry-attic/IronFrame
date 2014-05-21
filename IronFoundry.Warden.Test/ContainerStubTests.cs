@@ -19,6 +19,7 @@ namespace IronFoundry.Warden.Test
         protected readonly string testUserName = "TestUser";
         protected readonly string testUserPassword = "TestUserPassword";
         protected readonly string containerHandleString = "TestHandle";
+        protected readonly int owningProcessId = 255;
 
         protected ContainerHandle containerHandle;
         protected JobObject jobObject;
@@ -31,6 +32,7 @@ namespace IronFoundry.Warden.Test
         protected ProcessHelper processHelper;
         protected ProcessMonitor processMonitor;
 
+
         public ContainerStubContext()
         {
             containerHandle = new ContainerHandle(containerHandleString);
@@ -42,7 +44,7 @@ namespace IronFoundry.Warden.Test
             processHelper = Substitute.For<ProcessHelper>();
             processMonitor = new ProcessMonitor();
 
-            containerStub = new ContainerStub(jobObject, jobObjectLimits, commandRunner, processHelper, processMonitor);
+            containerStub = new ContainerStub(jobObject, jobObjectLimits, commandRunner, processHelper, processMonitor, owningProcessId);
 
             this.tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             Directory.CreateDirectory(tempDirectory);
@@ -435,6 +437,7 @@ namespace IronFoundry.Warden.Test
                         CreateProcess(1),
                         CreateProcess(2),
                     };
+
                     jobObject.GetProcessIds().Returns(new int[] { 1, 2 });
 
                     processHelper.GetProcesses(ArgMatchers.IsSequence(1, 2)).Returns(Processes);
@@ -503,6 +506,17 @@ namespace IronFoundry.Warden.Test
                     Assert.Equal(ContainerState.Stopped, containerStub.State);
                 }
 
+                [Fact]
+                public void IgnoresOwningProcessId()
+                {
+                    jobObject.GetProcessIds().Returns(new int[] { 1, 2, owningProcessId });
+
+                    containerStub.Stop(false);
+
+                    Processes[0].Received(1, x => x.RequestExit());
+                    Processes[1].Received(1, x => x.RequestExit());
+                }
+
                 IProcess CreateProcess(int processId)
                 {
                     var process = Substitute.For<IProcess>();
@@ -567,16 +581,6 @@ namespace IronFoundry.Warden.Test
                     var output = File.ReadAllText(tempFilePath);
                     Assert.Contains(userHolder.UserName, output);
                 }
-            }
-        }
-
-        public class WhenDestroyed : ContainerStubContext
-        {
-            [Fact]
-            public void StateIsDestroyed()
-            {
-                containerStub.Destroy();
-                Assert.Equal(ContainerState.Destroyed, containerStub.State);
             }
         }
 

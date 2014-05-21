@@ -23,26 +23,11 @@
             if (request.Handle.IsNullOrWhiteSpace()) throw new WardenException("Container handle is required.");
 
             log.Trace("Destroying container with handle: '{0}'", request.Handle);
-            
+
             return Task.Run<Response>(async () =>
                 {
-                    var container = GetContainer();
-                    if (container != null)
-                    {
-                        var containerInfo = await container.GetInfoAsync();
-                        if (containerInfo.State != Containers.Messages.ContainerState.Stopped)
-                        {
-                            try
-                            {
-                                await container.StopAsync(true);
-                            }
-                            catch (Exception ex)
-                            {
-                                log.WarnException(ex);
-                            }
-                        }
-                        await containerManager.DestroyContainerAsync(container);
-                    }
+                    await containerManager.DestroyContainerAsync(new ContainerHandle(request.Handle));
+
                     return new DestroyResponse();
                 });
 

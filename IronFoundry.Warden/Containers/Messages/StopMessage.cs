@@ -21,6 +21,12 @@ namespace IronFoundry.Warden.Containers.Messages
     {
         public const string MethodName = "Container.Stop";
 
+        // Required for serialization
+        public StopRequest()
+            : base(MethodName)
+        {
+        }
+
         public StopRequest(StopParameters parameters) : base(MethodName, parameters)
         {
         }

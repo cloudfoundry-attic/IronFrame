@@ -13,7 +13,6 @@ namespace IronFoundry.Warden.Containers
         string ContainerDirectoryPath { get; }
         ContainerHandle Handle { get; }
 
-        Task DestroyAsync();
         IEnumerable<string> DrainEvents();
         Task EnableLoggingAsync(InstanceLoggingInfo loggingInfo);
         Task<ContainerInfo> GetInfoAsync();

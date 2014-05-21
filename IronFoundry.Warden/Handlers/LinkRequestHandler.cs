@@ -1,11 +1,13 @@
 ﻿namespace IronFoundry.Warden.Handlers
 {
+    using System;
     using System.Threading.Tasks;
     using Containers;
     using Jobs;
     using NLog;
     using Properties;
     using Protocol;
+    using IronFoundry.Warden.Shared.Messaging;
 
     public class LinkRequestHandler : JobRequestHandler
     {
@@ -38,7 +40,7 @@
                     }
                     else
                     {
-                        IJobResult result = job.RunnableTask.Result;
+                        IJobResult result = await job.RunnableTask;
                         response = new LinkResponse
                         {
                             ExitStatus = (uint)result.ExitCode,
@@ -47,7 +49,20 @@
                         };
                     }
 
-                    response.Info = await BuildInfoResponseAsync();
+                    try
+                    {
+                        response.Info = await BuildInfoResponseAsync();
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // If the container is shutting down the link request may be completed and unable to build an information response
+                        // via normal channels.  In this case, we return a stopped info response.
+                        response.Info = new InfoResponse() { State = IronFoundry.Warden.Containers.Messages.ContainerState.Stopped.ToString() };
+                    }
+                    catch (MessagingException)
+                    {
+                        response.Info = new InfoResponse() { State = IronFoundry.Warden.Containers.Messages.ContainerState.Stopped.ToString() };
+                    }
 
                     return response;
                 });

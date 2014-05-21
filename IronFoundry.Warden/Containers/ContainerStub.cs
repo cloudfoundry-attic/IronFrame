@@ -20,24 +20,36 @@ namespace IronFoundry.Warden.Containers
         private ContainerHandle containerHandle;
         private System.Net.NetworkCredential user;
         private readonly ICommandRunner commandRunner;
-        private ProcessHelper processHelper;
+        private readonly ProcessHelper processHelper;
         private ILogEmitter logEmitter;
         private EventHandler outOfMemoryHandler;
-        private ProcessMonitor processMonitor;
+        private readonly ProcessMonitor processMonitor;
+        private readonly int owningProcessId;
 
         public ContainerStub(
             JobObject jobObject,
             JobObjectLimits jobObjectLimits,
             ICommandRunner commandRunner,
             ProcessHelper processHelper,
-            ProcessMonitor processMonitor)
+            ProcessMonitor processMonitor) :this (jobObject, jobObjectLimits, commandRunner, processHelper, processMonitor, Process.GetCurrentProcess().Id)
         {
+        }
+
+        public ContainerStub(
+            JobObject jobObject,
+            JobObjectLimits jobObjectLimits,
+            ICommandRunner commandRunner,
+            ProcessHelper processHelper,
+            ProcessMonitor processMonitor,
+            int owningProcessId)
+        {            
             this.jobObject = jobObject;
             this.jobObjectLimits = jobObjectLimits;
             this.currentState = ContainerState.Born;
             this.commandRunner = commandRunner;
             this.processHelper = processHelper;
             this.processMonitor = processMonitor;
+            this.owningProcessId = owningProcessId;
 
             this.jobObjectLimits.MemoryLimitReached += MemoryLimitReached;
 
@@ -160,12 +172,7 @@ namespace IronFoundry.Warden.Containers
             }
 
             return si;
-        }
-
-        public void Destroy()
-        {
-            this.currentState = ContainerState.Destroyed;
-        }
+        }    
 
         public System.Security.Principal.WindowsImpersonationContext GetExecutionContext(bool shouldImpersonate = false)
         {
@@ -248,7 +255,7 @@ namespace IronFoundry.Warden.Containers
             ThrowIfNotActive();
 
             // Sends "term" signal to processes
-            var processIds = jobObject.GetProcessIds();
+            var processIds = jobObject.GetProcessIds().Where(x => x != owningProcessId);
             var processes = processHelper.GetProcesses(processIds);
 
             var processTasks = processes.Select(p =>

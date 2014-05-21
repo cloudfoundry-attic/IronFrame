@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using IronFoundry.Warden.Utilities;
 using NLog;
 using IronFoundry.Warden.Containers.Messages;
+using IronFoundry.Warden.Configuration;
 
 namespace IronFoundry.Warden.Containers
 {
@@ -15,6 +16,14 @@ namespace IronFoundry.Warden.Containers
             new ConcurrentDictionary<ContainerHandle, IContainerClient>();
 
         private readonly Logger log = LogManager.GetCurrentClassLogger();
+        private readonly IContainerJanitor janitor;
+        private readonly IWardenConfig wardenConfig;
+
+        public ContainerManager(IContainerJanitor janitor, IWardenConfig wardenConfig)
+        {
+            this.janitor = janitor;
+            this.wardenConfig = wardenConfig;
+        }
 
         public IEnumerable<ContainerHandle> Handles
         {
@@ -59,7 +68,6 @@ namespace IronFoundry.Warden.Containers
                                        }
                                        catch (Exception ex)
                                        {
-                                           ContainerProxy.CleanUp(handle);
                                            log.ErrorException(ex);
                                        }
                                    }
@@ -89,23 +97,9 @@ namespace IronFoundry.Warden.Containers
             }
 
             IContainerClient removed;
-            if (containers.TryRemove(handle, out removed))
-            {
-                try
-                {
-                    await removed.DestroyAsync();
-                }
-                catch
-                {
-                    log.Error("Error destroying container! Re-adding to collection.");
-                    containers[handle] = removed;
-                    throw;
-                }
-            }
-            else
-            {
-                throw new WardenException("Could not remove container '{0}' from collection!", handle);
-            }
+            containers.TryRemove(handle, out removed);
+
+            await janitor.DestroyContainerAsync(handle, wardenConfig.ContainerBasePath, wardenConfig.TcpPort.ToString(), wardenConfig.DeleteContainerDirectories);
         }
 
         public void Dispose()

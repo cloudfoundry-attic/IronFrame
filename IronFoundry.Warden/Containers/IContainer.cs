@@ -20,7 +20,6 @@ namespace IronFoundry.Warden.Containers
 
         void BindMounts(IEnumerable<BindMount> mounts);
         IProcess CreateProcess(CreateProcessStartInfo si, bool impersonate = false);
-        void Destroy();
         WindowsImpersonationContext GetExecutionContext(bool shouldImpersonate = false);
         ContainerInfo GetInfo();
 

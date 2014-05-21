@@ -52,13 +52,13 @@
     <Compile Include="Containers\ContainerUser.cs" />
     <Compile Include="Containers\IContainer.cs" />
     <Compile Include="Containers\IContainerClient.cs" />
+    <Compile Include="Containers\IContainerJanitor.cs" />
     <Compile Include="Containers\IContainerManager.cs" />
     <Compile Include="Containers\IContainerUser.cs" />
     <Compile Include="Containers\JobObject.cs" />
     <Compile Include="Containers\ContainerHostLauncher.cs" />
     <Compile Include="Containers\JobObjectLimits.cs" />
     <Compile Include="Containers\Messages\BindMountMessage.cs" />
-    <Compile Include="Containers\Messages\ContainerDestroyMessage.cs" />
     <Compile Include="Containers\Messages\ContainerInfoMessage.cs" />
     <Compile Include="Containers\Messages\ContainerInitializeMessage.cs" />
     <Compile Include="Containers\Messages\ContainerStateMessage.cs" />

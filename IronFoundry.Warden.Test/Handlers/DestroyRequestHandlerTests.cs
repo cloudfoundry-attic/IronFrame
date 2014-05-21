@@ -24,23 +24,6 @@ namespace IronFoundry.Warden.Handlers
         }
 
         [Fact]
-        public async void RequestsStopWithKillOptionIfContainerActive()
-        {
-            container.GetInfoAsync().ReturnsTask(new Containers.Messages.ContainerInfo() { State = IronFoundry.Warden.Containers.Messages.ContainerState.Active });
-            
-            var request = new DestroyRequest()
-            {
-                Handle = "containerHandle",
-            };
-
-            var handler = new DestroyRequestHandler(manager, request);
-
-            var response= await handler.HandleAsync();
-
-            container.Received(1, x => x.StopAsync(true));
-        }
-
-        [Fact]
         public async void RequestsDestroyContainerFromManager()
         {
             container.GetInfoAsync().ReturnsTask(new Containers.Messages.ContainerInfo() { State = IronFoundry.Warden.Containers.Messages.ContainerState.Active });
@@ -53,8 +36,7 @@ namespace IronFoundry.Warden.Handlers
             var handler = new DestroyRequestHandler(manager, request);
 
             var response = await handler.HandleAsync();
-
-            manager.Received(1, x => x.DestroyContainerAsync(container));
+            manager.Received(1, x => x.DestroyContainerAsync(Arg.Is<ContainerHandle>(h => h.ToString() == "containerHandle")));
         }
     }
 }

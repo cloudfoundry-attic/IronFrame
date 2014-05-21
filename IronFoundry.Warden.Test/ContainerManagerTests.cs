@@ -1,4 +1,5 @@
-﻿using IronFoundry.Warden.Containers;
+﻿using IronFoundry.Warden.Configuration;
+using IronFoundry.Warden.Containers;
 using NSubstitute;
 using Xunit;
 
@@ -8,31 +9,40 @@ namespace IronFoundry.Warden.Test
     {
         public class WhenDestoryingContainer : ContainerManagerTests
         {
-            [Fact]
-            public async void CallsContainerDestroyAsync()
+            private readonly IContainerManager containerManager;
+            private readonly IContainerJanitor janitor;
+            private readonly IWardenConfig config;
+
+            public WhenDestoryingContainer()
             {
-                var client = Substitute.For<IContainerClient>();
-                var containerManager = new ContainerManager();
-                client.Handle.Returns(new ContainerHandle("asdfghjkl"));
-                containerManager.AddContainer(client);
+                janitor = Substitute.For<IContainerJanitor>();
+                config = Substitute.For<IWardenConfig>();
+                config.ContainerBasePath.Returns("c:\temp");
+                config.DeleteContainerDirectories.Returns(false);
+                config.TcpPort.Returns((ushort)5555);
 
-                await containerManager.DestroyContainerAsync(client);
-
-                client.Received(x => x.DestroyAsync());
+                containerManager = new ContainerManager(janitor, config);
             }
 
             [Fact]
             public async void ContainerShouldBeRemoved()
             {
                 var client = Substitute.For<IContainerClient>();
-                var containerManager = new ContainerManager();
                 client.Handle.Returns(new ContainerHandle("asdfghjkl"));
                 containerManager.AddContainer(client);
-                await containerManager.DestroyContainerAsync(client);
 
+                await containerManager.DestroyContainerAsync(client);
                 var destroyedClient = containerManager.GetContainer("asdfghjkl");
 
                 Assert.Null(destroyedClient);
+            }
+
+            [Fact]
+            public async void DelegatesDestroyToContainerJanitor()
+            {
+                await containerManager.DestroyContainerAsync(new ContainerHandle("containerHandle"));
+                
+                janitor.Received(1, x => x.DestroyContainerAsync("containerHandle",config.ContainerBasePath, config.TcpPort.ToString(), config.DeleteContainerDirectories));
             }
         }
     }
