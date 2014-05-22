@@ -13,7 +13,6 @@ namespace IronFoundry.Warden.Containers
     {
         private readonly IContainerHostLauncher launcher;
         private ContainerState cachedContainerState;
-        private IResourceHolder containerResources;
         private readonly List<string> events = new List<string>();
         private object eventLock = new object();
 
@@ -30,11 +29,6 @@ namespace IronFoundry.Warden.Containers
             cachedContainerState = ContainerState.Born;
         }
 
-        private string ContainerUserName
-        {
-            get { return containerResources.User.UserName; }
-        }
-
         private bool IsRemoteActive
         {
             get { return launcher.IsActive; }
@@ -45,15 +39,10 @@ namespace IronFoundry.Warden.Containers
             get { return !launcher.IsActive && launcher.WasActive; }
         }
 
-        public string ContainerDirectoryPath
-        {
-            get { return containerResources.Directory.FullName; }
-        }
+        public string ContainerDirectoryPath { get; private set; }
+        public ContainerHandle Handle { get; private set; }
 
-        public ContainerHandle Handle
-        {
-            get { return containerResources.Handle; }
-        }
+        public int? AssignedPort { get; private set; }
 
         public async Task BindMountsAsync(IEnumerable<BindMount> mounts)
         {
@@ -122,12 +111,12 @@ namespace IronFoundry.Warden.Containers
             }
         }
 
-        public Task InitializeAsync(IResourceHolder resources)
+        public async Task InitializeAsync(string baseDirectory, string handle)
         {
-            containerResources = resources;
-            launcher.Start(ContainerDirectoryPath, containerResources.Handle.ToString());
+            this.Handle = new ContainerHandle(handle);
+            launcher.Start(baseDirectory, handle);
 
-            return InvokeRemoteInitializeAsync();
+            this.ContainerDirectoryPath = await InvokeRemoteInitializeAsync(baseDirectory);
         }
 
         public async Task LimitMemoryAsync(ulong bytes)
@@ -145,14 +134,15 @@ namespace IronFoundry.Warden.Containers
             return new InvalidOperationException("The container proxy is not active.");
         }
 
-        public int ReservePort(int requestedPort)
+        public async Task<int> ReservePortAsync(int requestedPort)
         {
-            if (!containerResources.AssignedPort.HasValue)
-            {
-                containerResources.AssignedPort = containerResources.LocalTcpPortManager.ReserveLocalPort((ushort)requestedPort, ContainerUserName);
-            }
+            if (AssignedPort.HasValue)
+                return AssignedPort.Value;
 
-            return containerResources.AssignedPort.Value;
+            var request = new ReservePortRequest(requestedPort);
+            var response = await launcher.SendMessageAsync<ReservePortRequest, ReservePortResponse>(request);
+            AssignedPort = response.result;
+            return response.result;
         }
 
         public async Task StopAsync(bool kill)
@@ -205,18 +195,18 @@ namespace IronFoundry.Warden.Containers
             }
         }
 
-        private async Task InvokeRemoteInitializeAsync()
+        private async Task<string> InvokeRemoteInitializeAsync(string baseDirectory)
         {
             var request = new ContainerInitializeRequest(
                 new ContainerInitializeParameters
                 {
-                    containerDirectoryPath = ContainerDirectoryPath,
+                    containerBaseDirectoryPath = baseDirectory,
                     containerHandle = Handle.ToString(),
-                    userName = containerResources.User.GetCredential().UserName,
-                    userPassword = containerResources.User.GetCredential().SecurePassword
                 });
 
             var response = await launcher.SendMessageAsync<ContainerInitializeRequest, ContainerInitializeResponse>(request);
+
+            return response.result;
         }
 
         public static IContainerClient Restore(string handle, ContainerState containerState)

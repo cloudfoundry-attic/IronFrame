@@ -25,13 +25,23 @@ namespace IronFoundry.Warden.Containers
         private EventHandler outOfMemoryHandler;
         private readonly ProcessMonitor processMonitor;
         private readonly int owningProcessId;
+        private readonly ILocalTcpPortManager portManager;
 
         public ContainerStub(
             JobObject jobObject,
             JobObjectLimits jobObjectLimits,
             ICommandRunner commandRunner,
             ProcessHelper processHelper,
-            ProcessMonitor processMonitor) :this (jobObject, jobObjectLimits, commandRunner, processHelper, processMonitor, Process.GetCurrentProcess().Id)
+            ProcessMonitor processMonitor,
+            ILocalTcpPortManager portManager)
+            : this(
+                     jobObject,
+                     jobObjectLimits,
+                     commandRunner,
+                     processHelper,
+                     processMonitor,
+                     Process.GetCurrentProcess().Id,
+                     portManager)
         {
         }
 
@@ -41,8 +51,9 @@ namespace IronFoundry.Warden.Containers
             ICommandRunner commandRunner,
             ProcessHelper processHelper,
             ProcessMonitor processMonitor,
-            int owningProcessId)
-        {            
+            int owningProcessId,
+            ILocalTcpPortManager portManager)
+        {
             this.jobObject = jobObject;
             this.jobObjectLimits = jobObjectLimits;
             this.currentState = ContainerState.Born;
@@ -50,6 +61,7 @@ namespace IronFoundry.Warden.Containers
             this.processHelper = processHelper;
             this.processMonitor = processMonitor;
             this.owningProcessId = owningProcessId;
+            this.portManager = portManager;
 
             this.jobObjectLimits.MemoryLimitReached += MemoryLimitReached;
 
@@ -172,7 +184,7 @@ namespace IronFoundry.Warden.Containers
             }
 
             return si;
-        }    
+        }
 
         public System.Security.Principal.WindowsImpersonationContext GetExecutionContext(bool shouldImpersonate = false)
         {
@@ -247,7 +259,9 @@ namespace IronFoundry.Warden.Containers
 
         public int ReservePort(int requestedPort)
         {
-            throw new NotImplementedException();
+            ThrowIfNotActive();
+
+            return portManager.ReserveLocalPort((ushort)requestedPort, user.UserName);
         }
 
         public void Stop(bool kill)

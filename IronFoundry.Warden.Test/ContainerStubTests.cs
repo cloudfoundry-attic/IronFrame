@@ -31,6 +31,7 @@ namespace IronFoundry.Warden.Test
         protected IContainerUser userInfo;
         protected ProcessHelper processHelper;
         protected ProcessMonitor processMonitor;
+        protected ILocalTcpPortManager portManager;
 
 
         public ContainerStubContext()
@@ -39,12 +40,14 @@ namespace IronFoundry.Warden.Test
 
             commandRunner = Substitute.For<ICommandRunner>();
 
+            portManager = Substitute.For<ILocalTcpPortManager>();
+
             jobObject = Substitute.For<JobObject>();
             jobObjectLimits = Substitute.For<JobObjectLimits>(jobObject, TimeSpan.FromMilliseconds(10));
             processHelper = Substitute.For<ProcessHelper>();
             processMonitor = new ProcessMonitor();
 
-            containerStub = new ContainerStub(jobObject, jobObjectLimits, commandRunner, processHelper, processMonitor, owningProcessId);
+            containerStub = new ContainerStub(jobObject, jobObjectLimits, commandRunner, processHelper, processMonitor, owningProcessId, portManager);
 
             this.tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             Directory.CreateDirectory(tempDirectory);
@@ -76,7 +79,7 @@ namespace IronFoundry.Warden.Test
         {
             public BeforeInitialized()
             {
-                containerStub = new ContainerStub(null, new JobObjectLimits(jobObject), null, null, new ProcessMonitor());
+                containerStub = new ContainerStub(null, new JobObjectLimits(jobObject), null, null, new ProcessMonitor(), null);
             }
 
             [Fact]
@@ -117,9 +120,9 @@ namespace IronFoundry.Warden.Test
             }
 
             [Fact]
-            public void ReservePortThrowsNotImplemented()
+            public void ReservePortThrow()
             {
-                Assert.Throws<NotImplementedException>(() => containerStub.ReservePort(100));
+                Assert.Throws<InvalidOperationException>(() => containerStub.ReservePort(100));
             }
 
             [Fact]
@@ -522,6 +525,20 @@ namespace IronFoundry.Warden.Test
                     var process = Substitute.For<IProcess>();
                     process.Id.Returns(processId);
                     return process;
+                }
+            }
+
+            public class ReservePort : WhenInitialized
+            {
+                [Fact]
+                public void ReturnsPortReturnedfromResourceManager()
+                {
+                    portManager.ReserveLocalPort(50000, testUserName).Returns((ushort)10000);
+
+                    int requestedPort = 50000;
+                    var reservedPort = containerStub.ReservePort(requestedPort);
+
+                    Assert.Equal(10000, reservedPort);
                 }
             }
         }

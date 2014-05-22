@@ -12,13 +12,14 @@ namespace IronFoundry.Warden.Containers
     {
         string ContainerDirectoryPath { get; }
         ContainerHandle Handle { get; }
+        int? AssignedPort { get; }
 
         IEnumerable<string> DrainEvents();
         Task EnableLoggingAsync(InstanceLoggingInfo loggingInfo);
-        Task<ContainerInfo> GetInfoAsync();
-        Task InitializeAsync(IResourceHolder containerResources);
+        Task<ContainerInfo> GetInfoAsync();        
+        Task InitializeAsync(string baseDirectory, string handle);
         Task LimitMemoryAsync(ulong bytes);
-        int ReservePort(int port);
+        Task<int> ReservePortAsync(int port);
         Task<CommandResult> RunCommandAsync(RemoteCommand command);
         Task StopAsync(bool kill);
     }

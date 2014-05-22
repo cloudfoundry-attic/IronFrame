@@ -73,7 +73,7 @@ namespace IronFoundry.Warden.ContainerHost
         static void Main(string[] args)
         {
             //Debugger.Launch();
-            
+
             if (args.IsNullOrEmpty())
             {
                 Console.Error.WriteLine("There must be a start or destroy command supplied");
@@ -84,7 +84,7 @@ namespace IronFoundry.Warden.ContainerHost
 
             var command = argumentQueue.Dequeue();
 
-            switch(command.ToLowerInvariant())
+            switch (command.ToLowerInvariant())
             {
                 case "start":
                     Start(argumentQueue);
@@ -119,7 +119,7 @@ namespace IronFoundry.Warden.ContainerHost
             var hostProcess = System.Diagnostics.Process.GetCurrentProcess();
             jobObject.AssignProcessToJob(hostProcess);
 
-            container = new ContainerStub(jobObject, jobObjectLimits, BuildCommandRunner(), new ProcessHelper(), new ProcessMonitor());
+            container = new ContainerStub(jobObject, jobObjectLimits, BuildCommandRunner(), new ProcessHelper(), new ProcessMonitor(), new LocalTcpPortManager());
 
             container.OutOfMemory += HandleOutOfMemory;
 
@@ -144,24 +144,16 @@ namespace IronFoundry.Warden.ContainerHost
                 dispatcher.RegisterMethod<ContainerInitializeRequest>(ContainerInitializeRequest.MethodName, (r) =>
                 {
                     var containerHandle = new ContainerHandle(r.@params.containerHandle);
-                    var containerUser = new ContainerUser(r.@params.userName, r.@params.userPassword);
+                    var containerUser = ContainerUser.CreateUser(containerHandle, new LocalPrincipalManager(new DesktopPermissionManager()));
 
-                    // This is temporary until we can move the initialization of the container resources to ContainerHost
-                    var containerHostConfig = new ContainerHostConfig
-                    {
-                        ContainerBasePath = new DirectoryInfo(r.@params.containerDirectoryPath).Parent.FullName,
-                        DeleteContainerDirectories = true,
-                        TcpPort = 0,
-                    };
-
-                    var containerDirectory = new ContainerDirectory(containerHandle, containerUser, containerHostConfig.ContainerBasePath, false);
+                    var containerDirectory = new ContainerDirectory(containerHandle, containerUser, r.@params.containerBaseDirectoryPath, true);
 
                     container.Initialize(
                         containerDirectory,
                         containerHandle,
                         containerUser);
 
-                    return Task.FromResult<object>(new ContainerInitializeResponse(r.id));
+                    return Task.FromResult<object>(new ContainerInitializeResponse(r.id, containerDirectory.FullName));
                 });
 
                 dispatcher.RegisterMethod<ContainerStateRequest>(ContainerStateRequest.MethodName, (r) =>
@@ -200,6 +192,12 @@ namespace IronFoundry.Warden.ContainerHost
                     return Task.FromResult<object>(new LimitMemoryResponse(r.id));
                 });
 
+                dispatcher.RegisterMethod<ReservePortRequest>(ReservePortRequest.MethodName, r =>
+                {
+                    var reservedPort = container.ReservePort(r.@params);
+                    return Task.FromResult<object>(new ReservePortResponse(r.id, reservedPort));
+                });
+
                 dispatcher.RegisterMethod<StopRequest>(StopRequest.MethodName, r =>
                 {
                     container.Stop(r.@params.Kill);
@@ -223,11 +221,13 @@ namespace IronFoundry.Warden.ContainerHost
             string containerBasePath = null;
             string tcpPort = null;
             bool deleteDirectories = true;
+            ushort? containerPort = null;
 
             var options = new NDesk.Options.OptionSet {
                 { "handle=", v => handle = v },
                 { "containerBasePath=", v => containerBasePath = v},
                 { "tcpPort=", v => tcpPort = v },
+                { "containerPort=", v => containerPort = ushort.Parse(v) },
                 { "deleteDirectories", v => { if (v != null)  deleteDirectories = true; } },
             };
 
@@ -245,18 +245,18 @@ namespace IronFoundry.Warden.ContainerHost
             var config = new ContainerHostConfig()
             {
                 ContainerBasePath = containerBasePath,
-                TcpPort = ushort.Parse(tcpPort), 
+                TcpPort = ushort.Parse(tcpPort),
                 DeleteContainerDirectories = deleteDirectories
             };
-            
-            var holder = ContainerResourceHolder.CreateForDestroy(config, new ContainerHandle(handle));
+
+            var holder = ContainerResourceHolder.CreateForDestroy(config, new ContainerHandle(handle), containerPort);
             holder.Destroy();
         }
 
         private static void ExitWithError(string message, int exitCode)
         {
             Console.Error.WriteLine(message);
-            Environment.Exit(exitCode);            
+            Environment.Exit(exitCode);
         }
 
         private static CommandRunner BuildCommandRunner()

@@ -37,10 +37,11 @@
         {
             return Task.Run<Response>(async () =>
                 {
-                    var resources = ContainerResourceHolder.Create(new WardenConfig());
+                    var config = new WardenConfig();
+                    var handle = new ContainerHandle();
 
                     var container = new ContainerProxy(new ContainerHostLauncher());
-                    await container.InitializeAsync(resources);
+                    await container.InitializeAsync(config.ContainerBasePath, handle.ToString());
                     
                     containerManager.AddContainer(container);
 

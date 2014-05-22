@@ -96,10 +96,15 @@ namespace IronFoundry.Warden.Containers
                 throw new ArgumentNullException("handle");
             }
 
-            IContainerClient removed;
-            containers.TryRemove(handle, out removed);
+            int? containerPort = null;
 
-            await janitor.DestroyContainerAsync(handle, wardenConfig.ContainerBasePath, wardenConfig.TcpPort.ToString(), wardenConfig.DeleteContainerDirectories);
+            IContainerClient removed;
+            if (containers.TryRemove(handle, out removed))
+            {
+                containerPort = removed.AssignedPort;
+            }
+
+            await janitor.DestroyContainerAsync(handle, wardenConfig.ContainerBasePath, wardenConfig.TcpPort.ToString(), wardenConfig.DeleteContainerDirectories, containerPort);
         }
 
         public void Dispose()

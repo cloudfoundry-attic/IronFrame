@@ -17,7 +17,7 @@ namespace IronFoundry.Warden.Test
             {
                 janitor = Substitute.For<IContainerJanitor>();
                 config = Substitute.For<IWardenConfig>();
-                config.ContainerBasePath.Returns("c:\temp");
+                config.ContainerBasePath.Returns("c:\\temp");
                 config.DeleteContainerDirectories.Returns(false);
                 config.TcpPort.Returns((ushort)5555);
 
@@ -42,7 +42,20 @@ namespace IronFoundry.Warden.Test
             {
                 await containerManager.DestroyContainerAsync(new ContainerHandle("containerHandle"));
                 
-                janitor.Received(1, x => x.DestroyContainerAsync("containerHandle",config.ContainerBasePath, config.TcpPort.ToString(), config.DeleteContainerDirectories));
+                janitor.Received(1, x => x.DestroyContainerAsync("containerHandle",config.ContainerBasePath, config.TcpPort.ToString(), config.DeleteContainerDirectories, null));
+            }
+
+            [Fact]
+            public async void IncludesPortContainerIfAvailable()
+            {
+                var client = Substitute.For<IContainerClient>();
+                client.AssignedPort.Returns(100);
+                client.Handle.Returns(new ContainerHandle("asdfghjkl"));
+                containerManager.AddContainer(client);
+
+                await containerManager.DestroyContainerAsync(client);
+
+                janitor.Received(1, x => x.DestroyContainerAsync("asdfghjkl", config.ContainerBasePath, config.TcpPort.ToString(), config.DeleteContainerDirectories, 100));
             }
         }
     }

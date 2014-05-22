@@ -8,6 +8,6 @@ namespace IronFoundry.Warden.Containers
 {
     public interface IContainerJanitor
     {
-        Task DestroyContainerAsync(string handle, string containerBasePath, string tcpPort, bool deleteDirectories);
+        Task DestroyContainerAsync(string handle, string containerBasePath, string tcpPort, bool deleteDirectories, int? containerPort);
     }
 }

@@ -153,13 +153,16 @@ namespace IronFoundry.Warden.Containers
             return await messagingClient.SendMessageAsync<T, TResult>(request);
         }
 
-        public Task DestroyContainerAsync(string handle, string containerBasePath, string tcpPort, bool deleteDirectories)
+        public Task DestroyContainerAsync(string handle, string containerBasePath, string tcpPort, bool deleteDirectories, int? containerPort)
         {
             var argumentBuilder = new StringBuilder();
             argumentBuilder.Append("destroy ");
             argumentBuilder.AppendFormat("--handle {0} ", handle);
             argumentBuilder.AppendFormat("--containerBasePath {0} ", containerBasePath);
             argumentBuilder.AppendFormat("--tcpPort {0} ", tcpPort);
+            if (containerPort.HasValue)
+                argumentBuilder.AppendFormat("--containerPort {0} ", containerPort.Value);
+
             if (deleteDirectories)
                 argumentBuilder.AppendFormat("--deleteDirectories");
 

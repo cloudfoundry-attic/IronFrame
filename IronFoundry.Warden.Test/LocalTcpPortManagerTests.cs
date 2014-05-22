@@ -35,7 +35,7 @@ namespace IronFoundry.Warden.Test
                 ushort port = tcpPortManager.ReserveLocalPort(8888, "userName");
 
                 NetShRunner.Received().AddRule(Arg.Is((ushort)8888), Arg.Is("userName"));
-                FirewallManager.Received().OpenPort(Arg.Is((ushort)8888), Arg.Is("userName-8888"));
+                FirewallManager.Received().OpenPort(Arg.Is((ushort)8888), Arg.Is("userName"));
                 Assert.Equal(8888, port);
             }
 
@@ -93,7 +93,7 @@ namespace IronFoundry.Warden.Test
                 tcpPortManager.ReleaseLocalPort(8888, "userName");
 
                 NetShRunner.Received().DeleteRule(Arg.Is((ushort) 8888));
-                FirewallManager.Received().ClosePort(Arg.Is("userName-8888"));
+                FirewallManager.Received().ClosePort(Arg.Is("userName"));
             }
 
             [Fact]
@@ -105,6 +105,17 @@ namespace IronFoundry.Warden.Test
                 var exception = Record.Exception(() => tcpPortManager.ReleaseLocalPort(8888, "userName"));
 
                 Assert.IsType<WardenException>(exception);
+            }
+
+            [Fact]
+            public void RemovesFirewallRulesEvenWithNoPort()
+            {
+                var tcpPortManager = new LocalTcpPortManager(FirewallManager, NetShRunner);
+
+                tcpPortManager.ReleaseLocalPort(null, "userName");
+
+                NetShRunner.DidNotReceive().DeleteRule(Arg.Any<ushort>());
+                FirewallManager.Received().ClosePort(Arg.Is("userName"));
             }
 
             [Fact]

@@ -7,11 +7,7 @@ namespace IronFoundry.Warden.Containers.Messages
     public class ContainerInitializeParameters
     {
         public string containerHandle;
-        public string containerDirectoryPath;
-        public string userName;
-
-        [Newtonsoft.Json.JsonConverter(typeof(SecureStringJsonConverter))]
-        public SecureString userPassword;
+        public string containerBaseDirectoryPath;
     }
 
     public class ContainerInitializeRequest : JsonRpcRequest<ContainerInitializeParameters>
@@ -23,9 +19,9 @@ namespace IronFoundry.Warden.Containers.Messages
         }
     }
 
-    public class ContainerInitializeResponse : JsonRpcResponse<bool>
+    public class ContainerInitializeResponse : JsonRpcResponse<string>
     {
-        public ContainerInitializeResponse(JToken id) : base(id, true)
+        public ContainerInitializeResponse(JToken id, string containerPath) : base(id, containerPath)
         {
         }
     }

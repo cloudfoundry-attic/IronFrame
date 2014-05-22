@@ -42,10 +42,10 @@
                 port = (ushort)request.HostPort;
             }
 
-            return Task.Run<Response>(() =>
+            return Task.Run<Response>(async () =>
                 {
                     var container = GetContainer();                    
-                    var reservedPort = container.ReservePort(port);
+                    var reservedPort = await container.ReservePortAsync(port);
 
                     return new NetInResponse { HostPort = (uint)reservedPort, ContainerPort = (uint)reservedPort };
                 });

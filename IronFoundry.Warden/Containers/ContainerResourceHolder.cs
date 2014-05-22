@@ -102,7 +102,7 @@ namespace IronFoundry.Warden.Containers
             return resoureHolder;
         }
 
-        public static IResourceHolder CreateForDestroy(IWardenConfig config, ContainerHandle handle)
+        public static IResourceHolder CreateForDestroy(IWardenConfig config, ContainerHandle handle, ushort? assignedPort)
         {
             var user = new TempUser(handle, new LocalPrincipalManager(new DesktopPermissionManager()));
             var directory = new TempDirectory(handle, config.ContainerBasePath);
@@ -116,6 +116,8 @@ namespace IronFoundry.Warden.Containers
                 config.DeleteContainerDirectories
                 );
 
+            resoureHolder.AssignedPort = assignedPort;
+ 
             return resoureHolder;
         }
 

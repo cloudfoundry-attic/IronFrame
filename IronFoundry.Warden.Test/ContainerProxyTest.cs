@@ -28,31 +28,14 @@ namespace IronFoundry.Warden.Test
             protected ContainerProxy proxy;
             protected IContainerHostLauncher launcher;
             protected string tempDirectory;
-            protected IResourceHolder resourceHolder;
 
             public ProxyContainerContext()
             {
-                this.launcher = Substitute.For<IContainerHostLauncher, IDisposable>();
+                this.launcher = Substitute.For<IContainerHostLauncher>();
                 this.launcher.When(x => x.Start(null, null));
-
-                var userInfo = Substitute.For<IContainerUser>();
-                userInfo.UserName.ReturnsForAnyArgs(testUserName);
-                userInfo.GetCredential().ReturnsForAnyArgs(new System.Net.NetworkCredential(testUserName, testUserPassword));
 
                 this.tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
                 Directory.CreateDirectory(this.tempDirectory);
-
-                var containerDirectory = Substitute.For<IContainerDirectory>();
-                containerDirectory.FullName.Returns(this.tempDirectory);
-
-                var jobObject = Substitute.For<JobObject>();
-
-                this.resourceHolder = Substitute.For<IResourceHolder>();
-                this.resourceHolder.User.Returns(userInfo);
-                this.resourceHolder.Directory.Returns(containerDirectory);
-                this.resourceHolder.JobObject.Returns(jobObject);
-
-                this.resourceHolder.Handle.Returns(new ContainerHandle(containerHandle));
 
                 this.proxy = new ContainerProxy(launcher);
             }
@@ -127,19 +110,24 @@ namespace IronFoundry.Warden.Test
             }
         }
 
-        public class OnStop: ProxyContainerContext
+        public class ContainerInitializedContext : ProxyContainerContext
         {
-            public OnStop()
+            public ContainerInitializedContext()
             {
                 launcher.IsActive.Returns(true);
+                launcher.SendMessageAsync<ContainerInitializeRequest, ContainerInitializeResponse>(Arg.Any<ContainerInitializeRequest>())
+                    .ReturnsTask(new ContainerInitializeResponse("", tempDirectory));
             }
 
-            async Task CompleteInitializationAsync()
+            protected virtual async Task CompleteInitializationAsync()
             {
-                await proxy.InitializeAsync(resourceHolder);
+                await proxy.InitializeAsync(tempDirectory, containerHandle);
             }
+        }
 
-
+        public class OnStop : ContainerInitializedContext
+        {
+           
             [Fact]
             public async void SendsStopMessageToStub()
             {
@@ -161,18 +149,8 @@ namespace IronFoundry.Warden.Test
             }
         }
 
-        public class WhenInitialized : ProxyContainerContext
+        public class WhenInitialized : ContainerInitializedContext
         {
-            public WhenInitialized() : base()
-            {
-                launcher.IsActive.Returns(true);
-            }
-
-            async Task CompleteInitializationAsync()
-            {
-                await proxy.InitializeAsync(resourceHolder);
-            }
-
             [Fact]
             public async void LaunchesContainerHostProcess()
             {
@@ -201,49 +179,32 @@ namespace IronFoundry.Warden.Test
             public async void SendContainerPathToStub()
             {
                 ContainerInitializeParameters initializationParams = null;
-                launcher.SendMessageAsync<ContainerInitializeRequest, ContainerInitializeResponse>(null).ReturnsForAnyArgs(c =>
+                launcher.SendMessageAsync<ContainerInitializeRequest, ContainerInitializeResponse>(null).ReturnsTaskForAnyArgs(c =>
                 {
                     var request = c.Arg<ContainerInitializeRequest>();
                     initializationParams = request.@params;
-                    return Task.FromResult<ContainerInitializeResponse>(null);
+                    return new ContainerInitializeResponse("", tempDirectory);
                 });
 
                 await CompleteInitializationAsync();
 
-                Assert.Equal(tempDirectory, initializationParams.containerDirectoryPath);
+                Assert.Equal(tempDirectory, initializationParams.containerBaseDirectoryPath);
             }
 
             [Fact]
             public async void SendContainerHandleToStub()
             {
                 ContainerInitializeParameters initializationParams = null;
-                launcher.SendMessageAsync<ContainerInitializeRequest, ContainerInitializeResponse>(null).ReturnsForAnyArgs(c =>
+                launcher.SendMessageAsync<ContainerInitializeRequest, ContainerInitializeResponse>(null).ReturnsTaskForAnyArgs(c =>
                 {
                     var request = c.Arg<ContainerInitializeRequest>();
                     initializationParams = request.@params;
-                    return Task.FromResult<ContainerInitializeResponse>(null);
+                    return new ContainerInitializeResponse("", tempDirectory);
                 });
 
                 await CompleteInitializationAsync();
 
                 Assert.Equal(containerHandle, initializationParams.containerHandle);
-            }
-
-            [Fact]
-            public async void SendsUserInfoToStub()
-            {
-                ContainerInitializeParameters initializationParams = null;
-                launcher.SendMessageAsync<ContainerInitializeRequest, ContainerInitializeResponse>(null).ReturnsForAnyArgs(c =>
-                {
-                    var request = c.Arg<ContainerInitializeRequest>();
-                    initializationParams = request.@params;
-                    return Task.FromResult<ContainerInitializeResponse>(null);
-                });
-
-                await CompleteInitializationAsync();
-
-                Assert.Equal(testUserName, initializationParams.userName);
-                Assert.Equal(testUserPassword, initializationParams.userPassword.ToUnsecureString());
             }
 
             [Fact]
@@ -261,8 +222,6 @@ namespace IronFoundry.Warden.Test
 
                 Assert.Equal(containerHandle, proxy.Handle.ToString());
             }
-
-        
 
             [Fact]
             public async void EnableLoggingAsyncSendsMessageToHost()
@@ -284,7 +243,7 @@ namespace IronFoundry.Warden.Test
                 await proxy.LimitMemoryAsync(1024);
 
                 this.launcher.Received(
-                    1, 
+                    1,
                     x => x.SendMessageAsync<LimitMemoryRequest, LimitMemoryResponse>(
                         Arg.Is<LimitMemoryRequest>(
                             request => request.@params.LimitInBytes == 1024)));
@@ -347,7 +306,7 @@ namespace IronFoundry.Warden.Test
             [Fact]
             public void OutOfMemoryExitResultsInEventEntry()
             {
-                var exitCode =-2;
+                var exitCode = -2;
                 this.launcher.HostStopped += Raise.Event<EventHandler<int>>(new object(), exitCode);
 
                 Assert.Equal(new[] { "Application exceeded memory limits and was stopped." }, proxy.DrainEvents());
@@ -381,17 +340,10 @@ namespace IronFoundry.Warden.Test
 
                 Assert.Equal(0, proxy.DrainEvents().Count());
             }
-
-          
         }
 
-        public class WhenRunningCommand : ProxyContainerContext
-        {
-            public WhenRunningCommand()
-            {
-                launcher.IsActive.Returns(true);
-            }
-
+        public class WhenRunningCommand : ContainerInitializedContext
+        {          
             [Fact]
             public async void WhenRunningCommand_ShouldSendRunCommandRequestToHost()
             {
@@ -427,7 +379,7 @@ namespace IronFoundry.Warden.Test
             [Fact]
             public async void WhenRunningCommand_StdOutIsReturned()
             {
-                this.launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(Arg.Any<RunCommandRequest>()).ReturnsTask(new RunCommandResponse("", new RunCommandResponseData(){ exitCode = 0, stdOut = "StdOutMessage" }));
+                this.launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(Arg.Any<RunCommandRequest>()).ReturnsTask(new RunCommandResponse("", new RunCommandResponseData() { exitCode = 0, stdOut = "StdOutMessage" }));
                 var command = new RemoteCommand(false, "tar", "foo.zip");
 
                 var response = await proxy.RunCommandAsync(command);
@@ -438,7 +390,7 @@ namespace IronFoundry.Warden.Test
             [Fact]
             public async void WhenRunningCommand_StdErrIsReturned()
             {
-                this.launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(Arg.Any<RunCommandRequest>()).ReturnsTask(new RunCommandResponse("", new RunCommandResponseData(){ exitCode = 0, stdErr = "StdErrMessage" }));
+                this.launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(Arg.Any<RunCommandRequest>()).ReturnsTask(new RunCommandResponse("", new RunCommandResponseData() { exitCode = 0, stdErr = "StdErrMessage" }));
                 var command = new RemoteCommand(false, "tar", "foo.zip");
 
                 var response = await proxy.RunCommandAsync(command);
@@ -447,21 +399,68 @@ namespace IronFoundry.Warden.Test
             }
         }
 
-        public class WhenLauncherEndsAfterInitialize : ProxyContainerContext
+        public class WhenReservingPort : ContainerInitializedContext
+        {
+           
+            [Fact]
+            public async void ReturnsRespondedPort()
+            {
+                var request = new ReservePortRequest(100);
+
+                launcher.SendMessageAsync<ReservePortRequest, ReservePortResponse>(Arg.Any<ReservePortRequest>())
+                    .ReturnsTask(new ReservePortResponse("", 200));
+
+                var reservedPort = await proxy.ReservePortAsync(100);
+
+                Assert.Equal(200, reservedPort);
+            }
+
+            [Fact]
+            public async void CachesFirstReservation()
+            {
+                var request = new ReservePortRequest(100);
+                
+                launcher.SendMessageAsync<ReservePortRequest, ReservePortResponse>(Arg.Any<ReservePortRequest>())
+                   .ReturnsTask(new ReservePortResponse("", 100));
+
+                var reservedPort = await proxy.ReservePortAsync(100);
+
+                launcher.SendMessageAsync<ReservePortRequest, ReservePortResponse>(Arg.Any<ReservePortRequest>())
+                   .ReturnsTask(new ReservePortResponse("", 200));
+
+                var nextReservation = await proxy.ReservePortAsync(200);
+
+                Assert.Equal(reservedPort, nextReservation);
+            }
+
+            [Fact]
+            public void PriorToReservationPropertyReturnsNull()
+            {
+                Assert.Null(proxy.AssignedPort);    
+            }
+
+            [Fact]
+            public async void ReservedPortAvailableFromProperty()
+            {
+                var request = new ReservePortRequest(100);
+
+                launcher.SendMessageAsync<ReservePortRequest, ReservePortResponse>(Arg.Any<ReservePortRequest>())
+                    .ReturnsTask(new ReservePortResponse("", 200));
+
+                var reservedPort = await proxy.ReservePortAsync(100);
+
+                Assert.Equal(200, proxy.AssignedPort);
+            }
+
+        }
+
+        public class WhenLauncherEndsAfterInitialize : ContainerInitializedContext
         {
             public WhenLauncherEndsAfterInitialize()
             {
-                launcher.IsActive.Returns(true);
-                
                 launcher.SendMessageAsync<ContainerStateRequest, ContainerStateResponse>(Arg.Any<ContainerStateRequest>()).ReturnsTask(new ContainerStateResponse("foo", ContainerState.Active.ToString()));
-
             }
 
-            async Task CompleteInitializationAsync()
-            {
-                await proxy.InitializeAsync(resourceHolder);
-            }
-       
             [Fact]
             public async void GetInfoShouldReportStopped()
             {
@@ -475,7 +474,7 @@ namespace IronFoundry.Warden.Test
                 Assert.Equal(ContainerState.Stopped, info.State);
             }
         }
-        
+
         public class TestableContainerHostLauncher : ContainerHostLauncher
         {
             public void RaiseOnHostStopped(int exitCode)
