@@ -56,14 +56,13 @@ namespace IronFoundry.Warden.Containers
             {
                 Task.Run(async () =>
                                {
-                                   // TODO: use snapshot rather than directories
-                                   // when using separate container.exe check for that process' existence
+                                   // Recover containers primarily for deletion
                                    foreach (var dirPath in Directory.GetDirectories(containerRoot))
                                    {
                                        var handle = Path.GetFileName(dirPath);
                                        try
                                        {
-                                           var container = ContainerProxy.Restore(handle, ContainerState.Active);
+                                           var container = ContainerProxy.Restore(handle);
                                            containers.TryAdd(container.Handle, container);
                                        }
                                        catch (Exception ex)

@@ -12,7 +12,7 @@ namespace IronFoundry.Warden.Containers
     public class ContainerProxy : IDisposable, IContainerClient
     {
         private readonly IContainerHostLauncher launcher;
-        private ContainerState cachedContainerState;
+        
         private readonly List<string> events = new List<string>();
         private object eventLock = new object();
 
@@ -26,7 +26,7 @@ namespace IronFoundry.Warden.Containers
             this.launcher = launcher;
             this.launcher.HostStopped += HostStoppedHandler;
 
-            cachedContainerState = ContainerState.Born;
+            ContainerState = ContainerState.Born;
         }
 
         private bool IsRemoteActive
@@ -39,6 +39,7 @@ namespace IronFoundry.Warden.Containers
             get { return !launcher.IsActive && launcher.WasActive; }
         }
 
+        private ContainerState ContainerState { get; set; }
         public string ContainerDirectoryPath { get; private set; }
         public ContainerHandle Handle { get; private set; }
 
@@ -71,10 +72,10 @@ namespace IronFoundry.Warden.Containers
 
                 if (RemoteHalted)
                 {
-                    cachedContainerState = ContainerState.Stopped;
+                    ContainerState = ContainerState.Stopped;
                 }
 
-                info.State = cachedContainerState;
+                info.State = ContainerState;
             }
 
             info.Events.AddRange(DrainEvents());
@@ -153,7 +154,7 @@ namespace IronFoundry.Warden.Containers
                 launcher.Stop();
             }
 
-            cachedContainerState = ContainerState.Stopped;
+            ContainerState = ContainerState.Stopped;
         }
 
         public IEnumerable<string> DrainEvents()
@@ -209,9 +210,13 @@ namespace IronFoundry.Warden.Containers
             return response.result;
         }
 
-        public static IContainerClient Restore(string handle, ContainerState containerState)
+        public static IContainerClient Restore(string handle)
         {
-            throw new NotImplementedException();
+            var container = new ContainerProxy(new ContainerHostLauncher());
+            container.Handle = new ContainerHandle(handle);
+            container.ContainerState = ContainerState.Stopped;
+
+            return container;
         }
     }
 }

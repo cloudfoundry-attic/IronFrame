@@ -168,6 +168,8 @@ namespace IronFoundry.Warden.Containers
 
             var hostFullPath = Path.Combine(Directory.GetCurrentDirectory(), hostExe);
             var startInfo = new ProcessStartInfo(hostFullPath, argumentBuilder.ToString());
+            startInfo.UseShellExecute = false;
+            startInfo.CreateNoWindow = true;
 
             using (var process = Process.Start(startInfo))
             {
