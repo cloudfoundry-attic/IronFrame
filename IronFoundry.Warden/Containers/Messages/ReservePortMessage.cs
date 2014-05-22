@@ -9,7 +9,7 @@ namespace IronFoundry.Warden.Containers.Messages
 {
     public class ReservePortRequest : JsonRpcRequest<int>
     {
-        public const string MethodName = "ReservePort";
+        public const string MethodName = "Container.ReservePort";
 
         public ReservePortRequest() : base(MethodName)
         {

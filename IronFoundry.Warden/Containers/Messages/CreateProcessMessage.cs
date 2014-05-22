@@ -10,7 +10,7 @@ namespace IronFoundry.Warden.Containers.Messages
     [Obsolete]
     public class CreateProcessRequest : JsonRpcRequest<CreateProcessStartInfo>
     {
-        public static string MethodName = "CreateProcess";
+        public static string MethodName = "Container.CreateProcess";
 
         public CreateProcessRequest()
             : base(MethodName)
@@ -18,7 +18,7 @@ namespace IronFoundry.Warden.Containers.Messages
         }
 
         public CreateProcessRequest(CreateProcessStartInfo startInfo)
-            : base("CreateProcess")
+            : base(MethodName)
         {
             @params = startInfo;
         }
@@ -59,7 +59,7 @@ namespace IronFoundry.Warden.Containers.Messages
     [Obsolete]
     public class GetProcessExitInfoRequest : JsonRpcRequest<GetProcessExitInfoParams>
     {
-        public static string MethodName = "GetProcessExitInfo";
+        public static string MethodName = "Container.GetProcessExitInfo";
         public GetProcessExitInfoRequest()
             : base(MethodName)
         {

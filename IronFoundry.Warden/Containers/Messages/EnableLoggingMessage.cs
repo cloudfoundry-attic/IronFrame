@@ -21,7 +21,7 @@ namespace IronFoundry.Warden.Containers.Messages
 
     public class EnableLoggingRequest : JsonRpcRequest<InstanceLoggingInfo>
     {
-        public static string MethodName = "EnableLogging";
+        public static string MethodName = "Container.EnableLogging";
 
         public EnableLoggingRequest()
             : base(MethodName)

@@ -12,7 +12,7 @@ namespace IronFoundry.Warden.Containers.Messages
 
     public class RunCommandRequest : JsonRpcRequest<RunCommandData>
     {
-        public static string MethodName = "RunCommand";
+        public static string MethodName = "Container.RunCommand";
         public RunCommandRequest(RunCommandData command)
             : base(MethodName)
         {
