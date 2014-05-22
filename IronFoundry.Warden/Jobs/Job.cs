@@ -30,7 +30,7 @@
             this.runnable = runnable;
         }
 
-        public async void RunAsync()
+        public virtual async void RunAsync()
         {
             try
             {
@@ -47,12 +47,12 @@
             }
         }
 
-        public Task<IJobResult> RunnableTask
+        public virtual Task<IJobResult> RunnableTask
         {
             get { return runnableTask; }
         }
 
-        public void AttachListener(IJobListener listener)
+        public virtual void AttachListener(IJobListener listener)
         {
             if (listener == null)
             {
@@ -65,7 +65,7 @@
             this.listener = listener;
         }
 
-        public async Task<IJobResult> ListenAsync()
+        public virtual async Task<IJobResult> ListenAsync()
         {
             if (this.listener == null)
             {
@@ -90,22 +90,22 @@
             return result;
         }
 
-        public void Cancel()
+        public virtual void Cancel()
         {
             runnable.Cancel();
         }
 
-        public bool IsCompleted
+        public virtual bool IsCompleted
         {
             get { return isCompleted; }
         }
 
-        public IJobResult Result
+        public virtual IJobResult Result
         {
             get { return result; }
         }
 
-        public bool HasStatus
+        public virtual bool HasStatus
         {
             get { return runnable.HasStatus; }
         }

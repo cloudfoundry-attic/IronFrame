@@ -43,6 +43,7 @@
     <Compile Include="ContainerResourceHolderTest.cs" />
     <Compile Include="ContainerStubTests.cs" />
     <Compile Include="ContainerUserTests.cs" />
+    <Compile Include="Handlers\LinkRequestHandlerTests.cs" />
     <Compile Include="IFTestHelper.cs" />
     <Compile Include="JobObjectLimitsTests.cs" />
     <Compile Include="Handlers\DestroyRequestHandlerTests.cs" />
