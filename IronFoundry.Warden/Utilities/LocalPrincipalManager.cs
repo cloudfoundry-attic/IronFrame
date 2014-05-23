@@ -1,6 +1,7 @@
 ﻿using System;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
+using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Web.Security;
@@ -12,7 +13,6 @@ namespace IronFoundry.Warden.Utilities
     {
         private const uint COM_EXCEPT_UNKNOWN_DIRECTORY_OBJECT = 0x80005004;
 
-        // IIS_IUSRS_SID = "S-1-5-32-568";
         private const string IIS_IUSRS_NAME = "IIS_IUSRS";
 
         private readonly string directoryPath = String.Format("WinNT://{0}", Environment.MachineName);
@@ -28,13 +28,13 @@ namespace IronFoundry.Warden.Utilities
         {
             using (var localDirectory = new DirectoryEntry(directoryPath))
             {
-                DirectoryEntries users = localDirectory.Children;
-                // users.Find(userName) throws, rather than be exception based we enumerate this outselves                
-                var user = AnyEntry(users, de => de.Name == userName);
-                if (user != null)
+                var user = new DirectoryEntry(directoryPath + "/" + userName);
+                try
                 {
-                    permissionManager.RemoveDesktopPermission(userName);
-                    users.Remove(user);
+                    localDirectory.Children.Remove(user);
+                }
+                catch (COMException)
+                {
                 }
             }
         }
@@ -127,21 +127,6 @@ namespace IronFoundry.Warden.Utilities
             }
 
             return rv;
-        }
-
-        private DirectoryEntry AnyEntry(DirectoryEntries entries, Func<DirectoryEntry, bool> eval)
-        {
-            foreach (var entry in entries)
-            {
-                DirectoryEntry de = entry as DirectoryEntry;
-
-                if (de != null && eval(de))
-                {
-                    return de;
-                }
-            }
-
-            return null;
         }
     }
 }
