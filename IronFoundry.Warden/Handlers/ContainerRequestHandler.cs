@@ -45,6 +45,11 @@
                 {
                     // RSS is defined as memory + swap. This is the equivalent of "private memory" on Windows.
                     TotalRss = (ulong)info.MemoryStat.PrivateBytes,
+
+                    // DEA uses the following fields when calculating memory usage. 
+                    // Make sure they at least have a default value.
+                    TotalCache = 0,
+                    TotalInactiveFile = 0,
                 },
                 CpuStatInfo = new InfoResponse.CpuStat
                 {
