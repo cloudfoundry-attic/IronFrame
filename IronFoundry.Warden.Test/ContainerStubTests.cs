@@ -73,8 +73,44 @@ namespace IronFoundry.Warden.Test
         }
     }
 
+    public class ContainerInitializedContext : ContainerStubContext
+    {
+        public ContainerInitializedContext()
+        {
+            containerStub.Initialize(containerDirectory, containerHandle, userInfo);
+        }
+    }
+
     public class ContainerStubTests
     {
+        public class AfterInitialization : ContainerInitializedContext
+        {
+
+            [Fact]
+            public void StateIsActive()
+            {
+                Assert.Equal(ContainerState.Active, containerStub.State);
+            }
+
+            [Fact]
+            public void CanReturnDirectoryPath()
+            {
+                Assert.Equal(tempDirectory, containerStub.ContainerDirectoryPath);
+            }
+
+            [Fact]
+            public void CachesUserInformation()
+            {
+                Assert.NotNull(containerStub.ContainerUserName);
+            }
+
+            [Fact]
+            public void ReturnsContainerHandle()
+            {
+                Assert.Equal("TestHandle", containerStub.Handle.ToString());
+            }
+        }
+
         public class BeforeInitialized : ContainerStubContext
         {
             public BeforeInitialized()
@@ -132,37 +168,8 @@ namespace IronFoundry.Warden.Test
             }
         }
 
-        public class WhenInitialized : ContainerStubContext
+        public class CreateProcess : ContainerInitializedContext
         {
-            public WhenInitialized()
-            {
-                containerStub.Initialize(containerDirectory, containerHandle, userInfo);
-            }
-
-            [Fact]
-            public void StateIsActive()
-            {
-                Assert.Equal(ContainerState.Active, containerStub.State);
-            }
-
-            [Fact]
-            public void CanReturnDirectoryPath()
-            {
-                Assert.Equal(tempDirectory, containerStub.ContainerDirectoryPath);
-            }
-
-            [Fact]
-            public void CachesUserInformation()
-            {
-                Assert.NotNull(containerStub.ContainerUserName);
-            }
-
-            [Fact]
-            public void ReturnsContainerHandle()
-            {
-                Assert.Equal("TestHandle", containerStub.Handle.ToString());
-            }
-
             [Fact]
             public void StartedProcessLaunchUnderJobObject()
             {
@@ -263,18 +270,11 @@ namespace IronFoundry.Warden.Test
 
                 var ex = Assert.Throws<System.ComponentModel.Win32Exception>(() => containerStub.CreateProcess(si));
             }
+        }
 
-            [Fact]
-            public async void WhenReceivingRunCommand_ShouldDispatchToCommandRunner()
-            {
-                commandRunner.RunCommandAsync(false, null, null).ReturnsTaskForAnyArgs(new TaskCommandResult(0, null, null));
-
-                var result = await containerStub.RunCommandAsync(new RemoteCommand(false, "tar", "c:\temp"));
-
-                commandRunner.Received(x => x.RunCommandAsync(Arg.Any<bool>(), Arg.Is<string>(y => y == "tar"), Arg.Is<string[]>(y => y[0] == "c:\temp")));
-            }
-
-            [Fact(Skip="Unreliable on build server, investigate")]
+        public class EmitterAttached : ContainerInitializedContext
+        {
+            [Fact(Skip = "Unreliable on build server, investigate")]
             public void WhenAttachingLogEmitter_ForwardsOutputToEmitter()
             {
                 var emitter = Substitute.For<ILogEmitter>();
@@ -289,7 +289,7 @@ namespace IronFoundry.Warden.Test
                 }
             }
 
-            [Fact(Skip="Unreliable on build server, investigate")]
+            [Fact(Skip = "Unreliable on build server, investigate")]
             public void WhenAttachingLogEmitter_ForwardsErrorsToEmitter()
             {
                 var emitter = Substitute.For<ILogEmitter>();
@@ -303,6 +303,96 @@ namespace IronFoundry.Warden.Test
                     emitter.Received().EmitLogMessage(logmessage.LogMessage.MessageType.ERR, "Boomerang");
                 }
             }
+        }
+
+        public class GetInfo : ContainerInitializedContext
+        {
+            protected ContainerInfo Info { get; private set; }
+            protected CpuStatistics CpuStatistics { get; private set; }
+            protected IProcess[] Processes { get; private set; }
+
+            public GetInfo()
+                : base()
+            {
+                CpuStatistics = new Containers.CpuStatistics
+                {
+                    TotalKernelTime = TimeSpan.FromSeconds(1),
+                    TotalUserTime = TimeSpan.FromSeconds(2),
+                };
+                jobObject.GetCpuStatistics().Returns(CpuStatistics);
+
+                Processes = new IProcess[]
+                    {
+                        CreateProcess(1, 1024),
+                        CreateProcess(2, 4096),
+                    };
+                jobObject.GetProcessIds().Returns(new int[] { 1, 2 });
+                processHelper.GetProcesses(ArgMatchers.IsSequence(1, 2)).Returns(Processes);
+
+                Info = containerStub.GetInfo();
+            }
+
+            [Fact]
+            public void ReturnsHostIPAddress()
+            {
+                var localIPAddress = GetLocalIPAddress();
+                Assert.Equal(localIPAddress.ToString(), Info.HostIPAddress);
+            }
+
+            [Fact]
+            public void ReturnsContainerIPAddress()
+            {
+                var localIPAddress = GetLocalIPAddress();
+                Assert.Equal(localIPAddress.ToString(), Info.ContainerIPAddress);
+            }
+
+            [Fact]
+            public void ReturnsContainerPath()
+            {
+                Assert.Equal(tempDirectory, Info.ContainerPath);
+            }
+
+            [Fact]
+            public void ReturnsEvents()
+            {
+                Assert.Empty(Info.Events);
+            }
+
+            [Fact]
+            public void ReturnsState()
+            {
+                Assert.Equal(containerStub.State, Info.State);
+            }
+
+            [Fact]
+            public void ReturnsCpuStat()
+            {
+                Assert.Equal(CpuStatistics.TotalKernelTime + CpuStatistics.TotalUserTime, Info.CpuStat.TotalProcessorTime);
+            }
+
+            [Fact]
+            public void ReturnsMemoryStat()
+            {
+                Assert.Equal(1024UL + 4096UL, Info.MemoryStat.PrivateBytes);
+            }
+
+            private IPAddress GetLocalIPAddress()
+            {
+                var address = Dns.GetHostAddresses(Dns.GetHostName());
+                return address.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+            }
+
+            static IProcess CreateProcess(int processId, long privateMemoryBytes)
+            {
+                var process = Substitute.For<IProcess>();
+                process.Id.Returns(processId);
+                process.PrivateMemoryBytes.Returns(privateMemoryBytes);
+                return process;
+            }
+        }
+
+        public class LimitingMemory : ContainerInitializedContext
+        {
 
             [Fact]
             public void WhenLimitingMemory_SetsJobObjectMemoryLimit()
@@ -325,7 +415,24 @@ namespace IronFoundry.Warden.Test
 
                 Assert.True(eventRaised);
             }
+        }
 
+        public class ReservePort : ContainerInitializedContext
+        {
+            [Fact]
+            public void ReturnsPortReturnedfromResourceManager()
+            {
+                portManager.ReserveLocalPort(50000, testUserName).Returns((ushort)10000);
+
+                int requestedPort = 50000;
+                var reservedPort = containerStub.ReservePort(requestedPort);
+
+                Assert.Equal(10000, reservedPort);
+            }
+        }
+
+        public class RequestingBindMounts : ContainerInitializedContext
+        {
             [Fact]
             public void BindMountsDelegatesToContainerDirectory()
             {
@@ -343,203 +450,133 @@ namespace IronFoundry.Warden.Test
 
                 containerDirectory.Received(1, x => x.BindMounts(mounts));
             }
+        }
 
-            public class GetInfo : WhenInitialized
+        public class RunCommand : ContainerInitializedContext
+        {
+
+            [Fact]
+            public async void ShouldDispatchToCommandRunner()
             {
-                protected ContainerInfo Info { get; private set; }
-                protected CpuStatistics CpuStatistics { get; private set; }
-                protected IProcess[] Processes { get; private set; }
+                commandRunner.RunCommandAsync(false, null, null).ReturnsTaskForAnyArgs(new TaskCommandResult(0, null, null));
 
-                public GetInfo() : base()
-                {
-                    CpuStatistics = new Containers.CpuStatistics
-                    {
-                        TotalKernelTime = TimeSpan.FromSeconds(1),
-                        TotalUserTime = TimeSpan.FromSeconds(2),
-                    };
-                    jobObject.GetCpuStatistics().Returns(CpuStatistics);
+                var result = await containerStub.RunCommandAsync(new RemoteCommand(false, "tar", "c:\temp"));
 
-                    Processes = new IProcess[]
-                    {
-                        CreateProcess(1, 1024),
-                        CreateProcess(2, 4096),
-                    };
-                    jobObject.GetProcessIds().Returns(new int[] { 1, 2 });
-                    processHelper.GetProcesses(ArgMatchers.IsSequence(1, 2)).Returns(Processes);
-
-                    Info = containerStub.GetInfo();
-                }
-
-                [Fact]
-                public void ReturnsHostIPAddress()
-                {
-                    var localIPAddress = GetLocalIPAddress();
-                    Assert.Equal(localIPAddress.ToString(), Info.HostIPAddress);
-                }
-
-                [Fact]
-                public void ReturnsContainerIPAddress()
-                {
-                    var localIPAddress = GetLocalIPAddress();
-                    Assert.Equal(localIPAddress.ToString(), Info.ContainerIPAddress);
-                }
-
-                [Fact]
-                public void ReturnsContainerPath()
-                {
-                    Assert.Equal(tempDirectory, Info.ContainerPath);
-                }
-
-                [Fact]
-                public void ReturnsEvents()
-                {
-                    Assert.Empty(Info.Events);
-                }
-
-                [Fact]
-                public void ReturnsState()
-                {
-                    Assert.Equal(containerStub.State, Info.State);
-                }
-
-                [Fact]
-                public void ReturnsCpuStat()
-                {
-                    Assert.Equal(CpuStatistics.TotalKernelTime + CpuStatistics.TotalUserTime, Info.CpuStat.TotalProcessorTime);
-                }
-
-                [Fact]
-                public void ReturnsMemoryStat()
-                {
-                    Assert.Equal(1024UL + 4096UL, Info.MemoryStat.PrivateBytes);
-                }
-
-                private IPAddress GetLocalIPAddress()
-                {
-                    var address = Dns.GetHostAddresses(Dns.GetHostName());
-                    return address.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
-                }
-
-                static IProcess CreateProcess(int processId, long privateMemoryBytes)
-                {
-                    var process = Substitute.For<IProcess>();
-                    process.Id.Returns(processId);
-                    process.PrivateMemoryBytes.Returns(privateMemoryBytes);
-                    return process;
-                }
+                commandRunner.Received(x => x.RunCommandAsync(Arg.Any<bool>(), Arg.Is<string>(y => y == "tar"), Arg.Is<string[]>(y => y[0] == "c:\temp")));
             }
+        }
 
-            public class Stop : WhenInitialized
+        public class StoppingContainer : ContainerInitializedContext
+        {
+            protected IProcess[] Processes { get; private set; }
+
+            public StoppingContainer()
             {
-                protected IProcess[] Processes { get; private set; }
-
-                public Stop()
-                {
-                    Processes = new IProcess[]
+                Processes = new IProcess[]
                     {
                         CreateProcess(1),
                         CreateProcess(2),
                     };
 
-                    jobObject.GetProcessIds().Returns(new int[] { 1, 2 });
+                jobObject.GetProcessIds().Returns(new int[] { 1, 2 });
 
-                    processHelper.GetProcesses(ArgMatchers.IsSequence(1, 2)).Returns(Processes);
-                }
-
-                [Fact]
-                public void WhenKillIsFalse_SendsSignalToProcesses()
-                {
-                    containerStub.Stop(false);
-
-                    Processes[0].Received(1, x => x.RequestExit());
-                    Processes[1].Received(1, x => x.RequestExit());
-                }
-
-                [Fact]
-                public void WhenKillIsFalse_GivesProcessAChanceToExit()
-                {
-                    containerStub.Stop(false);
-
-                    Processes[0].Received(1, x => x.WaitForExit(10000));
-                    Processes[1].Received(1, x => x.WaitForExit(10000));
-                }
-
-                [Fact]
-                public void WhenKillIsTrue_DoesNotSendSignalToProcesses()
-                {
-                    containerStub.Stop(true);
-
-                    Processes[0].DidNotReceive(x => x.RequestExit());
-                    Processes[1].DidNotReceive(x => x.RequestExit());
-                }
-
-                [Fact]
-                public void WhenRequestExitThrows_DoesNotPreventOtherProcessesFromReceivedRequestExit()
-                {
-                    Processes[0].Throws(x => x.RequestExit(), new InvalidTimeZoneException());
-
-                    containerStub.Stop(false);
-
-                    Processes[1].Received(1, x => x.RequestExit());
-                }
-
-                [Fact]
-                public void WhenKillIsFalse_ProcessKillInvoked()
-                {
-                    containerStub.Stop(false);
-
-                    Processes[0].Received(1, x => x.Kill());
-                    Processes[1].Received(1, x => x.Kill());
-                }
-
-                [Fact]
-                public void WhenKillIsTrue_ProcessKillInvoked()
-                {
-                    containerStub.Stop(true);
-
-                    Processes[0].Received(1, x => x.Kill());
-                    Processes[1].Received(1, x => x.Kill());
-                }
-
-                [Fact]
-                public void SetsStateToStopped()
-                {
-                    containerStub.Stop(false);
-
-                    Assert.Equal(ContainerState.Stopped, containerStub.State);
-                }
-
-                [Fact]
-                public void IgnoresOwningProcessId()
-                {
-                    jobObject.GetProcessIds().Returns(new int[] { 1, 2, owningProcessId });
-
-                    containerStub.Stop(false);
-
-                    Processes[0].Received(1, x => x.RequestExit());
-                    Processes[1].Received(1, x => x.RequestExit());
-                }
-
-                IProcess CreateProcess(int processId)
-                {
-                    var process = Substitute.For<IProcess>();
-                    process.Id.Returns(processId);
-                    return process;
-                }
+                processHelper.GetProcesses(ArgMatchers.IsSequence(1, 2)).Returns(Processes);
             }
 
-            public class ReservePort : WhenInitialized
+            [Fact]
+            public void WhenKillIsFalse_SendsSignalToProcesses()
             {
-                [Fact]
-                public void ReturnsPortReturnedfromResourceManager()
-                {
-                    portManager.ReserveLocalPort(50000, testUserName).Returns((ushort)10000);
+                containerStub.Stop(false);
 
-                    int requestedPort = 50000;
-                    var reservedPort = containerStub.ReservePort(requestedPort);
+                Processes[0].Received(1, x => x.RequestExit());
+                Processes[1].Received(1, x => x.RequestExit());
+            }
 
-                    Assert.Equal(10000, reservedPort);
-                }
+            [Fact]
+            public void WhenKillIsFalse_GivesProcessAChanceToExit()
+            {
+                containerStub.Stop(false);
+
+                Processes[0].Received(1, x => x.WaitForExit(10000));
+                Processes[1].Received(1, x => x.WaitForExit(10000));
+            }
+
+            [Fact]
+            public void WhenKillIsTrue_DoesNotSendSignalToProcesses()
+            {
+                containerStub.Stop(true);
+
+                Processes[0].DidNotReceive(x => x.RequestExit());
+                Processes[1].DidNotReceive(x => x.RequestExit());
+            }
+
+            [Fact]
+            public void WhenRequestExitThrows_DoesNotPreventOtherProcessesFromReceivedRequestExit()
+            {
+                Processes[0].Throws(x => x.RequestExit(), new InvalidTimeZoneException());
+
+                containerStub.Stop(false);
+
+                Processes[1].Received(1, x => x.RequestExit());
+            }
+
+            [Fact]
+            public void WhenKillIsFalse_ProcessKillInvoked()
+            {
+                containerStub.Stop(false);
+
+                Processes[0].Received(1, x => x.Kill());
+                Processes[1].Received(1, x => x.Kill());
+            }
+
+            [Fact]
+            public void WhenKillIsTrue_ProcessKillInvoked()
+            {
+                containerStub.Stop(true);
+
+                Processes[0].Received(1, x => x.Kill());
+                Processes[1].Received(1, x => x.Kill());
+            }
+
+            [Fact]
+            public void SetsStateToStopped()
+            {
+                containerStub.Stop(false);
+
+                Assert.Equal(ContainerState.Stopped, containerStub.State);
+            }
+
+            [Fact]
+            public void IgnoresOwningProcessId()
+            {
+                jobObject.GetProcessIds().Returns(new int[] { 1, 2, owningProcessId });
+
+                containerStub.Stop(false);
+
+                Processes[0].Received(1, x => x.RequestExit());
+                Processes[1].Received(1, x => x.RequestExit());
+            }
+
+            IProcess CreateProcess(int processId)
+            {
+                var process = Substitute.For<IProcess>();
+                process.Id.Returns(processId);
+                return process;
+            }
+        }
+
+        public class WhenDisposed : ContainerStubContext
+        {
+            public WhenDisposed()
+            {
+                containerStub.Initialize(containerDirectory, containerHandle, userInfo);
+            }
+
+            [Fact]
+            public void DisposesJobObject()
+            {
+                containerStub.Dispose();
+                jobObject.Received().Dispose();
             }
         }
 
@@ -552,7 +589,7 @@ namespace IronFoundry.Warden.Test
             public WhenInitializedWithTestUserAccount()
             {
                 this.tempFilePath = Path.Combine(tempDirectory, Guid.NewGuid().ToString());
-                
+
                 this.shortUserName = "IF_" + this.GetHashCode().ToString();
                 this.userHolder = TestUserHolder.CreateUser(shortUserName);
 
@@ -579,7 +616,7 @@ namespace IronFoundry.Warden.Test
 
                     var output = File.ReadAllText(tempFilePath);
                     Assert.Contains(userHolder.UserName, output);
-                } 
+                }
             }
 
             [FactAdminRequired(Skip = "Unreliable on build server, review build server settings")]
@@ -598,21 +635,6 @@ namespace IronFoundry.Warden.Test
                     var output = File.ReadAllText(tempFilePath);
                     Assert.Contains(userHolder.UserName, output);
                 }
-            }
-        }
-
-        public class WhenDisposed : ContainerStubContext
-        {
-            public WhenDisposed()
-            {
-                containerStub.Initialize(containerDirectory, containerHandle, userInfo);
-            }
-
-            [Fact]
-            public void DisposesJobObject()
-            {
-                containerStub.Dispose();
-                jobObject.Received().Dispose();
             }
         }
 
