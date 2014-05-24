@@ -57,6 +57,37 @@ namespace IronFoundry.Warden.Containers
                     }));
         }
 
+        public async Task CopyAsync(string source, string destination)
+        {
+            var request = new CopyRequest(new CopyInfo(source, destination));
+            await launcher.SendMessageAsync<CopyRequest, CopyResponse>(request);
+        }
+
+        public void Dispose()
+        {
+            var disposable = launcher as IDisposable;
+            if (disposable != null)
+                disposable.Dispose();
+        }
+
+        public IEnumerable<string> DrainEvents()
+        {
+            lock (eventLock)
+            {
+                var clone = events.ToArray();
+                events.Clear();
+                return clone;
+            }
+        }
+
+        public async Task EnableLoggingAsync(InstanceLoggingInfo loggingInfo)
+        {
+            if (IsRemoteActive)
+            {
+                await launcher.SendMessageAsync<EnableLoggingRequest, EnableLoggingResponse>(new EnableLoggingRequest { @params = loggingInfo });
+            }
+        }
+
         public async Task<ContainerInfo> GetInfoAsync()
         {
             ContainerInfo info = null;
@@ -83,32 +114,19 @@ namespace IronFoundry.Warden.Containers
             return info;
         }
 
-        public async Task<CommandResult> RunCommandAsync(RemoteCommand command)
+        private void HostStoppedHandler(object sender, int exitCode)
         {
-            if (!IsRemoteActive) throw NotActiveError();
+            if (exitCode == 0) return;
 
-            var response = await launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(
-                new RunCommandRequest(
-                    new RunCommandData
-                    {
-                        impersonate = command.ShouldImpersonate,
-                        command = command.Command,
-                        arguments = command.Arguments,
-                    }));
-
-            return new CommandResult
-                   {
-                       ExitCode = response.result.exitCode,
-                       StdOut = response.result.stdOut,
-                       StdErr = response.result.stdErr,
-                   };
-        }
-
-        public async Task EnableLoggingAsync(InstanceLoggingInfo loggingInfo)
-        {
-            if (IsRemoteActive)
+            string msg = null;
+            if (!exitMessageMap.TryGetValue(exitCode, out msg))
             {
-                var enableResponse = await launcher.SendMessageAsync<EnableLoggingRequest, EnableLoggingResponse>(new EnableLoggingRequest { @params = loggingInfo });
+                msg = string.Format("Application's ContainerHost stopped with exit code: {0}.", exitCode);
+            }
+
+            lock (eventLock)
+            {
+                events.Add(msg);
             }
         }
 
@@ -118,6 +136,20 @@ namespace IronFoundry.Warden.Containers
             launcher.Start(baseDirectory, handle);
 
             this.ContainerDirectoryPath = await InvokeRemoteInitializeAsync(baseDirectory);
+        }
+        
+        private async Task<string> InvokeRemoteInitializeAsync(string baseDirectory)
+        {
+            var request = new ContainerInitializeRequest(
+                new ContainerInitializeParameters
+                {
+                    containerBaseDirectoryPath = baseDirectory,
+                    containerHandle = Handle.ToString(),
+                });
+
+            var response = await launcher.SendMessageAsync<ContainerInitializeRequest, ContainerInitializeResponse>(request);
+
+            return response.result;
         }
 
         public async Task LimitMemoryAsync(ulong bytes)
@@ -145,6 +177,36 @@ namespace IronFoundry.Warden.Containers
             AssignedPort = response.result;
             return response.result;
         }
+        
+        public static IContainerClient Restore(string handle)
+        {
+            var container = new ContainerProxy(new ContainerHostLauncher());
+            container.Handle = new ContainerHandle(handle);
+            container.ContainerState = ContainerState.Stopped;
+
+            return container;
+        }
+
+        public async Task<CommandResult> RunCommandAsync(RemoteCommand command)
+        {
+            if (!IsRemoteActive) throw NotActiveError();
+
+            var response = await launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(
+                new RunCommandRequest(
+                    new RunCommandData
+                    {
+                        impersonate = command.ShouldImpersonate,
+                        command = command.Command,
+                        arguments = command.Arguments,
+                    }));
+
+            return new CommandResult
+            {
+                ExitCode = response.result.exitCode,
+                StdOut = response.result.stdOut,
+                StdErr = response.result.stdErr,
+            };
+        }
 
         public async Task StopAsync(bool kill)
         {
@@ -155,68 +217,6 @@ namespace IronFoundry.Warden.Containers
             }
 
             ContainerState = ContainerState.Stopped;
-        }
-
-        public IEnumerable<string> DrainEvents()
-        {
-            lock (eventLock)
-            {
-                var clone = events.ToArray();
-                events.Clear();
-                return clone;
-            }
-        }
-
-        public void Dispose()
-        {
-            var disposable = launcher as IDisposable;
-            if (disposable != null)
-                disposable.Dispose();
-        }
-
-        private async Task<string> GetRemoteContainerState()
-        {
-            var response = await launcher.SendMessageAsync<ContainerStateRequest, ContainerStateResponse>(new ContainerStateRequest());
-            return response.result;
-        }
-
-        private void HostStoppedHandler(object sender, int exitCode)
-        {
-            if (exitCode == 0) return;
-
-            string msg = null;
-            if (!exitMessageMap.TryGetValue(exitCode, out msg))
-            {
-                msg = string.Format("Application's ContainerHost stopped with exit code: {0}.", exitCode);
-            }
-
-            lock (eventLock)
-            {
-                events.Add(msg);
-            }
-        }
-
-        private async Task<string> InvokeRemoteInitializeAsync(string baseDirectory)
-        {
-            var request = new ContainerInitializeRequest(
-                new ContainerInitializeParameters
-                {
-                    containerBaseDirectoryPath = baseDirectory,
-                    containerHandle = Handle.ToString(),
-                });
-
-            var response = await launcher.SendMessageAsync<ContainerInitializeRequest, ContainerInitializeResponse>(request);
-
-            return response.result;
-        }
-
-        public static IContainerClient Restore(string handle)
-        {
-            var container = new ContainerProxy(new ContainerHostLauncher());
-            container.Handle = new ContainerHandle(handle);
-            container.ContainerState = ContainerState.Stopped;
-
-            return container;
         }
     }
 }

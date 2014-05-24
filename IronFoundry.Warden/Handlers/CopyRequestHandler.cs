@@ -1,13 +1,10 @@
 ﻿namespace IronFoundry.Warden.Handlers
 {
-    using System;
-    using System.IO;
-    using System.Threading.Tasks;
     using Containers;
-    using Microsoft.VisualBasic.FileIO;
     using NLog;
     using Protocol;
-    using Utilities;
+    using System;
+    using System.Threading.Tasks;
 
     public abstract class CopyRequestHandler : ContainerRequestHandler
     {
@@ -16,7 +13,7 @@
         private readonly ICopyRequest request;
         private readonly Response response;
 
-        public CopyRequestHandler(IContainerManager containerManager, Request request, Response response)
+        protected CopyRequestHandler(IContainerManager containerManager, Request request, Response response)
             : base(containerManager, request)
         {
             if (request == null)
@@ -32,51 +29,19 @@
             this.response = response;
         }
 
-        public override Task<Response> HandleAsync()
+        public async override Task<Response> HandleAsync()
         {
-            var copyResponse = Task.FromResult<Response>(response);
-
             log.Trace("SrcPath: '{0}' DstPath: '{1}'", request.SrcPath, request.DstPath);
 
             IContainerClient container = GetContainer();
             if (container == null)
             {
-                return copyResponse;
+                return response;
             }
 
-            string sourcePath = container.ConvertToPathWithin(request.SrcPath);
+            await container.CopyAsync(request.SrcPath, request.DstPath);
 
-            bool sourceIsDir = false;
-            try
-            {
-                var sourceAttrs = File.GetAttributes(sourcePath);
-                sourceIsDir = sourceAttrs.HasFlag(FileAttributes.Directory);
-            }
-            catch (FileNotFoundException ex)
-            {
-                log.DebugException(ex);
-                return copyResponse;
-            }
-
-            string destinationPath = container.ConvertToPathWithin(request.DstPath);
-            var destinationAttrs = File.GetAttributes(destinationPath);
-            bool destinationIsDir = destinationAttrs.HasFlag(FileAttributes.Directory);
-
-            if (sourceIsDir && destinationIsDir)
-            {
-                FileSystem.CopyDirectory(sourcePath, destinationPath);
-            }
-            else if (!sourceIsDir && destinationIsDir)
-            {
-                var fileName = Path.GetFileName(sourcePath);
-                File.Copy(sourcePath, Path.Combine(destinationPath, fileName), true);
-            }
-            else
-            {
-                File.Copy(sourcePath, destinationPath, true);
-            }
-
-            return copyResponse;
+            return response;
         }
     }
 }

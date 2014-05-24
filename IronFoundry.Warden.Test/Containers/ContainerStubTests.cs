@@ -32,7 +32,7 @@ namespace IronFoundry.Warden.Test
         protected ProcessHelper processHelper;
         protected ProcessMonitor processMonitor;
         protected ILocalTcpPortManager portManager;
-
+        protected FileSystemManager fileSystemManager;
 
         public ContainerStubContext()
         {
@@ -41,13 +41,14 @@ namespace IronFoundry.Warden.Test
             commandRunner = Substitute.For<ICommandRunner>();
 
             portManager = Substitute.For<ILocalTcpPortManager>();
+            fileSystemManager = Substitute.For<FileSystemManager>();
 
             jobObject = Substitute.For<JobObject>();
             jobObjectLimits = Substitute.For<JobObjectLimits>(jobObject, TimeSpan.FromMilliseconds(10));
             processHelper = Substitute.For<ProcessHelper>();
             processMonitor = new ProcessMonitor();
 
-            containerStub = new ContainerStub(jobObject, jobObjectLimits, commandRunner, processHelper, processMonitor, owningProcessId, portManager);
+            containerStub = new ContainerStub(jobObject, jobObjectLimits, commandRunner, processHelper, processMonitor, owningProcessId, portManager, fileSystemManager);
 
             this.tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             Directory.CreateDirectory(tempDirectory);
@@ -57,7 +58,7 @@ namespace IronFoundry.Warden.Test
 
             this.userInfo = Substitute.For<IContainerUser>();
             this.userInfo.UserName.Returns(testUserName);
-            this.userInfo.GetCredential().Returns(new System.Net.NetworkCredential(testUserName, testUserPassword));
+            this.userInfo.GetCredential().Returns(new NetworkCredential(testUserName, testUserPassword));
         }
 
         public virtual void Dispose()
@@ -115,7 +116,7 @@ namespace IronFoundry.Warden.Test
         {
             public BeforeInitialized()
             {
-                containerStub = new ContainerStub(null, new JobObjectLimits(jobObject), null, null, new ProcessMonitor(), null);
+                containerStub = new ContainerStub(null, new JobObjectLimits(jobObject), null, null, new ProcessMonitor(), null, null);
             }
 
             [Fact]
@@ -159,6 +160,12 @@ namespace IronFoundry.Warden.Test
             public void ReservePortThrow()
             {
                 Assert.Throws<InvalidOperationException>(() => containerStub.ReservePort(100));
+            }
+
+            [Fact]
+            public void CopyThrow()
+            {
+                Assert.Throws<InvalidOperationException>(() => containerStub.Copy("source", "destination"));
             }
 
             [Fact]
@@ -393,7 +400,6 @@ namespace IronFoundry.Warden.Test
 
         public class LimitingMemory : ContainerInitializedContext
         {
-
             [Fact]
             public void WhenLimitingMemory_SetsJobObjectMemoryLimit()
             {
@@ -428,6 +434,41 @@ namespace IronFoundry.Warden.Test
                 var reservedPort = containerStub.ReservePort(requestedPort);
 
                 Assert.Equal(10000, reservedPort);
+            }
+        }
+
+        public class CopyingFiles : ContainerInitializedContext
+        {
+            [Fact]
+            public void EmptySourceThrows()
+            {
+                var except = Record.Exception(() => containerStub.Copy(string.Empty, "destination"));
+
+                Assert.IsType<InvalidOperationException>(except);
+            }
+
+            [Fact]
+            public void EmptyDestinationThrows()
+            {
+                var except = Record.Exception(() => containerStub.Copy("source", string.Empty));
+
+                Assert.IsType<InvalidOperationException>(except);
+            }
+
+            [Fact]
+            public void CopiesFiles()
+            {
+                containerStub.Copy("source", "destination");
+
+                fileSystemManager.Received(x => x.Copy("source", "destination"));
+            }
+
+            [Fact]
+            public void ReplacesContainerPathPlaceholders()
+            {
+                containerStub.Copy(@"@ROOT@/source", @"@ROOT@/destination");
+
+                fileSystemManager.Received(x => x.Copy(Path.Combine(containerDirectory.FullName, "source"), Path.Combine(containerDirectory.FullName, "destination")));
             }
         }
 

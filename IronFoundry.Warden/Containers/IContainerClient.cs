@@ -14,6 +14,7 @@ namespace IronFoundry.Warden.Containers
         ContainerHandle Handle { get; }
         int? AssignedPort { get; }
 
+        Task CopyAsync(string source, string destination);
         IEnumerable<string> DrainEvents();
         Task EnableLoggingAsync(InstanceLoggingInfo loggingInfo);
         Task<ContainerInfo> GetInfoAsync();        

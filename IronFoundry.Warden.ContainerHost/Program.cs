@@ -119,7 +119,7 @@ namespace IronFoundry.Warden.ContainerHost
             var hostProcess = System.Diagnostics.Process.GetCurrentProcess();
             jobObject.AssignProcessToJob(hostProcess);
 
-            container = new ContainerStub(jobObject, jobObjectLimits, BuildCommandRunner(), new ProcessHelper(), new ProcessMonitor(), new LocalTcpPortManager());
+            container = new ContainerStub(jobObject, jobObjectLimits, BuildCommandRunner(), new ProcessHelper(), new ProcessMonitor(), new LocalTcpPortManager(), new FileSystemManager());
 
             container.OutOfMemory += HandleOutOfMemory;
 
@@ -160,6 +160,12 @@ namespace IronFoundry.Warden.ContainerHost
                 {
                     return Task.FromResult<object>(
                         new ContainerStateResponse(r.id, container.State.ToString()));
+                });
+
+                dispatcher.RegisterMethod<CopyRequest>(CopyRequest.MethodName, r =>
+                {
+                    container.Copy(r.@params.Source, r.@params.Destination);
+                    return Task.FromResult<object>(new CopyResponse(r.id));
                 });
 
                 dispatcher.RegisterMethod<RunCommandRequest>(RunCommandRequest.MethodName, async (r) =>

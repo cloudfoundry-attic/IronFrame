@@ -62,6 +62,7 @@
     <Compile Include="Containers\Messages\ContainerInfoMessage.cs" />
     <Compile Include="Containers\Messages\ContainerInitializeMessage.cs" />
     <Compile Include="Containers\Messages\ContainerStateMessage.cs" />
+    <Compile Include="Containers\Messages\CopyMessage.cs" />
     <Compile Include="Containers\Messages\CreateProcessMessage.cs" />
     <Compile Include="Containers\Messages\CreateProcessStartInfo.cs" />
     <Compile Include="Containers\Messages\EnableLoggingMessage.cs" />
@@ -129,7 +130,7 @@
     <Compile Include="Tasks\ICommandRunner.cs" />
     <Compile Include="Tasks\RemoteCommand.cs" />
     <Compile Include="Utilities\ContainerExtensions.cs" />
-    <Compile Include="Utilities\IFileManager.cs" />
+    <Compile Include="Utilities\FileSystemManager.cs" />
     <Compile Include="Utilities\IFilePermissionManager.cs" />
     <Compile Include="Utilities\IProcess.cs" />
     <Compile Include="Utilities\IUserManager.cs" />

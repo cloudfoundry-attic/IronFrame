@@ -451,7 +451,18 @@ namespace IronFoundry.Warden.Test
 
                 Assert.Equal(200, proxy.AssignedPort);
             }
+        }
 
+        public class WhenCopyingFiles : ContainerInitializedContext
+        {
+
+            [Fact]
+            public async void CopiesFiles()
+            {
+                await proxy.CopyAsync("source", "destination");
+
+                launcher.Received(x => x.SendMessageAsync<CopyRequest, CopyResponse>(Arg.Is<CopyRequest>(y => y.@params.Source == "source" && y.@params.Destination == "destination")));
+            }
         }
 
         public class WhenLauncherEndsAfterInitialize : ContainerInitializedContext
