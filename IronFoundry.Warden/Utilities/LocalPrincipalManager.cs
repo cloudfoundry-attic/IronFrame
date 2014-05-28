@@ -6,11 +6,16 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Web.Security;
 using NLog;
+using System.Diagnostics;
 
 namespace IronFoundry.Warden.Utilities
 {
     public class LocalPrincipalManager : IUserManager
     {
+        const int NERR_Success = 0;
+        [DllImport("netapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern int NetUserDel(string serverName, string userName);
+
         private const uint COM_EXCEPT_UNKNOWN_DIRECTORY_OBJECT = 0x80005004;
 
         private const string IIS_IUSRS_NAME = "IIS_IUSRS";
@@ -26,16 +31,12 @@ namespace IronFoundry.Warden.Utilities
 
         public void DeleteUser(string userName)
         {
-            using (var localDirectory = new DirectoryEntry(directoryPath))
+            // Using NetUserDel as the DirectoryService APIs were painfully slow (~20-30 seconds to delete a single user).  
+            var result = NetUserDel(null, userName);
+
+            if (result != NERR_Success)
             {
-                var user = new DirectoryEntry(directoryPath + "/" + userName);
-                try
-                {
-                    localDirectory.Children.Remove(user);
-                }
-                catch (COMException)
-                {
-                }
+                log.Error("Failed to delete user with the error code: {0}", result);
             }
         }
 
