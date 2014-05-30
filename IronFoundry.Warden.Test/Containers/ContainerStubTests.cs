@@ -279,39 +279,6 @@ namespace IronFoundry.Warden.Test
             }
         }
 
-        public class EmitterAttached : ContainerInitializedContext
-        {
-            [Fact(Skip = "Unreliable on build server, investigate")]
-            public void WhenAttachingLogEmitter_ForwardsOutputToEmitter()
-            {
-                var emitter = Substitute.For<ILogEmitter>();
-                containerStub.AttachEmitter(emitter);
-
-                var si = new CreateProcessStartInfo("cmd.exe", @"/C echo Boomerang");
-
-                using (var p = containerStub.CreateProcess(si))
-                {
-                    WaitForGoodExit(p);
-                    emitter.Received().EmitLogMessage(logmessage.LogMessage.MessageType.OUT, "Boomerang");
-                }
-            }
-
-            [Fact(Skip = "Unreliable on build server, investigate")]
-            public void WhenAttachingLogEmitter_ForwardsErrorsToEmitter()
-            {
-                var emitter = Substitute.For<ILogEmitter>();
-                containerStub.AttachEmitter(emitter);
-
-                var si = new CreateProcessStartInfo("cmd.exe", @"/C echo Boomerang>&2");
-
-                using (var p = containerStub.CreateProcess(si))
-                {
-                    WaitForGoodExit(p);
-                    emitter.Received().EmitLogMessage(logmessage.LogMessage.MessageType.ERR, "Boomerang");
-                }
-            }
-        }
-
         public class GetInfo : ContainerInitializedContext
         {
             protected ContainerInfo Info { get; private set; }

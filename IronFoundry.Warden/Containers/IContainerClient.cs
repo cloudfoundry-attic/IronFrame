@@ -16,7 +16,7 @@ namespace IronFoundry.Warden.Containers
 
         Task CopyAsync(string source, string destination);
         IEnumerable<string> DrainEvents();
-        Task EnableLoggingAsync(InstanceLoggingInfo loggingInfo);
+        void EnableLogging(ILogEmitter logEmitter);
         Task<ContainerInfo> GetInfoAsync();        
         Task InitializeAsync(string baseDirectory, string handle);
         Task LimitMemoryAsync(ulong bytes);

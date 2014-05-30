@@ -10,12 +10,12 @@ using Xunit;
 
 namespace IronFoundry.Warden.Test
 {
-    public class ProcessHostLauncherTests : IDisposable
+    public class ContainerHostLauncherTests : IDisposable
     {
         private ContainerHostLauncher launcher;
         private string tempDirectory;
 
-        public ProcessHostLauncherTests()
+        public ContainerHostLauncherTests()
         {
             this.launcher = new ContainerHostLauncher();
 

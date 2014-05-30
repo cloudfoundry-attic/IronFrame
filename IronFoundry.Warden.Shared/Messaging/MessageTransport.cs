@@ -15,10 +15,20 @@ namespace IronFoundry.Warden.Shared.Messaging
         private TextWriter writer;
         private List<Func<JObject, Task>> requestCallbacks = new List<Func<JObject, Task>>();
         private List<Func<JObject, Task>> responseCallbacks = new List<Func<JObject, Task>>();
+        private List<Func<JObject, Task>> eventSubscribers = new List<Func<JObject, Task>>();
+
         private List<Action<Exception>> errorSubscribers = new List<Action<Exception>>();
         private CancellationTokenSource tokenSource = new CancellationTokenSource();
         private volatile Task readTask;
         private readonly AsyncLock writeLock = new AsyncLock();
+
+        enum ContentType
+        {
+            Unknown,
+            Request,
+            Response,
+            Event
+        }
 
         public MessageTransport(TextReader reader, TextWriter writer)
         {
@@ -64,15 +74,50 @@ namespace IronFoundry.Warden.Shared.Messaging
                 return;
             }
 
-            if (IsRequestMessage(message))
-                await InvokeRequestCallbackAsync(message);
-            else
-                await InvokeResponseCallbackAsync(message);
+            ContentType contentType;
+            JToken body = null;
+
+            if (!TryUnwrap(message, out contentType, out body))
+                InvokeErrors(new InvalidOperationException("Received invalidly formatted message"));
+
+            switch (contentType)
+            {
+                case ContentType.Request:
+                    await InvokeRequestCallbackAsync((JObject)body);
+                    break;
+                case ContentType.Response:
+                    await InvokeResponseCallbackAsync((JObject)body);
+                    break;
+                case ContentType.Event:
+                    await InvokeEventCallbackAsync((JObject)body);
+                    break;
+                default:
+                    InvokeErrors(new InvalidOperationException("Received currently unsupported content-type"));
+                    break;
+            }
         }
 
+        private bool TryUnwrap(JObject wrappedMessage, out ContentType contentType, out JToken body)
+        {
+            contentType = ContentType.Unknown;
+            body = null;
+
+            JToken contentTypeToken = null;
+            if (!wrappedMessage.TryGetValue("content_type", out contentTypeToken))
+                return false;
+
+            if (!Enum.TryParse<ContentType>(contentTypeToken.Value<string>(), out contentType))
+                return false;
+
+            if (!wrappedMessage.TryGetValue("body", out body))
+                return false;
+
+            return true;
+        }
+        
         private bool IsRequestMessage(JObject message)
         {
-            return (message["method"] != null);
+            return (message["content_type"].Value<string>() == "request");
         }
 
         private async Task InvokeRequestCallbackAsync(JObject message)
@@ -105,6 +150,21 @@ namespace IronFoundry.Warden.Shared.Messaging
             }
         }
 
+        private async Task InvokeEventCallbackAsync(JObject message)
+        {
+            List<Func<JObject, Task>> subscribers = new List<Func<JObject, Task>>();
+
+            lock (eventSubscribers)
+            {
+                subscribers.AddRange(eventSubscribers);
+            }
+
+            foreach (var subscriber in subscribers)
+            {
+                await subscriber(message);
+            }
+        }
+
         private void InvokeErrors(Exception e)
         {
             lock (errorSubscribers)
@@ -122,13 +182,31 @@ namespace IronFoundry.Warden.Shared.Messaging
             }
         }
 
-        public async Task PublishAsync(JObject message)
+        private async Task PublishAsync(JObject message)
         {
             string text = message.ToString(Formatting.None);
             using(var releaser = await writeLock.LockAsync())
             {
                 writer.WriteLine(text);
             }
+        }
+
+        public Task PublishRequestAsync(JObject message)
+        {
+            var request = WrapMessage(ContentType.Request, message);
+            return PublishAsync(request);
+        }
+
+        public Task PublishResponseAsync(JObject message)
+        {
+            var response = WrapMessage(ContentType.Response, message);
+            return PublishAsync(response);
+        }
+
+        public Task PublishEventAsync(JObject message)
+        {
+            var @event = WrapMessage(ContentType.Event, message);
+            return PublishAsync(@event);
         }
 
         public void Start()
@@ -163,12 +241,28 @@ namespace IronFoundry.Warden.Shared.Messaging
             }
         }
 
+        public void SubscribeEvent(Func<JObject, Task> callback)
+        {
+            lock (eventSubscribers)
+            {
+                eventSubscribers.Add(callback);
+            }
+        }
+
         public void SubscribeError(Action<Exception> callback)
         {
             lock (errorSubscribers)
             {
                 errorSubscribers.Add(callback);
             }
+        }
+
+        private static JObject WrapMessage(ContentType contentType, JObject body)
+        {
+            return new JObject(
+                new JProperty("content_type", contentType.ToString()),
+                new JProperty("body", body)
+                );
         }
     }
 }

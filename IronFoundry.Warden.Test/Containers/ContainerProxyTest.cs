@@ -5,6 +5,7 @@ using IronFoundry.Warden.Shared.Messaging;
 using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Test.TestSupport;
 using IronFoundry.Warden.Utilities;
+using logmessage;
 using NSubstitute;
 using System;
 using System.Collections.Generic;
@@ -27,12 +28,16 @@ namespace IronFoundry.Warden.Test
 
             protected ContainerProxy proxy;
             protected IContainerHostLauncher launcher;
+            protected ILogEmitter logEmitter;
+
             protected string tempDirectory;
 
             public ProxyContainerContext()
             {
                 this.launcher = Substitute.For<IContainerHostLauncher>();
                 this.launcher.When(x => x.Start(null, null));
+
+                this.logEmitter = Substitute.For<ILogEmitter>();
 
                 this.tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
                 Directory.CreateDirectory(this.tempDirectory);
@@ -223,15 +228,27 @@ namespace IronFoundry.Warden.Test
                 Assert.Equal(containerHandle, proxy.Handle.ToString());
             }
 
-            [Fact]
-            public async void EnableLoggingAsyncSendsMessageToHost()
+            [Theory]
+            [InlineData(LogMessage.MessageType.OUT)]
+            [InlineData(LogMessage.MessageType.ERR)]
+            public async void LogEventEmitsLogMessage(LogMessage.MessageType messageType)
             {
                 await CompleteInitializationAsync();
-                this.launcher.SendMessageAsync<EnableLoggingRequest, EnableLoggingResponse>(Arg.Any<EnableLoggingRequest>()).ReturnsTask(new EnableLoggingResponse(0));
 
-                await proxy.EnableLoggingAsync(new InstanceLoggingInfo());
+                proxy.EnableLogging(logEmitter);
+                launcher.LogEvent += Raise.Event<EventHandler<LogEventArgs>>(this, new LogEventArgs() {Data = messageType.ToString(), Type = messageType});
 
-                this.launcher.Received(x => x.SendMessageAsync<EnableLoggingRequest, EnableLoggingResponse>(Arg.Any<EnableLoggingRequest>()));
+                logEmitter.Received(e => e.EmitLogMessage(messageType, messageType.ToString()));
+            }
+
+            [Fact]
+            public async void IgnoresLoggingWhenLoggingNotEnabled()
+            {
+                await CompleteInitializationAsync();
+
+                launcher.LogEvent += Raise.Event<EventHandler<LogEventArgs>>(this, new LogEventArgs() { Data = "log me", Type = LogMessage.MessageType.OUT });
+
+                // Should not throw
             }
 
             [Fact]

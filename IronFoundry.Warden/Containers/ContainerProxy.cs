@@ -15,6 +15,7 @@ namespace IronFoundry.Warden.Containers
         
         private readonly List<string> events = new List<string>();
         private object eventLock = new object();
+        private ILogEmitter logEmitter;
 
         private static readonly Dictionary<int, string> exitMessageMap = new Dictionary<int, string>()
         {
@@ -25,6 +26,7 @@ namespace IronFoundry.Warden.Containers
         {
             this.launcher = launcher;
             this.launcher.HostStopped += HostStoppedHandler;
+            this.launcher.LogEvent += LogEventHandler;
 
             ContainerState = ContainerState.Born;
         }
@@ -80,12 +82,9 @@ namespace IronFoundry.Warden.Containers
             }
         }
 
-        public async Task EnableLoggingAsync(InstanceLoggingInfo loggingInfo)
+        public void EnableLogging(ILogEmitter logEmitter)
         {
-            if (IsRemoteActive)
-            {
-                await launcher.SendMessageAsync<EnableLoggingRequest, EnableLoggingResponse>(new EnableLoggingRequest { @params = loggingInfo });
-            }
+            this.logEmitter = logEmitter;
         }
 
         public async Task<ContainerInfo> GetInfoAsync()
@@ -128,6 +127,12 @@ namespace IronFoundry.Warden.Containers
             {
                 events.Add(msg);
             }
+        }
+
+        private void LogEventHandler(object sender, LogEventArgs eventArgs)
+        {
+            if (logEmitter != null)
+                logEmitter.EmitLogMessage(eventArgs.Type, eventArgs.Data);
         }
 
         public async Task InitializeAsync(string baseDirectory, string handle)

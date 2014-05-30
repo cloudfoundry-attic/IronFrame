@@ -12,6 +12,8 @@ using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Shared.Messaging;
 using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Utilities;
+using logmessage;
+using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Warden.ContainerHost
 {
@@ -118,8 +120,8 @@ namespace IronFoundry.Warden.ContainerHost
             var jobObjectLimits = new JobObjectLimits(jobObject);
             var hostProcess = System.Diagnostics.Process.GetCurrentProcess();
             jobObject.AssignProcessToJob(hostProcess);
-
-            container = new ContainerStub(jobObject, jobObjectLimits, BuildCommandRunner(), new ProcessHelper(), new ProcessMonitor(), new LocalTcpPortManager(), new FileSystemManager());
+            var processMonitor = new ProcessMonitor();
+            container = new ContainerStub(jobObject, jobObjectLimits, BuildCommandRunner(), new ProcessHelper(), processMonitor, new LocalTcpPortManager(), new FileSystemManager());
 
             container.OutOfMemory += HandleOutOfMemory;
 
@@ -184,14 +186,6 @@ namespace IronFoundry.Warden.ContainerHost
 
                 });
 
-                dispatcher.RegisterMethod<EnableLoggingRequest>(EnableLoggingRequest.MethodName, (r) =>
-                {
-                    var containerEmitter = new ContainerLogEmitter(r.@params);
-                    container.AttachEmitter(containerEmitter);
-
-                    return Task.FromResult<object>(new EnableLoggingResponse(r.id));
-                });
-
                 dispatcher.RegisterMethod<LimitMemoryRequest>(LimitMemoryRequest.MethodName, (r) =>
                 {
                     container.LimitMemory(r.@params);
@@ -214,8 +208,20 @@ namespace IronFoundry.Warden.ContainerHost
                     async (request) =>
                     {
                         var response = await dispatcher.DispatchAsync(request);
-                        await transport.PublishAsync(response);
+                        await transport.PublishResponseAsync(response);
                     });
+
+                processMonitor.ErrorDataReceived += (o,e) =>
+                {
+                    var jsonLogEvent = JObject.FromObject(new LogEvent() { MessageType = LogMessage.MessageType.ERR, LogData = e.Data });
+                    transport.PublishEventAsync(jsonLogEvent);
+                };
+
+                processMonitor.OutputDataReceived += (o, e) =>
+                {
+                    var jsonLogEvent = JObject.FromObject(new LogEvent() { MessageType = LogMessage.MessageType.OUT, LogData = e.Data });
+                    transport.PublishEventAsync(jsonLogEvent);
+                };
 
                 exitEvent.WaitOne();
             }

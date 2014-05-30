@@ -4,14 +4,18 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Shared.Messaging;
 using IronFoundry.Warden.Utilities;
+using logmessage;
+using NLog;
 
 namespace IronFoundry.Warden.Containers
 {
     public interface IContainerHostLauncher
     {
         event EventHandler<int> HostStopped;
+        event EventHandler<LogEventArgs> LogEvent;
 
         int HostProcessId { get; }
         bool IsActive { get; }
@@ -27,6 +31,7 @@ namespace IronFoundry.Warden.Containers
     public class ContainerHostLauncher : IDisposable, IContainerHostLauncher, IContainerJanitor
     {
         private const int CleanUpWaitTime = 60000;
+        private readonly Logger log = LogManager.GetCurrentClassLogger();
 
         string hostExe = "IronFoundry.Warden.ContainerHost.exe";
         Process hostProcess;
@@ -34,6 +39,8 @@ namespace IronFoundry.Warden.Containers
         MessagingClient messagingClient;
 
         public event EventHandler<int> HostStopped;
+
+        public event EventHandler<LogEventArgs> LogEvent;
 
         public int HostProcessId
         {
@@ -94,15 +101,34 @@ namespace IronFoundry.Warden.Containers
                 hostProcess.Start();
 
                 messageTransport = new MessageTransport(hostProcess.StandardOutput, hostProcess.StandardInput);
-                messagingClient = new MessagingClient(message =>
+                messagingClient = new MessagingClient(async message =>
                 {
-                    messageTransport.PublishAsync(message).GetAwaiter().GetResult();
+                    await messageTransport.PublishRequestAsync(message);
                 });
+
+                messagingClient.SubscribeEvent<LogEvent>(
+                    Messages.LogEvent.EventTopicName, 
+                    e => OnLogEvent(new LogEventArgs() { Data = e.LogData, Type = e.MessageType }));
+
                 messageTransport.SubscribeResponse(message =>
                 {
                     messagingClient.PublishResponse(message);
                     return Task.FromResult(0);
                 });
+
+                messageTransport.SubscribeEvent( @event =>
+                {
+                    try
+                    {
+                        messagingClient.PublishEvent(@event);
+                    }
+                    catch (Exception e)
+                    {
+                        log.LogException(LogLevel.Error, e.ToString(), e);
+                    }
+                    return Task.FromResult(0);
+                });
+
             }
         }
 
@@ -128,6 +154,15 @@ namespace IronFoundry.Warden.Containers
             if (handlers != null)
             {
                 handlers(this, exitCode);
+            }
+        }
+
+        protected virtual void OnLogEvent(LogEventArgs eventArgs)
+        {
+            var handlers = LogEvent;
+            if (handlers != null)
+            {
+                handlers(this, eventArgs);
             }
         }
 
@@ -182,5 +217,11 @@ namespace IronFoundry.Warden.Containers
 
             return Task.FromResult<object>(null);
         }
+    }
+
+    public class LogEventArgs : EventArgs
+    {
+        public LogMessage.MessageType Type { get; set; }
+        public string Data { get; set; }
     }
 }

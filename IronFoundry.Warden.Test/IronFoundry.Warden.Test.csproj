@@ -56,7 +56,7 @@
     <Compile Include="Messaging\SecureStringJsonConverterTest.cs" />
     <Compile Include="Containers\ProcessCommandTests.cs" />
     <Compile Include="Utilities\ProcessHelperTest.cs" />
-    <Compile Include="Containers\ProcessHostLauncherTests.cs" />
+    <Compile Include="Containers\ContainerHostLauncherTests.cs" />
     <Compile Include="Containers\ProcessMonitorTests.cs" />
     <Compile Include="TestSupport\ArgMatchers.cs" />
     <Compile Include="TestSupport\Asserts.cs" />

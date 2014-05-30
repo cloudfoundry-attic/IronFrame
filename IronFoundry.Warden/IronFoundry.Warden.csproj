@@ -67,6 +67,7 @@
     <Compile Include="Containers\Messages\CreateProcessStartInfo.cs" />
     <Compile Include="Containers\Messages\EnableLoggingMessage.cs" />
     <Compile Include="Containers\Messages\LimitMemoryMessage.cs" />
+    <Compile Include="Containers\Messages\LogEvent.cs" />
     <Compile Include="Containers\Messages\ReservePortMessage.cs" />
     <Compile Include="Containers\Messages\RunCommandMessage.cs" />
     <Compile Include="Containers\Messages\StopMessage.cs" />

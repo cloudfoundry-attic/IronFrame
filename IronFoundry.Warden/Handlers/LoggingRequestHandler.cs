@@ -19,7 +19,7 @@ namespace IronFoundry.Warden.Handlers
             this.request = (LoggingRequest)request;
         }
 
-        public async override Task<Response> HandleAsync()
+        public override Task<Response> HandleAsync()
         {
             var container = GetContainer();
 
@@ -33,9 +33,9 @@ namespace IronFoundry.Warden.Handlers
 
             loggingData.DrainUris.AddRange(request.DrainUris);
 
-            await container.EnableLoggingAsync(loggingData);
+            container.EnableLogging(new ContainerLogEmitter(loggingData));
 
-            return new LoggingResponse();
+            return Task.FromResult<Response>(new LoggingResponse());
         }
     }
 }

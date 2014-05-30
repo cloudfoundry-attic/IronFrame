@@ -12,6 +12,8 @@ namespace IronFoundry.Warden.Shared.Messaging
         private Action<JObject> transportHandler;
         private ConcurrentDictionary<JToken, ResponsePublisher> awaitingResponse =
             new ConcurrentDictionary<JToken, ResponsePublisher>();
+        private ConcurrentDictionary<string, EventPublisher> eventSubscribers =
+            new ConcurrentDictionary<string, EventPublisher>();
 
         public MessagingClient(Action<JObject> transportHandler)
         {
@@ -71,6 +73,33 @@ namespace IronFoundry.Warden.Shared.Messaging
             // TODO: Wire up error handling to raise an error on the publisher.Task when the transport fails to send the message.
             transportHandler(JObject.FromObject(request));
             return publisher.Task;
+        }
+
+        public void SubscribeEvent(string eventTopic, Action<JObject> callback)
+        {
+
+            eventSubscribers.TryAdd(eventTopic, new DefaultEventPublisher(callback));
+        }
+
+        public void SubscribeEvent<T>(string eventTopic, Action<T> callback)
+            where T: class, new()
+        {
+            eventSubscribers.TryAdd(eventTopic, new StronglyTypedEventPublisher<T>(callback));
+        }
+
+        public void PublishEvent(JObject @event)
+        {
+            JToken topic;
+            if (!@event.TryGetValue("EventTopic", out topic))
+            {
+                throw new ArgumentException("Event does not contain topic");
+            }
+
+            EventPublisher publisher;
+            if (eventSubscribers.TryGetValue(topic.Value<string>(), out publisher))
+            {
+                publisher.Publish(@event);
+            }
         }
 
         private abstract class ResponsePublisher
@@ -163,5 +192,41 @@ namespace IronFoundry.Warden.Shared.Messaging
                 tcs.TrySetException(new OperationCanceledException());
             }
         }
+
+        private abstract class EventPublisher
+        {
+            public abstract void Publish(JObject message);
+        }
+
+        private class DefaultEventPublisher: EventPublisher
+        {
+            private Action<JObject> callback;
+            public DefaultEventPublisher(Action<JObject> callback)
+            {
+                this.callback = callback;
+            }
+
+            public override void Publish(JObject message)
+            {
+                this.callback(message);
+            }
+        }
+
+        private class StronglyTypedEventPublisher<T> : EventPublisher
+        {
+            private Action<T> callback;
+
+            public StronglyTypedEventPublisher(Action<T> callback) 
+            {
+                this.callback = callback;
+            }
+
+            public override void Publish(JObject message)
+            {
+                T eventMessage = message.ToObject<T>();
+                this.callback(eventMessage);
+            }
+        }
+
     }
 }

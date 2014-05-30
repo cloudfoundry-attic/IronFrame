@@ -21,7 +21,6 @@ namespace IronFoundry.Warden.Containers
         private System.Net.NetworkCredential user;
         private readonly ICommandRunner commandRunner;
         private readonly ProcessHelper processHelper;
-        private ILogEmitter logEmitter;
         private EventHandler outOfMemoryHandler;
         private readonly ProcessMonitor processMonitor;
         private readonly int owningProcessId;
@@ -69,9 +68,6 @@ namespace IronFoundry.Warden.Containers
             this.fileSystemManager = fileSystemManager;
 
             this.jobObjectLimits.MemoryLimitReached += MemoryLimitReached;
-
-            this.processMonitor.OutputDataReceived += LogOutputData;
-            this.processMonitor.ErrorDataReceived += LogErrorData;
         }
 
         public string ContainerDirectoryPath
@@ -136,22 +132,6 @@ namespace IronFoundry.Warden.Containers
         {
             var result = await commandRunner.RunCommandAsync(remoteCommand.ShouldImpersonate, remoteCommand.Command, remoteCommand.Arguments);
             return new CommandResult { ExitCode = result.ExitCode };
-        }
-
-        private void LogErrorData(object sender, ProcessDataReceivedEventArgs e)
-        {
-            if (logEmitter != null)
-            {
-                logEmitter.EmitLogMessage(logmessage.LogMessage.MessageType.ERR, e.Data);
-            }
-        }
-
-        private void LogOutputData(object sender, ProcessDataReceivedEventArgs e)
-        {
-            if (logEmitter != null)
-            {
-                logEmitter.EmitLogMessage(logmessage.LogMessage.MessageType.OUT, e.Data);
-            }
         }
 
         private void ThrowIfNotActive()
@@ -329,11 +309,6 @@ namespace IronFoundry.Warden.Containers
         public void Dispose()
         {
             jobObject.Dispose();
-        }
-
-        public void AttachEmitter(ILogEmitter emitter)
-        {
-            this.logEmitter = emitter;
         }
     }
 }

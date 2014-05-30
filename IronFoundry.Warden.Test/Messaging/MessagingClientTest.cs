@@ -186,7 +186,7 @@ namespace IronFoundry.Warden.Test.ContainerHost
 
             client = new MessagingClient(m => { });
             client.SendMessageAsync(r);
-            
+
             var exception = Record.Exception(() => client.SendMessageAsync(r));
 
             Assert.IsType<MessagingException>(exception);
@@ -273,6 +273,67 @@ namespace IronFoundry.Warden.Test.ContainerHost
             Assert.IsType<OperationCanceledException>(((AggregateException)exception).InnerExceptions[0]);
         }
 
+        [Fact]
+        public void PublishesEventToListener()
+        {
+            MessagingClient client = new MessagingClient(s => { });
+
+            bool invoked = false;
+            client.SubscribeEvent("someTopic", e => { invoked = true; });
+
+            var @event = new JObject(
+                new JProperty("EventTopic", "someTopic")
+                );
+            
+            client.PublishEvent(@event);
+
+            Assert.True(invoked);
+        }
+
+        [Fact]
+        public void IgnoresEventsWithNoListeners()
+        {
+            MessagingClient client = new MessagingClient(s => { });
+            
+            var @event = new JObject(
+              new JProperty("EventTopic", "someTopic")
+              );
+
+            client.PublishEvent(@event);
+
+            // Should not error or throw on publish
+        }
+
+        [Fact]
+        public void ThrowsOnMalformedEvents()
+        {
+            MessagingClient client = new MessagingClient(s => { });
+            var @event = new JObject(
+                new JProperty("no_event_topic", "not here")
+            );
+
+            var except = Record.Exception(() => { client.PublishEvent(@event); });
+
+            Assert.IsType<ArgumentException>(except);
+        }
+
+        [Fact]
+        public void StronglyTypedSubscriptionsAreInvoked()
+        {
+            MessagingClient client = new MessagingClient(s => { });
+
+            TestEvent testEvent = null;
+            client.SubscribeEvent<TestEvent>("TestEvent", e => { testEvent = e; });
+
+            client.PublishEvent(new JObject(
+                new JProperty("EventTopic", "TestEvent"),
+                new JProperty("SomeEventProperty", "PropertyValue")
+                ));
+
+            Assert.NotNull(testEvent);
+            Assert.Equal("PropertyValue", testEvent.SomeEventProperty);
+        }
+
         class CustomRequest : JsonRpcRequest
         {
             public CustomRequest()
@@ -283,10 +344,17 @@ namespace IronFoundry.Warden.Test.ContainerHost
 
         class CustomResponse : JsonRpcResponse<string>
         {
-            public CustomResponse() : base("", "")
+            public CustomResponse()
+                : base("", "")
             {
 
             }
+        }
+
+        class TestEvent 
+        {
+            public string EventTopic { get; set; }
+            public string SomeEventProperty { get; set; }
         }
 
     }
