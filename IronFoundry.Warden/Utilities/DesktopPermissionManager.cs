@@ -50,29 +50,29 @@
             }
         }
 
-        public void AddDesktopPermission(string userName)
+        public void AddDesktopPermission(string userOrGroupName)
         {
             SafeHandle shWindowStation = new NonReleasingSafeHandle(GetProcessWindowStation(), false);
             var ws = new WindowStationSecurity(shWindowStation);
-            ws.AddAccessRule(new AccessRule<NativeMethods.WindowStationRights>(userName, NativeMethods.WindowStationRights.AllAccess, AccessControlType.Allow));
+            ws.AddAccessRule(new AccessRule<NativeMethods.WindowStationRights>(userOrGroupName, NativeMethods.WindowStationRights.AllAccess, AccessControlType.Allow));
             ws.AcceptChanges();
 
             SafeHandle shDesktopThread = new NonReleasingSafeHandle(GetThreadDesktop(GetCurrentThreadId()), false);
             var ds = new DesktopSecurity(shDesktopThread);
-            ds.AddAccessRule(new AccessRule<NativeMethods.DesktopRights>(userName, NativeMethods.DesktopRights.AllAccess, AccessControlType.Allow));
+            ds.AddAccessRule(new AccessRule<NativeMethods.DesktopRights>(userOrGroupName, NativeMethods.DesktopRights.AllAccess, AccessControlType.Allow));
             ds.AcceptChanges();
         }
 
-        public void RemoveDesktopPermission(string userName)
+        public void RemoveDesktopPermission(string userOrGroupName)
         {
             SafeHandle shWindowStation = new NonReleasingSafeHandle(GetProcessWindowStation(), false);
             var ws = new WindowStationSecurity(shWindowStation);
-            ws.AddAccessRule(new AccessRule<NativeMethods.WindowStationRights>(userName, NativeMethods.WindowStationRights.AllAccess, AccessControlType.Deny));
+            ws.RemoveAccessRule(new AccessRule<NativeMethods.WindowStationRights>(userOrGroupName, NativeMethods.WindowStationRights.AllAccess, AccessControlType.Allow));
             ws.AcceptChanges();
 
             SafeHandle shDesktopThread = new NonReleasingSafeHandle(GetThreadDesktop(GetCurrentThreadId()), false);
             var ds = new DesktopSecurity(shDesktopThread);
-            ds.AddAccessRule(new AccessRule<NativeMethods.DesktopRights>(userName, NativeMethods.DesktopRights.AllAccess, AccessControlType.Deny));
+            ds.RemoveAccessRule(new AccessRule<NativeMethods.DesktopRights>(userOrGroupName, NativeMethods.DesktopRights.AllAccess, AccessControlType.Allow));
             ds.AcceptChanges();
         }
     }

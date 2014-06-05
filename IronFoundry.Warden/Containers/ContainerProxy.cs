@@ -135,21 +135,22 @@ namespace IronFoundry.Warden.Containers
                 logEmitter.EmitLogMessage(eventArgs.Type, eventArgs.Data);
         }
 
-        public async Task InitializeAsync(string baseDirectory, string handle)
+        public async Task InitializeAsync(string baseDirectory, string handle, string usersGroup)
         {
             this.Handle = new ContainerHandle(handle);
             launcher.Start(baseDirectory, handle);
 
-            this.ContainerDirectoryPath = await InvokeRemoteInitializeAsync(baseDirectory);
+            this.ContainerDirectoryPath = await InvokeRemoteInitializeAsync(baseDirectory, usersGroup);
         }
         
-        private async Task<string> InvokeRemoteInitializeAsync(string baseDirectory)
+        private async Task<string> InvokeRemoteInitializeAsync(string baseDirectory, string usersGroup)
         {
             var request = new ContainerInitializeRequest(
                 new ContainerInitializeParameters
                 {
                     containerBaseDirectoryPath = baseDirectory,
                     containerHandle = Handle.ToString(),
+                    wardenUserGroup = usersGroup,
                 });
 
             var response = await launcher.SendMessageAsync<ContainerInitializeRequest, ContainerInitializeResponse>(request);

@@ -39,60 +39,6 @@ namespace IronFoundry.Warden.Test
             }
         }
 
-        public class WhenCreatingHolder : ResourceHolderContext
-        {
-            private IResourceHolder containerResources;
-            public WhenCreatingHolder()
-            {
-                containerResources = ContainerResourceHolder.Create(wardenConfig);
-            }
-
-            public override void Dispose()
-            {
-                var principal = UserPrincipal.FindByIdentity(new PrincipalContext(ContextType.Machine), containerResources.User.UserName);
-                if (principal != null)
-                {
-                    principal.Delete();
-                }
-
-                base.Dispose();
-            }
-
-            [FactAdminRequired]
-            public void CreateProducesContainerResourcesReference()
-            {
-
-                Assert.NotNull(containerResources);
-            }
-
-            [FactAdminRequired]
-            public void CreatesContainerHandle()
-            {
-                Assert.NotEmpty(containerResources.Handle.ToString());
-            }
-
-            [FactAdminRequired]
-            public void CreatesUserBasedOnHandle()
-            {
-                Assert.Equal("warden_" + containerResources.Handle.ToString(), containerResources.User.UserName);
-            }
-
-            [FactAdminRequired]
-            public void CreateDirectoryForContainer()
-            {
-                Assert.Equal(Path.Combine(tempDir, containerResources.Handle.ToString()), containerResources.Directory.FullName);
-            }
-
-            [FactAdminRequired]
-            public void CreatesJobObjectBasedOnHandle()
-            {
-                using (var jobObjectHandle = new SafeJobObjectHandle(NativeMethods.OpenJobObject(NativeMethods.JobObjectAccessRights.AllAccess, false, containerResources.Handle.ToString())))
-                {
-                    Assert.False(jobObjectHandle.IsInvalid);
-                }
-            }
-        }
-
         public class MockedResourceContext
         {
             protected ContainerHandle handle;

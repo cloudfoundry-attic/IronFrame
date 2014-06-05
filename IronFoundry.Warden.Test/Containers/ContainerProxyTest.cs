@@ -126,7 +126,7 @@ namespace IronFoundry.Warden.Test
 
             protected virtual async Task CompleteInitializationAsync()
             {
-                await proxy.InitializeAsync(tempDirectory, containerHandle);
+                await proxy.InitializeAsync(tempDirectory, containerHandle, "");
             }
         }
 

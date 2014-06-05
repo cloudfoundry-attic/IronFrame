@@ -2,7 +2,8 @@ param(
 	$InstallPath,
 	$ServiceAccount,
 	$ServicePassword,
-	$RootDataPath
+	$RootDataPath,
+    $UsersGroupName = "WardenUsers"
 )
 
 Write-Host "Installing warden service"
@@ -24,12 +25,16 @@ if ($LastExitCode -ne 0)
 	Exit $LastExitCode
 }
 
+Write-Host "Creating WardenUsers Group"
+. net.exe localgroup $UsersGroupName /ADD
+
 Write-Host "Updating configuration file"
 
 $configFile = join-path $Installpath "IronFoundry.Warden.Service.exe.config"
 
 $configContent = [xml](gc $configFile)
 $configContent.configuration['warden-server'].SetAttribute('container-basepath', "$RootDataPath\warden\containers")
+$configContent.configuration['warden-server'].SetAttribute('warden-users-group', "$UsersGroupName")
 $configContent.configuration.nlog.targets.SelectSingleNode("./*[local-name()='target' and @name='file']").SetAttribute('fileName', "$RootDataPath\log\if_warden.log")
 $configContent.configuration.nlog.targets.SelectSingleNode("./*[local-name()='target' and @name='file']").SetAttribute('archiveFileName', "$RootDataPath\log\if-warden-{#}.log")
 $configContent.Save($configFile)

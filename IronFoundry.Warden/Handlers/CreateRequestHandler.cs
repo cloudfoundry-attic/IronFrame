@@ -41,7 +41,7 @@
                     var handle = new ContainerHandle();
 
                     var container = new ContainerProxy(new ContainerHostLauncher());
-                    await container.InitializeAsync(config.ContainerBasePath, handle.ToString());
+                    await container.InitializeAsync(config.ContainerBasePath, handle.ToString(), config.WardenUsersGroup);
                     
                     containerManager.AddContainer(container);
 

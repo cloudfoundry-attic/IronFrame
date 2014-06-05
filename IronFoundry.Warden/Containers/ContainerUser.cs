@@ -38,7 +38,7 @@ namespace IronFoundry.Warden.Containers
         {
             this.userName = userName;
             this.password = password.ToUnsecureString();
-            userManager = new LocalPrincipalManager(new DesktopPermissionManager());
+            userManager = new LocalPrincipalManager(new DesktopPermissionManager(), string.Empty);
         }
 
         public string SID

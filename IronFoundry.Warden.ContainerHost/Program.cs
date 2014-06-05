@@ -57,6 +57,7 @@ namespace IronFoundry.Warden.ContainerHost
         public string ContainerBasePath { get; set; }
         public ushort TcpPort { get; set; }
         public bool DeleteContainerDirectories { get; set; }
+        public string WardenUsersGroup { get; set; }
     }
 
     class Program
@@ -146,7 +147,7 @@ namespace IronFoundry.Warden.ContainerHost
                 dispatcher.RegisterMethod<ContainerInitializeRequest>(ContainerInitializeRequest.MethodName, (r) =>
                 {
                     var containerHandle = new ContainerHandle(r.@params.containerHandle);
-                    var containerUser = ContainerUser.CreateUser(containerHandle, new LocalPrincipalManager(new DesktopPermissionManager()));
+                    var containerUser = ContainerUser.CreateUser(containerHandle, new LocalPrincipalManager(new DesktopPermissionManager(), r.@params.wardenUserGroup));
 
                     var containerDirectory = new ContainerDirectory(containerHandle, containerUser, r.@params.containerBaseDirectoryPath, true);
 

@@ -19,18 +19,23 @@ namespace IronFoundry.Warden.Utilities
         private const uint COM_EXCEPT_UNKNOWN_DIRECTORY_OBJECT = 0x80005004;
 
         private const string IIS_IUSRS_NAME = "IIS_IUSRS";
+        private const string WARDEN_USER_GROUP = "WardenUsers";
 
         private readonly string directoryPath = String.Format("WinNT://{0}", Environment.MachineName);
         private readonly Logger log = LogManager.GetCurrentClassLogger();
         private readonly IDesktopPermissionManager permissionManager;
+        private readonly string wardenUserGroupName;
 
-        public LocalPrincipalManager(IDesktopPermissionManager permissionManager)
+        public LocalPrincipalManager(IDesktopPermissionManager permissionManager, string userGroupName)
         {
             this.permissionManager = permissionManager;
+            this.wardenUserGroupName = userGroupName;
         }
 
         public void DeleteUser(string userName)
         {
+            // Don't need to cleanup desktop permissions as they are managed by the group.
+
             // Using NetUserDel as the DirectoryService APIs were painfully slow (~20-30 seconds to delete a single user).  
             var result = NetUserDel(null, userName);
 
@@ -40,10 +45,10 @@ namespace IronFoundry.Warden.Utilities
             }
         }
 
-        NetworkCredential IUserManager.CreateUser(string userName)
+        public NetworkCredential CreateUser(string userName)
         {
-            var data = CreateUser(userName);
-            permissionManager.AddDesktopPermission(userName);
+            var data = InnerCreateUser(userName);
+            permissionManager.AddDesktopPermission(wardenUserGroupName);
             return new NetworkCredential(data.UserName, data.Password);
         }
 
@@ -77,7 +82,7 @@ namespace IronFoundry.Warden.Utilities
             return rvUserName;
         }
 
-        public LocalPrincipalData CreateUser(string userName)
+        private LocalPrincipalData InnerCreateUser(string userName)
         {
             string rvUserName = null;
             string rvPassword = null;
@@ -110,24 +115,29 @@ namespace IronFoundry.Warden.Utilities
                 if (userSaved)
                 {
                     rvUserName = user.SamAccountName;
-                    var groupQuery = new GroupPrincipal(context, IIS_IUSRS_NAME);
-                    var searcher = new PrincipalSearcher(groupQuery);
-                    var iisUsersGroup = searcher.FindOne() as GroupPrincipal;
-
-                    // The iisUserGroups.Members.Add attempts to resolve all the SID's of the entries while
-                    // it's enumerating for an item.  This approach works around this issue by dynamically
-                    // invoking 'Add' with the DN of the user.
-                    var groupAsDirectoryEntry = iisUsersGroup.GetUnderlyingObject() as DirectoryEntry;
-                    var userAsDirectoryEntry = user.GetUnderlyingObject() as DirectoryEntry;
-                    groupAsDirectoryEntry.Invoke("Add", new object[] {userAsDirectoryEntry.Path});
-
-                    iisUsersGroup.Save();
-
+                    AddUserToGroup(context, IIS_IUSRS_NAME, user);
+                    AddUserToGroup(context, wardenUserGroupName, user);
                     rv = new LocalPrincipalData(rvUserName, rvPassword);
                 }
             }
 
             return rv;
+        }
+
+        private void AddUserToGroup(PrincipalContext context, string groupName, UserPrincipal user)
+        {
+            var groupQuery = new GroupPrincipal(context, groupName);
+            var searcher = new PrincipalSearcher(groupQuery);
+            var group = searcher.FindOne() as GroupPrincipal;
+
+            // The iisUserGroups.Members.Add attempts to resolve all the SID's of the entries while
+            // it's enumerating for an item.  This approach works around this issue by dynamically
+            // invoking 'Add' with the DN of the user.
+            var groupAsDirectoryEntry = group.GetUnderlyingObject() as DirectoryEntry;
+            var userAsDirectoryEntry = user.GetUnderlyingObject() as DirectoryEntry;
+            groupAsDirectoryEntry.Invoke("Add", new object[] { userAsDirectoryEntry.Path });
+
+            group.Save();
         }
     }
 }

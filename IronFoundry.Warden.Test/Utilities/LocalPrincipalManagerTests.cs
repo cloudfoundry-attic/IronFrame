@@ -20,20 +20,24 @@ namespace IronFoundry.Warden.Test
     public class LocalPrincipalManagerTests : IDisposable
     {
         private const string testUserName = "IFTestUserName";
+        private const string testGroupName = "TestWardenUserGroup";
+
         private LocalPrincipalManager manager;
         private IDesktopPermissionManager permissionManager;
 
         public LocalPrincipalManagerTests()
         {
             permissionManager = Substitute.For<IDesktopPermissionManager>();
-            manager = new LocalPrincipalManager(permissionManager);
+            RecreateLocalGroup(testGroupName);
+            manager = new LocalPrincipalManager(permissionManager, testGroupName);
 
             TryRemoveLocalUser(testUserName);
         }
 
         public void Dispose()
-        {
+        {            
             TryRemoveLocalUser(testUserName);
+            TryDeleteLocalGroup(testGroupName);
         }
 
         [FactAdminRequired]
@@ -57,6 +61,13 @@ namespace IronFoundry.Warden.Test
         {
             manager.CreateUser(testUserName);
             AssertUserInGroup("IIS_IUSRS", testUserName);
+        }
+
+        [FactAdminRequired]
+        void AddedUserAppearsInWardenGroup()
+        {
+            manager.CreateUser(testUserName);
+            AssertUserInGroup(testGroupName, testUserName);
         }
 
         [FactAdminRequired]
@@ -90,9 +101,18 @@ namespace IronFoundry.Warden.Test
         [FactAdminRequired]
         void WhenUserCreatedAddsDesktopPermissions()
         {
-            ((IUserManager)manager).CreateUser(testUserName);
+            manager.CreateUser(testUserName);
 
-            this.permissionManager.Received().AddDesktopPermission(testUserName);
+            permissionManager.Received().AddDesktopPermission(testGroupName);
+        }
+
+        [FactAdminRequired]
+        public void WhenUserDeletedRemovesDesktopPermissions()
+        {
+            manager.CreateUser(testUserName);
+            manager.DeleteUser(testUserName);
+
+            permissionManager.DidNotReceive().RemoveDesktopPermission(testGroupName);
         }
 
         #region Test Helpers
@@ -105,6 +125,50 @@ namespace IronFoundry.Warden.Test
             catch
             {
 
+            }
+        }
+
+        private void RecreateLocalGroup(string groupName)
+        {
+            TryDeleteLocalGroup(groupName);
+            CreateLocalGroup(groupName);
+        }
+
+        private void CreateLocalGroup(string groupName)
+        {
+            using (var localDirectory = new DirectoryEntry(String.Format("WinNT://{0}", Environment.MachineName)))
+            {
+                DirectoryEntries children = localDirectory.Children;
+
+                try
+                {
+                    DirectoryEntry group = children.Find(groupName);
+                    if (group != null) return;
+                }
+                catch (COMException)
+                {
+                    // Couldn't find group.
+                }
+
+                var newGroup = children.Add(groupName, "group");
+                newGroup.CommitChanges();
+            }
+        }
+
+        private void TryDeleteLocalGroup(string groupName)
+        {
+            using (var localDirectory = new DirectoryEntry(String.Format("WinNT://{0}", Environment.MachineName)))
+            {
+                DirectoryEntries children = localDirectory.Children;
+
+                try
+                {
+                    DirectoryEntry group = children.Find(groupName);
+                    children.Remove(group);
+                }
+                catch
+                {
+                }
             }
         }
 

@@ -84,27 +84,9 @@ namespace IronFoundry.Warden.Containers
             }
         }
 
-        public static IResourceHolder Create(IWardenConfig config)
-        {   
-            var handle = new ContainerHandle();
-            var user = ContainerUser.CreateUser(handle, new LocalPrincipalManager(new DesktopPermissionManager()));
-            var directory = new ContainerDirectory(handle, user, config.ContainerBasePath, true);
-            var localPortManager = new LocalTcpPortManager(new FirewallManager(), new NetShRunner());
-            var resoureHolder = new ContainerResourceHolder(
-                handle,
-                user,
-                directory,
-                new JobObject(handle.ToString()),
-                localPortManager,
-                config.DeleteContainerDirectories
-                );
-
-            return resoureHolder;
-        }
-
         public static IResourceHolder CreateForDestroy(IWardenConfig config, ContainerHandle handle, ushort? assignedPort)
         {
-            var user = new TempUser(handle, new LocalPrincipalManager(new DesktopPermissionManager()));
+            var user = new TempUser(handle, new LocalPrincipalManager(new DesktopPermissionManager(), config.WardenUsersGroup));
             var directory = new TempDirectory(handle, config.ContainerBasePath);
             var localPortManager = new LocalTcpPortManager(new FirewallManager(), new NetShRunner());
             var resoureHolder = new ContainerResourceHolder(

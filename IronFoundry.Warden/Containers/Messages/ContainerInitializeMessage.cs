@@ -8,6 +8,7 @@ namespace IronFoundry.Warden.Containers.Messages
     {
         public string containerHandle;
         public string containerBaseDirectoryPath;
+        public string wardenUserGroup;
     }
 
     public class ContainerInitializeRequest : JsonRpcRequest<ContainerInitializeParameters>
