@@ -25,8 +25,11 @@ if ($LastExitCode -ne 0)
 	Exit $LastExitCode
 }
 
-Write-Host "Creating WardenUsers Group"
-. net.exe localgroup $UsersGroupName /ADD
+Write-Host "Creating Group for Warden Users: $UsersGroupName"
+. net.exe localgroup $UsersGroupName 2>&1 | Out-Null
+if ($? -eq $false) {
+    . net.exe localgroup $UsersGroupName /ADD 
+}
 
 Write-Host "Updating configuration file"
 

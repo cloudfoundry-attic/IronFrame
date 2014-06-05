@@ -17,9 +17,7 @@ namespace IronFoundry.Warden.Utilities
         private static extern int NetUserDel(string serverName, string userName);
 
         private const uint COM_EXCEPT_UNKNOWN_DIRECTORY_OBJECT = 0x80005004;
-
         private const string IIS_IUSRS_NAME = "IIS_IUSRS";
-        private const string WARDEN_USER_GROUP = "WardenUsers";
 
         private readonly string directoryPath = String.Format("WinNT://{0}", Environment.MachineName);
         private readonly Logger log = LogManager.GetCurrentClassLogger();
