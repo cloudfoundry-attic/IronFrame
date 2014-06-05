@@ -25,18 +25,8 @@ if ($LastExitCode -ne 0)
 	Exit $LastExitCode
 }
 
-Write-Host "Creating Group for Warden Users: $UsersGroupName"
+Write-Host "Creating WardenUsers Group"
 . net.exe localgroup $UsersGroupName /ADD
-if ($LastExitCode -eq 1379)
-{
-	Write-Info "The group already exists."
-}
-
-. net.exe localgroup IIS_IUSRS $UsersGroupName /ADD
-if ($LastExitCode -eq 1378)
-{
-	Write-Info "The group is already in IIS_IUSRS"
-}
 
 Write-Host "Updating configuration file"
 
