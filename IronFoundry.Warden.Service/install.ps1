@@ -26,13 +26,20 @@ if ($LastExitCode -ne 0)
 }
 
 Write-Host "Creating Group for Warden Users: $UsersGroupName"
-. net.exe localgroup $UsersGroupName 2>&1 | Out-Null
-if ($? -eq $false) {
-    . net.exe localgroup $UsersGroupName /ADD 
+$addgroupResult = (. net.exe localgroup $UsersGroupName /ADD 2>&1)
+$Global:LastExitCode = $LastExitCode
+
+if ($LastExitCode -ne 0){
+    if ($addgroupResult -match '1379') {
+        Write-Host "Group already exists."
+    }
+    else {
+        Write-Error "Failed to add group: $addGroupResult"
+        Exit $LastExitCode
+    }
 }
 
 Write-Host "Updating configuration file"
-
 $configFile = join-path $Installpath "IronFoundry.Warden.Service.exe.config"
 
 $configContent = [xml](gc $configFile)
