@@ -27,7 +27,7 @@ namespace IronFoundry.Warden.Test.ContainerHost
         }
 
         [Fact]
-        public async void PublishRequestSendsWrappedRequestToTextToWriter()
+        public async void PublishRequestSendsWrappedRequestToTextWriter()
         {
             var outputSink = new TaskCompletionSource<string>();
             var outputWriter = Substitute.For<TextWriter>();
@@ -89,7 +89,18 @@ namespace IronFoundry.Warden.Test.ContainerHost
 
             inputSource.AddLine(@"{""content_type"":""Request"", ""body"":{""jsonrpc"":""2.0"",""id"":1,""method"":""foo""}}");
 
-            Assert.Same(tcs.Task, await Task.WhenAny(tcs.Task, Task.Delay(1000)));
+            await AssertHelper.CompletesWithinTimeoutAsync(1000, tcs.Task);
+        }
+
+        [Fact]
+        public async void MessageContentTypeIsNotCaseSensitive()
+        {
+            var tcs = new TaskCompletionSource<int>();
+            transporter.SubscribeRequest(r => { tcs.SetResult(0); return Task.FromResult(0); });
+
+            inputSource.AddLine(@"{""content_type"":""request"", ""body"":{""jsonrpc"":""2.0"",""id"":1,""method"":""foo""}}");
+
+            await AssertHelper.CompletesWithinTimeoutAsync(1000, tcs.Task);
         }
 
         [Fact]
@@ -100,8 +111,7 @@ namespace IronFoundry.Warden.Test.ContainerHost
 
             inputSource.AddLine(@"{""content_type"":""Request"",""body"":{""jsonrpc"":""2.0"",""id"":1,""method"":""foo""}}");
 
-            Assert.NotSame(tcs.Task, await Task.WhenAny(tcs.Task, Task.Delay(150)));
-            Assert.False(tcs.Task.IsCompleted); 
+            await AssertHelper.DoesNotCompleteWithinTimeoutAsync(150, tcs.Task);
         }
 
         [Fact]
@@ -112,7 +122,7 @@ namespace IronFoundry.Warden.Test.ContainerHost
 
             inputSource.AddLine(@"{""content_type"":""Response"",""body"":{""jsonrpc"":""2.0"",""id"":1,""result"":""foo-result""}}");
 
-            Assert.Same(tcs.Task, await Task.WhenAny(tcs.Task, Task.Delay(2000)));
+            await AssertHelper.CompletesWithinTimeoutAsync(1000, tcs.Task);
         }
 
         [Fact]
@@ -123,7 +133,7 @@ namespace IronFoundry.Warden.Test.ContainerHost
 
             inputSource.AddLine(@"{""content_type"":""Response"",""body"":{""jsonrpc"":""2.0"",""id"":1,""error"":{""code"":1,""message"":""foo-error""}}}");
 
-            Assert.Same(tcs.Task, await Task.WhenAny(tcs.Task, Task.Delay(2000)));
+            await AssertHelper.CompletesWithinTimeoutAsync(1000, tcs.Task);
         }
 
         [Fact]
@@ -134,7 +144,7 @@ namespace IronFoundry.Warden.Test.ContainerHost
 
             inputSource.AddLine(@"{""content_type"":""Event"",""body"":{""jsonrpc"":""2.0"",""id"":1,""result"":""foo-result""}}");
 
-            Assert.Same(tcs.Task, await Task.WhenAny(tcs.Task, Task.Delay(150)));
+            await AssertHelper.CompletesWithinTimeoutAsync(1000, tcs.Task);
         }
 
         [Fact]
@@ -145,8 +155,7 @@ namespace IronFoundry.Warden.Test.ContainerHost
 
             inputSource.AddLine(@"{""content_type"":""Response"",""body"":{""jsonrpc"":""2.0"",""id"":1,""result"":""foo-result""}}");
 
-            Assert.NotSame(tcs.Task, await Task.WhenAny(tcs.Task, Task.Delay(150)));
-            Assert.False(tcs.Task.IsCompleted); 
+            await AssertHelper.DoesNotCompleteWithinTimeoutAsync(150, tcs.Task);
         }
 
         [Fact]
@@ -157,8 +166,7 @@ namespace IronFoundry.Warden.Test.ContainerHost
 
             inputSource.AddLine(@"{""content_type"":""Response"",""body"":{""jsonrpc"":""2.0"",""id"":1,""result"":""foo-result""}}");
 
-            Assert.NotSame(tcs.Task, await Task.WhenAny(tcs.Task, Task.Delay(150)));
-            Assert.False(tcs.Task.IsCompleted);
+            await AssertHelper.DoesNotCompleteWithinTimeoutAsync(150, tcs.Task);
         }
 
         [Fact]
@@ -169,8 +177,7 @@ namespace IronFoundry.Warden.Test.ContainerHost
 
             inputSource.AddLine(@"!@#$%&*()");
 
-            Assert.NotSame(tcs.Task, await Task.WhenAny(tcs.Task, Task.Delay(150)));
-            Assert.False(tcs.Task.IsCompleted); 
+            await AssertHelper.DoesNotCompleteWithinTimeoutAsync(150, tcs.Task);
         }
 
         [Fact]
@@ -181,8 +188,7 @@ namespace IronFoundry.Warden.Test.ContainerHost
 
             inputSource.AddLine(@"!@#$%&*()");
 
-            Assert.NotSame(tcs.Task, await Task.WhenAny(tcs.Task, Task.Delay(150)));
-            Assert.False(tcs.Task.IsCompleted);
+            await AssertHelper.DoesNotCompleteWithinTimeoutAsync(150, tcs.Task);
         }
 
         [Fact]
@@ -193,8 +199,7 @@ namespace IronFoundry.Warden.Test.ContainerHost
 
             inputSource.AddLine(@"!@#$%&*()");
 
-            Assert.NotSame(tcs.Task, await Task.WhenAny(tcs.Task, Task.Delay(150)));
-            Assert.False(tcs.Task.IsCompleted);
+            await AssertHelper.DoesNotCompleteWithinTimeoutAsync(150, tcs.Task);
         }
 
         [Fact]
@@ -205,7 +210,23 @@ namespace IronFoundry.Warden.Test.ContainerHost
 
             inputSource.AddLine(@"!@#$%&*()");
 
-            Assert.Same(tcs.Task, await Task.WhenAny(tcs.Task, Task.Delay(3000)));
+            await AssertHelper.CompletesWithinTimeoutAsync(1000, tcs.Task);
+        }
+
+        [Fact]
+        public async void SkipsBlankLines()
+        {
+            var tcsError = new TaskCompletionSource<int>();
+            transporter.SubscribeError(ex => { tcsError.SetResult(0); });
+
+            var tcsRequest = new TaskCompletionSource<int>();
+            transporter.SubscribeRequest(r => { tcsRequest.SetResult(0); return Task.FromResult(0); });
+
+            inputSource.AddLine("");
+            inputSource.AddLine(@"{""content_type"":""Request"",""body"":{""jsonrpc"":""2.0"",""id"":1,""method"":""foo""}}");
+
+            await AssertHelper.CompletesWithinTimeoutAsync(1000, tcsRequest.Task);
+            await AssertHelper.DoesNotCompleteWithinTimeoutAsync(150, tcsError.Task);
         }
 
         [Fact]
@@ -219,8 +240,7 @@ namespace IronFoundry.Warden.Test.ContainerHost
 
             inputSource.AddLine(@"{""content_type"":""Response"",""body"":{""jsonrpc"":""2.0"",""id"":1,""result"":""foo-result""}}");
 
-            Assert.NotSame(tcs.Task, await Task.WhenAny(tcs.Task, Task.Delay(150)));
-            Assert.False(tcs.Task.IsCompleted);
+            await AssertHelper.DoesNotCompleteWithinTimeoutAsync(150, tcs.Task);
         }
 
         [Fact]
@@ -235,7 +255,7 @@ namespace IronFoundry.Warden.Test.ContainerHost
 
             inputSource.AddLine(@"{""content_type"":""Response"",""body"":{""jsonrpc"":""2.0"",""id"":1,""result"":""foo-result""}}");
 
-            Assert.Same(tcs.Task, await Task.WhenAny(tcs.Task, Task.Delay(1000)));
+            await AssertHelper.CompletesWithinTimeoutAsync(1000, tcs.Task);
         }
     }
 }

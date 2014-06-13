@@ -155,7 +155,7 @@ namespace IronFoundry.Warden.Containers
 
             var response = await launcher.SendMessageAsync<ContainerInitializeRequest, ContainerInitializeResponse>(request);
 
-            return response.result;
+            return response.result.containerDirectoryPath;
         }
 
         public async Task LimitMemoryAsync(ulong bytes)

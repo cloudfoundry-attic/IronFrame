@@ -104,6 +104,8 @@ namespace IronFoundry.Warden.ContainerHost
 
         private static void Start(IEnumerable<string> args)
         {
+            //Debugger.Launch();
+
             var input = Console.In;
             var output = Console.Out;
             string handle = null;

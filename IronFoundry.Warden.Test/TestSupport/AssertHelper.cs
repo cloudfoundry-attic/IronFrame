@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Xunit;
 
 public static class AssertHelper
 {
@@ -24,6 +25,8 @@ public static class AssertHelper
 
         if (!Object.ReferenceEquals(timeoutTask, completedTask))
             throw new Exception(String.Format("The task completed before the timeout period of {0}ms", milliseconds));
+
+        Assert.Equal(false, task.IsCompleted);
     }
 
     public static Task DoesNotCompleteWithinTimeoutAsync(int milliseconds, Func<Task> callback)

@@ -54,6 +54,9 @@ namespace IronFoundry.Warden.Shared.Messaging
                 if (line == null)
                     return;
 
+                if (line.Length == 0)
+                    continue;
+
                 var unused = Task.Run(() => InvokeCallbackAsync(line));
 
                 if (token.IsCancellationRequested)
@@ -106,7 +109,7 @@ namespace IronFoundry.Warden.Shared.Messaging
             if (!wrappedMessage.TryGetValue("content_type", out contentTypeToken))
                 return false;
 
-            if (!Enum.TryParse<ContentType>(contentTypeToken.Value<string>(), out contentType))
+            if (!Enum.TryParse<ContentType>(contentTypeToken.Value<string>(), true, out contentType))
                 return false;
 
             if (!wrappedMessage.TryGetValue("body", out body))
@@ -115,11 +118,6 @@ namespace IronFoundry.Warden.Shared.Messaging
             return true;
         }
         
-        private bool IsRequestMessage(JObject message)
-        {
-            return (message["content_type"].Value<string>() == "request");
-        }
-
         private async Task InvokeRequestCallbackAsync(JObject message)
         {
             List<Func<JObject, Task>> callbacks = new List<Func<JObject, Task>>();
