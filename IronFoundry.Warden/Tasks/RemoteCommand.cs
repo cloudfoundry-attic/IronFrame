@@ -8,15 +8,15 @@ namespace IronFoundry.Warden.Tasks
 {
     public class RemoteCommand
     {
-        public RemoteCommand(bool shouldImpersonate, string command, params string[] arguments)
+        public RemoteCommand(bool privileged, string command, params string[] arguments)
         {
             Command = command;
             Arguments = arguments;
-            ShouldImpersonate = shouldImpersonate;
+            Privileged = privileged;
         }
 
         public string Command { get; private set; }
-        public bool ShouldImpersonate { get; private set; }
+        public bool Privileged { get; private set; }
         public string[] Arguments { get; private set; }
     }
 }

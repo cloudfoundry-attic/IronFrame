@@ -11,8 +11,8 @@
         private readonly string executable;
         private readonly string args;
 
-        public ExeCommand(IContainer container, string[] arguments, bool shouldImpersonate, ResourceLimits rlimits)
-            : base(container, arguments, shouldImpersonate, rlimits)
+        public ExeCommand(IContainer container, string[] arguments, bool privileged, ResourceLimits rlimits)
+            : base(container, arguments, privileged, rlimits)
         {
             if (arguments.IsNullOrEmpty())
             {

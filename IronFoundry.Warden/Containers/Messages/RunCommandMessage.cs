@@ -5,7 +5,7 @@ namespace IronFoundry.Warden.Containers.Messages
 {
     public class RunCommandData
     {
-        public bool impersonate;
+        public bool privileged;
         public string command;
         public string[] arguments;
     }

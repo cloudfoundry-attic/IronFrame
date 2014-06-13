@@ -96,7 +96,7 @@ namespace IronFoundry.Warden.Test
             [Fact]
             public async void RunCommandThrows()
             {
-                var ex = await ExceptionAssert.RecordThrowsAsync(async () => { await proxy.RunCommandAsync(new RemoteCommand(false, "blah")); });
+                var ex = await ExceptionAssert.RecordThrowsAsync(async () => { await proxy.RunCommandAsync(new RemoteCommand(true, "blah")); });
                 Assert.IsType<InvalidOperationException>(ex);
             }
 
@@ -366,7 +366,7 @@ namespace IronFoundry.Warden.Test
             {
                 this.launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(Arg.Any<RunCommandRequest>()).ReturnsTask(new RunCommandResponse("", new RunCommandResponseData()));
 
-                var response = await proxy.RunCommandAsync(new RemoteCommand(false, "test", "test"));
+                var response = await proxy.RunCommandAsync(new RemoteCommand(true, "test", "test"));
 
                 this.launcher.Received(x => x.SendMessageAsync<RunCommandRequest, RunCommandResponse>(Arg.Any<RunCommandRequest>()));
             }
@@ -375,7 +375,7 @@ namespace IronFoundry.Warden.Test
             public async void WhenRunningCommand_ShouldSendRunCommandRequestWithCommandToHost()
             {
                 this.launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(Arg.Any<RunCommandRequest>()).ReturnsTask(new RunCommandResponse("", new RunCommandResponseData()));
-                var command = new RemoteCommand(false, "tar", "foo.zip");
+                var command = new RemoteCommand(true, "tar", "foo.zip");
 
                 var response = await proxy.RunCommandAsync(command);
 
@@ -386,7 +386,7 @@ namespace IronFoundry.Warden.Test
             public async void WhenRunningCommand_ExitCodeShouldBeReturned()
             {
                 this.launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(Arg.Any<RunCommandRequest>()).ReturnsTask(new RunCommandResponse("", new RunCommandResponseData() { exitCode = 10 }));
-                var command = new RemoteCommand(false, "tar", "foo.zip");
+                var command = new RemoteCommand(true, "tar", "foo.zip");
 
                 var response = await proxy.RunCommandAsync(command);
 
@@ -397,7 +397,7 @@ namespace IronFoundry.Warden.Test
             public async void WhenRunningCommand_StdOutIsReturned()
             {
                 this.launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(Arg.Any<RunCommandRequest>()).ReturnsTask(new RunCommandResponse("", new RunCommandResponseData() { exitCode = 0, stdOut = "StdOutMessage" }));
-                var command = new RemoteCommand(false, "tar", "foo.zip");
+                var command = new RemoteCommand(true, "tar", "foo.zip");
 
                 var response = await proxy.RunCommandAsync(command);
 
@@ -408,7 +408,7 @@ namespace IronFoundry.Warden.Test
             public async void WhenRunningCommand_StdErrIsReturned()
             {
                 this.launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(Arg.Any<RunCommandRequest>()).ReturnsTask(new RunCommandResponse("", new RunCommandResponseData() { exitCode = 0, stdErr = "StdErrMessage" }));
-                var command = new RemoteCommand(false, "tar", "foo.zip");
+                var command = new RemoteCommand(true, "tar", "foo.zip");
 
                 var response = await proxy.RunCommandAsync(command);
 

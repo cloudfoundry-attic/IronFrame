@@ -14,8 +14,8 @@
         private readonly string port;
         private readonly string runtimeVersion;
 
-        public WebApplicationCommand(IContainer container, string[] arguments, bool shouldImpersonate, ResourceLimits rlimits)
-            : base(container, arguments, shouldImpersonate, rlimits)
+        public WebApplicationCommand(IContainer container, string[] arguments, bool privileged, ResourceLimits rlimits)
+            : base(container, arguments, privileged, rlimits)
         {
             if (arguments.IsNullOrEmpty())
             {

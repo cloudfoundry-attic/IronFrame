@@ -466,9 +466,9 @@ namespace IronFoundry.Warden.Test
             [Fact]
             public async void ShouldDispatchToCommandRunner()
             {
-                commandRunner.RunCommandAsync(false, null, null).ReturnsTaskForAnyArgs(new TaskCommandResult(0, null, null));
+                commandRunner.RunCommandAsync(true, null, null).ReturnsTaskForAnyArgs(new TaskCommandResult(0, null, null));
 
-                var result = await containerStub.RunCommandAsync(new RemoteCommand(false, "tar", "c:\temp"));
+                var result = await containerStub.RunCommandAsync(new RemoteCommand(true, "tar", "c:\temp"));
 
                 commandRunner.Received(x => x.RunCommandAsync(Arg.Any<bool>(), Arg.Is<string>(y => y == "tar"), Arg.Is<string[]>(y => y[0] == "c:\temp")));
             }

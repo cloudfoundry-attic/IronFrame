@@ -1,15 +1,15 @@
 ﻿namespace IronFoundry.Warden.Tasks
 {
     using System;
-using System.Diagnostics;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using Containers;
-using IronFoundry.Warden.Shared.Messaging;
-using NLog;
-using Protocol;
-using Utilities;
+    using System.Diagnostics;
+    using System.Net;
+    using System.Text;
+    using System.Threading.Tasks;
+    using Containers;
+    using IronFoundry.Warden.Shared.Messaging;
+    using NLog;
+    using Protocol;
+    using Utilities;
     using IronFoundry.Warden.Containers.Messages;
 
     public abstract class ProcessCommand : TaskCommand
@@ -17,15 +17,16 @@ using Utilities;
         private readonly StringBuilder stdout = new StringBuilder();
         private readonly StringBuilder stderr = new StringBuilder();
 
-        private readonly bool shouldImpersonate = false;
+        private readonly bool privileged;
         private readonly ResourceLimits rlimits;
 
         private readonly Logger log = LogManager.GetCurrentClassLogger();
-        public ProcessCommand(IContainer container, string[] arguments, bool shouldImpersonate, ResourceLimits rlimits)
+
+        public ProcessCommand(IContainer container, string[] arguments, bool privileged, ResourceLimits rlimits)
 
             : base(container, arguments)
         {
-            this.shouldImpersonate = shouldImpersonate;
+            this.privileged = privileged;
             this.rlimits = rlimits;
         }
 
@@ -48,12 +49,12 @@ using Utilities;
 
         protected TaskCommandResult RunProcess(string workingDirectory, string executable, string processArguments)
         {
-            log.Trace("Running process{0}: {1} {2}", shouldImpersonate ? " (as warden user)" : String.Empty,  executable, processArguments);
+            log.Trace("Running process{0}: {1} {2}", privileged ? " (privileged)" : " (non-privileged)", executable, processArguments);
 
             var si = new CreateProcessStartInfo(executable, processArguments);
             si.WorkingDirectory = workingDirectory;
 
-            var process = container.CreateProcess(si, shouldImpersonate);
+            var process = container.CreateProcess(si, !privileged);
 
             log.Trace("Process ID: '{0}'", process.Id);
 

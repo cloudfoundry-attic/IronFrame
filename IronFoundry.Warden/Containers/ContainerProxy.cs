@@ -201,7 +201,7 @@ namespace IronFoundry.Warden.Containers
                 new RunCommandRequest(
                     new RunCommandData
                     {
-                        impersonate = command.ShouldImpersonate,
+                        privileged = command.Privileged,
                         command = command.Command,
                         arguments = command.Arguments,
                     }));

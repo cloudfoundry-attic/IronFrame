@@ -173,7 +173,7 @@ namespace IronFoundry.Warden.ContainerHost
 
                 dispatcher.RegisterMethod<RunCommandRequest>(RunCommandRequest.MethodName, async (r) =>
                 {
-                    var remoteCommand = new RemoteCommand(r.@params.impersonate, r.@params.command, r.@params.arguments);
+                    var remoteCommand = new RemoteCommand(r.@params.privileged, r.@params.command, r.@params.arguments);
                     var result = await container.RunCommandAsync(remoteCommand);
 
                     return new RunCommandResponse(
@@ -276,14 +276,15 @@ namespace IronFoundry.Warden.ContainerHost
         {
             var commandRunner = new CommandRunner();
 
-            commandRunner.RegisterCommand("exe", (shouldImpersonate, arguments) => { return new ExeCommand(container, arguments, shouldImpersonate, null); });
-            commandRunner.RegisterCommand("mkdir", (shouldImpersonate, arguments) => { return new MkdirCommand(container, arguments); });
-            commandRunner.RegisterCommand("iis", (shouldImpersonate, arguments) => { return new WebApplicationCommand(container, arguments, shouldImpersonate, null); });
-            commandRunner.RegisterCommand("ps1", (shouldImpersonate, arguments) => { return new PowershellCommand(container, arguments, shouldImpersonate, null); });
-            commandRunner.RegisterCommand("replace-tokens", (shouldImpersonate, arguments) => { return new ReplaceTokensCommand(container, arguments); });
-            commandRunner.RegisterCommand("tar", (shouldImpersonate, arguments) => { return new TarCommand(container, arguments); });
-            commandRunner.RegisterCommand("touch", (shouldImpersonate, arguments) => { return new TouchCommand(container, arguments); });
-            commandRunner.RegisterCommand("unzip", (shouldImpersonate, arguments) => { return new UnzipCommand(container, arguments); });
+            commandRunner.RegisterCommand("exe", (privileged, arguments) => { return new ExeCommand(container, arguments, privileged, null); });
+            commandRunner.RegisterCommand("mkdir", (privileged, arguments) => { return new MkdirCommand(container, arguments); });
+            commandRunner.RegisterCommand("iis", (privileged, arguments) => { return new WebApplicationCommand(container, arguments, privileged, null); });
+            commandRunner.RegisterCommand("ps1", (privileged, arguments) => { return new PowershellCommand(container, arguments, privileged, null); });
+            commandRunner.RegisterCommand("replace-tokens", (privileged, arguments) => { return new ReplaceTokensCommand(container, arguments); });
+            commandRunner.RegisterCommand("tar", (privileged, arguments) => { return new TarCommand(container, arguments); });
+            commandRunner.RegisterCommand("touch", (privileged, arguments) => { return new TouchCommand(container, arguments); });
+            commandRunner.RegisterCommand("unzip", (privileged, arguments) => { return new UnzipCommand(container, arguments); });
+
             return commandRunner;
         }
     }

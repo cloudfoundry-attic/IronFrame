@@ -45,7 +45,7 @@ namespace IronFoundry.Warden.Tasks.Test
         }
 
         [Fact]
-        public void WhenImpersonatingSelected_ShoudlRequestImperonation()
+        public void WhenNotPrivileged_ShouldImpersonateRestrictedUser()
         {
             CreateProcessStartInfo si  = null;
             container.CreateProcess(null).ReturnsForAnyArgs( c => 
@@ -54,10 +54,10 @@ namespace IronFoundry.Warden.Tasks.Test
                 return process;
             });
 
-            var cmd = new TestableProcessCommand(container, "C:\\temp", "some.exe", "some args", true);
+            var cmd = new TestableProcessCommand(container, "C:\\temp", "some.exe", "some args", false);
             cmd.Execute();
 
-            container.Received().CreateProcess(Arg.Any<CreateProcessStartInfo>(), Arg.Is<bool>(true));
+            container.Received().CreateProcess(Arg.Any<CreateProcessStartInfo>(), true);
         }
 
         [Fact]
@@ -68,7 +68,7 @@ namespace IronFoundry.Warden.Tasks.Test
             var cmd = new TestableProcessCommand(container, "C:\\temp", "some.exe", "some args");
             cmd.Execute();
 
-            process.Received().WaitForExit();            
+            process.Received().WaitForExit();
         }
 
         [Fact]
@@ -105,13 +105,14 @@ namespace IronFoundry.Warden.Tasks.Test
             private string exePath;
             private string exeArguments;
 
-            public TestableProcessCommand(IContainer container, string workingDirectory, string exePath, string exeArguments, bool impersonate = false) 
-                : base(container, null, impersonate, null)
+            public TestableProcessCommand(IContainer container, string workingDirectory, string exePath, string exeArguments, bool privileged = true) 
+                : base(container, null, privileged, null)
             {
                 this.workingDirectory = workingDirectory;
                 this.exePath = exePath;
                 this.exeArguments = exeArguments;
             }
+
             protected override TaskCommandResult DoExecute()
             {
                 return base.RunProcess(workingDirectory, exePath, exeArguments);

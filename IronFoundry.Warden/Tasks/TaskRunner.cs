@@ -97,8 +97,6 @@
 
         private async Task<IJobResult> DoRunAsync()
         {
-            bool shouldImpersonate = !request.Privileged;
-
             var results = new List<CommandResult>();
             foreach (TaskCommandDTO cmd in commands)
             {
@@ -109,7 +107,7 @@
 
                 try
                 {
-                    var commandResult = await container.RunCommandAsync( new RemoteCommand(shouldImpersonate, cmd.Command, cmd.Args));
+                    var commandResult = await container.RunCommandAsync(new RemoteCommand(request.Privileged, cmd.Command, cmd.Args));
                     results.Add(commandResult);
                 }
                 catch (Exception ex)

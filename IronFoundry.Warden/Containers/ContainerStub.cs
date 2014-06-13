@@ -130,7 +130,7 @@ namespace IronFoundry.Warden.Containers
 
         public async Task<CommandResult> RunCommandAsync(RemoteCommand remoteCommand)
         {
-            var result = await commandRunner.RunCommandAsync(remoteCommand.ShouldImpersonate, remoteCommand.Command, remoteCommand.Arguments);
+            var result = await commandRunner.RunCommandAsync(remoteCommand.Privileged, remoteCommand.Command, remoteCommand.Arguments);
             return new CommandResult { ExitCode = result.ExitCode };
         }
 

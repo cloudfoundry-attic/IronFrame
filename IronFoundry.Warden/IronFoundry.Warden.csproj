@@ -166,7 +166,6 @@
     <Compile Include="Tasks\MkdirCommand.cs" />
     <Compile Include="Tasks\TaskCommandDTO.cs" />
     <Compile Include="Tasks\TaskCommand.cs" />
-    <Compile Include="Tasks\TaskCommandFactory.cs" />
     <Compile Include="Tasks\TaskCommandResult.cs" />
     <Compile Include="Handlers\TaskRequestHandler.cs" />
     <Compile Include="Jobs\IJobManager.cs" />

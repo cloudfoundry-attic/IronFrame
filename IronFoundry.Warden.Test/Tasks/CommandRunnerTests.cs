@@ -25,7 +25,7 @@ namespace IronFoundry.Warden.Test
         [Fact]
         public async void WhenAskedToRunACommand_ExecutesCorrectRunnerBasedOnCommand()
         {
-            await runner.RunCommandAsync(false, "testCommand", "");
+            await runner.RunCommandAsync(true, "testCommand", "");
             command.Received().Execute();
         }
 
@@ -35,7 +35,7 @@ namespace IronFoundry.Warden.Test
             string[] capturedArgs = null;
             runner.RegisterCommand("anotherTestCommand", (i, a) => { capturedArgs = a; return command; });
 
-            await runner.RunCommandAsync(false, "anotherTestCommand", "blah");
+            await runner.RunCommandAsync(true, "anotherTestCommand", "blah");
 
             Assert.Equal("blah", capturedArgs[0]);
         }
@@ -47,7 +47,7 @@ namespace IronFoundry.Warden.Test
 
             Exception ex = await ExceptionAssert.RecordThrowsAsync(async () =>
             {
-                await runner.RunCommandAsync(false, "missingCommand", "");
+                await runner.RunCommandAsync(true, "missingCommand", "");
             });
 
             Assert.IsType<InvalidOperationException>(ex);
@@ -58,7 +58,7 @@ namespace IronFoundry.Warden.Test
         {
             command.Execute().ReturnsForAnyArgs(new TaskCommandResult(100, null, null));
 
-            var result = await runner.RunCommandAsync(false, "testCommand", "testArguments");
+            var result = await runner.RunCommandAsync(true, "testCommand", "testArguments");
 
             Assert.Equal(100, result.ExitCode);
         }
@@ -68,7 +68,7 @@ namespace IronFoundry.Warden.Test
         {
             command.Execute().ReturnsForAnyArgs(new TaskCommandResult(0, "This is a test", null));
 
-            var result = await runner.RunCommandAsync(false, "testCommand", "testArguments");
+            var result = await runner.RunCommandAsync(true, "testCommand", "testArguments");
 
             Assert.Equal("This is a test", result.Stdout);
         }
@@ -78,7 +78,7 @@ namespace IronFoundry.Warden.Test
         {
             command.Execute().ReturnsForAnyArgs(new TaskCommandResult(0, null, "This is an error"));
 
-            var result = await runner.RunCommandAsync(false, "testCommand", "testArguments");
+            var result = await runner.RunCommandAsync(true, "testCommand", "testArguments");
 
             Assert.Equal("This is an error", result.Stderr);
         }

@@ -10,13 +10,13 @@ namespace IronFoundry.Warden.Tasks
     {
         Dictionary<string, Func<bool, string[], TaskCommand>> commandGenerator = new Dictionary<string, Func<bool, string[], TaskCommand>>();
 
-        public Task<TaskCommandResult> RunCommandAsync(bool shouldImpersonate, string command, params string[] arguments)
+        public Task<TaskCommandResult> RunCommandAsync(bool privileged, string command, params string[] arguments)
         {
             if (!commandGenerator.ContainsKey(command))
                 throw new InvalidOperationException("Could not find command generator for key " + command);
 
             var generator = commandGenerator[command];
-            var taskCommand = generator(shouldImpersonate, arguments);
+            var taskCommand = generator(privileged, arguments);
             
             return Task.FromResult(taskCommand.Execute());
         }
