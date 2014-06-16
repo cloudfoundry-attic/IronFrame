@@ -157,15 +157,27 @@ namespace IronFoundry.Warden.Test
             }
 
             [Fact]
-            public void ReservePortThrow()
+            public void ReservePortThrows()
             {
                 Assert.Throws<InvalidOperationException>(() => containerStub.ReservePort(100));
             }
 
             [Fact]
-            public void CopyThrow()
+            public void CopyThrows()
             {
                 Assert.Throws<InvalidOperationException>(() => containerStub.Copy("source", "destination"));
+            }
+
+            [Fact]
+            public void CopyFileInThrows()
+            {
+                Assert.Throws<InvalidOperationException>(() => containerStub.CopyFileIn("source", "destination"));
+            }
+
+            [Fact]
+            public void CopyFileOutThrows()
+            {
+                Assert.Throws<InvalidOperationException>(() => containerStub.CopyFileOut("source", "destination"));
             }
 
             [Fact]
@@ -436,6 +448,133 @@ namespace IronFoundry.Warden.Test
                 containerStub.Copy(@"@ROOT@/source", @"@ROOT@/destination");
 
                 fileSystemManager.Received(x => x.Copy(Path.Combine(containerDirectory.FullName, "source"), Path.Combine(containerDirectory.FullName, "destination")));
+            }
+        }
+
+        public class CopyFileIn : ContainerInitializedContext
+        {
+            [Fact]
+            public void EmptySourceThrows()
+            {
+                var ex = Record.Exception(() => containerStub.CopyFileIn("", "/destination"));
+
+                Assert.IsType<InvalidOperationException>(ex);
+            }
+
+            [Fact]
+            public void EmptyDestinationThrows()
+            {
+                var ex = Record.Exception(() => containerStub.CopyFileIn("source", ""));
+
+                Assert.IsType<InvalidOperationException>(ex);
+            }
+
+            [Fact]
+            public void TranslatesDestinationPath()
+            {
+                containerStub.CopyFileIn("source", "/destination");
+
+                fileSystemManager.Received(x => x.CopyFile("source", Path.Combine(containerDirectory.FullName, "destination")));
+            }
+
+            [Fact]
+            public void CopiesFile()
+            {
+                containerStub.CopyFileIn("source", "/destination");
+
+                fileSystemManager.Received(x => x.CopyFile("source", Path.Combine(containerDirectory.FullName, "destination")));
+            }
+
+            [Fact]
+            public void WhenDestinationPathIsNotRooted_Throws()
+            {
+                var ex = Record.Exception(() => containerStub.CopyFileIn("source", "destination"));
+
+                Assert.IsType<ArgumentException>(ex);
+            }
+        }
+
+        public class CopyFileOut : ContainerInitializedContext
+        {
+            [Fact]
+            public void EmptySourceThrows()
+            {
+                var ex = Record.Exception(() => containerStub.CopyFileOut("", "destination"));
+
+                Assert.IsType<InvalidOperationException>(ex);
+            }
+
+            [Fact]
+            public void EmptyDestinationThrows()
+            {
+                var ex = Record.Exception(() => containerStub.CopyFileOut("/source", ""));
+
+                Assert.IsType<InvalidOperationException>(ex);
+            }
+
+            [Fact]
+            public void TranslatesSourcePath()
+            {
+                containerStub.CopyFileOut("/source", "destination");
+
+                fileSystemManager.Received(x => x.CopyFile(Path.Combine(containerDirectory.FullName, "source"), "destination"));
+            }
+
+            [Fact]
+            public void CopiesFile()
+            {
+                containerStub.CopyFileOut("/source", "destination");
+
+                fileSystemManager.Received(x => x.CopyFile(Path.Combine(containerDirectory.FullName, "source"), "destination"));
+            }
+
+            [Fact]
+            public void WhenSourcePathIsNotRooted_Throws()
+            {
+                var ex = Record.Exception(() => containerStub.CopyFileOut("source", "destination"));
+
+                Assert.IsType<ArgumentException>(ex);
+            }
+        }
+
+        public class ExtractTarFile : ContainerInitializedContext
+        {
+            [Fact]
+            public void EmptyTarFilePathThrows()
+            {
+                var ex = Record.Exception(() => containerStub.ExtractTarFile("", "/destination", false));
+                Assert.IsType<InvalidOperationException>(ex);
+            }
+
+            [Fact]
+            public void EmptyDestinationPathThrows()
+            {
+                var ex = Record.Exception(() => containerStub.ExtractTarFile("/source.tar", "", false));
+                Assert.IsType<InvalidOperationException>(ex);
+            }
+
+            [Fact]
+            public void TranslatesTarFilePath()
+            {
+                containerStub.ExtractTarFile("/source.tar", "/destination", false);
+
+                fileSystemManager.Received(x => x.ExtractTarFile(Path.Combine(containerDirectory.FullName, "source.tar"), Path.Combine(containerDirectory.FullName, "destination"), false));
+            }
+
+            [Fact]
+            public void TranslatesDestinationPath()
+            {
+                containerStub.ExtractTarFile("/source.tar", "/destination", false);
+
+                fileSystemManager.Received(x => x.ExtractTarFile(Path.Combine(containerDirectory.FullName, "source.tar"), Path.Combine(containerDirectory.FullName, "destination"), false));
+            }
+
+            [Fact]
+            public void ExtractsTarFile()
+            {
+                containerStub.ExtractTarFile("/source.tar", "/destination", false);
+
+                fileSystemManager.Received(x => x.ExtractTarFile(Path.Combine(containerDirectory.FullName, "source.tar"), Path.Combine(containerDirectory.FullName, "destination"), false));
             }
         }
 

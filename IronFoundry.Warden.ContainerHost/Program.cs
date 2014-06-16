@@ -173,6 +173,40 @@ namespace IronFoundry.Warden.ContainerHost
                     return Task.FromResult<object>(new CopyResponse(r.id));
                 });
 
+                dispatcher.RegisterMethod<CopyFileInRequest>(CopyFileInRequest.MethodName, r =>
+                {
+                    container.CopyFileIn(r.@params.SourceFilePath, r.@params.DestinationFilePath);
+                    return Task.FromResult<object>(new CopyFileResponse(r.id));
+                });
+
+                dispatcher.RegisterMethod<CopyFileOutRequest>(CopyFileOutRequest.MethodName, r =>
+                {
+                    container.CopyFileOut(r.@params.SourceFilePath, r.@params.DestinationFilePath);
+                    return Task.FromResult<object>(new CopyFileResponse(r.id));
+                });
+
+                dispatcher.RegisterMethod<ExtractTarFileRequest>(ExtractTarFileRequest.MethodName, r =>
+                {
+                    container.ExtractTarFile(
+                        r.@params.TarFilePath,
+                        r.@params.DestinationDirectoryPath,
+                        r.@params.Decompress);
+
+                    return Task.FromResult<object>(new ExtractTarFileResponse(r.id));
+                });
+
+                dispatcher.RegisterMethod<LimitMemoryRequest>(LimitMemoryRequest.MethodName, (r) =>
+                {
+                    container.LimitMemory(r.@params);
+                    return Task.FromResult<object>(new LimitMemoryResponse(r.id));
+                });
+
+                dispatcher.RegisterMethod<ReservePortRequest>(ReservePortRequest.MethodName, r =>
+                {
+                    var reservedPort = container.ReservePort(r.@params);
+                    return Task.FromResult<object>(new ReservePortResponse(r.id, reservedPort));
+                });
+
                 dispatcher.RegisterMethod<RunCommandRequest>(RunCommandRequest.MethodName, async (r) =>
                 {
                     var remoteCommand = new RemoteCommand(r.@params.privileged, r.@params.command, r.@params.arguments);
@@ -187,18 +221,6 @@ namespace IronFoundry.Warden.ContainerHost
                             stdOut = result.StdOut,
                         });
 
-                });
-
-                dispatcher.RegisterMethod<LimitMemoryRequest>(LimitMemoryRequest.MethodName, (r) =>
-                {
-                    container.LimitMemory(r.@params);
-                    return Task.FromResult<object>(new LimitMemoryResponse(r.id));
-                });
-
-                dispatcher.RegisterMethod<ReservePortRequest>(ReservePortRequest.MethodName, r =>
-                {
-                    var reservedPort = container.ReservePort(r.@params);
-                    return Task.FromResult<object>(new ReservePortResponse(r.id, reservedPort));
                 });
 
                 dispatcher.RegisterMethod<StopRequest>(StopRequest.MethodName, r =>

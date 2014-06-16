@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using IronFoundry.Warden.Containers.Messages;
@@ -103,6 +104,65 @@ namespace IronFoundry.Warden.Containers
             containerDirectory.BindMounts(mounts);
         }
 
+        string ConvertToContainerPath(string path)
+        {
+            // Expect the incoming path to be a unix style path.  The root is relative to the root of the container.
+            if (!path.StartsWith("/"))
+                throw new ArgumentException("The container path is invalid. The path must be rooted.", "path");
+
+            // Trim the leading '/' from the path so that we can combine it with the container's root.
+            string relativePath = path.Substring(1);
+
+            // Combine and normalize the paths (GetFullPath() will convert slashes to Windows backslashes).
+            return Path.GetFullPath(Path.Combine(containerDirectory.FullName, relativePath));
+        }
+
+        public void Copy(string source, string destination)
+        {
+            ThrowIfNotActive();
+
+            if (string.IsNullOrWhiteSpace(source))
+                throw new InvalidOperationException("Source file or directory is empty");
+
+            if (string.IsNullOrWhiteSpace(destination))
+                throw new InvalidOperationException("Destination file or directory is empty");
+
+            var convertedSource = this.ConvertToPathWithin(source);
+            var convertedDestination = this.ConvertToPathWithin(destination);
+
+            fileSystemManager.Copy(convertedSource, convertedDestination);
+        }
+
+        public void CopyFileIn(string sourceFilePath, string destinationFilePath)
+        {
+            ThrowIfNotActive();
+
+            if (string.IsNullOrWhiteSpace(sourceFilePath))
+                throw new InvalidOperationException("Source file is empty");
+
+            if (string.IsNullOrWhiteSpace(destinationFilePath))
+                throw new InvalidOperationException("Destination file is empty");
+
+            var containerDestinationPath = ConvertToContainerPath(destinationFilePath);
+
+            fileSystemManager.CopyFile(sourceFilePath, containerDestinationPath);
+        }
+
+        public void CopyFileOut(string sourceFilePath, string destinationFilePath)
+        {
+            ThrowIfNotActive();
+
+            if (String.IsNullOrWhiteSpace(sourceFilePath))
+                throw new InvalidOperationException("Source file is empty");
+
+            if (String.IsNullOrWhiteSpace(destinationFilePath))
+                throw new InvalidOperationException("Destination file is empty");
+
+            var containerSourcePath = ConvertToContainerPath(sourceFilePath);
+
+            fileSystemManager.CopyFile(containerSourcePath, destinationFilePath);
+        }
+
         public Utilities.IProcess CreateProcess(CreateProcessStartInfo si, bool impersonate = false)
         {
             ThrowIfNotActive();
@@ -126,6 +186,20 @@ namespace IronFoundry.Warden.Containers
             jobObject.AssignProcessToJob(p);
 
             return wrapped;
+        }
+
+        public void ExtractTarFile(string tarFilePath, string destinationPath, bool decompress)
+        {
+            if (String.IsNullOrWhiteSpace(tarFilePath))
+                throw new InvalidOperationException("The tar file path is empty.");
+
+            if (String.IsNullOrWhiteSpace(destinationPath))
+                throw new InvalidOperationException("The destination path is empty.");
+
+            var containerTarFilePath = ConvertToContainerPath(tarFilePath);
+            var containerDestinationPath = ConvertToContainerPath(destinationPath);
+
+            fileSystemManager.ExtractTarFile(containerTarFilePath, containerDestinationPath, decompress);
         }
 
         public async Task<CommandResult> RunCommandAsync(RemoteCommand remoteCommand)
@@ -247,22 +321,6 @@ namespace IronFoundry.Warden.Containers
             ThrowIfNotActive();
 
             return portManager.ReserveLocalPort((ushort)requestedPort, user.UserName);
-        }
-
-        public void Copy(string source, string destination)
-        {
-            ThrowIfNotActive();
-
-            if (string.IsNullOrWhiteSpace(source))
-                throw new InvalidOperationException("Source file or directory is empty");
-
-            if (string.IsNullOrWhiteSpace(destination))
-                throw new InvalidOperationException("Destination file or directory is empty");
-
-            var convertedSource = this.ConvertToPathWithin(source);
-            var convertedDestination = this.ConvertToPathWithin(destination);
-
-            fileSystemManager.Copy(convertedSource, convertedDestination);
         }
 
         public void Stop(bool kill)
