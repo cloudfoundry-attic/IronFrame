@@ -104,6 +104,20 @@ namespace IronFoundry.Warden.Containers
             containerDirectory.BindMounts(mounts);
         }
 
+        public void CreateTarFile(string sourcePath, string tarFilePath, bool compress)
+        {
+            if (String.IsNullOrWhiteSpace(sourcePath))
+                throw new InvalidOperationException("The source path is empty.");
+
+            if (String.IsNullOrWhiteSpace(tarFilePath))
+                throw new InvalidOperationException("The tar file path is empty.");
+
+            var containerSourcePath = ConvertToContainerPath(sourcePath);
+
+            // NOTE: tarFilePath should not be contained within the container.
+            fileSystemManager.CreateTarFile(containerSourcePath, tarFilePath, compress);
+        }
+
         string ConvertToContainerPath(string path)
         {
             // Expect the incoming path to be a unix style path.  The root is relative to the root of the container.
@@ -114,7 +128,7 @@ namespace IronFoundry.Warden.Containers
             string relativePath = path.Substring(1);
 
             // Combine and normalize the paths (GetFullPath() will convert slashes to Windows backslashes).
-            return Path.GetFullPath(Path.Combine(containerDirectory.FullName, relativePath));
+            return Path.GetFullPath(Path.Combine(containerDirectory.FullName, "root", relativePath));
         }
 
         public void Copy(string source, string destination)
@@ -196,10 +210,9 @@ namespace IronFoundry.Warden.Containers
             if (String.IsNullOrWhiteSpace(destinationPath))
                 throw new InvalidOperationException("The destination path is empty.");
 
-            var containerTarFilePath = ConvertToContainerPath(tarFilePath);
             var containerDestinationPath = ConvertToContainerPath(destinationPath);
 
-            fileSystemManager.ExtractTarFile(containerTarFilePath, containerDestinationPath, decompress);
+            fileSystemManager.ExtractTarFile(tarFilePath, containerDestinationPath, decompress);
         }
 
         public async Task<CommandResult> RunCommandAsync(RemoteCommand remoteCommand)

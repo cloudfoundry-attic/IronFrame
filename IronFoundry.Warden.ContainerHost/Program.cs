@@ -139,6 +139,16 @@ namespace IronFoundry.Warden.ContainerHost
                     return Task.FromResult<object>(new BindMountsResponse(r.id));
                 });
 
+                dispatcher.RegisterMethod<CreateTarFileRequest>(CreateTarFileRequest.MethodName, r =>
+                {
+                    container.CreateTarFile(
+                        r.@params.SourceDirectoryPath,
+                        r.@params.TarFilePath,
+                        r.@params.Compress);
+
+                    return Task.FromResult<object>(new CreateTarFileResponse(r.id));
+                });
+
                 dispatcher.RegisterMethod<ContainerInfoRequest>(ContainerInfoRequest.MethodName, r =>
                 {
                     var info = container.GetInfo();

@@ -474,7 +474,7 @@ namespace IronFoundry.Warden.Test
             {
                 containerStub.CopyFileIn("source", "/destination");
 
-                fileSystemManager.Received(x => x.CopyFile("source", Path.Combine(containerDirectory.FullName, "destination")));
+                fileSystemManager.Received(x => x.CopyFile("source", Path.Combine(containerDirectory.FullName, "root", "destination")));
             }
 
             [Fact]
@@ -482,7 +482,7 @@ namespace IronFoundry.Warden.Test
             {
                 containerStub.CopyFileIn("source", "/destination");
 
-                fileSystemManager.Received(x => x.CopyFile("source", Path.Combine(containerDirectory.FullName, "destination")));
+                fileSystemManager.Received(x => x.CopyFile("source", Path.Combine(containerDirectory.FullName, "root", "destination")));
             }
 
             [Fact]
@@ -517,7 +517,7 @@ namespace IronFoundry.Warden.Test
             {
                 containerStub.CopyFileOut("/source", "destination");
 
-                fileSystemManager.Received(x => x.CopyFile(Path.Combine(containerDirectory.FullName, "source"), "destination"));
+                fileSystemManager.Received(x => x.CopyFile(Path.Combine(containerDirectory.FullName, "root", "source"), "destination"));
             }
 
             [Fact]
@@ -525,7 +525,7 @@ namespace IronFoundry.Warden.Test
             {
                 containerStub.CopyFileOut("/source", "destination");
 
-                fileSystemManager.Received(x => x.CopyFile(Path.Combine(containerDirectory.FullName, "source"), "destination"));
+                fileSystemManager.Received(x => x.CopyFile(Path.Combine(containerDirectory.FullName, "root", "source"), "destination"));
             }
 
             [Fact]
@@ -534,6 +534,47 @@ namespace IronFoundry.Warden.Test
                 var ex = Record.Exception(() => containerStub.CopyFileOut("source", "destination"));
 
                 Assert.IsType<ArgumentException>(ex);
+            }
+        }
+
+        public class CreateTarFile : ContainerInitializedContext
+        {
+            [Fact]
+            public void EmptySourcePathThrows()
+            {
+                var ex = Record.Exception(() => containerStub.ExtractTarFile("", @"C:\destination.tar", false));
+                Assert.IsType<InvalidOperationException>(ex);
+            }
+
+            [Fact]
+            public void EmptyTarFilePathThrows()
+            {
+                var ex = Record.Exception(() => containerStub.CreateTarFile("/source", "", false));
+                Assert.IsType<InvalidOperationException>(ex);
+            }
+
+            [Fact]
+            public void TranslatesSourcePath()
+            {
+                containerStub.CreateTarFile("/source", @"C:\destination.tar", false);
+
+                fileSystemManager.Received(x => x.CreateTarFile(Path.Combine(containerDirectory.FullName, "root", "source"), @"C:\destination.tar", false));
+            }
+
+            [Fact]
+            public void DoesNotTranslateTarFilePath()
+            {
+                containerStub.CreateTarFile("/source", @"C:\destination.tar", false);
+
+                fileSystemManager.Received(x => x.CreateTarFile(Path.Combine(containerDirectory.FullName, "root", "source"), @"C:\destination.tar", false));
+            }
+
+            [Fact]
+            public void CreatesTarFile()
+            {
+                containerStub.CreateTarFile("/source", @"C:\destination.tar", false);
+
+                fileSystemManager.Received(x => x.CreateTarFile(Path.Combine(containerDirectory.FullName, "root", "source"), @"C:\destination.tar", false));
             }
         }
 
@@ -549,32 +590,32 @@ namespace IronFoundry.Warden.Test
             [Fact]
             public void EmptyDestinationPathThrows()
             {
-                var ex = Record.Exception(() => containerStub.ExtractTarFile("/source.tar", "", false));
+                var ex = Record.Exception(() => containerStub.ExtractTarFile(@"C:\source.tar", "", false));
                 Assert.IsType<InvalidOperationException>(ex);
             }
 
             [Fact]
             public void TranslatesTarFilePath()
             {
-                containerStub.ExtractTarFile("/source.tar", "/destination", false);
+                containerStub.ExtractTarFile(@"C:\source.tar", "/destination", false);
 
-                fileSystemManager.Received(x => x.ExtractTarFile(Path.Combine(containerDirectory.FullName, "source.tar"), Path.Combine(containerDirectory.FullName, "destination"), false));
+                fileSystemManager.Received(x => x.ExtractTarFile(@"C:\source.tar", Path.Combine(containerDirectory.FullName, "root", "destination"), false));
             }
 
             [Fact]
             public void TranslatesDestinationPath()
             {
-                containerStub.ExtractTarFile("/source.tar", "/destination", false);
+                containerStub.ExtractTarFile(@"C:\source.tar", "/destination", false);
 
-                fileSystemManager.Received(x => x.ExtractTarFile(Path.Combine(containerDirectory.FullName, "source.tar"), Path.Combine(containerDirectory.FullName, "destination"), false));
+                fileSystemManager.Received(x => x.ExtractTarFile(@"C:\source.tar", Path.Combine(containerDirectory.FullName, "root", "destination"), false));
             }
 
             [Fact]
             public void ExtractsTarFile()
             {
-                containerStub.ExtractTarFile("/source.tar", "/destination", false);
+                containerStub.ExtractTarFile(@"C:\source.tar", "/destination", false);
 
-                fileSystemManager.Received(x => x.ExtractTarFile(Path.Combine(containerDirectory.FullName, "source.tar"), Path.Combine(containerDirectory.FullName, "destination"), false));
+                fileSystemManager.Received(x => x.ExtractTarFile(@"C:\source.tar", Path.Combine(containerDirectory.FullName, "root", "destination"), false));
             }
         }
 

@@ -105,6 +105,55 @@ namespace IronFoundry.Warden.Utilities
             }
         }
 
+        public class CreateTarFile : FileSystemManagerTestContext
+        {
+            [Fact]
+            public void CreatesTarFile()
+            {
+                Stream tarStream = new MemoryStream();
+                fileSystem.OpenWrite("destination.tar").Returns(tarStream);
+
+                manager.CreateTarFile("source", "destination.tar", false);
+
+                fileSystem.Received(x => x.CreateTarArchive("source", tarStream));
+            }
+
+            [Fact]
+            public void CompressesTarFile()
+            {
+                Stream tarStream = new MemoryStream();
+                fileSystem.OpenWrite("destination.tar").Returns(tarStream);
+
+                manager.CreateTarFile("source", "destination.tar", true);
+
+                fileSystem.Received(x => x.CreateTarArchive(
+                    "source",
+                    Arg.Any<GZipOutputStream>()));
+            }
+
+            [Fact]
+            public void CreatesDestinationDirectoriesIfNecessary()
+            {
+                Stream tarStream = new MemoryStream();
+                fileSystem.OpenWrite(@"path\to\destination.tar").Returns(tarStream);
+
+                manager.CreateTarFile("source", @"path\to\destination.tar", false);
+
+                fileSystem.Received(x => x.CreateDirectory(@"path\to"));
+                fileSystem.Received(x => x.CreateTarArchive(@"source", tarStream));
+            }
+
+            [Fact]
+            public void WhenDestinationPathExists_ThrowsIfDestinationIsADirectory()
+            {
+                fileSystem.Exists("destination.tar").Returns(true);
+                fileSystem.GetAttributes("destination.tar").Returns(FileAttributes.Directory);
+
+                var ex = Record.Exception(() => manager.CreateTarFile("source", "destination.tar", false));
+                Assert.IsType<InvalidOperationException>(ex);
+            }
+        }
+
         public class ExtractTarFile : FileSystemManagerTestContext
         {
             [Fact]
@@ -119,7 +168,7 @@ namespace IronFoundry.Warden.Utilities
             }
 
             [Fact]
-            public void DecomrpessesTarFile()
+            public void DecompressesTarFile()
             {
                 Stream tarStream = new MemoryStream();
                 fileSystem.OpenRead("source.tar").Returns(tarStream);
