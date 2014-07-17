@@ -26,8 +26,11 @@ if ($LastExitCode -ne 0)
 }
 
 Write-Host "Creating Group for Warden Users: $UsersGroupName"
-$addgroupResult = (. net.exe localgroup $UsersGroupName /ADD 2>&1)
-$Global:LastExitCode = $LastExitCode
+try {
+    $addgroupResult = (. net.exe localgroup $UsersGroupName /ADD 2>&1)
+    $Global:LastExitCode = $LastExitCode
+}
+catch {}
 
 if ($LastExitCode -ne 0){
     if ($addgroupResult -match '1379') {
