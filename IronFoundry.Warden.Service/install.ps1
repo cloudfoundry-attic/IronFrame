@@ -26,11 +26,8 @@ if ($LastExitCode -ne 0)
 }
 
 Write-Host "Creating Group for Warden Users: $UsersGroupName"
-try {
-    $addgroupResult = (. net.exe localgroup $UsersGroupName /ADD 2>&1)
-    $Global:LastExitCode = $LastExitCode
-}
-catch {}
+$addgroupResult = (. net.exe localgroup $UsersGroupName /ADD 2>&1)
+$Global:LastExitCode = $LastExitCode
 
 if ($LastExitCode -ne 0){
     if ($addgroupResult -match '1379') {
@@ -40,6 +37,7 @@ if ($LastExitCode -ne 0){
         Write-Error "Failed to add group: $addGroupResult"
         Exit $LastExitCode
     }
+    $LastExitCode = 0
 }
 
 Write-Host "Updating configuration file"
