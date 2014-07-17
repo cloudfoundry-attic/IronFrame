@@ -33,14 +33,14 @@ catch {
     if ($LastExitCode -ne 0){
         if ($Error -match '1379') {
             Write-Host "Group already exists."
-            $LastExitCode = 0
         }
         else {
             Write-Error "Failed to add group: $UsersGroupName"
-            Exit $LastExitCode
+            Exit $Global:LastExitCode
         }
     }
 }
+$LastExitCode = 0
 
 Write-Host "Updating configuration file"
 $configFile = join-path $Installpath "IronFoundry.Warden.Service.exe.config"
