@@ -30,7 +30,7 @@ try {
     . net.exe localgroup $UsersGroupName /ADD 2>&1
 }
 catch {
-    if ($LastExitCode -ne 0){
+    if ($Global:LastExitCode -ne 0){
         if ($Error -match '1379') {
             Write-Host "Group already exists."
         }
@@ -40,7 +40,7 @@ catch {
         }
     }
 }
-$LastExitCode = 0
+$Global:LastExitCode = 0
 
 Write-Host "Updating configuration file"
 $configFile = join-path $Installpath "IronFoundry.Warden.Service.exe.config"
