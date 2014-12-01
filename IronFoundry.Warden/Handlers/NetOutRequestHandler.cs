@@ -18,7 +18,16 @@
         public override Task<Response> HandleAsync()
         {
             // TODO do work!
-            log.Trace("Handle: '{0}' Network: '{1}' Port: '{2}'", request.Handle, request.Network, request.Port);
+            log.Trace("Handle: '{0}' Network: '{1}' Port: '{2}' PortRange: '{3}' ProtocolInfo: '{4}' IcmpType: '{5}' IcmpCode: '{6}' Log: '{7}'", 
+                request.Handle, 
+                request.Network, 
+                request.Port, 
+                request.PortRange,
+                request.ProtocolInfo,
+                request.IcmpType,
+                request.IcmpCode,
+                request.Log
+                );
             return Task.FromResult<Response>(new NetOutResponse());
         }
     }
