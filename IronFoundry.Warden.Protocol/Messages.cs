@@ -2337,6 +2337,113 @@ namespace IronFoundry.Warden.Protocol
     private bool ShouldSerializePort() { return PortSpecified; }
     private void ResetPort() { PortSpecified = false; }
     
+
+    private string _portRange;
+    [global::ProtoBuf.ProtoMember(4, IsRequired = false, Name=@"port_range", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public string PortRange
+    {
+      get { return _portRange?? ""; }
+      set { _portRange = value; }
+    }
+    [global::System.Xml.Serialization.XmlIgnore]
+    [global::System.ComponentModel.Browsable(false)]
+    public bool PortRangeSpecified
+    {
+      get { return _portRange != null; }
+      set { if (value == (_portRange== null)) _portRange = value ? PortRange : (string)null; }
+    }
+    private bool ShouldSerializePortRange() { return PortRangeSpecified; }
+    private void ResetPortRange() { PortRangeSpecified = false; }
+    
+
+    private IronFoundry.Warden.Protocol.NetOutRequest.Protocol? _protocolInfo;
+    [global::ProtoBuf.ProtoMember(5, IsRequired = false, Name=@"protocol_info", DataFormat = global::ProtoBuf.DataFormat.TwosComplement)]
+    public IronFoundry.Warden.Protocol.NetOutRequest.Protocol ProtocolInfo
+    {
+      get { return _protocolInfo?? IronFoundry.Warden.Protocol.NetOutRequest.Protocol.TCP; }
+      set { _protocolInfo = value; }
+    }
+    [global::System.Xml.Serialization.XmlIgnore]
+    [global::System.ComponentModel.Browsable(false)]
+    public bool ProtocolInfoSpecified
+    {
+      get { return _protocolInfo != null; }
+      set { if (value == (_protocolInfo== null)) _protocolInfo = value ? ProtocolInfo : (IronFoundry.Warden.Protocol.NetOutRequest.Protocol?)null; }
+    }
+    private bool ShouldSerializeProtocolInfo() { return ProtocolInfoSpecified; }
+    private void ResetProtocolInfo() { ProtocolInfoSpecified = false; }
+    
+
+    private int? _icmpType;
+    [global::ProtoBuf.ProtoMember(6, IsRequired = false, Name=@"icmp_type", DataFormat = global::ProtoBuf.DataFormat.TwosComplement)]
+    public int IcmpType
+    {
+      get { return _icmpType?? default(int); }
+      set { _icmpType = value; }
+    }
+    [global::System.Xml.Serialization.XmlIgnore]
+    [global::System.ComponentModel.Browsable(false)]
+    public bool IcmpTypeSpecified
+    {
+      get { return _icmpType != null; }
+      set { if (value == (_icmpType== null)) _icmpType = value ? IcmpType : (int?)null; }
+    }
+    private bool ShouldSerializeIcmpType() { return IcmpTypeSpecified; }
+    private void ResetIcmpType() { IcmpTypeSpecified = false; }
+    
+
+    private int? _icmpCode;
+    [global::ProtoBuf.ProtoMember(7, IsRequired = false, Name=@"icmp_code", DataFormat = global::ProtoBuf.DataFormat.TwosComplement)]
+    public int IcmpCode
+    {
+      get { return _icmpCode?? default(int); }
+      set { _icmpCode = value; }
+    }
+    [global::System.Xml.Serialization.XmlIgnore]
+    [global::System.ComponentModel.Browsable(false)]
+    public bool IcmpCodeSpecified
+    {
+      get { return _icmpCode != null; }
+      set { if (value == (_icmpCode== null)) _icmpCode = value ? IcmpCode : (int?)null; }
+    }
+    private bool ShouldSerializeIcmpCode() { return IcmpCodeSpecified; }
+    private void ResetIcmpCode() { IcmpCodeSpecified = false; }
+    
+
+    private bool? _log;
+    [global::ProtoBuf.ProtoMember(8, IsRequired = false, Name=@"log", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public bool Log
+    {
+      get { return _log?? default(bool); }
+      set { _log = value; }
+    }
+    [global::System.Xml.Serialization.XmlIgnore]
+    [global::System.ComponentModel.Browsable(false)]
+    public bool LogSpecified
+    {
+      get { return _log != null; }
+      set { if (value == (_log== null)) _log = value ? Log : (bool?)null; }
+    }
+    private bool ShouldSerializeLog() { return LogSpecified; }
+    private void ResetLog() { LogSpecified = false; }
+    
+    [global::ProtoBuf.ProtoContract(Name=@"Protocol")]
+    public enum Protocol
+    {
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"TCP", Value=0)]
+      TCP = 0,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"UDP", Value=1)]
+      UDP = 1,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"ICMP", Value=2)]
+      ICMP = 2,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"ALL", Value=3)]
+      ALL = 3
+    }
+  
     private global::ProtoBuf.IExtension extensionObject;
     global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
       { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }

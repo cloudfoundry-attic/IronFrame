@@ -13,7 +13,7 @@ mkdir -ErrorAction SilentlyContinue $target_proto_dir
 
 $warden_proto_files = Get-ChildItem $warden_proto_dir -File -Filter '*.proto'
 foreach ($proto_file in $warden_proto_files)
-{   
+{
     (Get-Content -Path $proto_file.FullName) | ForEach-Object {
         $_ -replace 'package warden;', 'package IronFoundry.Warden.Protocol;'
     } | Set-Content (Join-Path $target_proto_dir $proto_file.Name)
@@ -27,6 +27,9 @@ foreach ($proto_file in $warden_proto_files)
        -replace 'disk_stat',   'disk_stat_info' `
        -replace 'bandwidth_stat', 'bandwidth_stat_info'
 } | Set-Content .\pb\info.proto
+
+# net_out.proto
+(Get-Content -Path .\pb\net_out.proto) | ForEach-Object { $_ -replace 'Protocol protocol', 'Protocol protocol_info' } | Set-Content .\pb\net_out.proto
 
 # create.proto
 (Get-Content -Path .\pb\create.proto) | ForEach-Object { $_ -replace 'Mode mode', 'Mode bind_mount_mode' } | Set-Content .\pb\create.proto
