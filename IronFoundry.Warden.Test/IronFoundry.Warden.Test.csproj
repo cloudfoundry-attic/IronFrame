@@ -14,6 +14,7 @@
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
     <TargetFrameworkProfile />
   </PropertyGroup>
+  <Import Project="$(SolutionDir)\build\build.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -34,6 +35,8 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Messaging\TaskExtensions.cs" />
+    <Compile Include="Tasks\TaskCommandDTODeserializaitonTests.cs" />
     <Compile Include="TestSupport\AssertHelper.cs" />
     <Compile Include="Tasks\CommandRunnerTests.cs" />
     <Compile Include="Containers\ContainerHandleTests.cs" />
@@ -112,18 +115,31 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\protobuf-net.2.0.0.668\lib\net40\protobuf-net.dll</HintPath>
     </Reference>
+    <Reference Include="Fluent Assertions">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\FluentAssertions.3.2.2\lib\net45\FluentAssertions.dll</HintPath>
+    </Reference>
+    <Reference Include="Fluent Assertions Core">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\FluentAssertions.3.2.2\lib\net45\FluentAssertions.Core.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.DirectoryServices.AccountManagement" />
     <Reference Include="System.Web" />
+    <Reference Include="System.XML" />
+    <Reference Include="System.Xml.Linq" />
     <Reference Include="xunit.abstractions">
-      <HintPath>..\packages\xunit.abstractions.2.0.0-alpha-build2576\lib\net35\xunit.abstractions.dll</HintPath>
+      <HintPath>$(xUnit_Abstractions_Package)lib\net35\xunit.abstractions.dll</HintPath>
     </Reference>
-    <Reference Include="xunit2">
-      <HintPath>..\packages\xunit.core.2.0.0-alpha-build2576\lib\net45\xunit2.dll</HintPath>
+    <Reference Include="xunit.assert">
+      <HintPath>$(xUnit_Assert_Package)lib\portable-net45+aspnetcore50+win+wpa81+wp80+monoandroid+monotouch10\xunit.assert.dll</HintPath>
     </Reference>
-    <Reference Include="xunit2.assert">
-      <HintPath>..\packages\xunit.assert.2.0.0-alpha-build2576\lib\net45\xunit2.assert.dll</HintPath>
+    <Reference Include="xunit.execution">
+      <HintPath>$(xUnit_Core_Package)build\portable-net45+win+wpa81+wp80+monotouch+monoandroid\xunit.execution.dll</HintPath>
+    </Reference>
+    <Reference Include="xunit.core">
+      <HintPath>$(xUnit_Core_Package)lib\portable-net45+aspnetcore50+win+wpa81+wp80+monotouch+monoandroid\xunit.core.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

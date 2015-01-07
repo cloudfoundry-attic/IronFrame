@@ -1,0 +1,13 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Default">
+  <PropertyGroup>
+    <PackageDir>$(SolutionDir)packages\</PackageDir>
+    
+
+    <!-- xUnit -->
+    <xUnitVersion>2.0.0-beta5-build2785</xUnitVersion>
+    <xUnit_Abstractions_Package>$(PackageDir)xunit.abstractions.$(xUnitVersion)\</xUnit_Abstractions_Package>
+    <xUnit_Assert_Package>$(PackageDir)xunit.assert.$(xUnitVersion)\</xUnit_Assert_Package>
+    <xUnit_Core_Package>$(PackageDir)xunit.Core.$(xUnitVersion)\</xUnit_Core_Package>
+
+  </PropertyGroup>
+</Project>
