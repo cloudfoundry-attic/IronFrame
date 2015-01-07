@@ -8,6 +8,6 @@ namespace IronFoundry.Warden.Tasks
 {
     public interface ICommandRunner
     {
-        Task<TaskCommandResult> RunCommandAsync(bool privileged, string command, string[] arguments);
+        Task<TaskCommandResult> RunCommandAsync(string command, IRemoteCommandArgs args);
     }
 }

@@ -36,7 +36,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Messaging\TaskExtensions.cs" />
-    <Compile Include="Tasks\TaskCommandDTODeserializaitonTests.cs" />
+    <Compile Include="Tasks\TaskCommandDTODeserializationTests.cs" />
     <Compile Include="TestSupport\AssertHelper.cs" />
     <Compile Include="Tasks\CommandRunnerTests.cs" />
     <Compile Include="Containers\ContainerHandleTests.cs" />

@@ -204,6 +204,7 @@ namespace IronFoundry.Warden.Containers
                         privileged = command.Privileged,
                         command = command.Command,
                         arguments = command.Arguments,
+                        environment = command.Environment
                     }));
 
             return new CommandResult

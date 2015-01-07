@@ -107,7 +107,7 @@
 
                 try
                 {
-                    var commandResult = await container.RunCommandAsync(new RemoteCommand(request.Privileged, cmd.Command, cmd.Args));
+                    var commandResult = await container.RunCommandAsync(new RemoteCommand(request.Privileged, cmd.Command, cmd.Args, cmd.Environment));
                     results.Add(commandResult);
                 }
                 catch (Exception ex)

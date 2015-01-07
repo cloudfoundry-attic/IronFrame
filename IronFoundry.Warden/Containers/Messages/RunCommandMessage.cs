@@ -1,4 +1,5 @@
-﻿using IronFoundry.Warden.Shared.Messaging;
+﻿using System.Collections.Generic;
+using IronFoundry.Warden.Shared.Messaging;
 using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Warden.Containers.Messages
@@ -8,6 +9,7 @@ namespace IronFoundry.Warden.Containers.Messages
         public bool privileged;
         public string command;
         public string[] arguments;
+        public IDictionary<string, string> environment;
     }
 
     public class RunCommandRequest : JsonRpcRequest<RunCommandData>

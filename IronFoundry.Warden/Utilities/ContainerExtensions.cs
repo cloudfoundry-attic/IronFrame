@@ -1,6 +1,7 @@
 ﻿using IronFoundry.Warden.Containers;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -81,6 +82,12 @@ namespace IronFoundry.Warden.Utilities
         public static TempFile TempFileInContainer(this IContainer container, string extension)
         {
             return new TempFile(container.ContainerDirectoryPath, extension);
+        }
+
+        public static TempFile FileInContainer(this IContainer container, string relativePath)
+        {
+            string pathInContainer = Path.Combine(container.ContainerDirectoryPath, relativePath);
+            return new TempFile(pathInContainer, deleteIfExists:true);
         }
     }
 }
