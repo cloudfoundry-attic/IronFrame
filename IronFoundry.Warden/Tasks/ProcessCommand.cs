@@ -59,12 +59,20 @@ namespace IronFoundry.Warden.Tasks
         protected TaskCommandResult RunProcess(string workingDirectory, string executable, string processArguments)
         {
             string exePath = container.ConvertToPathWithin(executable);
+            
+            string workingDir = workingDirectory.IsNullOrWhiteSpace()
+                ? container.ContainerDirectoryPath
+                : container.ConvertToPathWithin(workingDirectory);
 
-            log.Trace("Running process{0}: {1} {2}", privileged ? " (privileged)" : " (non-privileged)", exePath, processArguments);
+            log.Trace("Running process{0} (WorkingDir {1}): {2} {3}", 
+                privileged ? " (privileged)" : " (non-privileged)", 
+                workingDir,
+                exePath, 
+                processArguments);
 
             var si = new CreateProcessStartInfo(exePath, processArguments)
             {
-                WorkingDirectory = workingDirectory,
+                WorkingDirectory = workingDir,
                 EnvironmentVariables = environment
             };
             

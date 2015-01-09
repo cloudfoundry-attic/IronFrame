@@ -10,6 +10,7 @@ namespace IronFoundry.Warden.Containers.Messages
         public string command;
         public string[] arguments;
         public IDictionary<string, string> environment;
+        public string working_dir;
     }
 
     public class RunCommandRequest : JsonRpcRequest<RunCommandData>

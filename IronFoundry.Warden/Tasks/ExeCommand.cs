@@ -13,6 +13,7 @@ namespace IronFoundry.Warden.Tasks
         private const string DefaultAppDir = "app";
         private readonly string executable;
         private readonly string args;
+        private readonly string workingDir;
 
         public ExeCommand(IContainer container, IRemoteCommandArgs rcArgs, ResourceLimits rlimits)
             : base(container, rcArgs.Arguments, rcArgs.Privileged, rcArgs.Environment, rlimits)
@@ -32,12 +33,14 @@ namespace IronFoundry.Warden.Tasks
                 {
                     this.args = String.Join(" ", arguments.Skip(1));
                 }
+
+                workingDir = rcArgs.WorkingDirectory;
             }
         }
 
         protected override TaskCommandResult DoExecute()
         {
-            return base.RunProcess(container.ContainerDirectoryPath, executable, args);
+            return base.RunProcess(workingDir, executable, args);
         }
     }
 }

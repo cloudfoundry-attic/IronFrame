@@ -13,5 +13,8 @@
 
         [JsonProperty(PropertyName="env")]
         public Dictionary<string, string> Environment { get; set; } 
+
+        [JsonProperty(PropertyName = "working_dir")]
+        public string WorkingDirectory { get; set; } 
     }
 }

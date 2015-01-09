@@ -219,7 +219,7 @@ namespace IronFoundry.Warden.ContainerHost
 
                 dispatcher.RegisterMethod<RunCommandRequest>(RunCommandRequest.MethodName, async (r) =>
                 {
-                    var remoteCommand = new RemoteCommand(r.@params.privileged, r.@params.command, r.@params.arguments, r.@params.environment);
+                    var remoteCommand = new RemoteCommand(r.@params.privileged, r.@params.command, r.@params.arguments, r.@params.environment, r.@params.working_dir);
                     var result = await container.RunCommandAsync(remoteCommand);
 
                     return new RunCommandResponse(
