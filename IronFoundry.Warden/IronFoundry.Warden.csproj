@@ -82,6 +82,7 @@
     <Compile Include="PInvoke\StandardRights.cs" />
     <Compile Include="PInvoke\WindowsStationRights.cs" />
     <Compile Include="Utilities\DesktopSecurity.cs" />
+    <Compile Include="Utilities\EnvironmentBlock.cs" />
     <Compile Include="Utilities\IFirewallManager.cs" />
     <Compile Include="Utilities\ILocalTcpPortManager.cs" />
     <Compile Include="Utilities\INetShRunner.cs" />

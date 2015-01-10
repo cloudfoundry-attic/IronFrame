@@ -248,6 +248,8 @@ namespace IronFoundry.Warden.Containers
 
             if (!createProcessStartInfo.EnvironmentVariables.IsNullOrEmpty())
             {
+                si.EnvironmentVariables.Clear();
+
                 foreach (string key in createProcessStartInfo.EnvironmentVariables.Keys)
                 {
                     si.EnvironmentVariables[key] = createProcessStartInfo.EnvironmentVariables[key];

@@ -36,7 +36,7 @@ namespace IronFoundry.Warden.Tasks
         {
             this.privileged = privileged;
             this.rlimits = rlimits;
-            this.environment = ConvertEnvironmentPaths(environment ?? new Dictionary<string, string>(0));
+            this.environment = PrepareEnvironment(environment);
         }
 
         public override TaskCommandResult Execute()
@@ -124,6 +124,47 @@ namespace IronFoundry.Warden.Tasks
             System.IO.File.WriteAllText(tempFile.FullName, envLogBuilder.ToString(), Encoding.UTF8);
 
             return tempFile;
+        }
+
+        /// <summary>
+        /// Prepare the complete environment block that will be used based on the environment
+        /// variables that were specified in the request.
+        /// </summary>
+        /// <remarks>
+        /// When starting a process, you can let the process load the default environment or 
+        /// you can specify the exact variables to use by setting ProcessStartInfo.EnvironmentVariables.
+        /// 
+        /// If you specify the value of any variable, then you have to specify all of them, no defaults
+        /// will be provided
+        /// 
+        /// This method will generate the default environment variables to use and then upsert the ones
+        /// specified.  
+        /// </remarks>
+        /// <remarks>
+        /// For the variable values specified, any @ROOT@ prefixes found, will be replaced
+        /// with the full path to the container root.
+        /// </remarks>
+        private IDictionary<string, string> PrepareEnvironment(IDictionary<string, string> env)
+        {
+            if (env.IsNullOrEmpty())
+            {
+                return new Dictionary<string, string>(0);
+            }
+
+            // Root the provided environment values
+            var rootedEnv = env.ToDictionary(kv => kv.Key, kv => container.ConvertToPathWithin(kv.Value));
+
+            // Generate a new environment containing all the default values.
+            EnvironmentBlock defaultEnv = EnvironmentBlock.GenerateDefault(container.ContainerDirectoryPath);
+            
+            // Generate an environment with the machine variables
+            var machineVars = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Machine);
+            EnvironmentBlock machineEnv = EnvironmentBlock.Create(machineVars);
+
+            // Merge the default envs with the machine and user provided variables
+            var envHash = defaultEnv.Merge(machineEnv).Merge(rootedEnv).ToDictionary();
+
+            return envHash;
         }
 
         /// <summary>

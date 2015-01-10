@@ -104,6 +104,17 @@ namespace System.Collections.Generic
             return argThis.Where<T>(t => t != null);
         }
     }
+
+    public static class DictionaryExtensionMethods
+    {
+        public static void SetIfNotNull<TKey, TVal>(this IDictionary<TKey, TVal> dictionary, TKey key, TVal val)
+        {
+            if (val != null)
+            {
+                dictionary[key] = val;
+            }
+        }
+    }
 }
 
 namespace System.IO
