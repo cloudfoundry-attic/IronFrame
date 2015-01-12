@@ -829,7 +829,7 @@ namespace IronFoundry.Warden.Test
             }
         }
 
-        internal static void WaitForGoodExit(Utilities.IProcess p)
+        internal static void WaitForGoodExit(IProcess p)
         {
             p.WaitForExit(2000);
             Assert.Equal(0, p.ExitCode);

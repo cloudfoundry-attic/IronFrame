@@ -51,6 +51,7 @@
     <Compile Include="PInvoke\JobObjectLimitsTests.cs" />
     <Compile Include="Handlers\DestroyRequestHandlerTests.cs" />
     <Compile Include="Handlers\LimitMemoryRequestHandlerTest.cs" />
+    <Compile Include="Utilities\EnvironmentBlockTests.cs" />
     <Compile Include="Utilities\FileSystemManagerTests.cs" />
     <Compile Include="Utilities\LocalTcpPortManagerTests.cs" />
     <Compile Include="Handlers\LoggingRequestHandlerTest.cs" />
