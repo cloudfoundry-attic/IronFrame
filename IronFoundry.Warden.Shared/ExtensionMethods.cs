@@ -8,7 +8,8 @@ namespace System
 {
     public static class StringExtensionMethods
     {
-        private static readonly Regex backslashCleanup = new Regex(@"\\+", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        private static readonly Regex backslashCleanup = new Regex(@"\\+",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
         public static bool IsNullOrWhiteSpace(this string argThis)
         {
@@ -36,6 +37,29 @@ namespace System
             securedString.MakeReadOnly();
 
             return securedString;
+        }
+    }
+
+    public static class ActionExtensionMethods
+    {
+        public static bool ThrowsException<T>(this Action action) where T : Exception
+        {
+            bool threwException = false;
+
+            try
+            {
+                action();
+            }
+            catch (T)
+            {
+                threwException = true;
+            }
+            catch
+            {
+                // ignored
+            }
+
+            return threwException;
         }
     }
 }

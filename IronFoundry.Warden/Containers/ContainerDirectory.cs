@@ -1,4 +1,10 @@
-﻿namespace IronFoundry.Warden.Containers
+﻿using System.Runtime.CompilerServices;
+using System.Security.Principal;
+using System.Threading;
+using IronFoundry.Warden.Utilities;
+using NLog;
+
+namespace IronFoundry.Warden.Containers
 {
     using System;
     using System.Collections.Generic;
@@ -19,17 +25,21 @@
     {
         private readonly IContainerUser user;
         private readonly DirectoryInfo containerDirectory;
+        private readonly FileSystemManager fileSystem;
+        private readonly Logger log = LogManager.GetCurrentClassLogger();
 
-        public ContainerDirectory(ContainerHandle handle, IContainerUser user, string containerBaseDirectory, bool shouldCreate = false)
+        public ContainerDirectory(ContainerHandle handle, IContainerUser user, FileSystemManager fileSystem, string containerBaseDirectory, bool shouldCreate = false)
         {
             if (handle == null)
                 throw new ArgumentNullException("handle");
 
             this.user = user;
+            this.fileSystem = fileSystem;
 
+            string containerPath = Path.Combine(containerBaseDirectory, handle);
             this.containerDirectory = shouldCreate ?
-                CreateContainerDirectory(containerBaseDirectory, handle, user) :
-                FindContainerDirectory(containerBaseDirectory, handle);
+                CreateContainerDirectory(containerPath) :
+                FindContainerDirectory(containerPath);
         }
 
         public string FullName
@@ -37,16 +47,30 @@
             get { return containerDirectory.FullName; }
         }
 
-        void BindMount(BindMount bindMount)
+        private void BindMount(BindMount bindMount)
         {
-            var inheritanceFlags = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
-            // TODO: We need to determine the exact rights that are required for Read vs ReadWrite.
-            // Apparently FileSystemRights.Read | FileSystemRights.Write weren't enough.
-            var rights = FileSystemRights.FullControl;
+            log.Debug("BindMount ({0}): Source: {1} Dest: {2}", bindMount.Access, bindMount.SourcePath,
+                bindMount.DestinationPath);
 
-            var accessRule = new FileSystemAccessRule(user.UserName, rights, inheritanceFlags, PropagationFlags.InheritOnly, AccessControlType.Allow);
-            AddAccessRuleTo(accessRule, bindMount.SourcePath);
-            AddAccessRuleTo(accessRule, bindMount.DestinationPath);
+            // We can ignore the bindMount.TargetPath because we don't mount anything.
+            // Since we have no containers, we just read everything from the source.
+            string containerPath = bindMount.SourcePath;
+            
+            if (fileSystem.DirectoryExists(containerPath))
+            {
+                FileAccess effectiveAccess = fileSystem.GetEffectiveDirectoryAccess(containerPath, user.GetCredential());
+
+                // The AND provides us with the flags that are common between the requested access and the effective access.
+                // The XOR then flips those bits to 0 and leaves as 1 those that aren't found in effective access.
+                FileAccess accessNeeded = bindMount.Access ^ (bindMount.Access & effectiveAccess);
+
+                fileSystem.AddDirectoryAccess(containerPath, accessNeeded, user.UserName);
+            }
+            else
+            {
+                var access = GetDefaultDirectoryAccess();
+                fileSystem.CreateDirectory(containerPath, access);
+            }
         }
 
         public void BindMounts(IEnumerable<BindMount> mounts)
@@ -72,86 +96,45 @@
             return containerDirectory.ToString();
         }
 
-        //
-        // TODO: Consolidate the various helper methods
-        //
-
-        private static DirectoryInfo CreateContainerDirectory(string containerBaseDirectory, ContainerHandle handle, IContainerUser user)
+        private DirectoryInfo CreateContainerDirectory(string containerPath)
         {
-            var dirInfo = GetContainerDirectoryInfo(containerBaseDirectory, handle);
+            var defaultAccess = GetDefaultDirectoryAccess();
+            fileSystem.CreateDirectory(containerPath, defaultAccess);
+            fileSystem.AddDirectoryAccess(containerPath, FileAccess.ReadWrite, user.UserName);
 
-            var inheritanceFlags = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
-            var accessRule = new FileSystemAccessRule(user.UserName, FileSystemRights.FullControl, inheritanceFlags,
-                PropagationFlags.None, AccessControlType.Allow);
-
-            DirectoryInfo containerBaseInfo = dirInfo.Item1;
-            DirectorySecurity security = containerBaseInfo.GetAccessControl();
-            security.AddAccessRule(accessRule);
-
-            string containerDirectory = dirInfo.Item2;
-            return Directory.CreateDirectory(containerDirectory, security);
+            return new DirectoryInfo(containerPath);
         }
 
-        private static DirectoryInfo FindContainerDirectory(string containerBaseDirectory, ContainerHandle handle)
+        private static DirectoryInfo FindContainerDirectory(string containerPath)
         {
-            var dirInfo = GetContainerDirectoryInfo(containerBaseDirectory, handle);
-            if (Directory.Exists(dirInfo.Item2))
+            if (Directory.Exists(containerPath))
             {
-                return new DirectoryInfo(dirInfo.Item2);
+                return new DirectoryInfo(containerPath);
             }
             else
             {
-                throw new WardenException("Directory '{0}' does not exist!", dirInfo.Item2);
+                throw new WardenException("Directory '{0}' does not exist!", containerPath);
             }
         }
 
-        private static Tuple<DirectoryInfo, string> GetContainerDirectoryInfo(string containerBaseDirectory, ContainerHandle handle)
+        /// <summary>
+        /// Return the default access to use for new directories.  
+        /// </summary>
+        private IEnumerable<UserAccess> GetDefaultDirectoryAccess()
         {
-            string containerDirectory = Path.Combine(containerBaseDirectory, handle);
-
-            return new Tuple<DirectoryInfo, string>(new DirectoryInfo(containerBaseDirectory), containerDirectory);
+            return new[]
+            {
+                new UserAccess {UserName = GetBuiltInAdminGroupName(), Access = FileAccess.ReadWrite},
+                new UserAccess {UserName = user.UserName, Access = FileAccess.ReadWrite},
+            };
         }
 
-        private void AddAccessRuleTo(FileSystemAccessRule accessRule, string path)
+        private string GetBuiltInAdminGroupName()
         {
-            var pathInfo = new DirectoryInfo(path);
-            if (pathInfo.Exists)
-            {
-                var pathSecurity = pathInfo.GetAccessControl();
-                pathSecurity.AddAccessRule(accessRule);
-
-                ReplaceAllChildPermissions(pathInfo, pathSecurity);
-            }
-            else
-            {
-                DirectoryInfo parentInfo = pathInfo.Parent;
-                if (parentInfo.Exists)
-                {
-                    var pathSecurity = parentInfo.GetAccessControl();
-                    pathSecurity.AddAccessRule(accessRule);
-
-                    Directory.CreateDirectory(pathInfo.FullName, pathSecurity);
-
-                    ReplaceAllChildPermissions(pathInfo, pathSecurity);
-                }
-            }
+            var sid = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null);
+            var account = (NTAccount)sid.Translate(typeof(NTAccount));
+            return account.Value;
         }
 
-        private static void ReplaceAllChildPermissions(DirectoryInfo dirInfo, DirectorySecurity security)
-        {
-            dirInfo.SetAccessControl(security);
-
-            foreach (var fi in dirInfo.GetFiles())
-            {
-                var fileSecurity = fi.GetAccessControl();
-                fileSecurity.SetAccessRuleProtection(false, false);
-                fi.SetAccessControl(fileSecurity);
-            }
-
-            foreach (var di in dirInfo.GetDirectories())
-            {
-                ReplaceAllChildPermissions(di, security);
-            }
-        }
     }
 }

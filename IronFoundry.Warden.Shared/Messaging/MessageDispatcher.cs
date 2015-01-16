@@ -9,6 +9,7 @@ namespace IronFoundry.Warden.Shared.Messaging
 {
     public class MessageDispatcher
     {
+        private NLog.Logger log = NLog.LogManager.GetCurrentClassLogger();
         Dictionary<string, Func<JObject, Task<object>>> methods = new Dictionary<string, Func<JObject, Task<object>>>(StringComparer.OrdinalIgnoreCase);
 
         public async Task<JObject> DispatchAsync(JObject request)
@@ -31,6 +32,7 @@ namespace IronFoundry.Warden.Shared.Messaging
                 }
                 catch (Exception ex)
                 {
+                    log.Error("INTERNAL ERROR: {0}", ex.ToString());
                     return InternalError(request, ex);
                 }
             }

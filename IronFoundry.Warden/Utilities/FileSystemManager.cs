@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Net;
+using System.Security.AccessControl;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
+using Microsoft.VisualBasic;
 
 namespace IronFoundry.Warden.Utilities
 {
@@ -23,6 +25,11 @@ namespace IronFoundry.Warden.Utilities
         public virtual void CreateDirectory(string path)
         {
             Directory.CreateDirectory(path);
+        }
+
+        public virtual void CreateDirectory(string path, DirectorySecurity security)
+        {
+            Directory.CreateDirectory(path, security);
         }
 
         public virtual void CreateTarArchive(string sourceDirectoryPath, Stream tarStream)
@@ -45,6 +52,11 @@ namespace IronFoundry.Warden.Utilities
         public virtual bool Exists(string path)
         {
             return File.Exists(path);
+        }
+
+        public virtual bool DirectoryExists(string directoryPath)
+        {
+            return Directory.Exists(directoryPath);
         }
 
         public virtual void ExtractTarArchive(Stream tarStream, string destinationDirectoryPath)
@@ -166,6 +178,80 @@ namespace IronFoundry.Warden.Utilities
             public long Size { get; set; }
             public string FilePath { get; set; }
         }
+
+
+        /// <summary>
+        /// Returns true if the user has read access to the directory
+        /// </summary>
+        public bool HasDirectoryReadAccess(string directory, NetworkCredential credential)
+        {
+            // TODO - Change this to use the Windows API to determine the effective rights:
+            // Either:
+            // http://msdn.microsoft.com/en-us/library/windows/desktop/aa446637%28v=vs.85%29.aspx
+            // OR
+            // https://code.msdn.microsoft.com/windowsapps/Effective-access-rights-dd5b13a8#content
+
+            bool hasReadAccess = false;
+
+            using (Impersonator.GetContext(credential, true))
+            {
+                // Test for READ access
+                var dirInfo = new DirectoryInfo(directory);
+                Action readAcl = () => dirInfo.GetAccessControl(AccessControlSections.Access);
+                if (!readAcl.ThrowsException<UnauthorizedAccessException>())
+                {
+                    hasReadAccess = true;
+                }
+            }
+
+            return hasReadAccess;
+        }
+
+        /// <summary>
+        /// Returns true if the specified user can write to the directory
+        /// </summary>
+        public bool HasDirectoryWriteAccess(string directory, NetworkCredential credential)
+        {
+            // TODO - Change this to use the Windows API to determine the effective rights:
+            // Either:
+            // http://msdn.microsoft.com/en-us/library/windows/desktop/aa446637%28v=vs.85%29.aspx
+            // OR
+            // https://code.msdn.microsoft.com/windowsapps/Effective-access-rights-dd5b13a8#content
+
+            bool hasWriteAccess = false;
+
+            using (Impersonator.GetContext(credential, true))
+            {
+                string testFileName = "IF_WARDEN_WRITE_TEST." + Path.GetRandomFileName();
+                string testFilePath = Path.Combine(directory, testFileName);
+                try
+                {
+                    FileInfo file = new FileInfo(testFilePath);
+                    file.Create().Close();
+                    file.Delete();
+
+                    hasWriteAccess = true;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                }
+            }
+
+            return hasWriteAccess;
+        }
+
+        public DirectorySecurity GetDirectoryAccessSecurity(string path)
+        {
+            var dirInfo = new DirectoryInfo(path);
+            DirectorySecurity security = dirInfo.GetAccessControl();
+            return security;
+        }
+
+        public void SetDirectoryAccessSecurity(string path, DirectorySecurity security)
+        {
+            var dirInfo = new DirectoryInfo(path);
+            dirInfo.SetAccessControl(security);
+        }
     }
 
     public class FileSystemManager
@@ -276,5 +362,99 @@ namespace IronFoundry.Warden.Utilities
             else
                 return stream;
         }
+
+        /// <summary>
+        /// Returns true if the path refers to an existing directory.
+        /// </summary>
+        internal bool DirectoryExists(string path)
+        {
+            return fileSystem.DirectoryExists(path);
+        }
+
+        /// <summary>
+        /// Get the access that the specified user has to the specified directory.
+        /// </summary>
+        internal FileAccess GetEffectiveDirectoryAccess(string directory, NetworkCredential credential)
+        {
+            // TODO Modify this so it doesn't require the network credentials, only the username.
+
+            FileAccess access = new FileAccess();
+
+            if (fileSystem.HasDirectoryReadAccess(directory, credential))
+            {
+                access |= FileAccess.Read;
+            }
+
+            if (fileSystem.HasDirectoryWriteAccess(directory, credential))
+            {
+                access |= FileAccess.Write;
+            }
+
+            return access;
+        }
+
+        private IEnumerable<FileSystemAccessRule> GetAccessControlRules(FileAccess access, string username)
+        {
+            if ((int)access == 0)
+            {
+                // If no flags are set just return
+                return new FileSystemAccessRule[0];
+            }
+
+            FileSystemAccessRule accessRule;
+            const InheritanceFlags inheritanceFlags = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
+            List<FileSystemAccessRule> rules = new List<FileSystemAccessRule>();
+
+            if (access.HasFlag(FileAccess.Read))
+            {
+                accessRule = new FileSystemAccessRule(username, FileSystemRights.ReadAndExecute, inheritanceFlags, PropagationFlags.None, AccessControlType.Allow);
+                rules.Add(accessRule);
+            }
+
+            if (access.HasFlag(FileAccess.Write))
+            {
+                accessRule = new FileSystemAccessRule(username, FileSystemRights.Write, inheritanceFlags, PropagationFlags.None, AccessControlType.Allow);
+                rules.Add(accessRule);
+
+                accessRule = new FileSystemAccessRule(username, FileSystemRights.Delete, inheritanceFlags, PropagationFlags.None, AccessControlType.Allow);
+                rules.Add(accessRule);
+            }
+
+            return rules;
+        }
+
+        /// <summary>
+        /// Create a directory with the specified user access
+        /// </summary>
+        public void CreateDirectory(string path, IEnumerable<UserAccess> userAccess)
+        {
+            IEnumerable<FileSystemAccessRule> rules = userAccess.SelectMany(ua => GetAccessControlRules(ua.Access, ua.UserName));
+
+            DirectorySecurity security = new DirectorySecurity();
+            foreach (FileSystemAccessRule rule in rules)
+            {
+                security.AddAccessRule(rule);
+            }
+
+            fileSystem.CreateDirectory(path, security);
+        }
+
+        public void AddDirectoryAccess(string path, FileAccess access, string user)
+        {
+            DirectorySecurity security = fileSystem.GetDirectoryAccessSecurity(path);
+
+            foreach (FileSystemAccessRule rule in GetAccessControlRules(access, user))
+            {
+                security.AddAccessRule(rule);
+            }
+
+            fileSystem.SetDirectoryAccessSecurity(path, security);
+        }
+    }
+
+    public class UserAccess
+    {
+        public FileAccess Access { get; set; }
+        public string UserName { get; set; }
     }
 }

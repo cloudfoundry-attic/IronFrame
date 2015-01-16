@@ -161,7 +161,12 @@ namespace IronFoundry.Warden.ContainerHost
                     var containerHandle = new ContainerHandle(r.@params.containerHandle);
                     var containerUser = ContainerUser.CreateUser(containerHandle, new LocalPrincipalManager(new DesktopPermissionManager(), r.@params.wardenUserGroup));
 
-                    var containerDirectory = new ContainerDirectory(containerHandle, containerUser, r.@params.containerBaseDirectoryPath, true);
+                    var containerDirectory = new ContainerDirectory(
+                        containerHandle, 
+                        containerUser, 
+                        new FileSystemManager(), 
+                        r.@params.containerBaseDirectoryPath, 
+                        true);
 
                     container.Initialize(
                         containerDirectory,
@@ -185,6 +190,7 @@ namespace IronFoundry.Warden.ContainerHost
 
                 dispatcher.RegisterMethod<CopyFileInRequest>(CopyFileInRequest.MethodName, r =>
                 {
+                    
                     container.CopyFileIn(r.@params.SourceFilePath, r.@params.DestinationFilePath);
                     return Task.FromResult<object>(new CopyFileResponse(r.id));
                 });
