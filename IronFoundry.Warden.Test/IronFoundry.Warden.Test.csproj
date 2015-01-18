@@ -83,9 +83,9 @@
       <Project>{ddd0537b-4afe-4beb-bf30-4df0a5367a18}</Project>
       <Name>IronFoundry.Warden.Protocol</Name>
     </ProjectReference>
-    <ProjectReference Include="..\IronFoundry.Warden.Shared\IronFoundry.Warden.Shared.csproj">
+    <ProjectReference Include="..\IronFoundry.Container.Shared\IronFoundry.Container.Shared.csproj">
       <Project>{cb7ba555-21fd-4c57-a629-a925b6a83a31}</Project>
-      <Name>IronFoundry.Warden.Shared</Name>
+      <Name>IronFoundry.Container.Shared</Name>
     </ProjectReference>
     <ProjectReference Include="..\IronFoundry.Warden.TestHelper\IronFoundry.Warden.TestHelper.csproj">
       <Project>{ab96da85-8c4e-490b-b552-3fe9f0e0e9bf}</Project>

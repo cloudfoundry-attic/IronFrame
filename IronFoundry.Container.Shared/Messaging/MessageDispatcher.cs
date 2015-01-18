@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using IronFoundry.Warden.Shared.Messaging;
 using Newtonsoft.Json.Linq;
 using System.Threading;
 
-namespace IronFoundry.Warden.Shared.Messaging
+namespace IronFoundry.Container.Messaging
 {
     public class MessageDispatcher
     {

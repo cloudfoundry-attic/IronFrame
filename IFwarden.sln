@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30110.0
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Warden", "IronFoundry.Warden\IronFoundry.Warden.csproj", "{CC1C255A-A120-4D7F-B40F-C4CB3CDB193B}"
 EndProject
@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Warden.Service"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Warden.Test", "IronFoundry.Warden.Test\IronFoundry.Warden.Test.csproj", "{4FFC5E57-59AB-4631-92B9-484F0353E931}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Warden.Shared", "IronFoundry.Warden.Shared\IronFoundry.Warden.Shared.csproj", "{CB7BA555-21FD-4C57-A629-A925B6A83A31}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Container.Shared", "IronFoundry.Container.Shared\IronFoundry.Container.Shared.csproj", "{CB7BA555-21FD-4C57-A629-A925B6A83A31}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Warden.ContainerHost", "IronFoundry.Warden.ContainerHost\IronFoundry.Warden.ContainerHost.csproj", "{586784CF-DE8A-411F-AD99-18F00DC2A75B}"
 EndProject

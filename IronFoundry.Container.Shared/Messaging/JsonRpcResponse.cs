@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 
-namespace IronFoundry.Warden.Shared.Messaging
+namespace IronFoundry.Container.Messaging
 {
     /// <summary>
     /// Represents a JsonRpcResponse but must have either a result filed so derive from JsonRcpResponse<TResult>

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace IronFoundry.Warden.Shared.Concurrency
+namespace IronFoundry.Container.Concurrency
 {
     /// <summary>
     /// 

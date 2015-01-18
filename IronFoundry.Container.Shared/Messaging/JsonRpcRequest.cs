@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json.Linq;
 
-namespace IronFoundry.Warden.Shared.Messaging
+namespace IronFoundry.Container.Messaging
 {
     public class JsonRpcRequest
     {

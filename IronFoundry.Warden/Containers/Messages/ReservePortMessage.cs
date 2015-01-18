@@ -1,4 +1,4 @@
-﻿using IronFoundry.Warden.Shared.Messaging;
+﻿using IronFoundry.Container.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Linq;

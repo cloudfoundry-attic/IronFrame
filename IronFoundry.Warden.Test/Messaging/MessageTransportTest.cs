@@ -1,13 +1,12 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using IronFoundry.Warden.Shared.Messaging;
 using IronFoundry.Warden.Test.TestSupport;
 using Newtonsoft.Json.Linq;
 using NSubstitute;
 using Xunit;
 
-namespace IronFoundry.Warden.Test.ContainerHost
+namespace IronFoundry.Container.Messaging
 {
     public class MessageTransportTest : IDisposable
     {

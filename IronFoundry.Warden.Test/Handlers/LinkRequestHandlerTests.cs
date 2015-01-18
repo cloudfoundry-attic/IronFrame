@@ -1,15 +1,11 @@
-﻿using IronFoundry.Warden.Containers;
+﻿using System;
+using IronFoundry.Container.Messaging;
+using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Handlers;
 using IronFoundry.Warden.Jobs;
 using IronFoundry.Warden.Protocol;
-using IronFoundry.Warden.Shared.Messaging;
 using NSubstitute;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace IronFoundry.Warden.Test.Handlers

@@ -1,7 +1,6 @@
 ﻿using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Containers.Messages;
-using IronFoundry.Warden.Shared.Data;
-using IronFoundry.Warden.Shared.Messaging;
+using IronFoundry.Container.Messaging;
 using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Test.TestSupport;
 using IronFoundry.Warden.Utilities;

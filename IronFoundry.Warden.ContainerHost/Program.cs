@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using IronFoundry.Warden.Configuration;
 using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Containers.Messages;
-using IronFoundry.Warden.Shared.Messaging;
+using IronFoundry.Container.Messaging;
 using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Utilities;
 using logmessage;

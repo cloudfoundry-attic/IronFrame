@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Security;
 using Newtonsoft.Json;
-using IronFoundry.Warden.Shared.Messaging;
+using IronFoundry.Container.Messaging;
 
 namespace IronFoundry.Warden.Containers.Messages
 {

@@ -5,9 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using IronFoundry.Warden.Shared.Concurrency;
+using IronFoundry.Container.Concurrency;
 
-namespace IronFoundry.Warden.Shared.Messaging
+namespace IronFoundry.Container.Messaging
 {
     public class MessageTransport : IDisposable
     {

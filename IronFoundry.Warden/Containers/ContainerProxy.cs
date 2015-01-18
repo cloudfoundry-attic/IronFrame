@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using IronFoundry.Warden.Configuration;
 using IronFoundry.Warden.Containers.Messages;
-using IronFoundry.Warden.Shared.Data;
 using IronFoundry.Warden.Tasks;
 using System.Collections.Generic;
 using System.Linq;

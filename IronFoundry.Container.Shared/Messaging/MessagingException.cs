@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IronFoundry.Warden.Shared.Messaging
+namespace IronFoundry.Container.Messaging
 {
     [Serializable]
     public class MessagingException : Exception

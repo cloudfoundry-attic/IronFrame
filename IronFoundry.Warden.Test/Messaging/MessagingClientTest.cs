@@ -1,7 +1,5 @@
-﻿using IronFoundry.Warden.Shared.Messaging;
-using Newtonsoft.Json;
+﻿using System;
 using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,8 +7,7 @@ using System.Threading.Tasks;
 using IronFoundry.Warden.Test.Messaging;
 using Xunit;
 
-
-namespace IronFoundry.Warden.Test.ContainerHost
+namespace IronFoundry.Container.Messaging
 {
     public class MessagingClientTest
     {

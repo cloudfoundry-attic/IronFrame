@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using IronFoundry.Warden.Shared.Messaging;
+using IronFoundry.Container.Messaging;
 using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Warden.Containers.Messages

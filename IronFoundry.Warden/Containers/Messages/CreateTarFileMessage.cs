@@ -1,4 +1,4 @@
-﻿using IronFoundry.Warden.Shared.Messaging;
+﻿using IronFoundry.Container.Messaging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

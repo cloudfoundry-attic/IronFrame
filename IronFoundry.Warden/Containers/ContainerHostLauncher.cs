@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using IronFoundry.Warden.Containers.Messages;
-using IronFoundry.Warden.Shared.Messaging;
+using IronFoundry.Container.Messaging;
 using IronFoundry.Warden.Utilities;
 using logmessage;
 using NLog;

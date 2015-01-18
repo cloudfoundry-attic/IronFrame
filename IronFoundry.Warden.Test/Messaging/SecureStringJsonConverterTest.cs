@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xunit;
-using Newtonsoft.Json;
 using System.Security;
+using Newtonsoft.Json;
+using Xunit;
 
-namespace IronFoundry.Warden.Shared.Messaging
+namespace IronFoundry.Container.Messaging
 {
     public class SecureStringJsonConverterTest
     {

@@ -5,7 +5,7 @@ using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using IronFoundry.Warden.Shared.Messaging;
+using IronFoundry.Container.Messaging;
 
 namespace IronFoundry.Warden.Containers.Messages
 {

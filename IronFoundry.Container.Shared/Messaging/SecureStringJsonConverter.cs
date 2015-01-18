@@ -2,7 +2,7 @@
 using System.Security;
 using Newtonsoft.Json;
 
-namespace IronFoundry.Warden.Shared.Messaging
+namespace IronFoundry.Container.Messaging
 {
     public class SecureStringJsonConverter : JsonConverter
     {

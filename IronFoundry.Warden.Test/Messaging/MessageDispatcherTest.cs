@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using IronFoundry.Warden.Shared.Messaging;
+using IronFoundry.Container.Messaging;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
