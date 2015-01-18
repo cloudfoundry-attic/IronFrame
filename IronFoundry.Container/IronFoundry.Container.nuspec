@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>IronFoundry.Container</id>
+    <version>1.0</version>
+    <title>IronFoundry Container</title>
+    <description>IronFoundry Container Library</description>
+    <authors>CenturyLink Cloud</authors>
+    <owners>CenturyLink Cloud</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>https://github.com/cloudfoundry-incubator/if_warden</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+
+    <dependencies>
+      <dependency id="Newtonsoft.Json" version="6.0.1" />
+      <dependency id="NLog" version="2.1.0" />
+      <dependency id="SharpZipLib" version="0.86.0" />
+    </dependencies>
+
+    <references>
+      <reference file="IronFoundry.Warden.Shared.dll" />
+      <reference file="IronFoundry.Warden.ContainerHost.exe" />
+    </references>
+  </metadata>
+
+  <files>
+    <file src="bin\$configuration$\IronFoundry.Warden.Shared.dll" target="lib\net45" />
+    <file src="bin\$configuration$\IronFoundry.Warden.ContainerHost.exe" target="lib\net45" />
+  </files>
+
+</package>

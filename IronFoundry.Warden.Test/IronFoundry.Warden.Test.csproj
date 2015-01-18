@@ -75,6 +75,10 @@
     <Compile Include="TestSupport\TestUserHolder.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\IronFoundry.Container\IronFoundry.Container.csproj">
+      <Project>{5de07f79-b758-4a04-b908-626e7577313e}</Project>
+      <Name>IronFoundry.Container</Name>
+    </ProjectReference>
     <ProjectReference Include="..\IronFoundry.Warden.ContainerHost\IronFoundry.Warden.ContainerHost.csproj">
       <Project>{586784cf-de8a-411f-ad99-18f00dc2a75b}</Project>
       <Name>IronFoundry.Warden.ContainerHost</Name>
