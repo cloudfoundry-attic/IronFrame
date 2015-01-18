@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using IronFoundry.Container.Win32;
 using Xunit;
 
 namespace IronFoundry.Warden.Containers
@@ -66,7 +67,7 @@ namespace IronFoundry.Warden.Containers
                 jobObject.AssignProcessToJob(p);
 
                 bool isInJob;
-                IronFoundry.Warden.PInvoke.NativeMethods.IsProcessInJob(p.Handle, jobObject.Handle, out isInJob);
+                NativeMethods.IsProcessInJob(p.Handle, jobObject.Handle, out isInJob);
                 Assert.True(isInJob);
             }
             finally

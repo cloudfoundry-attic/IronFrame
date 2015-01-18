@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using IronFoundry.Warden.Utilities;
 using Xunit;
 using System.Collections;
+using IronFoundry.Container.Utilities;
 using NSubstitute;
 
 namespace IronFoundry.Warden.Test
@@ -22,11 +23,13 @@ namespace IronFoundry.Warden.Test
         private const string testUserName = "IFTestUserName";
         private const string testGroupName = "TestWardenUserGroup";
 
+        private LocalUserGroupManager groupManager;
         private LocalPrincipalManager manager;
         private IDesktopPermissionManager permissionManager;
 
         public LocalPrincipalManagerTests()
         {
+            groupManager = new LocalUserGroupManager();
             permissionManager = Substitute.For<IDesktopPermissionManager>();
             RecreateLocalGroup(testGroupName);
             manager = new LocalPrincipalManager(permissionManager, testGroupName);
@@ -130,47 +133,22 @@ namespace IronFoundry.Warden.Test
 
         private void RecreateLocalGroup(string groupName)
         {
+
             TryDeleteLocalGroup(groupName);
-            CreateLocalGroup(groupName);
-        }
-
-        private void CreateLocalGroup(string groupName)
-        {
-            using (var localDirectory = new DirectoryEntry(String.Format("WinNT://{0}", Environment.MachineName)))
-            {
-                DirectoryEntries children = localDirectory.Children;
-
-                try
-                {
-                    DirectoryEntry group = children.Find(groupName);
-                    if (group != null) return;
-                }
-                catch (COMException)
-                {
-                    // Couldn't find group.
-                }
-
-                var newGroup = children.Add(groupName, "group");
-                newGroup.CommitChanges();
-            }
+            groupManager.CreateLocalGroup(groupName);
         }
 
         private void TryDeleteLocalGroup(string groupName)
         {
-            using (var localDirectory = new DirectoryEntry(String.Format("WinNT://{0}", Environment.MachineName)))
+            try
             {
-                DirectoryEntries children = localDirectory.Children;
-
-                try
-                {
-                    DirectoryEntry group = children.Find(groupName);
-                    children.Remove(group);
-                }
-                catch
-                {
-                }
+                groupManager.DeleteLocalGroup(groupName);
+            }
+            catch (Exception)
+            {
             }
         }
+
 
         private void AssertUserInGroup(string groupName, string userName)
         {

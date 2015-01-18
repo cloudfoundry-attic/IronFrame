@@ -1,17 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using IronFoundry.Container;
 using IronFoundry.Container.Messaging;
 using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Warden.Containers.Messages
 {
-    public class BindMount
-    {
-        public string SourcePath { get; set; }
-        public string DestinationPath { get; set; }
-        public FileAccess Access { get; set; }
-    }
-
     public class BindMountsParameters
     {
         public List<BindMount> Mounts { get; set; }

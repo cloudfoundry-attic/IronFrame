@@ -17,6 +17,7 @@ namespace IronFoundry.Container.Messaging
         {
             var outputWriter = Substitute.For<TextWriter>();
             transporter = new MessageTransport(inputSource, outputWriter);
+            transporter.Start();
         }
 
         public void Dispose()

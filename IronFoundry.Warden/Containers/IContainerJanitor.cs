@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace IronFoundry.Warden.Containers
 {
+    // BR: Move this to IronFoundry.Container
     public interface IContainerJanitor
     {
         Task DestroyContainerAsync(string handle, string containerBasePath, string tcpPort, bool deleteDirectories, int? containerPort);

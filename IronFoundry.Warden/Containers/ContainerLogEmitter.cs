@@ -12,7 +12,7 @@ namespace IronFoundry.Warden.Containers
 {
     public interface ILogEmitter
     {
-        void EmitLogMessage(LogMessage.MessageType type, string message);
+        void EmitLogMessage(LogMessageType type, string message);
     }
 
 
@@ -75,7 +75,7 @@ namespace IronFoundry.Warden.Containers
         }
 
 
-        public void EmitLogMessage(LogMessage.MessageType type, string data)
+        public void EmitLogMessage(LogMessageType type, string data)
         {
             if (data.IsNullOrEmpty())
             {
@@ -84,7 +84,7 @@ namespace IronFoundry.Warden.Containers
 
             var message = new logmessage.LogMessage()
             {
-                message_type = type,
+                message_type = ToMessageType(type),
                 message = Encoding.ASCII.GetBytes(data),
                 app_id = instanceLoggingInfo.ApplicationId,
                 source_id = instanceLoggingInfo.InstanceIndex,
@@ -97,6 +97,17 @@ namespace IronFoundry.Warden.Containers
             message.timestamp = (DateTimeOffset.UtcNow.Ticks - dt.Ticks) * 100;
 
             logEmitter.EmitLogMessage(message);
+        }
+
+        logmessage.LogMessage.MessageType ToMessageType(LogMessageType type)
+        {
+            switch (type)
+            {
+                case LogMessageType.STDOUT: return LogMessage.MessageType.OUT;
+                case LogMessageType.STDERR: return LogMessage.MessageType.ERR;
+                default:
+                    throw new ArgumentOutOfRangeException("type");
+            }
         }
     }
 }

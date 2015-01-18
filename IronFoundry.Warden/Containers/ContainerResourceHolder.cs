@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using IronFoundry.Container;
 using IronFoundry.Warden.Configuration;
 using IronFoundry.Warden.Utilities;
 using IronFoundry.Warden.Containers.Messages;
@@ -8,6 +9,7 @@ using System.IO;
 
 namespace IronFoundry.Warden.Containers
 {
+    // BR: Move to IronFoundry.Container
     public interface IResourceHolder
     {
         ushort? AssignedPort { get; set; }
@@ -20,6 +22,7 @@ namespace IronFoundry.Warden.Containers
         void Destroy();
     }
 
+    // BR: Move to IronFoundry.Container
     public class ContainerResourceHolder : IResourceHolder
     {
         private const int TerminateWaitTimeout = 2000; // ms

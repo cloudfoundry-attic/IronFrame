@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -28,6 +29,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
@@ -48,22 +50,25 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\shared\CommonAssemblyInfo.cs">
       <Link>CommonAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="ConstrainedProcess.cs" />
+    <Compile Include="ConstrainedProcessRunner.cs" />
+    <Compile Include="Container.cs" />
+    <Compile Include="ContainerCreationService.cs" />
+    <Compile Include="ContainerHostClient.cs" />
+    <Compile Include="ContainerUser.cs" />
+    <Compile Include="IContainerHostService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\IronFoundry.Warden.ContainerHost\IronFoundry.Warden.ContainerHost.csproj">
-      <Project>{586784cf-de8a-411f-ad99-18f00dc2a75b}</Project>
-      <Name>IronFoundry.Warden.ContainerHost</Name>
+    <ProjectReference Include="..\IronFoundry.Container.Host\IronFoundry.Container.Host.csproj">
+      <Project>{6e4dd8fc-91e8-4c70-946d-4c37df84c8cf}</Project>
+      <Name>IronFoundry.Container.Host</Name>
     </ProjectReference>
     <ProjectReference Include="..\IronFoundry.Container.Shared\IronFoundry.Container.Shared.csproj">
       <Project>{cb7ba555-21fd-4c57-a629-a925b6a83a31}</Project>

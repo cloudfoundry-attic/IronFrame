@@ -7,6 +7,8 @@ using IronFoundry.Warden.Utilities;
 
 namespace IronFoundry.Warden.Containers
 {
+    // BR: Move to IronFoundry.Container
+    // BR: Investigate if we would need this in the host?? User management in the host is problematic...
     public class ContainerUser : IEquatable<ContainerUser>, IContainerUser
     {
         private const string UserPrefix = "warden_";

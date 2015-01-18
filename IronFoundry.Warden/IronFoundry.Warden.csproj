@@ -52,19 +52,16 @@
     <Compile Include="Containers\ContainerUser.cs" />
     <Compile Include="Containers\IContainer.cs" />
     <Compile Include="Containers\IContainerClient.cs" />
+    <Compile Include="Containers\IContainerHostLauncher.cs" />
     <Compile Include="Containers\IContainerJanitor.cs" />
     <Compile Include="Containers\IContainerManager.cs" />
-    <Compile Include="Containers\IContainerUser.cs" />
-    <Compile Include="Containers\JobObject.cs" />
     <Compile Include="Containers\ContainerHostLauncher.cs" />
-    <Compile Include="Containers\JobObjectLimits.cs" />
     <Compile Include="Containers\Messages\BindMountMessage.cs" />
     <Compile Include="Containers\Messages\ContainerInfoMessage.cs" />
     <Compile Include="Containers\Messages\ContainerInitializeMessage.cs" />
     <Compile Include="Containers\Messages\ContainerStateMessage.cs" />
     <Compile Include="Containers\Messages\CopyFileMessage.cs" />
     <Compile Include="Containers\Messages\CopyMessage.cs" />
-    <Compile Include="Containers\Messages\CreateProcessMessage.cs" />
     <Compile Include="Containers\Messages\CreateProcessStartInfo.cs" />
     <Compile Include="Containers\Messages\EnableLoggingMessage.cs" />
     <Compile Include="Containers\Messages\LimitMemoryMessage.cs" />
@@ -74,19 +71,8 @@
     <Compile Include="Containers\Messages\StopMessage.cs" />
     <Compile Include="Containers\ProcessMonitor.cs" />
     <Compile Include="Handlers\LoggingRequestHandler.cs" />
-    <Compile Include="PInvoke\Console.cs" />
-    <Compile Include="PInvoke\DesktopRights.cs" />
     <Compile Include="PInvoke\IoCompletionPort.cs" />
-    <Compile Include="PInvoke\StandardRights.cs" />
-    <Compile Include="PInvoke\WindowsStationRights.cs" />
-    <Compile Include="Utilities\DesktopSecurity.cs" />
     <Compile Include="Utilities\EnvironmentBlock.cs" />
-    <Compile Include="Utilities\IFirewallManager.cs" />
-    <Compile Include="Utilities\ILocalTcpPortManager.cs" />
-    <Compile Include="Utilities\INetShRunner.cs" />
-    <Compile Include="Utilities\NetShRunner.cs" />
-    <Compile Include="Utilities\ProcessDataReceivedEventArgs.cs" />
-    <Compile Include="Containers\SafeJobObjectHandle.cs" />
     <Compile Include="Handlers\ContainerRequestHandler.cs" />
     <Compile Include="Handlers\CopyRequestHandler.cs" />
     <Compile Include="Handlers\CopyInRequestHandler.cs" />
@@ -115,36 +101,24 @@
     <Compile Include="Logging\LogMessage.cs" />
     <Compile Include="PInvoke\CloseHandle.cs" />
     <Compile Include="PInvoke\Constants.cs" />
-    <Compile Include="PInvoke\JobObject.cs" />
     <Compile Include="PInvoke\Structs.cs" />
     <Compile Include="PInvoke\LookupAccountSid.cs" />
     <Compile Include="PInvoke\GetTokenInformation.cs" />
     <Compile Include="PInvoke\OpenProcessToken.cs" />
-    <Compile Include="PInvoke\DuplicateTokenEx.cs" />
     <Compile Include="PInvoke\Enums.cs" />
     <Compile Include="PInvoke\GetCurrentThreadId.cs" />
     <Compile Include="PInvoke\GetLengthSid.cs" />
     <Compile Include="PInvoke\GetProcessWindowStation.cs" />
     <Compile Include="PInvoke\GetThreadDesktop.cs" />
-    <Compile Include="PInvoke\LogonUser.cs" />
     <Compile Include="PInvoke\NativeMethods.cs" />
     <Compile Include="Tasks\CommandResult.cs" />
     <Compile Include="Tasks\CommandRunner.cs" />
     <Compile Include="Tasks\ICommandRunner.cs" />
     <Compile Include="Tasks\RemoteCommand.cs" />
     <Compile Include="Utilities\ContainerExtensions.cs" />
-    <Compile Include="Utilities\FileSystemManager.cs" />
     <Compile Include="Utilities\IFilePermissionManager.cs" />
-    <Compile Include="Utilities\IProcess.cs" />
-    <Compile Include="Utilities\IUserManager.cs" />
-    <Compile Include="Utilities\LocalPrincipalData.cs" />
     <Compile Include="Utilities\LoggedIEnumerableExtensionMethods.cs" />
-    <Compile Include="Utilities\FirewallManager.cs" />
     <Compile Include="Utilities\ProcessExtensionMethods.cs" />
-    <Compile Include="PInvoke\RevertToSelf.cs" />
-    <Compile Include="PInvoke\SafeUserTokenHandle.cs" />
-    <Compile Include="PInvoke\SecurityAttributes.cs" />
-    <Compile Include="PInvoke\Utils.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -155,7 +129,6 @@
     <Compile Include="Server\MessageHandler.cs" />
     <Compile Include="Server\SocketExceptionHandler.cs" />
     <Compile Include="Tasks\ExeCommand.cs" />
-    <Compile Include="Utilities\BackgroundProcess.cs" />
     <Compile Include="Tasks\ReplaceTokensCommand.cs" />
     <Compile Include="Tasks\ProcessCommand.cs" />
     <Compile Include="Tasks\TarCommand.cs" />
@@ -184,21 +157,17 @@
     <Compile Include="Handlers\StreamRequestHandler.cs" />
     <Compile Include="Server\TcpServer.cs" />
     <Compile Include="Tasks\WebApplicationCommand.cs" />
-    <Compile Include="Utilities\DesktopPermissionManager.cs" />
-    <Compile Include="Utilities\Impersonator.cs" />
-    <Compile Include="Utilities\IPUtilities.cs" />
-    <Compile Include="Utilities\LocalPrincipalManager.cs" />
     <Compile Include="Tasks\TaskRunner.cs" />
-    <Compile Include="Utilities\LocalTcpPortManager.cs" />
-    <Compile Include="Utilities\LoggerExtensionMethods.cs" />
     <Compile Include="Utilities\MessageWriter.cs" />
-    <Compile Include="Utilities\ProcessHelper.cs" />
     <Compile Include="Utilities\Statics.cs" />
     <Compile Include="Utilities\TempFile.cs" />
     <Compile Include="Server\Buffer.cs" />
-    <Compile Include="Utilities\WindowStationSecurity.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\IronFoundry.Container\IronFoundry.Container.csproj">
+      <Project>{5de07f79-b758-4a04-b908-626e7577313e}</Project>
+      <Name>IronFoundry.Container</Name>
+    </ProjectReference>
     <ProjectReference Include="..\IronFoundry.Warden.Protocol\IronFoundry.Warden.Protocol.csproj">
       <Project>{ddd0537b-4afe-4beb-bf30-4df0a5367a18}</Project>
       <Name>IronFoundry.Warden.Protocol</Name>

@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 
 namespace IronFoundry.Warden.Containers
 {
+
+    // BR: Move this to IronFoundry.Container.Shared
    
     /// <summary>
     /// Monitors supplied processes and aggregates their Error and Output received events.

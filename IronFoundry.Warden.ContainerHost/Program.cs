@@ -234,15 +234,17 @@ namespace IronFoundry.Warden.ContainerHost
 
                 processMonitor.ErrorDataReceived += (o,e) =>
                 {
-                    var jsonLogEvent = JObject.FromObject(new LogEvent() { MessageType = LogMessage.MessageType.ERR, LogData = e.Data });
+                    var jsonLogEvent = JObject.FromObject(new LogEvent() { MessageType = LogMessageType.STDERR, LogData = e.Data });
                     transport.PublishEventAsync(jsonLogEvent);
                 };
 
                 processMonitor.OutputDataReceived += (o, e) =>
                 {
-                    var jsonLogEvent = JObject.FromObject(new LogEvent() { MessageType = LogMessage.MessageType.OUT, LogData = e.Data });
+                    var jsonLogEvent = JObject.FromObject(new LogEvent() { MessageType = LogMessageType.STDOUT, LogData = e.Data });
                     transport.PublishEventAsync(jsonLogEvent);
                 };
+
+                transport.Start();
 
                 exitEvent.WaitOne();
             }

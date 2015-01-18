@@ -60,8 +60,6 @@ namespace IronFoundry.Warden.Test
                 jobObject.GetProcessIds().Returns(new int[] { 1234 });
 
                 var process = Substitute.For<IProcess>();
-                process.TotalProcessorTime.Returns(expectedTotalProcessorTime);
-                process.TotalUserProcessorTime.Returns(expectedTotalUserTime);
                 process.PrivateMemoryBytes.Returns(expectedPrivateMemoryBytes);
                 
                 processHelper.GetProcesses(null).ReturnsForAnyArgs(new[] { process });
@@ -93,28 +91,27 @@ namespace IronFoundry.Warden.Test
             long expectedPrivateMemoryBytes = 2048;
 
             List<IProcess> processes = new List<IProcess>();
+            CpuStatistics expectedCpuStats;
 
             public WhenManagingMultipleProcesses()
             {
+                expectedCpuStats = new CpuStatistics
+                {
+                    TotalKernelTime = expectedTotalKernelTime + expectedTotalKernelTime,
+                    TotalUserTime = expectedTotalUserTime + expectedTotalUserTime,
+                };
+
                 var firstProcess = Substitute.For<IProcess>();
                 firstProcess.Id.Returns(12);
-                firstProcess.TotalProcessorTime.Returns(expectedTotalProcessorTime);
-                firstProcess.TotalUserProcessorTime.Returns(expectedTotalUserTime);
                 firstProcess.PrivateMemoryBytes.Returns(expectedPrivateMemoryBytes);
                 processes.Add(firstProcess);
 
                 var secondProcess = Substitute.For<IProcess>();
                 secondProcess.Id.Returns(34);
-                secondProcess.TotalProcessorTime.Returns(expectedTotalProcessorTime);
-                secondProcess.TotalUserProcessorTime.Returns(expectedTotalUserTime);
                 secondProcess.PrivateMemoryBytes.Returns(expectedPrivateMemoryBytes);
                 processes.Add(secondProcess);
 
-                jobObject.GetCpuStatistics().Returns(new CpuStatistics
-                {
-                    TotalKernelTime = expectedTotalKernelTime + expectedTotalKernelTime,
-                    TotalUserTime = expectedTotalUserTime + expectedTotalUserTime,
-                });
+                jobObject.GetCpuStatistics().Returns(expectedCpuStats);
                 jobObject.GetProcessIds().Returns(new int[] { 12, 34 });
 
                 processHelper.GetProcesses(null).ReturnsForAnyArgs(new[] { firstProcess, secondProcess });
@@ -127,7 +124,7 @@ namespace IronFoundry.Warden.Test
             [Fact]
             public void ReturnsAggregateTotalProcessorTime()
             {
-                Assert.Equal(processes.Sum(p => p.TotalProcessorTime.Ticks), info.CpuStat.TotalProcessorTime.Ticks);
+                Assert.Equal(expectedCpuStats.TotalKernelTime.Ticks + expectedCpuStats.TotalUserTime.Ticks, info.CpuStat.TotalProcessorTime.Ticks);
             }
 
             [Fact]

@@ -30,12 +30,12 @@ namespace IronFoundry.Warden.Test
             public void CallsNetShRunnerFirewallManagerAndReturnsPort()
             {
                 var tcpPortManager = new LocalTcpPortManager(FirewallManager, NetShRunner);
-                NetShRunner.AddRule(Arg.Any<ushort>(), Arg.Any<string>()).ReturnsForAnyArgs(true);
+                NetShRunner.AddRule(Arg.Any<int>(), Arg.Any<string>()).ReturnsForAnyArgs(true);
 
-                ushort port = tcpPortManager.ReserveLocalPort(8888, "userName");
+                var port = tcpPortManager.ReserveLocalPort(8888, "userName");
 
-                NetShRunner.Received().AddRule(Arg.Is((ushort)8888), Arg.Is("userName"));
-                FirewallManager.Received().OpenPort(Arg.Is((ushort)8888), Arg.Is("userName"));
+                NetShRunner.Received().AddRule(Arg.Is(8888), Arg.Is("userName"));
+                FirewallManager.Received().OpenPort(Arg.Is(8888), Arg.Is("userName"));
                 Assert.Equal(8888, port);
             }
 
@@ -43,9 +43,9 @@ namespace IronFoundry.Warden.Test
             public void ZeroPortReturnsNewPort()
             {
                 var tcpPortManager = new LocalTcpPortManager(FirewallManager, NetShRunner);
-                NetShRunner.AddRule(Arg.Any<ushort>(), Arg.Any<string>()).ReturnsForAnyArgs(true);
+                NetShRunner.AddRule(Arg.Any<int>(), Arg.Any<string>()).ReturnsForAnyArgs(true);
 
-                ushort port = tcpPortManager.ReserveLocalPort(0, "userName");
+                var port = tcpPortManager.ReserveLocalPort(0, "userName");
 
                 Assert.True(port > 0);
             }
@@ -54,7 +54,7 @@ namespace IronFoundry.Warden.Test
             public void ThrowsWardenExceptionIfNetShFails()
             {
                 var tcpPortManager = new LocalTcpPortManager(FirewallManager, NetShRunner);
-                NetShRunner.AddRule(Arg.Any<ushort>(), Arg.Any<string>()).ReturnsForAnyArgs(false);
+                NetShRunner.AddRule(Arg.Any<int>(), Arg.Any<string>()).ReturnsForAnyArgs(false);
 
                 var exception = Record.Exception(() =>  tcpPortManager.ReserveLocalPort(8888, "userName"));
 
@@ -65,8 +65,8 @@ namespace IronFoundry.Warden.Test
             public void ThrowWardenExecptionIfFirewallManagerFails()
             {
                 var tcpPortManager = new LocalTcpPortManager(FirewallManager, NetShRunner);
-                NetShRunner.AddRule(Arg.Any<ushort>(), Arg.Any<string>()).ReturnsForAnyArgs(true);
-                FirewallManager.When(x => x.OpenPort(Arg.Any<ushort>(), Arg.Any<string>())).Do(x => { throw new Exception(); });
+                NetShRunner.AddRule(Arg.Any<int>(), Arg.Any<string>()).ReturnsForAnyArgs(true);
+                FirewallManager.When(x => x.OpenPort(Arg.Any<int>(), Arg.Any<string>())).Do(x => { throw new Exception(); });
 
                 var exception = Record.Exception(() => tcpPortManager.ReserveLocalPort(8888, "userName"));
 
@@ -88,11 +88,11 @@ namespace IronFoundry.Warden.Test
             public void CallsNetShRunnerFirewallManagerToReleasePort()
             {
                 var tcpPortManager = new LocalTcpPortManager(FirewallManager, NetShRunner);
-                NetShRunner.DeleteRule(Arg.Any<ushort>()).ReturnsForAnyArgs(true);
+                NetShRunner.DeleteRule(Arg.Any<int>()).ReturnsForAnyArgs(true);
 
                 tcpPortManager.ReleaseLocalPort(8888, "userName");
 
-                NetShRunner.Received().DeleteRule(Arg.Is((ushort) 8888));
+                NetShRunner.Received().DeleteRule(Arg.Is(8888));
                 FirewallManager.Received().ClosePort(Arg.Is("userName"));
             }
 
@@ -100,7 +100,7 @@ namespace IronFoundry.Warden.Test
             public void ThrowsWardenExceptionIfNetShFails()
             {
                 var tcpPortManager = new LocalTcpPortManager(FirewallManager, NetShRunner);
-                NetShRunner.DeleteRule(Arg.Any<ushort>()).ReturnsForAnyArgs(false);
+                NetShRunner.DeleteRule(Arg.Any<int>()).ReturnsForAnyArgs(false);
 
                 var exception = Record.Exception(() => tcpPortManager.ReleaseLocalPort(8888, "userName"));
 
@@ -114,7 +114,7 @@ namespace IronFoundry.Warden.Test
 
                 tcpPortManager.ReleaseLocalPort(null, "userName");
 
-                NetShRunner.DidNotReceive().DeleteRule(Arg.Any<ushort>());
+                NetShRunner.DidNotReceive().DeleteRule(Arg.Any<int>());
                 FirewallManager.Received().ClosePort(Arg.Is("userName"));
             }
 
@@ -122,7 +122,7 @@ namespace IronFoundry.Warden.Test
             public void ThrowWardenExecptionIfFirewallManagerFails()
             {
                 var tcpPortManager = new LocalTcpPortManager(FirewallManager, NetShRunner);
-                NetShRunner.DeleteRule(Arg.Any<ushort>()).ReturnsForAnyArgs(true);
+                NetShRunner.DeleteRule(Arg.Any<int>()).ReturnsForAnyArgs(true);
                 FirewallManager.When(x => x.ClosePort(Arg.Any<string>())).Do(x => { throw new Exception(); });
 
                 var exception = Record.Exception(() => tcpPortManager.ReserveLocalPort(8888, "userName"));

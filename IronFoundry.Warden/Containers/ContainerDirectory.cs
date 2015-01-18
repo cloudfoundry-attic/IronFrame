@@ -11,9 +11,12 @@ namespace IronFoundry.Warden.Containers
     using System.Collections.Generic;
     using System.IO;
     using System.Security.AccessControl;
+    using IronFoundry.Container;
     using IronFoundry.Warden.Configuration;
     using IronFoundry.Warden.Containers.Messages;
 
+    // BR: Move to IronFoundry.Container.Shared
+    // BR: Check garden interface and potentially move BindMount concept to Warden
     public interface IContainerDirectory
     {
         string FullName { get; }
@@ -22,6 +25,8 @@ namespace IronFoundry.Warden.Containers
         void Delete();
     }
 
+    // BR: Move to IronFoundry.Container.Shared
+    // BR: Check garden interface and potentially move BindMount concept to Warden
     public class ContainerDirectory : IContainerDirectory
     {
         private readonly IContainerUser user;

@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -28,8 +29,13 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.6.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -39,6 +45,9 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.DirectoryServices" />
+    <Reference Include="System.DirectoryServices.AccountManagement" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -49,8 +58,43 @@
     <Compile Include="..\shared\CommonAssemblyInfo.cs">
       <Link>CommonAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="BindMount.cs" />
     <Compile Include="Concurrency\AsyncLock.cs" />
+    <Compile Include="ContainerHandleGenerator.cs" />
     <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="FileSystemManager.cs" />
+    <Compile Include="Guard.cs" />
+    <Compile Include="IContainerDirectory.cs" />
+    <Compile Include="IContainerUser.cs" />
+    <Compile Include="ILocalTcpPortManager.cs" />
+    <Compile Include="ContainerProcess.cs" />
+    <Compile Include="JobObjectLimits.cs" />
+    <Compile Include="Messages\CreateProcessMessage.cs" />
+    <Compile Include="Messages\PingMessage.cs" />
+    <Compile Include="Messages\ProcessDataEvent.cs" />
+    <Compile Include="Messages\WaitForProcessExitMessage.cs" />
+    <Compile Include="Utilities\BackgroundProcess.cs" />
+    <Compile Include="Utilities\DesktopPermissionManager.cs" />
+    <Compile Include="Utilities\FirewallManager.cs" />
+    <Compile Include="Utilities\IFirewallManager.cs" />
+    <Compile Include="Utilities\INetShRunner.cs" />
+    <Compile Include="Utilities\IPUtilities.cs" />
+    <Compile Include="Utilities\LocalPrincipalManager.cs" />
+    <Compile Include="Utilities\LocalTcpPortManager.cs" />
+    <Compile Include="Utilities\LocalUserGroupManager.cs" />
+    <Compile Include="Utilities\LoggerExtensionMethods.cs" />
+    <Compile Include="Utilities\NetShRunner.cs" />
+    <Compile Include="Utilities\WindowStationSecurity.cs" />
+    <Compile Include="WardenException.cs" />
+    <Compile Include="Win32\DesktopRights.cs" />
+    <Compile Include="Win32\DesktopSecurity.cs" />
+    <Compile Include="Win32\DuplicateTokenEx.cs" />
+    <Compile Include="Win32\Enums.cs" />
+    <Compile Include="Win32\Impersonator.cs" />
+    <Compile Include="IProcess.cs" />
+    <Compile Include="IUserManager.cs" />
+    <Compile Include="JobObject.cs" />
+    <Compile Include="ProcessRunner.cs" />
     <Compile Include="Messaging\JsonRpcRequest.cs" />
     <Compile Include="Messaging\JsonRpcResponse.cs" />
     <Compile Include="Messaging\MessageDispatcher.cs" />
@@ -58,12 +102,38 @@
     <Compile Include="Messaging\MessagingClient.cs" />
     <Compile Include="Messaging\MessagingException.cs" />
     <Compile Include="Messaging\SecureStringJsonConverter.cs" />
+    <Compile Include="Win32\CloseHandle.cs" />
+    <Compile Include="Win32\Console.cs" />
+    <Compile Include="Win32\Constants.cs" />
+    <Compile Include="Win32\JobObject.cs" />
+    <Compile Include="Win32\LocalPrincipalData.cs" />
+    <Compile Include="Win32\LogonUser.cs" />
+    <Compile Include="Win32\NativeMethods.cs" />
+    <Compile Include="Win32\RevertToSelf.cs" />
+    <Compile Include="Win32\SafeUserTokenHandle.cs" />
+    <Compile Include="Win32\SecurityAttributes.cs" />
+    <Compile Include="Win32\StandardRights.cs" />
+    <Compile Include="Win32\Utils.cs" />
+    <Compile Include="ProcessDataReceivedEventArgs.cs" />
+    <Compile Include="ProcessHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SafeJobObjectHandle.cs" />
+    <Compile Include="Win32\WindowsStationRights.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <COMReference Include="NetFwTypeLib">
+      <Guid>{58FBCF7C-E7A9-467C-80B3-FC65E8FCCA08}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

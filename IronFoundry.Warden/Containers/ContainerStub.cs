@@ -4,12 +4,16 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using IronFoundry.Container;
+using IronFoundry.Container.Win32;
 using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Utilities;
 
 namespace IronFoundry.Warden.Containers
 {
+    // BR: Move to IronFoundry.Container.Shared
+    // BR: Might make sense to split the functionality between the library and the host
     public class ContainerStub : IContainer, IDisposable
     {
         const int ExitTimeout = 10000;
@@ -188,7 +192,7 @@ namespace IronFoundry.Warden.Containers
 
             p.EnableRaisingEvents = true;
 
-            var wrapped = processHelper.WrapProcess(p);
+            var wrapped = ProcessHelper.WrapProcess(p);
             processMonitor.TryAdd(wrapped);
 
             bool started = p.Start();

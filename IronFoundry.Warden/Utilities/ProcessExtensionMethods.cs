@@ -7,6 +7,7 @@
     using System.Text;
     using PInvoke;
 
+    // BR: Move this to IronFoundry.Container.Shared
     public static class ProcessExtensionMethods
     {
         public static string GetUserName(this Process targetProcess)

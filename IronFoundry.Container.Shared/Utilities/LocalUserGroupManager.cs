@@ -1,0 +1,48 @@
+﻿using System;
+using System.Collections.Generic;
+using System.DirectoryServices;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace IronFoundry.Container.Utilities
+{
+    // BR: Move to IronFoundry.Container
+    // TODO: Either change LocalPrincipalManager to use the LocalUserGroupManager for its group operations
+    // or have the container use both to create the user and then add it to the appropriate groups
+    public class LocalUserGroupManager
+    {
+        public void CreateLocalGroup(string groupName)
+        {
+            using (var localDirectory = new DirectoryEntry(String.Format("WinNT://{0}", Environment.MachineName)))
+            {
+                DirectoryEntries children = localDirectory.Children;
+
+                try
+                {
+                    DirectoryEntry group = children.Find(groupName);
+                    if (group != null) return;
+                }
+                catch (COMException)
+                {
+                    // Couldn't find group.
+                }
+
+                var newGroup = children.Add(groupName, "group");
+                newGroup.CommitChanges();
+            }
+        }
+
+        public void DeleteLocalGroup(string groupName)
+        {
+            using (var localDirectory = new DirectoryEntry(String.Format("WinNT://{0}", Environment.MachineName)))
+            {
+                DirectoryEntries children = localDirectory.Children;
+
+                DirectoryEntry group = children.Find(groupName);
+                children.Remove(group);
+            }
+        }
+    }
+}

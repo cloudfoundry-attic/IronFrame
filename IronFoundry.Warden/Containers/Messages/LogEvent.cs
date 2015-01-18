@@ -18,6 +18,6 @@ namespace IronFoundry.Warden.Containers.Messages
 
         public string EventTopic { get; set; }
         public string LogData { get; set; }
-        public LogMessage.MessageType MessageType { get; set; }
+        public LogMessageType MessageType { get; set; }
     }
 }

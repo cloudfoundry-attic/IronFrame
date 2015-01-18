@@ -21,10 +21,10 @@
             this.request = (CreateRequest)request;
         }
 
-        static IEnumerable<BindMount> GetBindMounts(CreateRequest request)
+        static IEnumerable<IronFoundry.Container.BindMount> GetBindMounts(CreateRequest request)
         {
             return request.BindMounts.Select(
-                x => new BindMount
+                x => new IronFoundry.Container.BindMount
                 {
                     SourcePath = x.SrcPath,
                     DestinationPath = x.DstPath,

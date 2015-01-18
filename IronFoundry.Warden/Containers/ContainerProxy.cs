@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using IronFoundry.Container;
 using IronFoundry.Warden.Configuration;
 using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Tasks;

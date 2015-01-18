@@ -4,14 +4,17 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security.AccessControl;
+using IronFoundry.Container;
+using IronFoundry.Container.Win32;
 using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Containers.Messages;
-using IronFoundry.Warden.PInvoke;
 using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Test.TestSupport;
 using IronFoundry.Warden.Utilities;
 using NSubstitute;
 using Xunit;
+// Temporary type aliases
+using IContainerDirectory = IronFoundry.Warden.Containers.IContainerDirectory;
 
 namespace IronFoundry.Warden.Test
 {

@@ -104,7 +104,7 @@ namespace IronFoundry.Warden.Test
             };
             var emitter = new ContainerLogEmitter(logData);
 
-            emitter.EmitLogMessage(LogMessage.MessageType.OUT, null);
+            emitter.EmitLogMessage(LogMessageType.STDOUT, null);
         }
     }
 }
