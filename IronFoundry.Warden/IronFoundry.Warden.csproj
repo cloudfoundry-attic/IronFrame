@@ -66,9 +66,7 @@
     <Compile Include="Containers\Messages\CopyMessage.cs" />
     <Compile Include="Containers\Messages\CreateProcessMessage.cs" />
     <Compile Include="Containers\Messages\CreateProcessStartInfo.cs" />
-    <Compile Include="Containers\Messages\CreateTarFileMessage.cs" />
     <Compile Include="Containers\Messages\EnableLoggingMessage.cs" />
-    <Compile Include="Containers\Messages\ExtractTarFileMessage.cs" />
     <Compile Include="Containers\Messages\LimitMemoryMessage.cs" />
     <Compile Include="Containers\Messages\LogEvent.cs" />
     <Compile Include="Containers\Messages\ReservePortMessage.cs" />
