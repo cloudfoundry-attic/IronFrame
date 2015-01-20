@@ -10,7 +10,6 @@ namespace IronFoundry.Warden.Tasks
 
     public class ExeCommand : ProcessCommand
     {
-        private const string DefaultAppDir = "app";
         private readonly string executable;
         private readonly string args;
         private readonly string workingDir;

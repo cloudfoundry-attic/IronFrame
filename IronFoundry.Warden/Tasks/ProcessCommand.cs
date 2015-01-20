@@ -117,7 +117,7 @@ namespace IronFoundry.Warden.Tasks
             var envLogBuilder = new StringBuilder();
             foreach (var kv in processEnv)
             {
-                string line = string.Format("{0} = {1}", kv.Key, kv.Value);
+                string line = string.Format("{0}={1}", kv.Key, kv.Value);
                 envLogBuilder.AppendLine(line);
             }
 
@@ -156,13 +156,9 @@ namespace IronFoundry.Warden.Tasks
 
             // Generate a new environment containing all the default values.
             EnvironmentBlock defaultEnv = EnvironmentBlock.GenerateDefault();
-            
-            // Generate an environment with the machine variables
-            var machineVars = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Machine);
-            EnvironmentBlock machineEnv = EnvironmentBlock.Create(machineVars);
 
             // Merge the default envs with the machine and user provided variables
-            var envHash = defaultEnv.Merge(machineEnv).Merge(rootedEnv).ToDictionary();
+            var envHash = defaultEnv.Merge(rootedEnv).ToDictionary();
 
             return envHash;
         }

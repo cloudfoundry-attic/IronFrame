@@ -54,10 +54,6 @@ namespace System
             {
                 threwException = true;
             }
-            catch
-            {
-                // ignored
-            }
 
             return threwException;
         }

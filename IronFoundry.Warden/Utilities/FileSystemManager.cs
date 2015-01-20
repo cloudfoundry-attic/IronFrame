@@ -6,7 +6,6 @@ using System.Net;
 using System.Security.AccessControl;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
-using Microsoft.VisualBasic;
 
 namespace IronFoundry.Warden.Utilities
 {

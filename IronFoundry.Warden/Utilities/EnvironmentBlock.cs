@@ -57,7 +57,7 @@ namespace IronFoundry.Warden.Utilities
 
         public IDictionary<string, string> ToDictionary()
         {
-            return new Dictionary<string, string>(_environment);
+            return new Dictionary<string, string>(_environment, _environment.Comparer);
         }
 
 

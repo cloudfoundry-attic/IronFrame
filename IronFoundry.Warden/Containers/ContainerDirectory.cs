@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using System.Threading;
 using IronFoundry.Warden.Utilities;
@@ -68,7 +69,9 @@ namespace IronFoundry.Warden.Containers
             }
             else
             {
-                var access = GetDefaultDirectoryAccess();
+                var access = GetDefaultDirectoryAccess().ToList();
+                access.Add(new UserAccess {Access = bindMount.Access, UserName = user.UserName});
+                
                 fileSystem.CreateDirectory(containerPath, access);
             }
         }
@@ -98,10 +101,11 @@ namespace IronFoundry.Warden.Containers
 
         private DirectoryInfo CreateContainerDirectory(string containerPath)
         {
-            var defaultAccess = GetDefaultDirectoryAccess();
-            fileSystem.CreateDirectory(containerPath, defaultAccess);
-            fileSystem.AddDirectoryAccess(containerPath, FileAccess.ReadWrite, user.UserName);
-
+            var access = GetDefaultDirectoryAccess().ToList();
+            access.Add(new UserAccess { Access = FileAccess.ReadWrite, UserName = user.UserName });
+            
+            fileSystem.CreateDirectory(containerPath, access);
+            
             return new DirectoryInfo(containerPath);
         }
 
@@ -125,7 +129,6 @@ namespace IronFoundry.Warden.Containers
             return new[]
             {
                 new UserAccess {UserName = GetBuiltInAdminGroupName(), Access = FileAccess.ReadWrite},
-                new UserAccess {UserName = user.UserName, Access = FileAccess.ReadWrite},
             };
         }
 
