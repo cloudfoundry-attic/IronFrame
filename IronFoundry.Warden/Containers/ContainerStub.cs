@@ -217,7 +217,7 @@ namespace IronFoundry.Warden.Containers
 
         public async Task<CommandResult> RunCommandAsync(RemoteCommand remoteCommand)
         {
-            var result = await commandRunner.RunCommandAsync(remoteCommand.Privileged, remoteCommand.Command, remoteCommand.Arguments);
+            var result = await commandRunner.RunCommandAsync(remoteCommand.Command, remoteCommand);
             return new CommandResult { ExitCode = result.ExitCode };
         }
 
@@ -246,9 +246,10 @@ namespace IronFoundry.Warden.Containers
                 Password = impersonate ? user.SecurePassword : createProcessStartInfo.Password
             };
 
-            if (createProcessStartInfo.EnvironmentVariables.Count > 0)
+            if (!createProcessStartInfo.EnvironmentVariables.IsNullOrEmpty())
             {
                 si.EnvironmentVariables.Clear();
+
                 foreach (string key in createProcessStartInfo.EnvironmentVariables.Keys)
                 {
                     si.EnvironmentVariables[key] = createProcessStartInfo.EnvironmentVariables[key];

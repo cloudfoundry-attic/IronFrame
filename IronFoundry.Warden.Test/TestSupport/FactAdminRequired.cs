@@ -16,7 +16,7 @@ namespace IronFoundry.Warden.Test
     /// they are present.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    [TestCaseDiscoverer("Xunit.Sdk.FactDiscoverer", "xunit2")]
+    [XunitTestCaseDiscoverer("Xunit.Sdk.FactDiscoverer", "xunit2")]
     public class FactAdminRequired : FactAttribute
     {
         public override string Skip

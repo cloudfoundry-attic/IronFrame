@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using IronFoundry.Warden.Test.Messaging;
 using Xunit;
 
 
@@ -179,29 +180,29 @@ namespace IronFoundry.Warden.Test.ContainerHost
         }
 
         [Fact]
-        public void ThrowsWhenReceivingDuplicateRequest()
+        public async void ThrowsWhenReceivingDuplicateRequest()
         {
             MessagingClient client = null;
             JsonRpcRequest r = new JsonRpcRequest("TestMethod");
 
             client = new MessagingClient(m => { });
-            client.SendMessageAsync(r);
+            client.SendMessageAsync(r).Forget();
 
-            var exception = Record.Exception(() => client.SendMessageAsync(r));
+            var exception = await Record.ExceptionAsync(() => client.SendMessageAsync(r));
 
             Assert.IsType<MessagingException>(exception);
         }
 
         [Fact]
-        public void ThrowsWhenReceivingDuplicateStronglyTypedRequest()
+        public async void ThrowsWhenReceivingDuplicateStronglyTypedRequest()
         {
             MessagingClient client = null;
             var r = new CustomRequest();
 
             client = new MessagingClient(m => { });
-            client.SendMessageAsync<CustomRequest, CustomResponse>(r);
+            client.SendMessageAsync<CustomRequest, CustomResponse>(r).Forget();
 
-            var exception = Record.Exception(() => client.SendMessageAsync<CustomRequest, CustomResponse>(r));
+            var exception = await Record.ExceptionAsync(() => client.SendMessageAsync<CustomRequest, CustomResponse>(r));
 
             Assert.IsType<MessagingException>(exception);
         }

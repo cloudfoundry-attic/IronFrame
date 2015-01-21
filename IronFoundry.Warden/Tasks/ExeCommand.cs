@@ -1,4 +1,6 @@
-﻿namespace IronFoundry.Warden.Tasks
+﻿using IronFoundry.Warden.Utilities;
+
+namespace IronFoundry.Warden.Tasks
 {
     using System;
     using System.Linq;
@@ -10,9 +12,10 @@
     {
         private readonly string executable;
         private readonly string args;
+        private readonly string workingDir;
 
-        public ExeCommand(IContainer container, string[] arguments, bool privileged, ResourceLimits rlimits)
-            : base(container, arguments, privileged, rlimits)
+        public ExeCommand(IContainer container, IRemoteCommandArgs rcArgs, ResourceLimits rlimits)
+            : base(container, rcArgs.Arguments, rcArgs.Privileged, rcArgs.Environment, rlimits)
         {
             if (arguments.IsNullOrEmpty())
             {
@@ -29,12 +32,14 @@
                 {
                     this.args = String.Join(" ", arguments.Skip(1));
                 }
+
+                workingDir = rcArgs.WorkingDirectory;
             }
         }
 
         protected override TaskCommandResult DoExecute()
         {
-            return base.RunProcess(container.ContainerDirectoryPath, executable, args);
+            return base.RunProcess(workingDir, executable, args);
         }
     }
 }

@@ -30,6 +30,6 @@ namespace IronFoundry.Warden.Containers.Messages
         public SecureString Password { get; set; }
 
         public string WorkingDirectory { get; set; }
-        public Dictionary<string, string> EnvironmentVariables { get; set; }
+        public IDictionary<string, string> EnvironmentVariables { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -225,8 +226,9 @@ namespace IronFoundry.Warden.Test
             {
                 var tempFile = Path.Combine(tempDirectory, Guid.NewGuid().ToString());
 
-                var si = new CreateProcessStartInfo("cmd.exe", string.Format(@"/C echo %FOO% > {0}", tempFile));
+                var si = new CreateProcessStartInfo("cmd.exe", string.Format(@"/C set > {0}", tempFile));
                 si.EnvironmentVariables["FOO"] = "BAR";
+                si.EnvironmentVariables["FOO2"] = "SNAFU";
 
                 using (var p = containerStub.CreateProcess(si))
                 {
@@ -234,6 +236,7 @@ namespace IronFoundry.Warden.Test
 
                     var output = File.ReadAllText(tempFile);
                     Assert.Contains("BAR", output);
+                    Assert.Contains("SNAFU", output);
                 }
             }
 
@@ -646,11 +649,11 @@ namespace IronFoundry.Warden.Test
             [Fact]
             public async void ShouldDispatchToCommandRunner()
             {
-                commandRunner.RunCommandAsync(true, null, null).ReturnsTaskForAnyArgs(new TaskCommandResult(0, null, null));
+                commandRunner.RunCommandAsync(null, null).ReturnsTaskForAnyArgs(new TaskCommandResult(0, null, null));
 
-                var result = await containerStub.RunCommandAsync(new RemoteCommand(true, "tar", "c:\temp"));
+                var result = await containerStub.RunCommandAsync(new RemoteCommand(true, "tar", new [] { @"c:\temp" }));
 
-                commandRunner.Received(x => x.RunCommandAsync(Arg.Any<bool>(), Arg.Is<string>(y => y == "tar"), Arg.Is<string[]>(y => y[0] == "c:\temp")));
+                commandRunner.Received(x => x.RunCommandAsync(Arg.Is<string>(y => y == "tar"),  Arg.Is<IRemoteCommandArgs>(y => y.Arguments[0] == @"c:\temp")));
             }
         }
 
@@ -826,7 +829,7 @@ namespace IronFoundry.Warden.Test
             }
         }
 
-        internal static void WaitForGoodExit(Utilities.IProcess p)
+        internal static void WaitForGoodExit(IProcess p)
         {
             p.WaitForExit(2000);
             Assert.Equal(0, p.ExitCode);

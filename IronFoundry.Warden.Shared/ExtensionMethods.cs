@@ -8,7 +8,8 @@ namespace System
 {
     public static class StringExtensionMethods
     {
-        private static readonly Regex backslashCleanup = new Regex(@"\\+", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        private static readonly Regex backslashCleanup = new Regex(@"\\+",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
         public static bool IsNullOrWhiteSpace(this string argThis)
         {
@@ -36,6 +37,25 @@ namespace System
             securedString.MakeReadOnly();
 
             return securedString;
+        }
+    }
+
+    public static class ActionExtensionMethods
+    {
+        public static bool ThrowsException<T>(this Action action) where T : Exception
+        {
+            bool threwException = false;
+
+            try
+            {
+                action();
+            }
+            catch (T)
+            {
+                threwException = true;
+            }
+
+            return threwException;
         }
     }
 }
@@ -102,6 +122,17 @@ namespace System.Collections.Generic
                 return null;
 
             return argThis.Where<T>(t => t != null);
+        }
+    }
+
+    public static class DictionaryExtensionMethods
+    {
+        public static void SetIfNotNull<TKey, TVal>(this IDictionary<TKey, TVal> dictionary, TKey key, TVal val)
+        {
+            if (val != null)
+            {
+                dictionary[key] = val;
+            }
         }
     }
 }

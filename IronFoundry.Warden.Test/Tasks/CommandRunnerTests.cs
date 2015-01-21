@@ -14,30 +14,40 @@ namespace IronFoundry.Warden.Test
     {
         private CommandRunner runner;
         private TaskCommand command;
+        private IRemoteCommandArgs rcArgs;
 
         public CommandRunnerTests()
         {
             runner = new CommandRunner();
             command = Substitute.For<TaskCommand>();
-            runner.RegisterCommand("testCommand", (i, a) => { return command; });
+            rcArgs = Substitute.For<IRemoteCommandArgs>();
+
+            runner.RegisterCommand("testCommand", (a) => { return command; });
         }
 
         [Fact]
         public async void WhenAskedToRunACommand_ExecutesCorrectRunnerBasedOnCommand()
         {
-            await runner.RunCommandAsync(true, "testCommand", "");
+            await runner.RunCommandAsync("testCommand",  null);
             command.Received().Execute();
         }
 
         [Fact]
         public async void WhenAskedToRunACommand_PassesArgsToGenerator()
         {
+            // Setup the remote command args
+            const string expectedValue = "blah";
+            rcArgs.Arguments.Returns(new [] { expectedValue });
+
+            // Setup the command runner
             string[] capturedArgs = null;
-            runner.RegisterCommand("anotherTestCommand", (i, a) => { capturedArgs = a; return command; });
+            runner.RegisterCommand("anotherTestCommand", (a) => { capturedArgs = a.Arguments; return command; });
 
-            await runner.RunCommandAsync(true, "anotherTestCommand", "blah");
 
-            Assert.Equal("blah", capturedArgs[0]);
+            await runner.RunCommandAsync("anotherTestCommand", rcArgs);
+
+            Assert.Equal(capturedArgs.Length, 1);
+            Assert.Equal(expectedValue, capturedArgs[0]);
         }
 
         [Fact]
@@ -47,7 +57,7 @@ namespace IronFoundry.Warden.Test
 
             Exception ex = await ExceptionAssert.RecordThrowsAsync(async () =>
             {
-                await runner.RunCommandAsync(true, "missingCommand", "");
+                await runner.RunCommandAsync("missingCommand", rcArgs);
             });
 
             Assert.IsType<InvalidOperationException>(ex);
@@ -58,7 +68,7 @@ namespace IronFoundry.Warden.Test
         {
             command.Execute().ReturnsForAnyArgs(new TaskCommandResult(100, null, null));
 
-            var result = await runner.RunCommandAsync(true, "testCommand", "testArguments");
+            var result = await runner.RunCommandAsync("testCommand", rcArgs);
 
             Assert.Equal(100, result.ExitCode);
         }
@@ -68,7 +78,7 @@ namespace IronFoundry.Warden.Test
         {
             command.Execute().ReturnsForAnyArgs(new TaskCommandResult(0, "This is a test", null));
 
-            var result = await runner.RunCommandAsync(true, "testCommand", "testArguments");
+            var result = await runner.RunCommandAsync("testCommand", rcArgs);
 
             Assert.Equal("This is a test", result.Stdout);
         }
@@ -78,7 +88,7 @@ namespace IronFoundry.Warden.Test
         {
             command.Execute().ReturnsForAnyArgs(new TaskCommandResult(0, null, "This is an error"));
 
-            var result = await runner.RunCommandAsync(true, "testCommand", "testArguments");
+            var result = await runner.RunCommandAsync("testCommand", rcArgs);
 
             Assert.Equal("This is an error", result.Stderr);
         }

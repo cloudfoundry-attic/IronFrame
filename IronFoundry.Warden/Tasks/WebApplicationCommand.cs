@@ -14,8 +14,8 @@
         private readonly string port;
         private readonly string runtimeVersion;
 
-        public WebApplicationCommand(IContainer container, string[] arguments, bool privileged, ResourceLimits rlimits)
-            : base(container, arguments, privileged, rlimits)
+        public WebApplicationCommand(IContainer container, IRemoteCommandArgs rcArgs, ResourceLimits rlimits)
+            : base(container, rcArgs.Arguments, rcArgs.Privileged, rcArgs.Environment, rlimits)
         {
             if (arguments.IsNullOrEmpty())
             {

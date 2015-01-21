@@ -8,6 +8,29 @@
         private readonly string basePath;
         private readonly FileInfo tempFileInfo;
 
+        /// <summary>
+        /// Create a tempfile using the full path specified.
+        /// </summary>
+        /// <remarks>
+        /// Use this overload if you know the name of the file you want to use but
+        /// want to guarantee it gets deleted after you are done with it.
+        /// </remarks>
+        public TempFile(string path, bool deleteIfExists)
+        {
+            if (path.IsNullOrWhiteSpace())
+            {
+                throw new ArgumentNullException("path");
+            }
+
+            this.basePath = Path.GetDirectoryName(path);
+            FileMode openMode = deleteIfExists ? FileMode.Create : FileMode.CreateNew;
+
+            this.tempFileInfo = GetTempFileInfo(
+                this.basePath,
+                () => path,
+                openMode);
+        }
+
         public TempFile(string basePath, string extension = ".tmp")
         {
             if (basePath.IsNullOrWhiteSpace())
@@ -22,7 +45,11 @@
                 throw new ArgumentException("basePath directory must exist.");
             }
 
-            this.tempFileInfo = GetTempFileInfo(this.basePath, extension);
+            this.tempFileInfo = GetTempFileInfo(
+                this.basePath, 
+                () => GenerateRandomFileName(extension), 
+                FileMode.CreateNew
+                );
         }
 
         public string FullName
@@ -45,20 +72,23 @@
             tempFileInfo.Delete();
         }
 
-        private static FileInfo GetTempFileInfo(string basePath, string extension)
+        private static FileInfo GetTempFileInfo(string basePath, Func<string> filenameGenerator, FileMode openMode)
         {
             string fileName;
             int attempt = 0;
             bool exit = false;
             do
             {
-                fileName = Path.GetRandomFileName();
-                fileName = Path.ChangeExtension(fileName, extension);
-                fileName = Path.Combine(basePath, fileName);
+                // If the subdirectories don't exist, create them.
+                if (!basePath.IsNullOrWhiteSpace() && !Directory.Exists(basePath))
+                {
+                    Directory.CreateDirectory(basePath);
+                }
 
+                fileName = filenameGenerator();
                 try
                 {
-                    using (new FileStream(fileName, FileMode.CreateNew)) {}
+                    using (new FileStream(fileName, openMode)) {}
                     exit = true;
                 }
                 catch (IOException ex)
@@ -73,5 +103,16 @@
 
             return new FileInfo(fileName);
         }
+
+        public string GenerateRandomFileName(string extension)
+        {
+            string fileName = Path.GetRandomFileName();
+            fileName = Path.ChangeExtension(fileName, extension);
+            fileName = Path.Combine(basePath, fileName);
+
+            return fileName;
+        }
+
+
     }
 }
