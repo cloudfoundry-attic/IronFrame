@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -47,7 +48,7 @@ namespace IronFoundry.Warden.Test
             portManager = Substitute.For<ILocalTcpPortManager>();
             fileSystemManager = Substitute.For<FileSystemManager>();
 
-            jobObject = Substitute.For<JobObject>();
+            jobObject = Substitute.ForPartsOf<JobObject>();
             jobObjectLimits = Substitute.For<JobObjectLimits>(jobObject, TimeSpan.FromMilliseconds(10));
             processHelper = Substitute.For<ProcessHelper>();
             processMonitor = new ProcessMonitor();
@@ -202,7 +203,7 @@ namespace IronFoundry.Warden.Test
                     CreateProcess(si, false))
                 {
                     bool isInJob = false;
-
+                    
                     NativeMethods.IsProcessInJob(p.Handle, jobObject.Handle, out isInJob);
                     Assert.True(isInJob);
                 }

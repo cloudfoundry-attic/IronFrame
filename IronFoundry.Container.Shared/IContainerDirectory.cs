@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Principal;
+using System.Threading;
 using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Utilities;
 
@@ -29,9 +32,13 @@ namespace IronFoundry.Container
         {
             // TODO: Sanitize the container handle for use in the filesystem
             var containerPath = Path.Combine(containerBasePath, containerHandle);
-            var userAccess = Enumerable.Empty<UserAccess>();
+            var containerUserPath = Path.Combine(containerPath, UserRelativePath);
+            var defaultAccess = GetDefaultDirectoryAccess();
+            var userAccess = defaultAccess.ToList();
+            userAccess.Add(new UserAccess { Access = FileAccess.ReadWrite, UserName = containerUser.UserName });
 
-            fileSystem.CreateDirectory(containerPath, userAccess);
+            fileSystem.CreateDirectory(containerPath, defaultAccess);
+            fileSystem.CreateDirectory(containerUserPath, userAccess);
 
             return new ContainerDirectory(containerPath);
         }
@@ -57,6 +64,27 @@ namespace IronFoundry.Container
                 path += "\\";
 
             return path;
+        }
+
+        static IEnumerable<UserAccess> GetDefaultDirectoryAccess()
+        {
+            return new[]
+            {
+                new UserAccess { UserName = GetBuiltInAdminGroupName(), Access = FileAccess.ReadWrite },
+                new UserAccess { UserName = GetCurrentUserName(), Access = FileAccess.ReadWrite },
+            };
+        }
+
+        static string GetCurrentUserName()
+        {
+            return WindowsIdentity.GetCurrent().Name;
+        }
+
+        static string GetBuiltInAdminGroupName()
+        {
+            var sid = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null);
+            var account = (NTAccount)sid.Translate(typeof(NTAccount));
+            return account.Value;
         }
     }
 }

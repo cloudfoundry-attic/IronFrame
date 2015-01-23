@@ -9,7 +9,7 @@ namespace IronFoundry.Container
     public class ConstrainedProcessTests
     {
         Guid ProcessKey { get; set; }
-        TestableHostClient HostClient { get; set; }
+        IContainerHostClient HostClient { get; set; }
         ConstrainedProcess Process { get; set; }
         Action<string> OutputCallback { get; set; }
         Action<string> ErrorCallback { get; set; }
@@ -18,47 +18,12 @@ namespace IronFoundry.Container
         {
             ProcessKey = Guid.NewGuid();
 
-            HostClient = Substitute.For<TestableHostClient>();
+            HostClient = Substitute.For<IContainerHostClient>();
 
             OutputCallback = delegate { };
             ErrorCallback = delegate { };
 
-            Process = new ConstrainedProcess(HostClient, ProcessKey, 100, (data) => OutputCallback(data), (data) => ErrorCallback(data));
-        }
-
-        public class Constructor : ConstrainedProcessTests
-        {
-            [Fact]
-            public void SubscribesToProcessDataEvents()
-            {
-                Assert.Equal(ProcessKey, HostClient.ActualProcessKey);
-                Assert.NotNull(HostClient.ActualProcessDataCallback);
-            }
-        }
-
-        public class HandleProcessData : ConstrainedProcessTests
-        {
-            [Fact]
-            public void BubblesUpOutputData()
-            {
-                string actualOutputData = null;
-                OutputCallback = (data) => actualOutputData = data;
-
-                HostClient.ActualProcessDataCallback(new ProcessDataEvent(ProcessKey, ProcessDataType.STDOUT, "This is STDOUT"));
-
-                Assert.Equal("This is STDOUT", actualOutputData);
-            }
-
-            [Fact]
-            public void BubblesUpErrorData()
-            {
-                string actualErrorData = null;
-                ErrorCallback = (data) => actualErrorData = data;
-
-                HostClient.ActualProcessDataCallback(new ProcessDataEvent(ProcessKey, ProcessDataType.STDERR, "This is STDERR"));
-
-                Assert.Equal("This is STDERR", actualErrorData);
-            }
+            Process = new ConstrainedProcess(HostClient, ProcessKey, 100);
         }
 
         public class WaitForExit : ConstrainedProcessTests
@@ -118,38 +83,6 @@ namespace IronFoundry.Container
                 Process.WaitForExit();
 
                 Assert.Equal(100, Process.ExitCode);
-            }
-        }
-
-        public class TestableHostClient : IContainerHostClient
-        {
-            public Guid ActualProcessKey { get; set; }
-            public Action<ProcessDataEvent> ActualProcessDataCallback { get; set; }
-
-            public virtual CreateProcessResult CreateProcess(CreateProcessParams @params)
-            {
-                throw new NotImplementedException();
-            }
-
-            public bool Ping(TimeSpan timeout)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void Shutdown()
-            {
-                throw new NotImplementedException();
-            }
-
-            public void SubscribeToProcessData(Guid processKey, Action<ProcessDataEvent> callback)
-            {
-                ActualProcessKey = processKey;
-                ActualProcessDataCallback = callback;
-            }
-
-            public virtual WaitForProcessExitResult WaitForProcessExit(WaitForProcessExitParams @params)
-            {
-                throw new NotImplementedException();
             }
         }
     }

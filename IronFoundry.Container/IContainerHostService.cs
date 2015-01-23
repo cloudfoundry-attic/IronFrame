@@ -6,6 +6,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using IronFoundry.Container.Messaging;
+using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Utilities;
 using NLog;
 
@@ -13,21 +14,20 @@ namespace IronFoundry.Container
 {
     public interface IContainerHostService
     {
-        IContainerHostClient StartContainerHost(string jobObjectName, NetworkCredential credentials);
+        IContainerHostClient StartContainerHost(JobObject jobObject, NetworkCredential credentials);
     }
 
     public class ContainerHostService : IContainerHostService
     {
         const string HostExe = "IronFoundry.Container.Host.exe";
+        static readonly TimeSpan HostProcessStartTimeout = TimeSpan.FromSeconds(5);
+
         readonly Logger log = LogManager.GetCurrentClassLogger();
 
-        public IContainerHostClient StartContainerHost(string jobObjectName, NetworkCredential credentials)
+        public IContainerHostClient StartContainerHost(JobObject jobObject, NetworkCredential credentials)
         {
-            var argumentBuilder = new StringBuilder();
-            argumentBuilder.AppendFormat("--jobObject {0}", jobObjectName);
-
             var hostFullPath = Path.Combine(Directory.GetCurrentDirectory(), HostExe);
-            var hostStartInfo = new ProcessStartInfo(hostFullPath, argumentBuilder.ToString());
+            var hostStartInfo = new ProcessStartInfo(hostFullPath);
 
             hostStartInfo.RedirectStandardInput = true;
             hostStartInfo.RedirectStandardOutput = true;
@@ -47,8 +47,16 @@ namespace IronFoundry.Container
 
             hostProcess.Start();
 
-            string status = hostProcess.StandardError.ReadLine();
-            ThrowIfFailedToStart(status);
+            WaitForProcessToStart(hostProcess, HostProcessStartTimeout);
+
+            // Order here is important.
+            // - Start the process and verify that it's running
+            // - Add the process to the job object
+            // - Start the RPC message pump
+            //
+            // We need to ensure that the host process cannot create any new processes before
+            // it's added to the job object.
+            jobObject.AssignProcessToJob(hostProcess);
 
             var messageTransport = new MessageTransport(hostProcess.StandardOutput, hostProcess.StandardInput);
             var messagingClient = new MessagingClient(async message =>
@@ -82,9 +90,41 @@ namespace IronFoundry.Container
             return containerHostClient;
         }
 
-        void ThrowIfFailedToStart(string status)
+        string ReadLineWithTimeout(TextReader reader, TimeSpan timeout)
         {
-            if (status != "OK")
+            var startTime = DateTimeOffset.UtcNow;
+            var builder = new StringBuilder();
+            do
+            {
+                if (reader.Peek() != 0)
+                {
+                    var ch = (char)reader.Read();
+                    
+                    if (ch == '\r')
+                        continue;
+
+                    if (ch == '\n')
+                        return builder.ToString();
+
+                    builder.Append(ch);
+                }
+            } 
+            while (DateTimeOffset.UtcNow - startTime < timeout);
+
+            return null;
+        }
+
+        void WaitForProcessToStart(Process hostProcess, TimeSpan timeout)
+        {
+            string status = ReadLineWithTimeout(hostProcess.StandardError, timeout);
+            if (status == null)
+            {
+                throw new Exception(
+                    String.Format(
+                        "The container host process failed to start within the timeout period ({0:N}s).", 
+                        timeout.TotalSeconds));
+            }
+            else if (status != "OK")
             {
                 throw new Exception("The container host process failed to start with the error: " + status);
             }

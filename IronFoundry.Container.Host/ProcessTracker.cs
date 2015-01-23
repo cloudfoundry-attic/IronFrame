@@ -17,9 +17,9 @@ namespace IronFoundry.Container.Host
     public class ProcessTracker : IProcessTracker
     {
         ConcurrentDictionary<Guid, IProcess> processes = new ConcurrentDictionary<Guid, IProcess>();
-        MessageTransport transport;
+        IMessageTransport transport;
 
-        public ProcessTracker(MessageTransport transport)
+        public ProcessTracker(IMessageTransport transport)
         {
             this.transport = transport;
         }
@@ -36,7 +36,8 @@ namespace IronFoundry.Container.Host
         public void HandleProcessData(Guid key, ProcessDataType dataType, string data)
         {
             var dataEvent = new ProcessDataEvent(key, dataType, data);
-            transport.PublishEventAsync(JObject.FromObject(dataEvent));
+
+            transport.PublishEventAsync("processData", dataEvent).GetAwaiter().GetResult();
         }
 
         public void TrackProcess(Guid key, IProcess process)

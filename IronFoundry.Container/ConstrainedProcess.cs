@@ -10,25 +10,17 @@ namespace IronFoundry.Container
         readonly IContainerHostClient hostClient;
         readonly Guid key;
         readonly int id;
-        readonly Action<string> outputCallback;
-        readonly Action<string> errorCallback;
 
         int? exitCode = 0;
 
         public ConstrainedProcess(
             IContainerHostClient hostClient, 
             Guid key, 
-            int id, 
-            Action<string> outputCallback, 
-            Action<string> errorCallback)
+            int id)
         {
             this.hostClient = hostClient;
             this.key = key;
             this.id = id;
-            this.outputCallback = outputCallback;
-            this.errorCallback = errorCallback;
-
-            hostClient.SubscribeToProcessData(key, HandleProcessData);
         }
 
         public int ExitCode
@@ -98,22 +90,6 @@ namespace IronFoundry.Container
         public void Dispose()
         {
             throw new NotImplementedException();
-        }
-
-        void HandleProcessData(ProcessDataEvent processData)
-        {
-            switch (processData.dataType)
-            {
-                case ProcessDataType.STDOUT:
-                    if (outputCallback != null)
-                        outputCallback(processData.data);
-                    break;
-
-                case ProcessDataType.STDERR:
-                    if (errorCallback != null)
-                        errorCallback(processData.data);
-                    break;
-            }
         }
     }
 }

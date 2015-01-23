@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using IronFoundry.Warden.Containers;
@@ -71,7 +73,14 @@ namespace IronFoundry.Container
             var user = ContainerUser.Create(userManager, handle);
             var directory = ContainerDirectory.Create(fileSystem, containerBasePath, handle, user);
 
-            return new Container(handle, user, directory, tcpPortManager, processRunner, null);
+            var jobObjectName = handle;
+            var jobObject = new JobObject(jobObjectName);
+
+            var containerHostClient = containerHostService.StartContainerHost(jobObject, user.GetCredential());
+
+            var constrainedProcessRunner = new ConstrainedProcessRunner(containerHostClient);
+
+            return new Container(handle, user, directory, tcpPortManager, jobObject, processRunner, constrainedProcessRunner);
         }
 
         public void Dispose()

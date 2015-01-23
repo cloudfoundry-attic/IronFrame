@@ -13,6 +13,7 @@ namespace IronFoundry.Container
         Container Container { get; set; }
         IContainerUser User { get; set; }
         IContainerDirectory Directory { get; set; }
+        JobObject JobObject { get; set; }
         IProcessRunner ProcessRunner { get; set; }
         IProcessRunner ConstrainedProcessRunner { get; set; }
         ILocalTcpPortManager TcpPortManager { get; set; }
@@ -27,8 +28,9 @@ namespace IronFoundry.Container
             ProcessRunner = Substitute.For<IProcessRunner>();
             ConstrainedProcessRunner = Substitute.For<IProcessRunner>();
             TcpPortManager = Substitute.For<ILocalTcpPortManager>();
+            JobObject = Substitute.For<JobObject>();
 
-            Container = new Container("handle", User, Directory, TcpPortManager, ProcessRunner, ConstrainedProcessRunner);
+            Container = new Container("handle", User, Directory, TcpPortManager, JobObject, ProcessRunner, ConstrainedProcessRunner);
         }
 
         public class ReservePort : ContainerTests

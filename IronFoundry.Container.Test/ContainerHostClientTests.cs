@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using IronFoundry.Container.Messages;
 using IronFoundry.Container.Messaging;
@@ -86,10 +87,39 @@ namespace IronFoundry.Container
 
         public class Ping : ContainerHostClientTests
         {
-            [Fact]
-            public void Fail()
+            PingResponse ExpectedResponse { get; set; }
+
+            public Ping()
             {
-                throw new NotImplementedException();
+                MessagingClient.SendMessageAsync<PingRequest, PingResponse>(null)
+                    .ReturnsForAnyArgs(GetCompletedTask(ExpectedResponse));
+            }
+
+            [Fact]
+            public void SendsRequest()
+            {
+                Client.Ping(TimeSpan.FromMilliseconds(0));
+
+                MessagingClient.Received(1).SendMessageAsync<PingRequest, PingResponse>(
+                    Arg.Any<PingRequest>());
+            }
+
+            [Fact]
+            public void WhenTimeoutDoesNotOccur_ReturnsTrue()
+            {
+                Assert.True(Client.Ping(TimeSpan.FromMilliseconds(0)));
+            }
+
+            [Fact]
+            public void WhenTimeoutOccurs_ReturnsFalse()
+            {
+                MessagingClient.SendMessageAsync<PingRequest, PingResponse>(null)
+                    .ReturnsForAnyArgs(async (call) => {
+                        await Task.Delay(20);
+                        return ExpectedResponse;
+                    });
+                    
+                Assert.False(Client.Ping(TimeSpan.FromMilliseconds(1)));
             }
         }
 

@@ -68,12 +68,13 @@ namespace IronFoundry.Container
         public class Dispose : ConstrainedProcessRunnerTests
         {
             [Fact]
-            public void ShutsDownHost()
+            public void DisposesHost()
             {
                 var runner = new ConstrainedProcessRunner(Client);
+                
                 runner.Dispose();
 
-                Client.Received(1).Shutdown();
+                Client.Received(1).Dispose();
             }
         }
     }

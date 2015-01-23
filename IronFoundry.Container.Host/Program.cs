@@ -18,21 +18,6 @@ namespace IronFoundry.Container.Host
 
             var input = Console.In;
             var output = Console.Out;
-            var error = Console.Error;
-            string jobObjectName = null;
-
-            var options = new NDesk.Options.OptionSet {
-                { "jobObject=", v => jobObjectName = v },
-            };
-
-            options.Parse(args);
-
-            if (String.IsNullOrWhiteSpace(jobObjectName))
-                ExitWithError("Missing --jobObject option for starting container", 10);
-
-            var jobObject = new JobObject(jobObjectName);
-            var hostProcess = System.Diagnostics.Process.GetCurrentProcess();
-            jobObject.AssignProcessToJob(hostProcess);
 
             using (var transport = new MessageTransport(input, output))
             {
@@ -40,6 +25,7 @@ namespace IronFoundry.Container.Host
 
                 var createProcessHandler = new CreateProcessHandler(new ProcessRunner(), processTracker);
                 var pingHandler = new PingHandler();
+                var waitForProcessExitHandler = new WaitForProcessExitHandler(processTracker);
 
                 var dispatcher = new MessageDispatcher();
                 dispatcher.RegisterMethod<CreateProcessRequest>(
@@ -55,6 +41,13 @@ namespace IronFoundry.Container.Host
                     {
                         await pingHandler.ExecuteAsync();
                         return new PingResponse(request.id);
+                    });
+                dispatcher.RegisterMethod<WaitForProcessExitRequest>(
+                    WaitForProcessExitRequest.MethodName,
+                    async (request) =>
+                    {
+                        var result = await waitForProcessExitHandler.ExecuteAsync(request.@params);
+                        return new WaitForProcessExitResponse(request.id, result);
                     });
 
                 transport.SubscribeRequest(

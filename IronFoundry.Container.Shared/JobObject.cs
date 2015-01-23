@@ -61,12 +61,12 @@
             }
         }
 
-        public void AssignProcessToJob(IntPtr processHandle)
+        public virtual void AssignProcessToJob(IntPtr processHandle)
         {
             NativeMethods.AssignProcessToJobObject(handle, processHandle);
         }
 
-        public void AssignProcessToJob(Process process)
+        public virtual void AssignProcessToJob(Process process)
         {
             AssignProcessToJob(process.Handle);
         }

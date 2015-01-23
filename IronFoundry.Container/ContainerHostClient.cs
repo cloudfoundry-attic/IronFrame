@@ -8,7 +8,7 @@ using IronFoundry.Warden.Utilities;
 
 namespace IronFoundry.Container
 {
-    public interface IContainerHostClient
+    public interface IContainerHostClient : IDisposable
     {
         CreateProcessResult CreateProcess(CreateProcessParams @params);
         bool Ping(TimeSpan timeout);
@@ -33,6 +33,8 @@ namespace IronFoundry.Container
 
             this.hostProcess.Exited += (o, e) =>
             {
+                // TODO: If the host process dies (or is killed) we should shutdown the container.
+
                 //OnHostStopped(hostProcess != null && hostProcess.HasExited ? hostProcess.ExitCode : 0);
                 DisposeMessageHandling();
             };
@@ -45,6 +47,11 @@ namespace IronFoundry.Container
             var request = new CreateProcessRequest(@params);
             var responseTask = messagingClient.SendMessageAsync<CreateProcessRequest, CreateProcessResponse>(request);
             return responseTask.GetAwaiter().GetResult().result;
+        }
+
+        public void Dispose()
+        {
+            Shutdown();
         }
 
         void DisposeMessageHandling()

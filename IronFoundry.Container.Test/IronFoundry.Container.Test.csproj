@@ -74,8 +74,10 @@
     <Compile Include="ContainerTests.cs" />
     <Compile Include="ContainerUserTests.cs" />
     <Compile Include="Handlers\CreateProcessHandlerTests.cs" />
+    <Compile Include="Handlers\WaitForProcessExitHandlerTests.cs" />
     <Compile Include="Helpers\TempFile.cs" />
     <Compile Include="ProcessRunnerTests.cs" />
+    <Compile Include="ProcessTrackerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestSupport\RandomFactory.cs" />
     <Compile Include="TestSupport\FactAdminRequired.cs" />

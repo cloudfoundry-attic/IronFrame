@@ -13,6 +13,8 @@ namespace IronFoundry.Container.Messaging
     {
         void Start();
         void Stop();
+
+        Task PublishEventAsync<T>(string eventTopic, T @event);
     }
 
     public class MessageTransport : IMessageTransport
@@ -209,6 +211,13 @@ namespace IronFoundry.Container.Messaging
         {
             var @event = WrapMessage(ContentType.Event, message);
             return PublishAsync(@event);
+        }
+
+        public Task PublishEventAsync<T>(string eventTopic, T @event)
+        {
+            var jsonEvent = JObject.FromObject(@event);
+            jsonEvent["EventTopic"] = eventTopic;
+            return PublishEventAsync(jsonEvent);
         }
 
         public void Start()

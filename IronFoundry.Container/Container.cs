@@ -40,7 +40,7 @@ namespace IronFoundry.Container
 
         //ContainerInfo GetInfo();
 
-        //void Stop(bool kill);
+        void Stop(bool kill);
 
         int ReservePort(int requestedPort);
         ContainerProcess Run(ProcessSpec spec, IProcessIO io);
@@ -60,6 +60,7 @@ namespace IronFoundry.Container
         readonly IContainerUser user;
         readonly IContainerDirectory directory;
         readonly ILocalTcpPortManager tcpPortManager;
+        readonly JobObject jobObject;
         readonly IProcessRunner processRunner;
         readonly IProcessRunner constrainedProcessRunner;
         readonly Dictionary<string, string> defaultEnvironment;
@@ -70,6 +71,7 @@ namespace IronFoundry.Container
             IContainerUser user,
             IContainerDirectory directory, 
             ILocalTcpPortManager tcpPortManager,
+            JobObject jobObject,
             IProcessRunner processRunner,
             IProcessRunner constrainedProcessRunner
             )
@@ -78,6 +80,7 @@ namespace IronFoundry.Container
             this.user = user;
             this.directory = directory;
             this.tcpPortManager = tcpPortManager;
+            this.jobObject = jobObject;
             this.processRunner = processRunner;
             this.constrainedProcessRunner = constrainedProcessRunner;
 
@@ -87,6 +90,11 @@ namespace IronFoundry.Container
         public string Handle
         {
             get { return handle; }
+        }
+
+        public IContainerDirectory Directory
+        {
+            get { return directory; }
         }
 
         public void Initialize()
@@ -135,6 +143,12 @@ namespace IronFoundry.Container
             //TODO - Delete the container directory
 
             this.user.Delete();
+        }
+
+        public void Stop(bool kill)
+        {
+            if (constrainedProcessRunner != null)
+                constrainedProcessRunner.Dispose();
         }
     }
 }

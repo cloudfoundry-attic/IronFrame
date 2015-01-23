@@ -36,6 +36,10 @@ namespace IronFoundry.Container
     {
         static readonly string[] EmptyArguments = new string[0];
 
+        public void Dispose()
+        {
+        }
+
         public IProcess Run(ProcessRunSpec runSpec)
         {
             var startInfo = new ProcessStartInfo
@@ -91,10 +95,6 @@ namespace IronFoundry.Container
             p.BeginErrorReadLine();
 
             return wrapped;
-        }
-
-        public void Dispose()
-        {
         }
     }
 }
