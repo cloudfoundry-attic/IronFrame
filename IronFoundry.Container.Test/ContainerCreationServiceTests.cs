@@ -297,9 +297,6 @@ cmd.exe /C %*
                             Arguments = new[] { "set" },
                             Environment = new Dictionary<string,string>
                             {
-                                // TODO: Add the correct default environment when specifying environment variables
-                                { "PATH", Environment.GetEnvironmentVariable("PATH") },
-                                { "PATHEXT", Environment.GetEnvironmentVariable("PATHEXT") },
                                 { "FOO", "1" },
                                 { "BAR", "two" },
                             },

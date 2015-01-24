@@ -61,6 +61,7 @@
     <Compile Include="BindMount.cs" />
     <Compile Include="Concurrency\AsyncLock.cs" />
     <Compile Include="ContainerHandleGenerator.cs" />
+    <Compile Include="EnvironmentBlock.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="FileSystemManager.cs" />
     <Compile Include="Guard.cs" />

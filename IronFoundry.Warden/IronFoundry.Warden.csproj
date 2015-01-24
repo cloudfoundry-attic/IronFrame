@@ -72,7 +72,6 @@
     <Compile Include="Containers\ProcessMonitor.cs" />
     <Compile Include="Handlers\LoggingRequestHandler.cs" />
     <Compile Include="PInvoke\IoCompletionPort.cs" />
-    <Compile Include="Utilities\EnvironmentBlock.cs" />
     <Compile Include="Handlers\ContainerRequestHandler.cs" />
     <Compile Include="Handlers\CopyRequestHandler.cs" />
     <Compile Include="Handlers\CopyInRequestHandler.cs" />

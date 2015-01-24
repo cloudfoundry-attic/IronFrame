@@ -42,12 +42,14 @@ namespace IronFoundry.Container
         {
             Guid processKey = Guid.NewGuid();
             
+            var defaultEnvironmentBlock = EnvironmentBlock.GenerateDefault();
+
             CreateProcessParams @params = new CreateProcessParams
             {
                 key = processKey,
                 executablePath = runSpec.ExecutablePath,
                 arguments = runSpec.Arguments,
-                environment = runSpec.Environment,
+                environment = defaultEnvironmentBlock.Merge(runSpec.Environment).ToDictionary(),
                 workingDirectory = runSpec.WorkingDirectory
             };
 

@@ -2,7 +2,6 @@
 {
     using System.Collections;
     using System.Collections.Generic;
-    using FluentAssertions;
     using IronFoundry.Warden.Utilities;
     using Xunit;
 
@@ -13,7 +12,8 @@
         {
             var env = EnvironmentBlock.Create(new Dictionary<string, string> {{"FOO", "BAR"}});
             var dict = env.ToDictionary();
-            dict.Should().HaveCount(1).And.ContainKey("FOO").And.ContainValue("BAR");
+            Assert.Equal(1, dict.Count);
+            Assert.Equal("BAR", dict["FOO"]);
         }
 
         [Fact]
@@ -22,9 +22,12 @@
             var env = EnvironmentBlock.GenerateDefault();
             var dict = env.ToDictionary();
 
-            dict.Count.Should().BeGreaterOrEqualTo(0);
+            Assert.True(dict.Count > 0);
             // Verify some of the environment variables we expect to be there by default
-            dict.Should().ContainKeys("TEMP", "TMP", "SystemRoot", "COMPUTERNAME");
+            Assert.Contains("TEMP", dict.Keys);
+            Assert.Contains("TMP", dict.Keys);
+            Assert.Contains("SystemRoot", dict.Keys);
+            Assert.Contains("COMPUTERNAME", dict.Keys);
         }
 
         [Fact]
@@ -34,8 +37,8 @@
             var newEnv = EnvironmentBlock.Create(new Hashtable {{"COMPUTERNAME", "FOOBAR"}});
             var dict = env.Merge(newEnv).ToDictionary();
 
-            dict.Should().HaveCount(env.ToDictionary().Count);
-            dict["COMPUTERNAME"].Should().Be("FOOBAR");
+            Assert.Equal(env.ToDictionary().Count, dict.Count);
+            Assert.Equal("FOOBAR", dict["COMPUTERNAME"]);
         }
     }
 }

@@ -73,9 +73,13 @@
     <Compile Include="ContainerProcessTests.cs" />
     <Compile Include="ContainerTests.cs" />
     <Compile Include="ContainerUserTests.cs" />
+    <Compile Include="EnvironmentBlockTests.cs" />
+    <Compile Include="FileSystemManagerTests.cs" />
     <Compile Include="Handlers\CreateProcessHandlerTests.cs" />
     <Compile Include="Handlers\WaitForProcessExitHandlerTests.cs" />
+    <Compile Include="Helpers\NSubstituteExtensions.cs" />
     <Compile Include="Helpers\TempFile.cs" />
+    <Compile Include="ProcessHelperTest.cs" />
     <Compile Include="ProcessRunnerTests.cs" />
     <Compile Include="ProcessTrackerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
