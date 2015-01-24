@@ -134,16 +134,31 @@ namespace IronFoundry.Container
                 ContainerHostService.Received(1).StartContainerHost(Arg.Any<JobObject>(), expectedCredentials);
             }
 
-            public class Acceptance : ContainerCreationServiceTests, IDisposable
+            public class AcceptanceFixture : IDisposable
             {
-                string TempDirectory { get; set; }
+                public string TempDirectory { get; set; }
 
-                public Acceptance()
+                public AcceptanceFixture()
                 {
                     TempDirectory = Path.Combine(Path.GetTempPath(), "Containers_" + Guid.NewGuid().ToString("N"));
                     Directory.CreateDirectory(TempDirectory);
+                }
 
-                    ContainerBasePath = TempDirectory;
+                public virtual void Dispose()
+                {
+                    Directory.Delete(TempDirectory, true);
+                }
+            }
+
+            public class Acceptance : ContainerCreationServiceTests, IDisposable, IClassFixture<AcceptanceFixture>
+            {
+                AcceptanceFixture Fixture { get; set; }
+
+                public Acceptance(AcceptanceFixture fixture)
+                {
+                    Fixture = fixture;
+
+                    ContainerBasePath = Fixture.TempDirectory;
 
                     FileSystem = new FileSystemManager();
                     ProcessRunner = new ProcessRunner();
@@ -159,11 +174,14 @@ namespace IronFoundry.Container
                 public virtual void Dispose()
                 {
                     Service.Dispose();
-                    //Directory.Delete(TempDirectory, true);
                 }
 
                 public class Create : Acceptance
                 {
+                    public Create(AcceptanceFixture fixture) : base(fixture)
+                    {
+                    }
+
                     [Fact]
                     public void CanCreateContainer()
                     {
@@ -196,7 +214,7 @@ cmd.exe /C %*
 
                     IContainer Container { get; set; }
                     
-                    public WithContainer()
+                    public WithContainer(AcceptanceFixture fixture) : base(fixture)
                     {
                         var spec = new ContainerSpec
                         {
