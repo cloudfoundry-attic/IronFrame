@@ -77,8 +77,11 @@
     <Compile Include="FileSystemManagerTests.cs" />
     <Compile Include="Handlers\CreateProcessHandlerTests.cs" />
     <Compile Include="Handlers\WaitForProcessExitHandlerTests.cs" />
+    <Compile Include="Helpers\ArgMatchers.cs" />
+    <Compile Include="Helpers\AssertHelper.cs" />
     <Compile Include="Helpers\NSubstituteExtensions.cs" />
     <Compile Include="Helpers\TempFile.cs" />
+    <Compile Include="Helpers\TestProcessIO.cs" />
     <Compile Include="ProcessHelperTest.cs" />
     <Compile Include="ProcessRunnerTests.cs" />
     <Compile Include="ProcessTrackerTests.cs" />

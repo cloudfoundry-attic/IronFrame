@@ -79,18 +79,6 @@ namespace IronFoundry.Container
                 Directory.MapUserPath("/").Returns(containerUserPath);
             }
 
-            static ProcessRunSpec MatchProcessRunSpec(ProcessRunSpec expected)
-            {
-                var expectedEnvironmentKeys = new HashSet<string>(expected.Environment.Keys);
-
-                return Arg.Is<ProcessRunSpec>(actual =>
-                    actual.ExecutablePath == expected.ExecutablePath &&
-                    actual.Arguments.SequenceEqual(expected.Arguments) &&
-                    new HashSet<string>(actual.Environment.Keys).SetEquals(expectedEnvironmentKeys) &&
-                    actual.WorkingDirectory == expected.WorkingDirectory
-                );
-            }
-
             public class WhenPrivileged : Run
             {
                 public WhenPrivileged()
@@ -106,17 +94,19 @@ namespace IronFoundry.Container
                     var process = Container.Run(Spec, io);
 
                     Assert.NotNull(process);
-                    ProcessRunner.Received(1).Run(MatchProcessRunSpec(ExpectedRunSpec));
+                    var actual = ProcessRunner.Captured(x => x.Run(null)).Arg<ProcessRunSpec>();
+                    Assert.Equal(ExpectedRunSpec.ExecutablePath, actual.ExecutablePath);
+                    Assert.Equal(ExpectedRunSpec.Arguments, actual.Arguments);
+                    Assert.Superset(
+                        new HashSet<string>(ExpectedRunSpec.Environment.Keys), 
+                        new HashSet<string>(actual.Environment.Keys));
+                    Assert.Equal(ExpectedRunSpec.WorkingDirectory, actual.WorkingDirectory);
                 }
 
                 [Fact]
                 public void ProcessIoIsRedirected()
                 {
-                    var stdout = Substitute.For<TextWriter>();
-                    var stderr = Substitute.For<TextWriter>();
-                    var io = Substitute.For<IProcessIO>();
-                    io.StandardOutput.Returns(stdout);
-                    io.StandardError.Returns(stderr);
+                    var io = new TestProcessIO();
                     var localProcess = Substitute.For<IProcess>();
                     ProcessRunner.Run(Arg.Any<ProcessRunSpec>()).Returns(localProcess)
                         .AndDoes(call =>
@@ -128,8 +118,22 @@ namespace IronFoundry.Container
 
                     Container.Run(Spec, io);
 
-                    stdout.Received(1).Write("This is STDOUT");
-                    stderr.Received(1).Write("This is STDERR");
+                    Assert.Equal("This is STDOUT", io.Output.ToString());
+                    Assert.Equal("This is STDERR", io.Error.ToString());
+                }
+
+                [Fact]
+                public void WhenPathMappingIsDisabled_DoesNotMapExecutablePath()
+                {
+                    var io = Substitute.For<IProcessIO>();
+                    Spec.DisablePathMapping = true;
+                    Spec.ExecutablePath = "cmd.exe";
+
+                    var process = Container.Run(Spec, io);
+
+                    Assert.NotNull(process);
+                    var actual = ProcessRunner.Captured(x => x.Run(null)).Arg<ProcessRunSpec>();
+                    Assert.Equal("cmd.exe", actual.ExecutablePath);
                 }
             }
 
@@ -148,17 +152,19 @@ namespace IronFoundry.Container
                     var process = Container.Run(Spec, io);
 
                     Assert.NotNull(process);
-                    ConstrainedProcessRunner.Received(1).Run(MatchProcessRunSpec(ExpectedRunSpec));
+                    var actual = ConstrainedProcessRunner.Captured(x => x.Run(null)).Arg<ProcessRunSpec>();
+                    Assert.Equal(ExpectedRunSpec.ExecutablePath, actual.ExecutablePath);
+                    Assert.Equal(ExpectedRunSpec.Arguments, actual.Arguments);
+                    Assert.Superset(
+                        new HashSet<string>(ExpectedRunSpec.Environment.Keys),
+                        new HashSet<string>(actual.Environment.Keys));
+                    Assert.Equal(ExpectedRunSpec.WorkingDirectory, actual.WorkingDirectory);
                 }
 
                 [Fact]
                 public void ProcessIoIsRedirected()
                 {
-                    var stdout = Substitute.For<TextWriter>();
-                    var stderr = Substitute.For<TextWriter>();
-                    var io = Substitute.For<IProcessIO>();
-                    io.StandardOutput.Returns(stdout);
-                    io.StandardError.Returns(stderr);
+                    var io = new TestProcessIO();
                     var remoteProcess = Substitute.For<IProcess>();
                     ConstrainedProcessRunner.Run(Arg.Any<ProcessRunSpec>()).Returns(remoteProcess)
                         .AndDoes(call =>
@@ -170,8 +176,22 @@ namespace IronFoundry.Container
 
                     Container.Run(Spec, io);
 
-                    stdout.Received(1).Write("This is STDOUT");
-                    stderr.Received(1).Write("This is STDERR");
+                    Assert.Equal("This is STDOUT", io.Output.ToString());
+                    Assert.Equal("This is STDERR", io.Error.ToString());
+                }
+
+                [Fact]
+                public void WhenPathMappingIsDisabled_DoesNotMapExecutablePath()
+                {
+                    var io = Substitute.For<IProcessIO>();
+                    Spec.DisablePathMapping = true;
+                    Spec.ExecutablePath = "cmd.exe";
+
+                    var process = Container.Run(Spec, io);
+
+                    Assert.NotNull(process);
+                    var actual = ConstrainedProcessRunner.Captured(x => x.Run(null)).Arg<ProcessRunSpec>();
+                    Assert.Equal("cmd.exe", actual.ExecutablePath);
                 }
             }
         }

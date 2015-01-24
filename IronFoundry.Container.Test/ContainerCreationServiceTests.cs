@@ -269,7 +269,7 @@ cmd.exe /C %*
                         var process = Container.Run(spec, io);
                         process.WaitForExit();
 
-                        Assert.Contains("This is STDOUT", io.GetStandardOutput());
+                        Assert.Contains("This is STDOUT", io.Output.ToString());
                     }
 
                     [Fact]
@@ -285,7 +285,7 @@ cmd.exe /C %*
                         var process = Container.Run(spec, io);
                         process.WaitForExit();
 
-                        Assert.Contains("This is STDERR", io.GetStandardError());
+                        Assert.Contains("This is STDERR", io.Error.ToString());
                     }
 
                     [Fact]
@@ -306,41 +306,9 @@ cmd.exe /C %*
                         var process = Container.Run(spec, io);
                         process.WaitForExit();
 
-                        var stdout = io.GetStandardOutput();
+                        var stdout = io.Output.ToString();
                         Assert.Contains("FOO=1", stdout);
                         Assert.Contains("BAR=two", stdout);
-                    }
-                }
-
-                class TestProcessIO : IProcessIO
-                {
-                    readonly StringWriter standardOutput = new StringWriter();
-                    readonly StringWriter standardError = new StringWriter();
-                    readonly StringReader standardInput = new StringReader("");
-
-                    public TextWriter StandardOutput
-                    {
-                        get { return standardOutput; }
-                    }
-
-                    public TextWriter StandardError
-                    {
-                        get { return standardError; }
-                    }
-
-                    public TextReader StandardInput
-                    {
-                        get { return standardInput; }
-                    }
-
-                    public string GetStandardOutput()
-                    {
-                        return standardOutput.ToString();
-                    }
-
-                    public string GetStandardError()
-                    {
-                        return standardError.ToString();
                     }
                 }
             }

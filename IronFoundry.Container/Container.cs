@@ -17,6 +17,7 @@ namespace IronFoundry.Container
         public Dictionary<string, string> Environment { get; set; }
         public string WorkingDirectory { get; set; }
         public bool Privileged { get; set; }
+        public bool DisablePathMapping { get; set; }
     }
 
     public interface IProcessIO
@@ -25,7 +26,6 @@ namespace IronFoundry.Container
         TextWriter StandardError { get; }
         TextReader StandardInput { get; }
     }
-
 
     public interface IContainer : IDisposable
     {
@@ -116,9 +116,13 @@ namespace IronFoundry.Container
                 processRunner :
                 constrainedProcessRunner;
 
+            var executablePath = !spec.DisablePathMapping ?
+                directory.MapUserPath(spec.ExecutablePath) :
+                spec.ExecutablePath;
+
             var runSpec = new ProcessRunSpec
             {
-                ExecutablePath = directory.MapUserPath(spec.ExecutablePath),
+                ExecutablePath = executablePath,
                 Arguments = spec.Arguments,
                 Environment = spec.Environment ?? defaultEnvironment,
                 WorkingDirectory = directory.MapUserPath(spec.WorkingDirectory ?? DefaultWorkingDirectory),
