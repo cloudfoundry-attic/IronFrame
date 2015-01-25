@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using IronFoundry.Container.Win32;
@@ -330,6 +331,30 @@ namespace IronFoundry.Warden.Containers
                     x => Assert.Equal(processes[4].Id, x),
                     x => Assert.Equal(processes[5].Id, x)
                 );
+            }
+
+            [Fact]
+            public void WhenManagedProcessCreatesChildProcess_ReturnsAllProcessIds()
+            {
+                // Arrange:
+                var process = IFTestHelper.ExecuteWithWait("create-child");
+                jobObject.AssignProcessToJob(process);
+                process.StandardInput.WriteLine();
+
+                var pidLine = process.StandardOutput.ReadLine();
+                int pid = Int32.Parse(pidLine);
+
+                // Act:
+                var managedProcesses = jobObject.GetProcessIds();
+
+                // Assert:
+                Assert.Contains(process.Id, managedProcesses);
+                Assert.Contains(pid, managedProcesses);
+
+                process.StandardInput.WriteLine();
+
+                process.WaitForExit();
+                Assert.True(IFTestHelper.Succeeded(process));
             }
         }
     }

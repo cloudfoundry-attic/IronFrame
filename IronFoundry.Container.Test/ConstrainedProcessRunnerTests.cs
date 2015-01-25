@@ -106,15 +106,38 @@ namespace IronFoundry.Container
 
                 Assert.Equal(expectedId, process.Id);
             }
+        }
 
-            CreateProcessParams MatchCreateProcessData(ProcessRunSpec expected)
+        public class StopAll : ConstrainedProcessRunnerTests
+        {
+            ConstrainedProcessRunner Runner { get; set; }
+
+            public StopAll()
             {
-                return Arg.Is<CreateProcessParams>(actual =>
-                    actual.executablePath == expected.ExecutablePath &&
-                    actual.arguments == expected.Arguments &&
-                    actual.environment == expected.Environment &&
-                    actual.workingDirectory == expected.WorkingDirectory &&
-                    actual.key != Guid.Empty
+                Runner = new ConstrainedProcessRunner(Client);
+            }
+
+            [Fact]
+            public void WhenKillIsFalse_SendsStopAllProcessesMessageWithTimeout()
+            {
+                Runner.StopAll(kill: false);
+
+                Client.Received(1).StopAllProcesses(
+                    Arg.Is<StopAllProcessesParams>(actual =>
+                        actual.timeout == 10000
+                    )
+                );
+            }
+
+            [Fact]
+            public void WhenKillIsTrue_SendsStopAllProcessesMessageWithNoTimeout()
+            {
+                Runner.StopAll(kill: true);
+
+                Client.Received(1).StopAllProcesses(
+                    Arg.Is<StopAllProcessesParams>(actual =>
+                        actual.timeout == 0
+                    )
                 );
             }
         }
@@ -122,7 +145,7 @@ namespace IronFoundry.Container
         public class Dispose : ConstrainedProcessRunnerTests
         {
             [Fact]
-            public void DisposesHost()
+            public void DisposesHostClient()
             {
                 var runner = new ConstrainedProcessRunner(Client);
                 

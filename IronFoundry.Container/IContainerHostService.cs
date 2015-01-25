@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -14,7 +13,7 @@ namespace IronFoundry.Container
 {
     public interface IContainerHostService
     {
-        IContainerHostClient StartContainerHost(JobObject jobObject, NetworkCredential credentials);
+        IContainerHostClient StartContainerHost(string containerId, JobObject jobObject, NetworkCredential credentials);
     }
 
     public class ContainerHostService : IContainerHostService
@@ -24,10 +23,11 @@ namespace IronFoundry.Container
 
         readonly Logger log = LogManager.GetCurrentClassLogger();
 
-        public IContainerHostClient StartContainerHost(JobObject jobObject, NetworkCredential credentials)
+        public IContainerHostClient StartContainerHost(string containerId, JobObject jobObject, NetworkCredential credentials)
         {
             var hostFullPath = Path.Combine(Directory.GetCurrentDirectory(), HostExe);
-            var hostStartInfo = new ProcessStartInfo(hostFullPath);
+            var hostArguments = containerId;
+            var hostStartInfo = new ProcessStartInfo(hostFullPath, hostArguments);
 
             hostStartInfo.RedirectStandardInput = true;
             hostStartInfo.RedirectStandardOutput = true;
@@ -83,7 +83,7 @@ namespace IronFoundry.Container
                 return Task.FromResult(0);
             });
 
-            var containerHostClient = new ContainerHostClient(ProcessHelper.WrapProcess(hostProcess), messageTransport, messagingClient);
+            var containerHostClient = new ContainerHostClient(ProcessHelper.WrapProcess(hostProcess), messageTransport, messagingClient, jobObject);
 
             messageTransport.Start();
 

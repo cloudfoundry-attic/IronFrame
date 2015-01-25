@@ -71,6 +71,25 @@ namespace IronFoundry.Warden.TestHelper
             return SUCCEEDED;
         }
 
+        static int CreateChildProcess(IEnumerable<string> args)
+        {
+            var process = new Process();
+            process.StartInfo.FileName = "cmd.exe";
+            process.StartInfo.Arguments = "/K";
+            process.StartInfo.UseShellExecute = false;
+
+            if (!process.Start())
+                return FAILED;
+
+            Console.Out.WriteLine(process.Id);
+
+            Console.ReadLine();
+
+            process.Kill();
+
+            return SUCCEEDED;
+        }
+
         static void Main(string[] args)
         {
             if (args.Length == 0)
@@ -114,6 +133,10 @@ namespace IronFoundry.Warden.TestHelper
 
                     case "consume-cpu":
                         exitCode = ConsumeCpu(commandArgs);
+                        break;
+
+                    case "create-child":
+                        exitCode = CreateChildProcess(commandArgs);
                         break;
 
                     case "nop":

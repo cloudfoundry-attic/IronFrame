@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using IronFoundry.Container.Messages;
 using IronFoundry.Container.Messaging;
+using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Utilities;
 using Newtonsoft.Json.Linq;
 using NSubstitute;
@@ -15,6 +16,7 @@ namespace IronFoundry.Container
         IProcess HostProcess { get; set; }
         IMessageTransport MessageTransport { get; set; }
         IMessagingClient MessagingClient { get; set; }
+        JobObject JobObject { get; set; }
         Action<ProcessDataEvent> ProcessDataEventGenerator { get; set; }
         ContainerHostClient Client { get; set; }
 
@@ -30,7 +32,9 @@ namespace IronFoundry.Container
                     ProcessDataEventGenerator = call.Arg<Action<ProcessDataEvent>>();
                 });
 
-            Client = new ContainerHostClient(HostProcess, MessageTransport, MessagingClient);
+            JobObject = Substitute.For<JobObject>();
+
+            Client = new ContainerHostClient(HostProcess, MessageTransport, MessagingClient, JobObject);
         }
 
         static Task<T> GetCompletedTask<T>(T result)
@@ -120,6 +124,26 @@ namespace IronFoundry.Container
                     });
                     
                 Assert.False(Client.Ping(TimeSpan.FromMilliseconds(1)));
+            }
+        }
+
+        public class Shutdown : ContainerHostClientTests
+        {
+            [Fact]
+            public void DisconnectsMessaging()
+            {
+                Client.Shutdown();
+
+                MessagingClient.Received(1).Dispose();
+                MessageTransport.Received(1).Dispose();
+            }
+
+            [Fact]
+            public void TerminatesProcessesInJobObject()
+            {
+                Client.Shutdown();
+                
+                JobObject.Received(1).TerminateProcessesAndWait(Timeout.Infinite);
             }
         }
 

@@ -41,12 +41,12 @@ namespace IronFoundry.Container.Acceptance
         {
             if (Container1 != null)
             {
-                Container1.Dispose();
+                Container1.Destroy();
             }
 
             if (Container2 != null)
             {
-                Container2.Dispose();
+                Container2.Destroy();
             }
 
             UserGroupManager.DeleteLocalGroup(UserGroupName);

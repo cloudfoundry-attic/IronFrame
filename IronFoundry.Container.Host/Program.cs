@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using IronFoundry.Container.Host.Handlers;
 using IronFoundry.Container.Messages;
 using IronFoundry.Container.Messaging;
 using IronFoundry.Warden.Containers;
+using IronFoundry.Warden.Utilities;
+using NDesk.Options;
 
 namespace IronFoundry.Container.Host
 {
@@ -11,20 +15,34 @@ namespace IronFoundry.Container.Host
     {
         static ManualResetEvent exitEvent = new ManualResetEvent(false);
         static ProcessTracker processTracker;
+        static string containerId = null;
+        static JobObject hostJobObject = null;
+        static IProcess hostProcess = null;
 
         static void Main(string[] args)
         {
             //Debugger.Launch();
+
+            if (args.Length == 0)
+                ExitWithError("Must specify container-id as the first argument.", -1);
+
+            containerId = args[0];
+
+            var hostJobObjectName = String.Format("{0}:host", containerId);
+            hostJobObject = new JobObject(hostJobObjectName);
+
+            hostProcess = ProcessHelper.WrapProcess(Process.GetCurrentProcess());
 
             var input = Console.In;
             var output = Console.Out;
 
             using (var transport = new MessageTransport(input, output))
             {
-                processTracker = new ProcessTracker(transport);
+                processTracker = new ProcessTracker(transport, hostJobObject, hostProcess, new ProcessHelper());
 
                 var createProcessHandler = new CreateProcessHandler(new ProcessRunner(), processTracker);
                 var pingHandler = new PingHandler();
+                var stopAllProcessesHandler = new StopAllProcessesHandler(processTracker);
                 var waitForProcessExitHandler = new WaitForProcessExitHandler(processTracker);
 
                 var dispatcher = new MessageDispatcher();
@@ -41,6 +59,13 @@ namespace IronFoundry.Container.Host
                     {
                         await pingHandler.ExecuteAsync();
                         return new PingResponse(request.id);
+                    });
+                dispatcher.RegisterMethod<StopAllProcessesRequest>(
+                    StopAllProcessesRequest.MethodName,
+                    async (request) =>
+                    {
+                        await stopAllProcessesHandler.ExecuteAsync(request.@params);
+                        return new StopAllProcessesResponse(request.id);
                     });
                 dispatcher.RegisterMethod<WaitForProcessExitRequest>(
                     WaitForProcessExitRequest.MethodName,

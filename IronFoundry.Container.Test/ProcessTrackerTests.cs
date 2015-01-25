@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using IronFoundry.Container.Host;
 using IronFoundry.Container.Messages;
 using IronFoundry.Container.Messaging;
+using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Utilities;
 using NSubstitute;
 using Xunit;
@@ -10,14 +13,68 @@ namespace IronFoundry.Container
 {
     public class ProcessTrackerTests
     {
+        IProcess HostProcess { get; set; }
+        JobObject JobObject { get; set; }
+        ProcessHelper ProcessHelper { get; set; }
         IMessageTransport Transport { get; set; }
         ProcessTracker ProcessTracker { get; set; }
 
         public ProcessTrackerTests()
         {
+            HostProcess = Substitute.For<IProcess>();
+            JobObject = Substitute.For<JobObject>();
+            ProcessHelper = Substitute.For<ProcessHelper>();
             Transport = Substitute.For<IMessageTransport>();
 
-            ProcessTracker = new ProcessTracker(Transport);
+            ProcessTracker = new ProcessTracker(Transport, JobObject, HostProcess, ProcessHelper);
+        }
+
+        public class GetAllChildProcesses : ProcessTrackerTests
+        {
+            int[] ExpectedProcessIds { get; set; }
+            int HostProcessId { get; set; }
+
+            public GetAllChildProcesses() : base()
+            {
+                HostProcessId = 100;
+                ExpectedProcessIds = new [] { 1, 2, 3, 4, 5, HostProcessId };
+
+                HostProcess.Id.Returns(HostProcessId);
+
+                JobObject.GetProcessIds().Returns(ExpectedProcessIds);
+                ProcessHelper.GetProcesses(null)
+                    .ReturnsForAnyArgs(call =>
+                    {
+                        var ids = call.Arg<IEnumerable<int>>();
+                        return ids.Select(id =>
+                        {
+                            var p = Substitute.For<IProcess>();
+                            p.Id.Returns(id);
+                            return p;
+                        });
+                    });
+            }
+            
+            [Fact]
+            public void IncludesAllChildProcessesAsTrackedByJobObject()
+            {
+                var processes = ProcessTracker.GetAllChildProcesses();
+
+                Assert.Collection(processes,
+                    x => Assert.Equal(1, x.Id),
+                    x => Assert.Equal(2, x.Id),
+                    x => Assert.Equal(3, x.Id),
+                    x => Assert.Equal(4, x.Id),
+                    x => Assert.Equal(5, x.Id));
+            }
+
+            [Fact]
+            public void DoesNotIncludeHostProcess()
+            {
+                var processes = ProcessTracker.GetAllChildProcesses();
+                
+                Assert.DoesNotContain(HostProcessId, processes.Select(p => p.Id));
+            }
         }
 
         public class GetProcessByKey : ProcessTrackerTests

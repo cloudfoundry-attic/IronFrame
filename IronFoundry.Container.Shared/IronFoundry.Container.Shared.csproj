@@ -73,6 +73,7 @@
     <Compile Include="Messages\CreateProcessMessage.cs" />
     <Compile Include="Messages\PingMessage.cs" />
     <Compile Include="Messages\ProcessDataEvent.cs" />
+    <Compile Include="Messages\StopAllProcessesMessage.cs" />
     <Compile Include="Messages\WaitForProcessExitMessage.cs" />
     <Compile Include="Utilities\BackgroundProcess.cs" />
     <Compile Include="Utilities\DesktopPermissionManager.cs" />

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Threading;
 using System.Threading.Tasks;
 using IronFoundry.Container.Messages;
 using IronFoundry.Container.Messaging;
+using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Utilities;
 
 namespace IronFoundry.Container
@@ -13,23 +15,26 @@ namespace IronFoundry.Container
         CreateProcessResult CreateProcess(CreateProcessParams @params);
         bool Ping(TimeSpan timeout);
         void Shutdown();
+        void StopAllProcesses(StopAllProcessesParams @params);
         void SubscribeToProcessData(Guid processKey, Action<ProcessDataEvent> callback);
         WaitForProcessExitResult WaitForProcessExit(WaitForProcessExitParams @params);
     }
 
     public class ContainerHostClient : IContainerHostClient
     {
+        JobObject containerJobObject;
         IProcess hostProcess;
         IMessageTransport messageTransport;
         IMessagingClient messagingClient;
 
         readonly ConcurrentDictionary<Guid, Action<ProcessDataEvent>> subscribers = new ConcurrentDictionary<Guid,Action<ProcessDataEvent>>();
 
-        public ContainerHostClient(IProcess hostProcess, IMessageTransport messageTransport, IMessagingClient messagingClient)
+        public ContainerHostClient(IProcess hostProcess, IMessageTransport messageTransport, IMessagingClient messagingClient, JobObject containerJobObject)
         {
             this.hostProcess = hostProcess;
             this.messageTransport = messageTransport;
             this.messagingClient = messagingClient;
+            this.containerJobObject = containerJobObject;
 
             this.hostProcess.Exited += (o, e) =>
             {
@@ -44,9 +49,8 @@ namespace IronFoundry.Container
 
         public CreateProcessResult CreateProcess(CreateProcessParams @params)
         {
-            var request = new CreateProcessRequest(@params);
-            var responseTask = messagingClient.SendMessageAsync<CreateProcessRequest, CreateProcessResponse>(request);
-            return responseTask.GetAwaiter().GetResult().result;
+            var response = SendMessage<CreateProcessRequest, CreateProcessResponse>(new CreateProcessRequest(@params));
+            return response.result;
         }
 
         public void Dispose()
@@ -78,21 +82,8 @@ namespace IronFoundry.Container
 
         public bool Ping(TimeSpan timeout)
         {
-            var request = new PingRequest();
-            var responseTask = messagingClient.SendMessageAsync<PingRequest, PingResponse>(request);
-
-            // This looks weird, but it's the only want to detect a timeout with Tasks and awaiters.
-            // Using Task.Wait(timeout) is dangerous in an async/await world!
-            var timeoutTask = Task.Delay(timeout);
-            var completedTask = Task.WhenAny(responseTask, timeoutTask).GetAwaiter().GetResult();
-
-            if (Object.ReferenceEquals(completedTask, responseTask))
-            {
-                responseTask.GetAwaiter().GetResult();
-                return true;
-            }
-
-            return false;
+            PingResponse response;
+            return TrySendMessage<PingRequest, PingResponse>(new PingRequest(), timeout, out response);
         }
 
         static void SafeKill(IProcess process)
@@ -108,19 +99,48 @@ namespace IronFoundry.Container
             }
         }
 
+        TResponse SendMessage<TRequest, TResponse>(TRequest request)
+            where TRequest : JsonRpcRequest
+            where TResponse : JsonRpcResponse
+        {
+            var task = messagingClient.SendMessageAsync<TRequest, TResponse>(request);
+            return task.GetAwaiter().GetResult();
+        }
+
+        bool TrySendMessage<TRequest, TResponse>(TRequest request, TimeSpan timeout, out TResponse response)
+            where TRequest : JsonRpcRequest
+            where TResponse : JsonRpcResponse
+        {
+            var task = messagingClient.SendMessageAsync<TRequest, TResponse>(request);
+            // This looks weird, but it's the only want to detect a timeout with Tasks and awaiters.
+            // Using Task.Wait(timeout) is dangerous in an async/await world!
+            var timeoutTask = Task.Delay(timeout);
+            var completedTask = Task.WhenAny(task, timeoutTask).GetAwaiter().GetResult();
+
+            if (Object.ReferenceEquals(completedTask, task))
+            {
+                response = task.GetAwaiter().GetResult();
+                return true;
+            }
+
+            response = null;
+            return false;
+        }
+
         public void Shutdown()
         {
-            var hostCapture = hostProcess;
-            hostProcess = null;
-
             DisposeMessageHandling();
 
-            if (hostCapture != null)
-            {
-                SafeKill(hostCapture);
+            if (containerJobObject != null)
+                containerJobObject.TerminateProcessesAndWait(Timeout.Infinite);
 
-                hostCapture.Dispose();
-            }
+            hostProcess = null;
+            containerJobObject = null;
+        }
+
+        public void StopAllProcesses(StopAllProcessesParams @params)
+        {
+            SendMessage<StopAllProcessesRequest, StopAllProcessesResponse>(new StopAllProcessesRequest(@params));
         }
 
         public void SubscribeToProcessData(Guid processKey, Action<ProcessDataEvent> callback)
@@ -130,9 +150,8 @@ namespace IronFoundry.Container
 
         public WaitForProcessExitResult WaitForProcessExit(WaitForProcessExitParams @params)
         {
-            var request = new WaitForProcessExitRequest(@params);
-            var responseTask = messagingClient.SendMessageAsync<WaitForProcessExitRequest, WaitForProcessExitResponse>(request);
-            return responseTask.GetAwaiter().GetResult().result;
+            var response = SendMessage<WaitForProcessExitRequest, WaitForProcessExitResponse>(new WaitForProcessExitRequest(@params));
+            return response.result;
         }
     }
 }

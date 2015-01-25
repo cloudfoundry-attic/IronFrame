@@ -29,6 +29,7 @@ namespace IronFoundry.Container
 
     public interface IContainer : IDisposable
     {
+        string Id { get; }
         string Handle { get; }
         //ContainerState State { get; }
 
@@ -40,6 +41,7 @@ namespace IronFoundry.Container
 
         //ContainerInfo GetInfo();
 
+        void Destroy();
         void Stop(bool kill);
 
         int ReservePort(int requestedPort);
@@ -56,6 +58,7 @@ namespace IronFoundry.Container
     {
         const string DefaultWorkingDirectory = "/";
 
+        readonly string id;
         readonly string handle;
         readonly IContainerUser user;
         readonly IContainerDirectory directory;
@@ -64,9 +67,10 @@ namespace IronFoundry.Container
         readonly IProcessRunner processRunner;
         readonly IProcessRunner constrainedProcessRunner;
         readonly Dictionary<string, string> defaultEnvironment;
-        private readonly List<int> reservedPorts = new List<int>();  
+        readonly List<int> reservedPorts = new List<int>();
 
         public Container(
+            string id,
             string handle,
             IContainerUser user,
             IContainerDirectory directory, 
@@ -76,6 +80,7 @@ namespace IronFoundry.Container
             IProcessRunner constrainedProcessRunner
             )
         {
+            this.id = id;
             this.handle = handle;
             this.user = user;
             this.directory = directory;
@@ -85,6 +90,11 @@ namespace IronFoundry.Container
             this.constrainedProcessRunner = constrainedProcessRunner;
 
             this.defaultEnvironment = new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        public string Id
+        {
+            get { return id; }
         }
 
         public string Handle
@@ -135,24 +145,40 @@ namespace IronFoundry.Container
             return new ContainerProcess(process);
         }
 
-        public void Dispose()
+        public void Destroy()
         {
-            // TODO Dispose of the constrainedProcessRunner
-//            this.constrainedProcessRunner.Dispose();
+            Stop(true);
+
             foreach (var port in reservedPorts)
             {
-                this.tcpPortManager.ReleaseLocalPort(port, this.user.UserName);
+                tcpPortManager.ReleaseLocalPort(port, user.UserName);
             }
-            //TODO - Unmap the mounted directories (Removes user ACLs)
-            //TODO - Delete the container directory
 
-            this.user.Delete();
+            // BR - Unmap the mounted directories (Removes user ACLs)
+            // BR - Delete the container directory
+
+            if (user != null)
+                user.Delete();
+
+            if (constrainedProcessRunner != null)
+                constrainedProcessRunner.Dispose();
+
+            if (processRunner != null)
+                processRunner.Dispose();
+        }
+
+        public void Dispose()
+        {
+            // Should perform basic cleanup only.
         }
 
         public void Stop(bool kill)
         {
             if (constrainedProcessRunner != null)
-                constrainedProcessRunner.Dispose();
+                constrainedProcessRunner.StopAll(kill);
+
+            if (processRunner != null)
+                processRunner.StopAll(kill);
         }
     }
 }

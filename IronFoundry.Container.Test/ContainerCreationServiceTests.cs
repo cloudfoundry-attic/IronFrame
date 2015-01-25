@@ -38,7 +38,7 @@ namespace IronFoundry.Container
             ContainerHostClient = Substitute.For<IContainerHostClient>();
 
             ContainerHostService = Substitute.For<IContainerHostService>();
-            ContainerHostService.StartContainerHost(null, null)
+            ContainerHostService.StartContainerHost(null, null, null)
                 .ReturnsForAnyArgs(ContainerHostClient);
 
             UserManager.CreateUser(null).ReturnsForAnyArgs(new NetworkCredential("username", "password"));
@@ -131,7 +131,7 @@ namespace IronFoundry.Container
 
                 Service.CreateContainer(spec);
 
-                ContainerHostService.Received(1).StartContainerHost(Arg.Any<JobObject>(), expectedCredentials);
+                ContainerHostService.Received(1).StartContainerHost(Arg.Any<string>(), Arg.Any<JobObject>(), expectedCredentials);
             }
 
             public class AcceptanceFixture : IDisposable
@@ -200,7 +200,7 @@ namespace IronFoundry.Container
                         finally
                         {
                             if (container != null)
-                                container.Stop(true);
+                                container.Destroy();
                         }
                     }
                 }
@@ -238,7 +238,7 @@ cmd.exe /C %*
 
                     public override void Dispose()
                     {
-                        Container.Stop(true);
+                        Container.Destroy();
                         base.Dispose();
                     }
 

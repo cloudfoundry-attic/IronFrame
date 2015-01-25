@@ -30,6 +30,7 @@ namespace IronFoundry.Container
     public interface IProcessRunner : IDisposable
     {
         IProcess Run(ProcessRunSpec runSpec);
+        void StopAll(bool kill);
     }
 
     public class ProcessRunner : IProcessRunner
@@ -95,6 +96,10 @@ namespace IronFoundry.Container
             p.BeginErrorReadLine();
 
             return wrapped;
+        }
+
+        public void StopAll(bool kill)
+        {
         }
     }
 }

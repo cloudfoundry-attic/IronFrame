@@ -76,6 +76,7 @@
     <Compile Include="EnvironmentBlockTests.cs" />
     <Compile Include="FileSystemManagerTests.cs" />
     <Compile Include="Handlers\CreateProcessHandlerTests.cs" />
+    <Compile Include="Handlers\StopAllProcessesHandlerTests.cs" />
     <Compile Include="Handlers\WaitForProcessExitHandlerTests.cs" />
     <Compile Include="Helpers\ArgMatchers.cs" />
     <Compile Include="Helpers\AssertHelper.cs" />

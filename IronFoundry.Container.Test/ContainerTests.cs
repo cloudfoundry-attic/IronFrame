@@ -30,7 +30,7 @@ namespace IronFoundry.Container
             TcpPortManager = Substitute.For<ILocalTcpPortManager>();
             JobObject = Substitute.For<JobObject>();
 
-            Container = new Container("handle", User, Directory, TcpPortManager, JobObject, ProcessRunner, ConstrainedProcessRunner);
+            Container = new Container("id", "handle", User, Directory, TcpPortManager, JobObject, ProcessRunner, ConstrainedProcessRunner);
         }
 
         public class ReservePort : ContainerTests
@@ -196,8 +196,17 @@ namespace IronFoundry.Container
             }
         }
 
-        public class Dispose : ContainerTests
+        public class Destroy : ContainerTests
         {
+            [Fact]
+            public void KillsProcesses()
+            {
+                Container.Destroy();
+
+                ProcessRunner.Received(1).StopAll(true);
+                ConstrainedProcessRunner.Received(1).StopAll(true);
+            }
+
             [Fact]
             public void ReleasesPorts()
             {
@@ -206,20 +215,33 @@ namespace IronFoundry.Container
 
                 Container.ReservePort(100);
                 Container.ReservePort(101);
-                
-                Container.Dispose();
+
+                Container.Destroy();
 
                 TcpPortManager.Received(1).ReleaseLocalPort(100, User.UserName);
                 TcpPortManager.Received(1).ReleaseLocalPort(101, User.UserName);
             }
 
             [Fact]
-            public void DeletesTheUser()
+            public void DeletesUser()
             {
-                Container.Dispose();
+                Container.Destroy();
 
                 User.Received(1).Delete();
             }
+
+            [Fact]
+            public void DisposesRunners()
+            {
+                Container.Destroy();
+
+                ProcessRunner.Received(1).Dispose();
+                ConstrainedProcessRunner.Received(1).Dispose();
+            }
+        }
+
+        public class Dispose : ContainerTests
+        {
         }
     }
 }

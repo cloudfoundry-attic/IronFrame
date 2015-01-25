@@ -66,6 +66,7 @@ namespace IronFoundry.Container
         {
             Guard.NotNull(containerSpec, "containerSpec");
 
+            var id = Guid.NewGuid().ToString("N");
             var handle = containerSpec.Handle;
             if (String.IsNullOrEmpty(handle))
                 handle = ContainerHandleGenerator.Generate();
@@ -76,11 +77,11 @@ namespace IronFoundry.Container
             var jobObjectName = handle;
             var jobObject = new JobObject(jobObjectName);
 
-            var containerHostClient = containerHostService.StartContainerHost(jobObject, user.GetCredential());
+            var containerHostClient = containerHostService.StartContainerHost(id, jobObject, user.GetCredential());
 
             var constrainedProcessRunner = new ConstrainedProcessRunner(containerHostClient);
 
-            return new Container(handle, user, directory, tcpPortManager, jobObject, processRunner, constrainedProcessRunner);
+            return new Container(id, handle, user, directory, tcpPortManager, jobObject, processRunner, constrainedProcessRunner);
         }
 
         public void Dispose()

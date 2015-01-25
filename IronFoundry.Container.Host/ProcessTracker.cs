@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using IronFoundry.Container.Messages;
 using IronFoundry.Container.Messaging;
+using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Utilities;
 using Newtonsoft.Json.Linq;
 
@@ -9,6 +12,7 @@ namespace IronFoundry.Container.Host
 {
     public interface IProcessTracker
     {
+        IReadOnlyList<IProcess> GetAllChildProcesses();
         IProcess GetProcessByKey(Guid key);
         void HandleProcessData(Guid key, ProcessDataType dataType, string data);
         void TrackProcess(Guid key, IProcess process);
@@ -16,12 +20,27 @@ namespace IronFoundry.Container.Host
 
     public class ProcessTracker : IProcessTracker
     {
-        ConcurrentDictionary<Guid, IProcess> processes = new ConcurrentDictionary<Guid, IProcess>();
-        IMessageTransport transport;
+        readonly IProcess hostProcess;
+        readonly JobObject jobObject;
+        readonly ConcurrentDictionary<Guid, IProcess> processes = new ConcurrentDictionary<Guid, IProcess>();
+        readonly ProcessHelper processHelper;
+        readonly IMessageTransport transport;
 
-        public ProcessTracker(IMessageTransport transport)
+        public ProcessTracker(IMessageTransport transport, JobObject jobObject, IProcess hostProcess, ProcessHelper processHelper)
         {
             this.transport = transport;
+            this.jobObject = jobObject;
+            this.hostProcess = hostProcess;
+            this.processHelper = processHelper;
+        }
+
+        public IReadOnlyList<IProcess> GetAllChildProcesses()
+        {
+            var ids = jobObject.GetProcessIds()
+                .Where(id => hostProcess.Id != id)
+                .ToList();
+
+            return processHelper.GetProcesses(ids).ToList();
         }
 
         public IProcess GetProcessByKey(Guid key)
