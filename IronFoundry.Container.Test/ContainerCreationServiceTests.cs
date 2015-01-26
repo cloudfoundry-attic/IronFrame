@@ -38,18 +38,12 @@ namespace IronFoundry.Container
             ContainerHostClient = Substitute.For<IContainerHostClient>();
 
             ContainerHostService = Substitute.For<IContainerHostService>();
-            ContainerHostService.StartContainerHost(null, null, null)
+            ContainerHostService.StartContainerHost(null, null, null, null)
                 .ReturnsForAnyArgs(ContainerHostClient);
 
             UserManager.CreateUser(null).ReturnsForAnyArgs(new NetworkCredential("username", "password"));
 
             Service = new ContainerCreationService(UserManager, FileSystem, TcpPortManager, ProcessRunner, ContainerHostService, ContainerBasePath);
-        }
-
-        [Fact]
-        public void WhenCreatedWithBasePathAndUserGroup()
-        {
-            var creationService = new ContainerCreationService(ContainerBasePath, ContainerUserGroup);
         }
 
         public class CreateContainer : ContainerCreationServiceTests
@@ -102,7 +96,7 @@ namespace IronFoundry.Container
 
                 Service.CreateContainer(spec);
 
-                UserManager.Received(1).CreateUser("container_handle");
+                UserManager.Received(1).CreateUser("c_handle");
             }
 
             [Fact]
@@ -131,7 +125,7 @@ namespace IronFoundry.Container
 
                 Service.CreateContainer(spec);
 
-                ContainerHostService.Received(1).StartContainerHost(Arg.Any<string>(), Arg.Any<JobObject>(), expectedCredentials);
+                ContainerHostService.Received(1).StartContainerHost(Arg.Any<string>(), Arg.Any<IContainerDirectory>(), Arg.Any<JobObject>(), expectedCredentials);
             }
 
             public class AcceptanceFixture : IDisposable
@@ -176,7 +170,7 @@ namespace IronFoundry.Container
                     FileSystem = new FileSystemManager();
                     ProcessRunner = new ProcessRunner();
                     
-                    ContainerHostService = new ContainerHostService();
+                    ContainerHostService = new ContainerHostService(FileSystem, ProcessRunner, new ContainerHostDependencyHelper());
 
                     UserManager = new LocalPrincipalManager(new DesktopPermissionManager(), Fixture.SecurityGroupName);
 
@@ -194,12 +188,12 @@ namespace IronFoundry.Container
                     {
                     }
 
-                    [Fact]
+                    [FactAdminRequired]
                     public void CanCreateContainer()
                     {
                         var spec = new ContainerSpec
                         {
-                            Handle = Guid.NewGuid().ToString("N"),
+                            Handle = ContainerHandleGenerator.Generate(),
                         };
 
                         IContainer container = null;
@@ -254,7 +248,7 @@ cmd.exe /C %*
                         base.Dispose();
                     }
 
-                    [Fact]
+                    [FactAdminRequired]
                     public void CanRunAProcess()
                     {
                         var spec = new ProcessSpec
@@ -270,7 +264,7 @@ cmd.exe /C %*
                         Assert.Equal(0, exitCode);
                     }
 
-                    [Fact]
+                    [FactAdminRequired]
                     public void CanGetExitCode()
                     {
                         var spec = new ProcessSpec
@@ -286,7 +280,7 @@ cmd.exe /C %*
                         Assert.Equal(100, exitCode);
                     }
 
-                    [Fact]
+                    [FactAdminRequired]
                     public void CanGetProcessOutput()
                     {
                         var spec = new ProcessSpec
@@ -302,7 +296,7 @@ cmd.exe /C %*
                         Assert.Contains("This is STDOUT", io.Output.ToString());
                     }
 
-                    [Fact]
+                    [FactAdminRequired]
                     public void CanGetProcessErrors()
                     {
                         var spec = new ProcessSpec
@@ -318,7 +312,7 @@ cmd.exe /C %*
                         Assert.Contains("This is STDERR", io.Error.ToString());
                     }
 
-                    [Fact]
+                    [FactAdminRequired]
                     public void CanSetEnvironmentVariables()
                     {
                         var spec = new ProcessSpec

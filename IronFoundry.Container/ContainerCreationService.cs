@@ -51,7 +51,7 @@ namespace IronFoundry.Container
             this.fileSystem = new FileSystemManager();
             this.tcpPortManager = new LocalTcpPortManager();
             this.processRunner = new ProcessRunner();
-            this.containerHostService = new ContainerHostService();
+            this.containerHostService = new ContainerHostService(this.fileSystem, this.processRunner, new ContainerHostDependencyHelper());
             this.containerBasePath = containerBasePath;
         }
 
@@ -70,7 +70,7 @@ namespace IronFoundry.Container
             var jobObjectName = handle;
             var jobObject = new JobObject(jobObjectName);
 
-            var containerHostClient = containerHostService.StartContainerHost(id, jobObject, user.GetCredential());
+            var containerHostClient = containerHostService.StartContainerHost(id, directory, jobObject, user.GetCredential());
 
             var constrainedProcessRunner = new ConstrainedProcessRunner(containerHostClient);
 

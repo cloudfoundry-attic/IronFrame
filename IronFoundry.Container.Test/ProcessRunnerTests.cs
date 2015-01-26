@@ -24,6 +24,7 @@ namespace IronFoundry.Container
                 {
                     ExecutablePath = exePath,
                     Arguments = arguments,
+                    BufferedInputOutput = false,
                 };
             }
 
@@ -121,7 +122,7 @@ namespace IronFoundry.Container
             }
 
             [Fact]
-            public void CanGetStandardOutputFromProcess()
+            public void CanGetEventedOutputFromProcess()
             {
                 var spec = CreateRunSpec("cmd.exe", new[] { "/C", "echo This is STDOUT && echo This is STDERR >&2 && pause" });
 
@@ -145,7 +146,7 @@ namespace IronFoundry.Container
                 {
                     try
                     {
-                        WaitHandle.WaitAll(new[] { outputSignal, errorSignal }, 1000);
+                        WaitHandle.WaitAll(new[] { outputSignal, errorSignal }, 2000);
                         Assert.Contains("This is STDOUT", output.ToString());
                         Assert.Contains("This is STDERR", error.ToString());
                     }
@@ -153,6 +154,20 @@ namespace IronFoundry.Container
                     {
                         p.Kill();
                     }
+                }
+            }
+
+            [Fact]
+            public void CanGetBufferedOutputFromProcess()
+            {
+                var spec = CreateRunSpec("cmd.exe", new[] { "/C", "echo This is STDOUT && echo This is STDERR >&2" });
+                spec.BufferedInputOutput = true;
+
+                using (var p = Runner.Run(spec))
+                {
+                    p.WaitForExit();
+                    Assert.Contains("This is STDOUT", p.StandardOutput.ReadToEnd());
+                    Assert.Contains("This is STDERR", p.StandardError.ReadToEnd());
                 }
             }
 

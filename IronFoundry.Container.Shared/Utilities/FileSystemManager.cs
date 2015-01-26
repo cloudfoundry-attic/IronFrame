@@ -365,10 +365,15 @@ namespace IronFoundry.Container.Utilities
                 return stream;
         }
 
+        public virtual bool FileExists(string path)
+        {
+            return fileSystem.Exists(path);
+        }
+
         /// <summary>
         /// Returns true if the path refers to an existing directory.
         /// </summary>
-        public bool DirectoryExists(string path)
+        public virtual bool DirectoryExists(string path)
         {
             return fileSystem.DirectoryExists(path);
         }
@@ -376,7 +381,7 @@ namespace IronFoundry.Container.Utilities
         /// <summary>
         /// Get the access that the specified user has to the specified directory.
         /// </summary>
-        public FileAccess GetEffectiveDirectoryAccess(string directory, NetworkCredential credential)
+        public virtual FileAccess GetEffectiveDirectoryAccess(string directory, NetworkCredential credential)
         {
             // TODO Modify this so it doesn't require the network credentials, only the username.
 

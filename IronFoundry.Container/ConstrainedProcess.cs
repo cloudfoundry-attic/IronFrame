@@ -91,5 +91,30 @@ namespace IronFoundry.Container
         {
             throw new NotImplementedException();
         }
+
+
+        public System.IO.TextReader StandardOutput
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public System.IO.TextReader StandardError
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public System.IO.TextWriter StandardInput
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
     }
 }

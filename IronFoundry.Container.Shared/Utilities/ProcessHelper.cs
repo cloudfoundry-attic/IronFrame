@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using IronFoundry.Container.Win32;
@@ -48,13 +49,14 @@ namespace IronFoundry.Container.Utilities
 
         class RealProcessWrapper : IProcess
         {
-            private readonly Process process;
+            readonly Process process;
 
             public RealProcessWrapper(Process process)
             {
                 this.process = process;
 
                 this.process.Exited += WrappedExited;
+
                 this.process.OutputDataReceived += WrappedOutputDataReceived;
                 this.process.ErrorDataReceived += WrappedErrorDataReceived;
             }
@@ -77,6 +79,21 @@ namespace IronFoundry.Container.Utilities
             public long PrivateMemoryBytes
             {
                 get { return process.PrivateMemorySize64; }
+            }
+
+            public TextReader StandardOutput
+            {
+                get { return process.StandardOutput; }
+            }
+
+            public TextReader StandardError
+            {
+                get { return process.StandardError; }
+            }
+
+            public TextWriter StandardInput
+            {
+                get { return process.StandardInput; }
             }
 
             public void Dispose()

@@ -1,50 +1,107 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using IronFoundry.Container.Messaging;
 using IronFoundry.Container.Utilities;
 using NLog;
+using System.Collections.Generic;
 
 namespace IronFoundry.Container
 {
     public interface IContainerHostService
     {
-        IContainerHostClient StartContainerHost(string containerId, JobObject jobObject, NetworkCredential credentials);
+        IContainerHostClient StartContainerHost(string containerId, IContainerDirectory directory, JobObject jobObject, NetworkCredential credentials);
+    }
+
+    public class ContainerHostDependencyHelper
+    {
+        public virtual string ContainerHostExe
+        {
+            get { return "IronFoundry.Container.Host.exe"; }
+        }
+
+        public virtual string ContainerHostExePath
+        {
+            get { return Path.Combine(Directory.GetCurrentDirectory(), ContainerHostExe); }
+        }
+
+        public virtual IReadOnlyList<string> GetContainerHostDependencies()
+        {
+            var hostAssembly = Assembly.ReflectionOnlyLoadFrom(ContainerHostExePath);
+            var hostDirectoryPath = Path.GetDirectoryName(ContainerHostExePath);
+
+            return EnumerateLocalReferencedAssemblies(hostDirectoryPath, hostAssembly)
+                .ToList();
+        }
+
+        IEnumerable<string> EnumerateLocalReferencedAssemblies(string basePath, Assembly assembly)
+        {
+            foreach (var dependency in assembly.GetReferencedAssemblies())
+            {
+                var fileName = dependency.Name + ".dll";
+                var filePath = Path.Combine(basePath, fileName);
+                if (File.Exists(filePath))
+                {
+                    var localAssembly = Assembly.ReflectionOnlyLoadFrom(filePath);
+                    foreach (var localAssemblyDependency in EnumerateLocalReferencedAssemblies(basePath, localAssembly))
+                    {
+                        yield return localAssemblyDependency;
+                    }
+
+                    yield return filePath;
+                }
+            }
+        }
     }
 
     public class ContainerHostService : IContainerHostService
     {
-        const string HostExe = "IronFoundry.Container.Host.exe";
         static readonly TimeSpan HostProcessStartTimeout = TimeSpan.FromSeconds(5);
 
+        readonly ContainerHostDependencyHelper dependencyHelper;
+        readonly FileSystemManager fileSystem;
         readonly Logger log = LogManager.GetCurrentClassLogger();
+        readonly IProcessRunner processRunner;
 
-        public IContainerHostClient StartContainerHost(string containerId, JobObject jobObject, NetworkCredential credentials)
+        public ContainerHostService(FileSystemManager fileSystem, IProcessRunner processRunner, ContainerHostDependencyHelper dependencyHelper)
         {
-            var hostFullPath = Path.Combine(Directory.GetCurrentDirectory(), HostExe);
-            var hostArguments = containerId;
-            var hostStartInfo = new ProcessStartInfo(hostFullPath, hostArguments);
+            this.fileSystem = fileSystem;
+            this.processRunner = processRunner;
+            this.dependencyHelper = dependencyHelper;
+        }
 
-            hostStartInfo.RedirectStandardInput = true;
-            hostStartInfo.RedirectStandardOutput = true;
-            hostStartInfo.RedirectStandardError = true;
-            hostStartInfo.UseShellExecute = false;
+        void CopyHostToContainer(IContainerDirectory directory)
+        {
+            fileSystem.CopyFile(
+                dependencyHelper.ContainerHostExePath, 
+                directory.MapBinPath(dependencyHelper.ContainerHostExe));
 
-            if (credentials != null)
+            foreach (var dependencyFilePath in dependencyHelper.GetContainerHostDependencies())
             {
-                hostStartInfo.UserName = credentials.UserName;
-                hostStartInfo.Password = credentials.SecurePassword;
-                hostStartInfo.LoadUserProfile = false;
+                var targetFilePath = directory.MapBinPath(Path.GetFileName(dependencyFilePath));
+                fileSystem.CopyFile(dependencyFilePath, targetFilePath);
             }
+        }
 
-            var hostProcess = new Process();
-            hostProcess.StartInfo = hostStartInfo;
-            hostProcess.EnableRaisingEvents = true;
+        public IContainerHostClient StartContainerHost(string containerId, IContainerDirectory directory, JobObject jobObject, NetworkCredential credentials)
+        {
+            CopyHostToContainer(directory);
 
-            hostProcess.Start();
+            var hostRunSpec = new ProcessRunSpec
+            {
+                ExecutablePath = directory.MapBinPath(dependencyHelper.ContainerHostExe),
+                Arguments = new[] { containerId },
+                BufferedInputOutput = true,
+                WorkingDirectory = directory.UserPath,
+                Credentials = credentials,
+            };
+
+            var hostProcess = processRunner.Run(hostRunSpec);
 
             WaitForProcessToStart(hostProcess, HostProcessStartTimeout);
 
@@ -55,7 +112,7 @@ namespace IronFoundry.Container
             //
             // We need to ensure that the host process cannot create any new processes before
             // it's added to the job object.
-            jobObject.AssignProcessToJob(hostProcess);
+            jobObject.AssignProcessToJob(hostProcess.Handle);
 
             var messageTransport = new MessageTransport(hostProcess.StandardOutput, hostProcess.StandardInput);
             var messagingClient = new MessagingClient(async message =>
@@ -82,7 +139,7 @@ namespace IronFoundry.Container
                 return Task.FromResult(0);
             });
 
-            var containerHostClient = new ContainerHostClient(ProcessHelper.WrapProcess(hostProcess), messageTransport, messagingClient, jobObject);
+            var containerHostClient = new ContainerHostClient(hostProcess, messageTransport, messagingClient, jobObject);
 
             messageTransport.Start();
 
@@ -113,7 +170,7 @@ namespace IronFoundry.Container
             return null;
         }
 
-        void WaitForProcessToStart(Process hostProcess, TimeSpan timeout)
+        void WaitForProcessToStart(IProcess hostProcess, TimeSpan timeout)
         {
             string status = ReadLineWithTimeout(hostProcess.StandardError, timeout);
             if (status == null)

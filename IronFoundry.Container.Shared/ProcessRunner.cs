@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Net;
 using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container
@@ -19,6 +21,10 @@ namespace IronFoundry.Container
         public string[] Arguments { get; set; }
         public Dictionary<string, string> Environment { get; set; }
         public string WorkingDirectory { get; set; }
+
+        public NetworkCredential Credentials { get; set; }
+
+        public bool BufferedInputOutput { get; set; }
 
         public Action<string> OutputCallback { get; set; }
         public Action<string> ErrorCallback { get; set; }
@@ -70,27 +76,33 @@ namespace IronFoundry.Container
 
             var wrapped = ProcessHelper.WrapProcess(p);
 
-            if (runSpec.OutputCallback != null)
+            if (!runSpec.BufferedInputOutput)
             {
-                p.OutputDataReceived += (sender, e) =>
+                if (runSpec.OutputCallback != null)
                 {
-                    runSpec.OutputCallback(e.Data);
-                };
-            }
+                    p.OutputDataReceived += (sender, e) =>
+                    {
+                        runSpec.OutputCallback(e.Data);
+                    };
+                }
 
-            if (runSpec.ErrorCallback != null)
-            {
-                p.ErrorDataReceived += (sender, e) =>
+                if (runSpec.ErrorCallback != null)
                 {
-                    runSpec.ErrorCallback(e.Data);
-                };
+                    p.ErrorDataReceived += (sender, e) =>
+                    {
+                        runSpec.ErrorCallback(e.Data);
+                    };
+                }
             }
 
             bool started = p.Start();
             Debug.Assert(started); // TODO: Should we throw an exception here? Fail fast?
 
-            p.BeginOutputReadLine();
-            p.BeginErrorReadLine();
+            if (!runSpec.BufferedInputOutput)
+            {
+                p.BeginOutputReadLine();
+                p.BeginErrorReadLine();
+            }
 
             return wrapped;
         }

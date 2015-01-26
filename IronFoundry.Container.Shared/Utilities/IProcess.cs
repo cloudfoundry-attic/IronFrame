@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
+using System.IO;
 
 namespace IronFoundry.Container.Utilities
 {
@@ -15,6 +15,10 @@ namespace IronFoundry.Container.Utilities
         event EventHandler Exited;
         event EventHandler<ProcessDataReceivedEventArgs> OutputDataReceived;
         event EventHandler<ProcessDataReceivedEventArgs> ErrorDataReceived;
+
+        TextReader StandardOutput { get; }
+        TextReader StandardError { get; }
+        TextWriter StandardInput { get; }
 
         void Kill();
         void WaitForExit();
