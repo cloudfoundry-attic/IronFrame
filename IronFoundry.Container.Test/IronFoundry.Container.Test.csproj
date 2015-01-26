@@ -44,6 +44,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.DirectoryServices" />
     <Reference Include="System.DirectoryServices.AccountManagement" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -73,17 +74,28 @@
     <Compile Include="ContainerProcessTests.cs" />
     <Compile Include="ContainerTests.cs" />
     <Compile Include="ContainerUserTests.cs" />
-    <Compile Include="EnvironmentBlockTests.cs" />
-    <Compile Include="FileSystemManagerTests.cs" />
+    <Compile Include="Messaging\MessageDispatcherTest.cs" />
+    <Compile Include="Messaging\MessageTransportTest.cs" />
+    <Compile Include="Messaging\MessagingClientTest.cs" />
+    <Compile Include="Messaging\SecureStringJsonConverterTest.cs" />
+    <Compile Include="Messaging\TaskExtensions.cs" />
+    <Compile Include="TestSupport\IFTestHelper.cs" />
+    <Compile Include="TestSupport\InputSource.cs" />
+    <Compile Include="Utilities\EnvironmentBlockTests.cs" />
+    <Compile Include="Utilities\FileSystemManagerTests.cs" />
     <Compile Include="Handlers\CreateProcessHandlerTests.cs" />
     <Compile Include="Handlers\StopAllProcessesHandlerTests.cs" />
     <Compile Include="Handlers\WaitForProcessExitHandlerTests.cs" />
-    <Compile Include="Helpers\ArgMatchers.cs" />
-    <Compile Include="Helpers\AssertHelper.cs" />
-    <Compile Include="Helpers\NSubstituteExtensions.cs" />
-    <Compile Include="Helpers\TempFile.cs" />
-    <Compile Include="Helpers\TestProcessIO.cs" />
-    <Compile Include="ProcessHelperTest.cs" />
+    <Compile Include="TestSupport\ArgMatchers.cs" />
+    <Compile Include="TestSupport\AssertHelper.cs" />
+    <Compile Include="TestSupport\NSubstituteExtensions.cs" />
+    <Compile Include="TestSupport\TempFile.cs" />
+    <Compile Include="TestSupport\TestProcessIO.cs" />
+    <Compile Include="Utilities\JobObjectLimitsTests.cs" />
+    <Compile Include="Utilities\JobObjectTests.cs" />
+    <Compile Include="Utilities\LocalPrincipalManagerTests.cs" />
+    <Compile Include="Utilities\LocalTcpPortManagerTests.cs" />
+    <Compile Include="Utilities\ProcessHelperTest.cs" />
     <Compile Include="ProcessRunnerTests.cs" />
     <Compile Include="ProcessTrackerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -102,10 +114,17 @@
       <Project>{cb7ba555-21fd-4c57-a629-a925b6a83a31}</Project>
       <Name>IronFoundry.Container.Shared</Name>
     </ProjectReference>
+    <ProjectReference Include="..\IronFoundry.Container.TestHelper\IronFoundry.Container.TestHelper.csproj">
+      <Project>{ab96da85-8c4e-490b-b552-3fe9f0e0e9bf}</Project>
+      <Name>IronFoundry.Container.TestHelper</Name>
+    </ProjectReference>
     <ProjectReference Include="..\IronFoundry.Container\IronFoundry.Container.csproj">
       <Project>{5de07f79-b758-4a04-b908-626e7577313e}</Project>
       <Name>IronFoundry.Container</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Helpers\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

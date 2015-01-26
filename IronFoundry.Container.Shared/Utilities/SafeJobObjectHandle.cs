@@ -2,7 +2,7 @@
 using Microsoft.Win32.SafeHandles;
 using System;
 
-namespace IronFoundry.Warden.Containers
+namespace IronFoundry.Container.Utilities
 {
     // BR: Move this to IronFoundry.Container.Shared
     public class SafeJobObjectHandle : SafeHandleZeroOrMinusOneIsInvalid

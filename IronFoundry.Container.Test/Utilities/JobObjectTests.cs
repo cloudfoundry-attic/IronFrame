@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using IronFoundry.Container.Win32;
 using Xunit;
 
-namespace IronFoundry.Warden.Containers
+namespace IronFoundry.Container.Utilities
 {
     public class JobObjectTests
     {

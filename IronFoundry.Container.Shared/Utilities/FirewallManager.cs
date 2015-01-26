@@ -1,7 +1,7 @@
 ﻿using System;
 using NetFwTypeLib;
 
-namespace IronFoundry.Warden.Utilities
+namespace IronFoundry.Container.Utilities
 {
     // BR: Move this to IronFoundry.Container
 

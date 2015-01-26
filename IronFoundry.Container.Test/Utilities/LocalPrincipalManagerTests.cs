@@ -3,13 +3,11 @@ using System.Linq;
 using System.DirectoryServices;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
-using IronFoundry.Warden.Utilities;
 using Xunit;
 using System.Collections;
-using IronFoundry.Container.Utilities;
 using NSubstitute;
 
-namespace IronFoundry.Warden.Test
+namespace IronFoundry.Container.Utilities
 {
     /// <summary>
     /// Test the LocalPrincipal by using the actual local WinNT users and groups entries.

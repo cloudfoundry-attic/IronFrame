@@ -1,7 +1,7 @@
 ﻿using System;
 using NLog;
 
-namespace IronFoundry.Warden.Utilities
+namespace IronFoundry.Container.Utilities
 {
     // BR: Move this to IronFoundry.Container
     public class LocalTcpPortManager : ILocalTcpPortManager

@@ -8,7 +8,7 @@ using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
 using IronFoundry.Container.Win32;
 
-namespace IronFoundry.Warden.Utilities
+namespace IronFoundry.Container.Utilities
 {
     // BR: Move this to IronFoundry.Container
     public class PlatformFileSystem

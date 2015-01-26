@@ -1,8 +1,7 @@
-﻿namespace IronFoundry.Warden.Utilities
-{
-    using System;
-    using NLog;
+﻿using System;
 
+namespace NLog
+{
     public static class LoggerExtensionMethods
     {
         public static void DebugException(this Logger logger, Exception exception)

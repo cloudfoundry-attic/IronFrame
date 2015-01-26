@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using NSubstitute;
 using Xunit;
 
-namespace IronFoundry.Warden.Containers
+namespace IronFoundry.Container.Utilities
 {
     public class JobObjectLimitsTests : IDisposable
     {

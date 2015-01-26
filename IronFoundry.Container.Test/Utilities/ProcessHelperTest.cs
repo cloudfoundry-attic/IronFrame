@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using IronFoundry.Warden.Utilities;
 using Xunit;
 
-namespace IronFoundry.Warden.Utilities
+namespace IronFoundry.Container.Utilities
 {
     public class ProcessHelperTest
     {

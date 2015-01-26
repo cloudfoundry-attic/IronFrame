@@ -3,6 +3,7 @@
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using IronFoundry.Container;
     using IronFoundry.Warden.Containers;
     using IronFoundry.Warden.Handlers;
     using IronFoundry.Warden.Jobs;

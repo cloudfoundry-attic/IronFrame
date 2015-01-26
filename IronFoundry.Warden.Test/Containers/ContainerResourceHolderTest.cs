@@ -12,6 +12,7 @@ using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
+using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Warden.Test
 {

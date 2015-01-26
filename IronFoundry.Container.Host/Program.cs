@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using IronFoundry.Container.Host.Handlers;
 using IronFoundry.Container.Messages;
 using IronFoundry.Container.Messaging;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Utilities;
-using NDesk.Options;
+using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container.Host
 {

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using IronFoundry.Container.Messages;
 using IronFoundry.Container.Messaging;
 using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Utilities;
+using IronFoundry.Container.Utilities;
 using Newtonsoft.Json.Linq;
 using NSubstitute;
 using Xunit;

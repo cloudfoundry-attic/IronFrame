@@ -1,9 +1,8 @@
 ﻿using System;
-using IronFoundry.Warden.Utilities;
 using NSubstitute;
 using Xunit;
 
-namespace IronFoundry.Warden.Test
+namespace IronFoundry.Container.Utilities
 {
     public class LocalTcpPortManagerTests
     {

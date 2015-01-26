@@ -1,6 +1,6 @@
 ﻿using IronFoundry.Container.Win32;
 
-namespace IronFoundry.Warden.Utilities
+namespace IronFoundry.Container.Utilities
 {
     using System;
     using System.Runtime.InteropServices;

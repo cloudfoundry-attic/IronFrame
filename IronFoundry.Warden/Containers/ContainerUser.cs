@@ -3,7 +3,7 @@ using System.Net;
 using System.Security;
 using System.Security.Principal;
 using System.Text.RegularExpressions;
-using IronFoundry.Warden.Utilities;
+using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Warden.Containers
 {

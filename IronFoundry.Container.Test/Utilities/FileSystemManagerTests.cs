@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Xunit;
 using ICSharpCode.SharpZipLib.GZip;
 
-namespace IronFoundry.Warden.Utilities
+namespace IronFoundry.Container.Utilities
 {
     public class FileSystemManagerTests
     {

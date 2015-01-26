@@ -1,4 +1,4 @@
-namespace IronFoundry.Warden.Utilities
+namespace IronFoundry.Container.Utilities
 {
     // BR: Move this to IronFoundry.Container
     public interface ILocalTcpPortManager

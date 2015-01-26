@@ -4,8 +4,7 @@ using System.Linq;
 using IronFoundry.Container.Host;
 using IronFoundry.Container.Messages;
 using IronFoundry.Container.Messaging;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Utilities;
+using IronFoundry.Container.Utilities;
 using NSubstitute;
 using Xunit;
 

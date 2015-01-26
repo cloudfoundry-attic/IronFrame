@@ -7,6 +7,7 @@ using IronFoundry.Warden.Utilities;
 using NLog;
 using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Configuration;
+using IronFoundry.Container;
 
 namespace IronFoundry.Warden.Containers
 {

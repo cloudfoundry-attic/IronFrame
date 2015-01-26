@@ -2,7 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace IronFoundry.Warden.Test.TestSupport
+namespace IronFoundry.Container
 {
     class InputSource : TextReader
     {

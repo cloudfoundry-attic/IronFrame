@@ -1,4 +1,4 @@
-﻿namespace IronFoundry.Warden
+﻿namespace IronFoundry.Container
 {
     using System;
     using System.Runtime.Serialization;

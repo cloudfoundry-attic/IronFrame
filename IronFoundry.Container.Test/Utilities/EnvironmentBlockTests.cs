@@ -1,8 +1,7 @@
-﻿namespace IronFoundry.Warden.Test.Utilities
+﻿namespace IronFoundry.Container.Utilities
 {
     using System.Collections;
     using System.Collections.Generic;
-    using IronFoundry.Warden.Utilities;
     using Xunit;
 
     public class EnvironmentBlockTests

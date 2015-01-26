@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Security.AccessControl;
 using IronFoundry.Container;
+using IronFoundry.Container.Utilities;
 using IronFoundry.Container.Win32;
 using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Containers.Messages;
@@ -307,7 +308,7 @@ namespace IronFoundry.Warden.Test
             public GetInfo()
                 : base()
             {
-                CpuStatistics = new Containers.CpuStatistics
+                CpuStatistics = new CpuStatistics
                 {
                     TotalKernelTime = TimeSpan.FromSeconds(1),
                     TotalUserTime = TimeSpan.FromSeconds(2),

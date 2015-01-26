@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using IronFoundry.Container.Messages;
-using IronFoundry.Warden.Utilities;
+using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container
 {

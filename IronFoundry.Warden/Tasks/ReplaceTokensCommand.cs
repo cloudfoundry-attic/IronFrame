@@ -5,7 +5,7 @@
     using System.Linq;
     using System.Text;
     using Configuration;
-    using Containers;
+    using IronFoundry.Container;
     using Utilities;
 
     /// <summary>
@@ -17,7 +17,7 @@
 
         private readonly Func<string, string> tokenReplacer;
 
-        public ReplaceTokensCommand(IContainer container, string[] arguments)
+        public ReplaceTokensCommand(IronFoundry.Warden.Containers.IContainer container, string[] arguments)
             : base(container, arguments)
         {
             tokenReplacer = (line) => line.Replace("@ROOT@", container.ContainerDirectoryPath).ToWinPathString();

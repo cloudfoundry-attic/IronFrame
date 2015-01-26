@@ -5,7 +5,7 @@ using System.Linq;
 using System.Security.Principal;
 using System.Threading;
 using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Utilities;
+using IronFoundry.Container.Utilities;
 using NSubstitute;
 using NSubstitute.Core;
 using Xunit;

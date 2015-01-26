@@ -5,8 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using IronFoundry.Container.Messages;
 using IronFoundry.Container.Messaging;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Utilities;
+using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container
 {

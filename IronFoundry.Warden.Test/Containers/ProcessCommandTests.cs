@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using IronFoundry.Container.Utilities;
 using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Protocol;

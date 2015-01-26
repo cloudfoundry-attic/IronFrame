@@ -14,6 +14,7 @@ using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Utilities;
 using logmessage;
 using Newtonsoft.Json.Linq;
+using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Warden.ContainerHost
 {

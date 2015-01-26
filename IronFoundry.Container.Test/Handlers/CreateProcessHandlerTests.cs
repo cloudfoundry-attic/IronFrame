@@ -8,7 +8,7 @@ using NSubstitute;
 using IronFoundry.Container.Host.Handlers;
 using IronFoundry.Container.Host;
 using IronFoundry.Container.Messages;
-using IronFoundry.Warden.Utilities;
+using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container.Handlers
 {

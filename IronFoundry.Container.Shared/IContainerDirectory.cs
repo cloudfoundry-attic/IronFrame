@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Principal;
-using System.Threading;
+using IronFoundry.Container.Utilities;
 using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Utilities;
 
 namespace IronFoundry.Container
 {

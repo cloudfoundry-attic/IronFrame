@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Net;
-using System.Security;
+using IronFoundry.Container.Utilities;
 using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Utilities;
 using NSubstitute;
 using Xunit;
 

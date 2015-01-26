@@ -1,6 +1,6 @@
 ﻿using System;
 using IronFoundry.Container.Messages;
-using IronFoundry.Warden.Utilities;
+using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container
 {

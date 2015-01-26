@@ -61,15 +61,15 @@
     <Compile Include="BindMount.cs" />
     <Compile Include="Concurrency\AsyncLock.cs" />
     <Compile Include="ContainerHandleGenerator.cs" />
-    <Compile Include="EnvironmentBlock.cs" />
+    <Compile Include="Utilities\EnvironmentBlock.cs" />
     <Compile Include="ExtensionMethods.cs" />
-    <Compile Include="FileSystemManager.cs" />
+    <Compile Include="Utilities\FileSystemManager.cs" />
     <Compile Include="Guard.cs" />
     <Compile Include="IContainerDirectory.cs" />
     <Compile Include="IContainerUser.cs" />
-    <Compile Include="ILocalTcpPortManager.cs" />
+    <Compile Include="Utilities\ILocalTcpPortManager.cs" />
     <Compile Include="ContainerProcess.cs" />
-    <Compile Include="JobObjectLimits.cs" />
+    <Compile Include="Utilities\JobObjectLimits.cs" />
     <Compile Include="Messages\CreateProcessMessage.cs" />
     <Compile Include="Messages\PingMessage.cs" />
     <Compile Include="Messages\ProcessDataEvent.cs" />
@@ -93,9 +93,9 @@
     <Compile Include="Win32\DuplicateTokenEx.cs" />
     <Compile Include="Win32\Enums.cs" />
     <Compile Include="Win32\Impersonator.cs" />
-    <Compile Include="IProcess.cs" />
-    <Compile Include="IUserManager.cs" />
-    <Compile Include="JobObject.cs" />
+    <Compile Include="Utilities\IProcess.cs" />
+    <Compile Include="Utilities\IUserManager.cs" />
+    <Compile Include="Utilities\JobObject.cs" />
     <Compile Include="ProcessRunner.cs" />
     <Compile Include="Messaging\JsonRpcRequest.cs" />
     <Compile Include="Messaging\JsonRpcResponse.cs" />
@@ -116,10 +116,10 @@
     <Compile Include="Win32\SecurityAttributes.cs" />
     <Compile Include="Win32\StandardRights.cs" />
     <Compile Include="Win32\Utils.cs" />
-    <Compile Include="ProcessDataReceivedEventArgs.cs" />
-    <Compile Include="ProcessHelper.cs" />
+    <Compile Include="Utilities\ProcessDataReceivedEventArgs.cs" />
+    <Compile Include="Utilities\ProcessHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SafeJobObjectHandle.cs" />
+    <Compile Include="Utilities\SafeJobObjectHandle.cs" />
     <Compile Include="Win32\WindowsStationRights.cs" />
   </ItemGroup>
   <ItemGroup>

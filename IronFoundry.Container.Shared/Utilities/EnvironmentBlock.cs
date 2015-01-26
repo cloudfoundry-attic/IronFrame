@@ -1,6 +1,6 @@
 ﻿
 
-namespace IronFoundry.Warden.Utilities
+namespace IronFoundry.Container.Utilities
 {
     using System;
     using System.Collections;

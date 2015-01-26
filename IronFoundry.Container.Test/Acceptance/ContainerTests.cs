@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using IronFoundry.Container.TestSupport;
 using IronFoundry.Container.Utilities;
 using IronFoundry.Warden.Test;
 using NSubstitute;

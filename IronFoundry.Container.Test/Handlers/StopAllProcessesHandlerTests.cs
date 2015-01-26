@@ -1,7 +1,7 @@
 ﻿using IronFoundry.Container.Host;
 using IronFoundry.Container.Host.Handlers;
 using IronFoundry.Container.Messages;
-using IronFoundry.Warden.Utilities;
+using IronFoundry.Container.Utilities;
 using NSubstitute;
 using Xunit;
 

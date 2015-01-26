@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using IronFoundry.Container.Helpers;
-using IronFoundry.Warden.Utilities;
+using IronFoundry.Container.Utilities;
 using Xunit;
 
 namespace IronFoundry.Container

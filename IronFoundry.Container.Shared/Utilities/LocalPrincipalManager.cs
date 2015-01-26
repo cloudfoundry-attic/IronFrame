@@ -1,15 +1,13 @@
 ﻿using System;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
-using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Web.Security;
-using NLog;
-using System.Diagnostics;
 using IronFoundry.Container.Win32;
+using NLog;
 
-namespace IronFoundry.Warden.Utilities
+namespace IronFoundry.Container.Utilities
 {
     // BR: Move this to IronFoundry.Container
     public class LocalPrincipalManager : IUserManager

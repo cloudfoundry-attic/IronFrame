@@ -36,7 +36,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Messaging\TaskExtensions.cs" />
     <Compile Include="Tasks\TaskCommandDTODeserializationTests.cs" />
     <Compile Include="TestSupport\AssertHelper.cs" />
     <Compile Include="Tasks\CommandRunnerTests.cs" />
@@ -48,27 +47,17 @@
     <Compile Include="Containers\ContainerStubTests.cs" />
     <Compile Include="Containers\ContainerUserTests.cs" />
     <Compile Include="Handlers\LinkRequestHandlerTests.cs" />
-    <Compile Include="TestSupport\IFTestHelper.cs" />
-    <Compile Include="PInvoke\JobObjectLimitsTests.cs" />
     <Compile Include="Handlers\DestroyRequestHandlerTests.cs" />
     <Compile Include="Handlers\LimitMemoryRequestHandlerTest.cs" />
-    <Compile Include="Utilities\LocalTcpPortManagerTests.cs" />
     <Compile Include="Handlers\LoggingRequestHandlerTest.cs" />
-    <Compile Include="Messaging\MessageTransportTest.cs" />
-    <Compile Include="Messaging\MessagingClientTest.cs" />
-    <Compile Include="Messaging\SecureStringJsonConverterTest.cs" />
     <Compile Include="Containers\ProcessCommandTests.cs" />
     <Compile Include="Containers\ContainerHostLauncherTests.cs" />
     <Compile Include="Containers\ProcessMonitorTests.cs" />
     <Compile Include="TestSupport\ArgMatchers.cs" />
     <Compile Include="TestSupport\Asserts.cs" />
     <Compile Include="TestSupport\FactAdminRequired.cs" />
-    <Compile Include="Messaging\MessageDispatcherTest.cs" />
-    <Compile Include="PInvoke\JobObjectTests.cs" />
-    <Compile Include="Utilities\LocalPrincipalManagerTests.cs" />
     <Compile Include="Containers\ContainerStubStatsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestSupport\InputSource.cs" />
     <Compile Include="TestSupport\NSubstituteExtensions.cs" />
     <Compile Include="TestSupport\TestUserHolder.cs" />
   </ItemGroup>

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace IronFoundry.Warden.Utilities
+namespace IronFoundry.Container.Utilities
 {
     // BR: Move this to IronFoundry.Container.Shared
     public interface IProcess : IDisposable

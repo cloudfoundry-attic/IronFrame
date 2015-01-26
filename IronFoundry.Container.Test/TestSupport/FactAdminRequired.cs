@@ -1,57 +1,49 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.DirectoryServices.AccountManagement;
-using System.Linq;
 using System.Security.Principal;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Sdk;
 
-namespace IronFoundry.Warden.Test
+/// <summary>
+/// Tests for current identity running as Admin and skips test if they
+/// are not currently running as admin.  Honors existing Skip messages if 
+/// they are present.
+/// </summary>
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+[XunitTestCaseDiscoverer("Xunit.Sdk.FactDiscoverer", "xunit.execution")]
+public class FactAdminRequired : FactAttribute
 {
-    /// <summary>
-    /// Tests for current identity running as Admin and skips test if they
-    /// are not currently running as admin.  Honors existing Skip messages if 
-    /// they are present.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    [XunitTestCaseDiscoverer("Xunit.Sdk.FactDiscoverer", "xunit.execution")]
-    public class FactAdminRequired : FactAttribute
+    public override string Skip
     {
-        public override string Skip
+        get
         {
-            get
+            if (!string.IsNullOrEmpty(base.Skip) || IsAdmin())
             {
-                if (!string.IsNullOrEmpty(base.Skip) || IsAdmin())
-                {
-                    return base.Skip;
-                }
+                return base.Skip;
+            }
 
-                return "Test required to run as admin to run.";
-            }
-            set
-            {
-                base.Skip = value;
-            }
+            return "Test required to run as admin to run.";
+        }
+        set
+        {
+            base.Skip = value;
+        }
+    }
+
+    protected virtual bool IsAdmin()
+    {
+        bool isAdmin = false;
+
+        try
+        {
+            var identity = WindowsIdentity.GetCurrent();
+            var principal = new WindowsPrincipal(identity);
+            isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+        catch
+        {
+            isAdmin = false;
         }
 
-        protected virtual bool IsAdmin()
-        {
-            bool isAdmin = false;
-
-            try
-            {
-                var identity = WindowsIdentity.GetCurrent();
-                var principal = new WindowsPrincipal(identity);
-                isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
-            }
-            catch
-            {
-                isAdmin = false;
-            }
-
-            return isAdmin;
-        }
+        return isAdmin;
     }
 }

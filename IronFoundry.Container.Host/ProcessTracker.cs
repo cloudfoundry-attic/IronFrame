@@ -4,9 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using IronFoundry.Container.Messages;
 using IronFoundry.Container.Messaging;
-using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Utilities;
-using Newtonsoft.Json.Linq;
+using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container.Host
 {

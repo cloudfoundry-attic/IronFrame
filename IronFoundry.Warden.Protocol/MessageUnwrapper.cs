@@ -2,6 +2,7 @@
 {
     using System;
     using System.IO;
+    using IronFoundry.Container;
     using ProtoBuf;
 
     public class MessageUnwrapper

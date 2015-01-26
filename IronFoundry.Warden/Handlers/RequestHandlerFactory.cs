@@ -1,6 +1,7 @@
 ﻿namespace IronFoundry.Warden.Handlers
 {
     using System;
+    using IronFoundry.Container;
     using IronFoundry.Warden.Containers;
     using IronFoundry.Warden.Jobs;
     using IronFoundry.Warden.Protocol;

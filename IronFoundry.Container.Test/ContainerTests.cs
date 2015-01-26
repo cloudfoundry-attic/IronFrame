@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Utilities;
+using IronFoundry.Container.Utilities;
 using NSubstitute;
 using Xunit;
 

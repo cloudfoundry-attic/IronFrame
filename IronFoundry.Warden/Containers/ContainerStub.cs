@@ -8,6 +8,7 @@ using IronFoundry.Container;
 using IronFoundry.Container.Win32;
 using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Tasks;
+using IronFoundry.Container.Utilities;
 using IronFoundry.Warden.Utilities;
 
 namespace IronFoundry.Warden.Containers
@@ -181,7 +182,7 @@ namespace IronFoundry.Warden.Containers
             fileSystemManager.CopyFile(containerSourcePath, destinationFilePath);
         }
 
-        public Utilities.IProcess CreateProcess(CreateProcessStartInfo si, bool impersonate = false)
+        public IProcess CreateProcess(CreateProcessStartInfo si, bool impersonate = false)
         {
             ThrowIfNotActive();
 

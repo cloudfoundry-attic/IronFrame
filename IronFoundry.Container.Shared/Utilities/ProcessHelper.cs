@@ -6,7 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using IronFoundry.Container.Win32;
 
-namespace IronFoundry.Warden.Utilities
+namespace IronFoundry.Container.Utilities
 {
     // BR: Move this to IronFoundry.Container.Shared
     public class ProcessHelper

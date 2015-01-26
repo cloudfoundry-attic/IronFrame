@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using IronFoundry.Container.Concurrency;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using IronFoundry.Container.Concurrency;
 
 namespace IronFoundry.Container.Messaging
 {

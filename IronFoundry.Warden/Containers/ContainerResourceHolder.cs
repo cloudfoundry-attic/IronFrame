@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using IronFoundry.Container;
 using IronFoundry.Warden.Configuration;
-using IronFoundry.Warden.Utilities;
+using IronFoundry.Container.Utilities;
 using IronFoundry.Warden.Containers.Messages;
 using System.Collections.Generic;
 using System;

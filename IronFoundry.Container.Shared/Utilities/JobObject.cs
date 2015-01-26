@@ -1,4 +1,4 @@
-﻿namespace IronFoundry.Warden.Containers
+﻿namespace IronFoundry.Container.Utilities
 {
     using System;
     using System.ComponentModel;
