@@ -17,7 +17,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Container.Share
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Warden.ContainerHost", "IronFoundry.Warden.ContainerHost\IronFoundry.Warden.ContainerHost.csproj", "{586784CF-DE8A-411F-AD99-18F00DC2A75B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Warden.TestHelper", "IronFoundry.Warden.TestHelper\IronFoundry.Warden.TestHelper.csproj", "{AB96DA85-8C4E-490B-B552-3FE9F0E0E9BF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Container.TestHelper", "IronFoundry.Container.TestHelper\IronFoundry.Container.TestHelper.csproj", "{AB96DA85-8C4E-490B-B552-3FE9F0E0E9BF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Container", "IronFoundry.Container\IronFoundry.Container.csproj", "{5DE07F79-B758-4A04-B908-626E7577313E}"
 EndProject
