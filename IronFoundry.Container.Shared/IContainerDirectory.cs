@@ -10,21 +10,38 @@ namespace IronFoundry.Container
 {
     public interface IContainerDirectory
     {
+        string BinPath { get; }
+        string UserPath { get; }
+
+        string MapBinPath(string containerPath);
         string MapUserPath(string containerPath);
     }
 
     public class ContainerDirectory : IContainerDirectory
     {
+        const string BinRelativePath = "bin";
         const string UserRelativePath = "user";
 
         readonly string containerPath;
+        readonly string containerBinPath;
         readonly string containerUserPath;
 
         public ContainerDirectory(string containerPath)
         {
             this.containerPath = containerPath;
 
+            this.containerBinPath = CanonicalizePath(Path.Combine(containerPath, BinRelativePath), ensureTrailingSlash: true);
             this.containerUserPath = CanonicalizePath(Path.Combine(containerPath, UserRelativePath), ensureTrailingSlash: true);
+        }
+
+        public string BinPath
+        {
+            get { return containerBinPath; }
+        }
+
+        public string UserPath
+        {
+            get { return containerUserPath; }
         }
 
         public static ContainerDirectory Create(FileSystemManager fileSystem, string containerBasePath, string containerHandle, IContainerUser containerUser)
@@ -32,27 +49,38 @@ namespace IronFoundry.Container
             // TODO: Sanitize the container handle for use in the filesystem
             var containerPath = Path.Combine(containerBasePath, containerHandle);
             var containerUserPath = Path.Combine(containerPath, UserRelativePath);
-            var defaultAccess = GetDefaultDirectoryAccess();
-            var userAccess = defaultAccess.ToList();
-            userAccess.Add(new UserAccess { Access = FileAccess.ReadWrite, UserName = containerUser.UserName });
+            var containerBinPath = Path.Combine(containerPath, BinRelativePath);
 
-            fileSystem.CreateDirectory(containerPath, defaultAccess);
-            fileSystem.CreateDirectory(containerUserPath, userAccess);
+            fileSystem.CreateDirectory(containerPath, GetContainerDefaultAccess());
+            fileSystem.CreateDirectory(containerBinPath, GetContainerUserAccess(containerUser.UserName, FileAccess.Read));
+            fileSystem.CreateDirectory(containerUserPath, GetContainerUserAccess(containerUser.UserName, FileAccess.ReadWrite));
 
             return new ContainerDirectory(containerPath);
         }
 
-        public string MapUserPath(string path)
+        public string MapBinPath(string path)
         {
+            return MapContainerPath(BinRelativePath, path);
+        }
+
+        private string MapContainerPath(string pathPrefix, string path)
+        {
+            var basePath = CanonicalizePath(Path.Combine(containerPath, pathPrefix));
+
             path = path.TrimStart('/');
             var isRootPath = String.IsNullOrWhiteSpace(path);
 
-            var mappedPath = CanonicalizePath(Path.Combine(containerUserPath, path), ensureTrailingSlash: isRootPath);
+            var mappedPath = CanonicalizePath(Path.Combine(basePath, path), ensureTrailingSlash: isRootPath);
 
-            if (!mappedPath.StartsWith(containerUserPath, StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException("The path is not a valid user path.", "path");
+            if (!mappedPath.StartsWith(basePath, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("The path is not a valid container path.", "path");
 
             return mappedPath;
+        }
+
+        public string MapUserPath(string path)
+        {
+            return MapContainerPath(UserRelativePath, path);
         }
 
         static string CanonicalizePath(string path, bool ensureTrailingSlash = false)
@@ -65,13 +93,20 @@ namespace IronFoundry.Container
             return path;
         }
 
-        static IEnumerable<UserAccess> GetDefaultDirectoryAccess()
+        static IEnumerable<UserAccess> GetContainerDefaultAccess()
         {
             return new[]
             {
                 new UserAccess { UserName = GetBuiltInAdminGroupName(), Access = FileAccess.ReadWrite },
                 new UserAccess { UserName = GetCurrentUserName(), Access = FileAccess.ReadWrite },
             };
+        }
+
+        static IEnumerable<UserAccess> GetContainerUserAccess(string username, FileAccess access)
+        {
+            var result = GetContainerDefaultAccess().ToList();
+            result.Add(new UserAccess { UserName = username, Access = access });
+            return result;
         }
 
         static string GetCurrentUserName()

@@ -27,7 +27,7 @@ namespace IronFoundry.Container
 
         static string BuildContainerUserName(string handle)
         {
-            return "container_" + handle;
+            return "c_" + handle;
         }
 
         public static ContainerUser Create(IUserManager userManager, string containerHandle)

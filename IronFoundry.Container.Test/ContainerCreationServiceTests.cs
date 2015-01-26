@@ -136,17 +136,30 @@ namespace IronFoundry.Container
 
             public class AcceptanceFixture : IDisposable
             {
+                private LocalUserGroupManager userGroupManager;
+
                 public string TempDirectory { get; set; }
+                public string SecurityGroupName { get; set; }
 
                 public AcceptanceFixture()
                 {
-                    TempDirectory = Path.Combine(Path.GetTempPath(), "Containers_" + Guid.NewGuid().ToString("N"));
+                    userGroupManager = new LocalUserGroupManager();
+
+                    var uniqueId = Guid.NewGuid().ToString("N");
+
+                    SecurityGroupName = "ContainerUsers_" + uniqueId;
+                    
+                    userGroupManager.CreateLocalGroup(SecurityGroupName);
+
+                    TempDirectory = Path.Combine(Path.GetTempPath(), "Containers_" + uniqueId);
                     Directory.CreateDirectory(TempDirectory);
                 }
 
                 public virtual void Dispose()
                 {
                     Directory.Delete(TempDirectory, true);
+
+                    userGroupManager.DeleteLocalGroup(SecurityGroupName);
                 }
             }
 
@@ -165,8 +178,7 @@ namespace IronFoundry.Container
                     
                     ContainerHostService = new ContainerHostService();
 
-                    UserManager.CreateUser(Arg.Any<string>())
-                        .Returns(new NetworkCredential("container_user", "Pass@word1"));
+                    UserManager = new LocalPrincipalManager(new DesktopPermissionManager(), Fixture.SecurityGroupName);
 
                     Service = new ContainerCreationService(UserManager, FileSystem, TcpPortManager, ProcessRunner, ContainerHostService, ContainerBasePath);
                 }
@@ -218,7 +230,7 @@ cmd.exe /C %*
                     {
                         var spec = new ContainerSpec
                         {
-                            Handle = Guid.NewGuid().ToString("N"),
+                            Handle = ContainerHandleGenerator.Generate(),
                         };
 
                         Container = Service.CreateContainer(spec);
