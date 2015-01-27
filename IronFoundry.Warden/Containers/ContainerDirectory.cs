@@ -65,7 +65,8 @@ namespace IronFoundry.Warden.Containers
             
             if (fileSystem.DirectoryExists(containerPath))
             {
-                FileAccess effectiveAccess = fileSystem.GetEffectiveDirectoryAccess(containerPath, user.GetCredential());
+                NTAccount account = new NTAccount(user.UserName);
+                FileAccess effectiveAccess = fileSystem.GetEffectiveDirectoryAccess(containerPath, account);
 
                 // The AND provides us with the flags that are common between the requested access and the effective access.
                 // The XOR then flips those bits to 0 and leaves as 1 those that aren't found in effective access.
