@@ -69,6 +69,7 @@ namespace IronFoundry.Container.Acceptance
             {
                 ExecutablePath = "whoami.exe",
                 DisablePathMapping = true,
+                Privileged = false
             };
 
             var io1 = new StringProcessIO();
@@ -128,8 +129,8 @@ namespace IronFoundry.Container.Acceptance
             int exitCode;
             bool exited = process.TryWaitForExit(2000, out exitCode);
 
-            var output = io.Output.ToString();
-            var error = io.Error.ToString();
+            var output = io.Output.ToString().Trim();
+            var error = io.Error.ToString().Trim();
 
             // VERIFY THE PROCESS RAN AND EXITED
             Assert.True(exited);
