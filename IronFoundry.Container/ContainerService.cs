@@ -95,7 +95,7 @@ namespace IronFoundry.Container
                 var constrainedProcessRunner = new ConstrainedProcessRunner(containerHostClient);
                 undoStack.Push(() => constrainedProcessRunner.Dispose());
 
-                container = new Container(id, handle, user, directory, tcpPortManager, jobObject, processRunner, constrainedProcessRunner);
+                container = new Container(id, handle, user, directory, tcpPortManager, jobObject, processRunner, constrainedProcessRunner, containerSpec.Environment);
                 containers.Add(container);
             }
             catch (Exception e)

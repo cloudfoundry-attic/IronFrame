@@ -17,7 +17,7 @@ namespace IronFoundry.Container
         IProcessRunner ProcessRunner { get; set; }
         IProcessRunner ConstrainedProcessRunner { get; set; }
         ILocalTcpPortManager TcpPortManager { get; set; }
-        Dictionary<string, string> Environment { get; set; } 
+        Dictionary<string, string> ContainerEnvironment { get; set; } 
 
         public ContainerTests()
         {
@@ -30,9 +30,9 @@ namespace IronFoundry.Container
             ConstrainedProcessRunner = Substitute.For<IProcessRunner>();
             TcpPortManager = Substitute.For<ILocalTcpPortManager>();
             JobObject = Substitute.For<JobObject>();
-            Environment = new Dictionary<string, string>();
+            ContainerEnvironment = new Dictionary<string, string>() { { "Handle", "handle" } };
 
-            Container = new Container("id", "handle", User, Directory, TcpPortManager, JobObject, ProcessRunner, ConstrainedProcessRunner);
+            Container = new Container("id", "handle", User, Directory, TcpPortManager, JobObject, ProcessRunner, ConstrainedProcessRunner, ContainerEnvironment);
         }
 
         public class ReservePort : ContainerTests
@@ -136,6 +136,34 @@ namespace IronFoundry.Container
                     Assert.NotNull(process);
                     var actual = ProcessRunner.Captured(x => x.Run(null)).Arg<ProcessRunSpec>();
                     Assert.Equal("cmd.exe", actual.ExecutablePath);
+                }
+
+                [Fact]
+                public void WhenProcessSpecHasNoEnvironment()
+                {
+                    var io = Substitute.For<IProcessIO>();
+                    var process = Container.Run(Spec, io);
+
+                    var actualSpec = ProcessRunner.Captured(x => x.Run(null)).Arg<ProcessRunSpec>();
+
+                    Assert.Equal(ContainerEnvironment, actualSpec.Environment);
+                }
+
+                [Fact]
+                public void WhenProcessEnvironmentConflictsWithContainerEnvironment()
+                {
+                    Spec.Environment = new Dictionary<string, string>
+                    {
+                        { "Handle", "procHandle" },
+                        { "ProcEnv", "ProcEnv" }
+                    };
+
+                    var io = Substitute.For<IProcessIO>();
+                    var process = Container.Run(Spec, io);
+
+                    var actualSpec = ProcessRunner.Captured(x => x.Run(null)).Arg<ProcessRunSpec>();
+
+                    Assert.Equal(Spec.Environment, actualSpec.Environment);
                 }
             }
 

@@ -73,7 +73,8 @@ namespace IronFoundry.Container
             ILocalTcpPortManager tcpPortManager,
             JobObject jobObject,
             IProcessRunner processRunner,
-            IProcessRunner constrainedProcessRunner
+            IProcessRunner constrainedProcessRunner,
+            Dictionary<string, string> defaultEnvironment
             )
         {
             this.id = id;
@@ -85,7 +86,7 @@ namespace IronFoundry.Container
             this.processRunner = processRunner;
             this.constrainedProcessRunner = constrainedProcessRunner;
 
-            this.defaultEnvironment = new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);
+            this.defaultEnvironment = defaultEnvironment ?? new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);
         }
 
         public string Id
@@ -126,11 +127,14 @@ namespace IronFoundry.Container
                 directory.MapUserPath(spec.ExecutablePath) :
                 spec.ExecutablePath;
 
+            var specEnvironment = spec.Environment ?? new Dictionary<string, string>();
+            var processEnvironment = this.defaultEnvironment.Merge(specEnvironment);
+
             var runSpec = new ProcessRunSpec
             {
                 ExecutablePath = executablePath,
                 Arguments = spec.Arguments,
-                Environment = spec.Environment ?? defaultEnvironment,
+                Environment = processEnvironment,
                 WorkingDirectory = directory.MapUserPath(spec.WorkingDirectory ?? DefaultWorkingDirectory),
                 OutputCallback = data => io.StandardOutput.Write(data),
                 ErrorCallback = data => io.StandardError.Write(data),
