@@ -13,6 +13,18 @@ namespace System
         {
             yield return argThis;
         }
+
+        public static IEnumerable<T> AsSingleItemOrEmptyEnumerable<T>(this T argThis)
+        {
+            if (argThis == null)
+            {
+                yield break;
+            }
+            else
+            {
+                yield return argThis;
+            }
+        }
     }
 
 public static class StringExtensionMethods
@@ -96,6 +108,11 @@ namespace System.Collections
         public static bool IsNullOrEmpty(this IEnumerable argThis)
         {
             return null == argThis || false == argThis.GetEnumerator().MoveNext();
+        }
+
+        public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T> source)
+        {
+            return source ?? Enumerable.Empty<T>();
         }
     }
 }

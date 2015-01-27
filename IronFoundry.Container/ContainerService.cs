@@ -68,7 +68,7 @@ namespace IronFoundry.Container
         {
             Guard.NotNull(containerSpec, "containerSpec");
 
-            List<Action> undoList = new List<Action>();
+            UndoStack undoStack = new UndoStack();
             Container container;
 
             try
@@ -78,62 +78,40 @@ namespace IronFoundry.Container
                   handle = handleHelper.GenerateHandle();
 
                 var id = handleHelper.GenerateId(handle);
+
                 var user = ContainerUser.Create(userManager, id);
-                undoList.Add(() => user.Delete());
+                undoStack.Push(() => user.Delete());
 
                 var directory = ContainerDirectory.Create(fileSystem, containerBasePath, id, user);
-                undoList.Add(() => fileSystem.DeleteDirectory(containerBasePath));
+                undoStack.Push(() => fileSystem.DeleteDirectory(containerBasePath));
 
                 var jobObjectName = handle;
                 var jobObject = new JobObject(jobObjectName);
-                undoList.Add(() => jobObject.Dispose());
+                undoStack.Push(() => jobObject.Dispose());
 
                 var containerHostClient = containerHostService.StartContainerHost(id, directory, jobObject, user.GetCredential());
-                undoList.Add(() => containerHostClient.Shutdown());
+                undoStack.Push(() => containerHostClient.Shutdown());
 
                 var constrainedProcessRunner = new ConstrainedProcessRunner(containerHostClient);
-                undoList.Add(() => constrainedProcessRunner.Dispose());
+                undoStack.Push(() => constrainedProcessRunner.Dispose());
 
                 container = new Container(id, handle, user, directory, tcpPortManager, jobObject, processRunner, constrainedProcessRunner);
                 containers.Add(container);
             }
             catch (Exception e)
             {
-                var exceptions = AttemptActions(undoList);
-                if (exceptions.Count > 0)
+                try
                 {
-                    throw new AggregateException(exceptions.Concat(e.AsSingleItemEnumerable()));
-                }
-                else
-                {
+                    undoStack.UndoAll();
                     throw;
+                }
+                catch (AggregateException undoException)
+                {
+                    throw new AggregateException(new [] { e, undoException });
                 }
             }
 
             return container;
-        }
-
-        /// <summary>
-        /// Attempt to invoke a list of actions and return any exceptions thrown.
-        /// </summary>
-        private static List<Exception> AttemptActions(List<Action> undoList)
-        {
-            List<Exception> cleanupExceptions = new List<Exception>();
-
-            // Attempt to undo the resources we created
-            foreach (var undo in undoList)
-            {
-                try
-                {
-                    undo();
-                }
-                catch (Exception e)
-                {
-                    cleanupExceptions.Add(e);
-                }
-            }
-
-            return cleanupExceptions;
         }
         
         public void DestroyContainer(string handle)

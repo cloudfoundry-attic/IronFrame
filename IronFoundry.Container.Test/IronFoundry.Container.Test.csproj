@@ -83,7 +83,9 @@
     <Compile Include="Messaging\TaskExtensions.cs" />
     <Compile Include="TestSupport\IFTestHelper.cs" />
     <Compile Include="TestSupport\InputSource.cs" />
+    <Compile Include="Utilities\EffectiveAccessComputerTests.cs" />
     <Compile Include="Utilities\EnvironmentBlockTests.cs" />
+    <Compile Include="Utilities\FileSystemEffectiveAccessComputerTests.cs" />
     <Compile Include="Utilities\FileSystemManagerTests.cs" />
     <Compile Include="Handlers\CreateProcessHandlerTests.cs" />
     <Compile Include="Handlers\StopAllProcessesHandlerTests.cs" />
@@ -93,6 +95,7 @@
     <Compile Include="TestSupport\NSubstituteExtensions.cs" />
     <Compile Include="TestSupport\TempFile.cs" />
     <Compile Include="TestSupport\TestProcessIO.cs" />
+    <Compile Include="Utilities\FileSystemSecurityDescriptorReaderTests.cs" />
     <Compile Include="Utilities\JobObjectLimitsTests.cs" />
     <Compile Include="Utilities\JobObjectTests.cs" />
     <Compile Include="Utilities\LocalPrincipalManagerTests.cs" />
@@ -103,6 +106,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestSupport\RandomFactory.cs" />
     <Compile Include="TestSupport\FactAdminRequired.cs" />
+    <Compile Include="Utilities\UndoStackTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
