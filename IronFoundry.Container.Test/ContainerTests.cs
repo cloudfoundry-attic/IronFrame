@@ -17,6 +17,7 @@ namespace IronFoundry.Container
         IProcessRunner ProcessRunner { get; set; }
         IProcessRunner ConstrainedProcessRunner { get; set; }
         ILocalTcpPortManager TcpPortManager { get; set; }
+        Dictionary<string, string> Environment { get; set; } 
 
         public ContainerTests()
         {
@@ -29,6 +30,7 @@ namespace IronFoundry.Container
             ConstrainedProcessRunner = Substitute.For<IProcessRunner>();
             TcpPortManager = Substitute.For<ILocalTcpPortManager>();
             JobObject = Substitute.For<JobObject>();
+            Environment = new Dictionary<string, string>();
 
             Container = new Container("id", "handle", User, Directory, TcpPortManager, JobObject, ProcessRunner, ConstrainedProcessRunner);
         }

@@ -6,17 +6,17 @@ namespace NLog
     {
         public static void DebugException(this Logger logger, Exception exception)
         {
-            logger.LogException(LogLevel.Debug, String.Empty, exception);
+            logger.Log(LogLevel.Debug, String.Empty, exception);
         }
 
         public static void ErrorException(this Logger logger, Exception exception)
         {
-            logger.LogException(LogLevel.Error, String.Empty, exception);
+            logger.Log(LogLevel.Error, String.Empty, exception);
         }
 
         public static void WarnException(this Logger logger, Exception exception)
         {
-            logger.LogException(LogLevel.Warn, String.Empty, exception);
+            logger.Log(LogLevel.Warn, String.Empty, exception);
         }
     }
 }

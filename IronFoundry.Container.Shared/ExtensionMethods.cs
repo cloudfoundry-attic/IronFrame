@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
@@ -159,6 +160,22 @@ namespace System.Collections.Generic
             {
                 dictionary[key] = val;
             }
+        }
+
+        /// <summary>
+        /// Create a new dictionary which merges the right dictionary into the left one.
+        /// Any conflicting keys are replaced by the right dictionary values.
+        /// </summary>
+        public static Dictionary<TKey, TVal> Merge<TKey, TVal>(this Dictionary<TKey, TVal> leftDic, Dictionary<TKey, TVal> rightDic)
+        {
+            Dictionary<TKey, TVal> merged = new Dictionary<TKey, TVal>(leftDic, leftDic.Comparer);
+
+            foreach (var kv in rightDic)
+            {
+                merged[kv.Key] = rightDic[kv.Key];
+            }
+
+            return merged;
         }
     }
 }
