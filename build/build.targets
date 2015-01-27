@@ -33,7 +33,9 @@
         
         <NuGetVersion Condition=" '$(NuGetIsPreRelease)' != 'True' ">$(BuildVersion)</NuGetVersion>
         <NuGetVersion Condition=" '$(NuGetIsPreRelease)' == 'True' ">$(BuildVersion)-$(NuGetPreReleaseName)</NuGetVersion>
-        
+        <CurrentDate>$([System.DateTime]::Now.ToString(yyyyMMddHHmmss))</CurrentDate>
+        <NuGetVersion Condition=" '$(NuGetIsPreRelease)' == 'True' ">$([System.DateTime]::Now.ToString(0.yyyyMMdd.HHmmss))-$(NuGetPreReleaseName)</NuGetVersion>
+
         <BuildInParallel Condition=" '$(BuildInParallel)' == '' And $(MSBuildNodeCount) &gt; 1 ">true</BuildInParallel>
         <BuildInParallel Condition=" '$(BuildInParallel)' == '' ">false</BuildInParallel>
     </PropertyGroup>
@@ -48,6 +50,7 @@
             <OutputDir Condition=" '$(OutputDir)' == '' ">$(BUILD_ROOT)</OutputDir>
             <OutputDir Condition=" '$(OutputDir)' == '' and '$(SolutionDir)' != '' ">$(SolutionDir)\output\$(BuildVersion)\</OutputDir>
             <BinOutputDir>$(OutputDir)binaries\</BinOutputDir>
+            <NugetOutputDir>$(OutputDir)nuget\</NugetOutputDir>
         </PropertyGroup>
 
         <Message Text="BuildIsPrivate: $(BuildIsPrivate)" />
@@ -57,6 +60,20 @@
         <Message Text="NuGetVersion: $(NuGetVersion)" />
     </Target>
 
+    <Target Name="FindNuGet">
+        <ItemGroup>
+            <FindNuGetExe
+                Condition=" '$(NuGetExe)' == '' "
+                Include="$(MSBuildThisFileDirectory)\**\nuget.exe;" />
+        </ItemGroup>
+        <PropertyGroup>
+            <!-- The %(FindNuGetExe.Identity) syntax will use the last item in the set. -->
+            <NuGetExe Condition=" '$(NuGetExe)' == '' ">%(FindNuGetExe.Identity)</NuGetExe>
+        </PropertyGroup>
+        <Error Text="NuGet.exe cannot be found." Condition=" !Exists('$(NuGetExe)') " />
+        <Message Text="Found NuGet.exe at '$(NuGetExe)'." Condition=" Exists('$(NuGetExe)') " />
+    </Target>
+    
     <Target Name="SetVersion">
         <!-- Update all version files -->
         <Message Text="BuildVersion: $(BuildVersion)" />
@@ -69,9 +86,9 @@
             <VersionFileLines Include="using System.Resources%3b" />
             <VersionFileLines Include="using System.Runtime.CompilerServices%3b" />
             <VersionFileLines Include="using System.Runtime.InteropServices%3b" />
-            <VersionFileLines Include="[assembly: AssemblyCompany(&quot;Tier 3, Inc.&quot;)]" />
-            <VersionFileLines Include="[assembly: AssemblyCopyright(&quot;Copyright © Tier 3, Inc. All rights reserved.&quot;)]" />
-            <VersionFileLines Include="[assembly: AssemblyProduct(&quot;Iron Foundry&quot;)]" />
+            <VersionFileLines Include="[assembly: AssemblyCompany(&quot;Cloud Foundry Foundation&quot;)]" />
+            <VersionFileLines Include="[assembly: AssemblyCopyright(&quot;© 2015 Cloud Foundry Foundation&quot;)]" />
+            <VersionFileLines Include="[assembly: AssemblyProduct(&quot;Cloud Foundry&quot;)]" />
             <VersionFileLines Include="[assembly: AssemblyVersion(&quot;$(BuildVersion)&quot;)]" />
             <VersionFileLines Include="[assembly: AssemblyFileVersion(&quot;$(BuildVersion)&quot;)]" />
             <VersionFileLines Include="[assembly: AssemblyInformationalVersion(&quot;$(BuildCommit)&quot;)]" />
@@ -140,7 +157,7 @@
         <xunit Assemblies="$(File)" />
     </Target>
 
-    <Target Name="Package">
+    <Target Name="PackageBinaries" DependsOnTargets="Build">
         <ItemGroup>
             <PackagedOutput Include="$(SolutionDir)\**\bin\$(Configuration)\**"></PackagedOutput>
         </ItemGroup>
@@ -150,8 +167,19 @@
         <Copy SourceFiles="@(PackagedOutput)" DestinationFolder="$(BinOutputDir)" />
     </Target>
     
+    <Target Name="PackageNuget" DependsOnTargets="Build;FindNuGet">
+        <RemoveDir Condition="Exists('$(NugetOutputDir)')" Directories="$(NugetOutputDir)" />
+
+        <MakeDir Directories="$(NugetOutputDir)" />
+        
+        <Exec Command=" $(NuGetExe) pack %(NugetPackage.Identity) -OutputDirectory $(NugetOutputDir) -Version $(NuGetVersion)" />
+    </Target>
+
+    <Target Name="Package" DependsOnTargets="PackageBinaries;PackageNuget">
+    </Target>
+    
     <!-- External Targets (i.e. called from the command-line or build server -->
-    <Target Name="Default" DependsOnTargets="PackageRestore;SetVersion;Build;Test;Package">
+    <Target Name="Default" DependsOnTargets="Build;Test;Package">
     </Target>
     
     <Target Name="CI" DependsOnTargets="Clean;Default">

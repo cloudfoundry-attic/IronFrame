@@ -27,5 +27,25 @@ namespace IronFoundry.Container
                 Assert.NotEqual(handle1, handle2);
             }
         }
+
+        public class GenerateId
+        {
+            [Fact]
+            public void GeneratesHashOfHandleWithKnownLength()
+            {
+                var id = ContainerHandleGenerator.GenerateId(Guid.NewGuid().ToString("N"));
+
+                Assert.Equal(18, id.Length);
+            }
+
+            [Fact]
+            public void GeneratesUniqueHashesForDifferentHandles()
+            {
+                var id1 = ContainerHandleGenerator.GenerateId(Guid.NewGuid().ToString("N"));
+                var id2 = ContainerHandleGenerator.GenerateId(Guid.NewGuid().ToString("N"));
+
+                Assert.NotEqual(id1, id2);
+            }
+        }
     }
 }

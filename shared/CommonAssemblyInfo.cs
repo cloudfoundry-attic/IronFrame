@@ -4,9 +4,9 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-[assembly: AssemblyCompany("Tier 3, Inc.")]
-[assembly: AssemblyCopyright("Copyright © Tier 3, Inc. All rights reserved.")]
-[assembly: AssemblyProduct("Iron Foundry")]
+[assembly: AssemblyCompany("Cloud Foundry Foundation")]
+[assembly: AssemblyCopyright("© 2015 Cloud Foundry Foundation")]
+[assembly: AssemblyProduct("Cloud Foundry")]
 [assembly: AssemblyVersion("0.0.0")]
 [assembly: AssemblyFileVersion("0.0.0")]
 [assembly: AssemblyInformationalVersion("DevLocal")]

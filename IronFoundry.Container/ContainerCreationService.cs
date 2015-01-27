@@ -59,11 +59,11 @@ namespace IronFoundry.Container
         {
             Guard.NotNull(containerSpec, "containerSpec");
 
-            var id = Guid.NewGuid().ToString("N");
             var handle = containerSpec.Handle;
             if (String.IsNullOrEmpty(handle))
                 handle = ContainerHandleGenerator.Generate();
 
+            var id = ContainerHandleGenerator.GenerateId(handle);
             var user = ContainerUser.Create(userManager, handle);
             var directory = ContainerDirectory.Create(fileSystem, containerBasePath, handle, user);
 

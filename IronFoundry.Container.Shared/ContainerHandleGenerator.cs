@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace IronFoundry.Container
@@ -29,6 +30,14 @@ namespace IronFoundry.Container
         public static string Generate()
         {
             return Generate(Random);
+        }
+
+        public static string GenerateId(string handle)
+        {
+            var sha = new SHA1Managed();
+            var handleBytes = Encoding.UTF8.GetBytes(handle);
+            var hashBytes = sha.ComputeHash(handleBytes);
+            return BitConverter.ToString(hashBytes, 0, 9).Replace("-", "");
         }
     }
 }
