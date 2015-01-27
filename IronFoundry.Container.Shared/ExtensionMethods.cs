@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -6,7 +7,15 @@ using System.Text.RegularExpressions;
 
 namespace System
 {
-    public static class StringExtensionMethods
+    public static class ObjectExtensionMethods
+    {
+        public static IEnumerable<T> AsSingleItemEnumerable<T>(this T argThis)
+        {
+            yield return argThis;
+        }
+    }
+
+public static class StringExtensionMethods
     {
         private static readonly Regex backslashCleanup = new Regex(@"\\+",
             RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);

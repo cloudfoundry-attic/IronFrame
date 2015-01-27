@@ -50,6 +50,11 @@ namespace IronFoundry.Container.Utilities
             }
         }
 
+        public virtual void DeleteDirectory(string path)
+        {
+            Directory.Delete(path, true);
+        }
+
         public virtual bool Exists(string path)
         {
             return File.Exists(path);
@@ -329,6 +334,11 @@ namespace IronFoundry.Container.Utilities
                     fileSystem.CreateTarArchive(sourcePath, tarStream);
                 }
             }
+        }
+
+        public virtual void DeleteDirectory(string path)
+        {
+            fileSystem.DeleteDirectory(path);
         }
 
         public virtual void ExtractTarFile(string tarFilePath, string destinationPath, bool decompress)

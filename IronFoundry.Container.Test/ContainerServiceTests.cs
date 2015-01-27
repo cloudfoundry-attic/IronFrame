@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -147,6 +148,31 @@ namespace IronFoundry.Container
                 ContainerHostService.Received(1).StartContainerHost(Arg.Any<string>(), Arg.Any<IContainerDirectory>(), Arg.Any<JobObject>(), expectedCredentials);
             }
 
+            [Fact]
+            public void CleansUpWhenItFails()
+            {
+                var spec = new ContainerSpec
+                {
+                    Handle = "handle",
+                };
+
+                ContainerHostService.StartContainerHost(null, null, null, null)
+                    .ThrowsForAnyArgs(new Exception());
+
+                try
+                {
+                    Service.CreateContainer(spec);
+                }
+                catch (Exception)
+                {
+                    // Expect this exception.
+                }
+
+                // Created and deleted the user
+                UserManager.Received(1).CreateUser(Arg.Any<string>());
+                UserManager.Received(1).DeleteUser(Arg.Any<string>());
+            }
+
             public class AcceptanceFixture : IDisposable
             {
                 private LocalUserGroupManager userGroupManager;
@@ -161,7 +187,7 @@ namespace IronFoundry.Container
                     var uniqueId = Guid.NewGuid().ToString("N");
 
                     SecurityGroupName = "ContainerUsers_" + uniqueId;
-                    
+
                     userGroupManager.CreateLocalGroup(SecurityGroupName);
 
                     TempDirectory = Path.Combine(Path.GetTempPath(), "Containers_" + uniqueId);
@@ -184,6 +210,7 @@ namespace IronFoundry.Container
             public class Acceptance : ContainerServiceTests, IDisposable, IClassFixture<AcceptanceFixture>
             {
                 AcceptanceFixture Fixture { get; set; }
+                NetworkCredential UserCredential { get; set; }
 
                 public Acceptance(AcceptanceFixture fixture)
                 {
@@ -194,7 +221,7 @@ namespace IronFoundry.Container
                     FileSystem = new FileSystemManager();
                     HandleHelper = new ContainerHandleHelper();
                     ProcessRunner = new ProcessRunner();
-                    
+
                     ContainerHostService = new ContainerHostService(FileSystem, ProcessRunner, new ContainerHostDependencyHelper());
 
                     UserManager = new LocalPrincipalManager(new DesktopPermissionManager(), Fixture.SecurityGroupName);
@@ -205,6 +232,14 @@ namespace IronFoundry.Container
                 public virtual void Dispose()
                 {
                     Service.Dispose();
+
+                    if (UserCredential != null)
+                    {
+                        // Delete the test user
+                        LocalPrincipalManager principalManager =
+                            new LocalPrincipalManager(new DesktopPermissionManager());
+                        principalManager.DeleteUser(UserCredential.UserName);
+                    }
                 }
 
                 public class Create : Acceptance
@@ -220,7 +255,6 @@ namespace IronFoundry.Container
                         {
                             Handle = Guid.NewGuid().ToString("N"),
                         };
-
                         IContainer container = null;
                         try
                         {

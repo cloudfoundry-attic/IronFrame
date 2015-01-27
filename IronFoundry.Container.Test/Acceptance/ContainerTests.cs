@@ -148,14 +148,13 @@ namespace IronFoundry.Container.Acceptance
         //{
         //    var containerService = new ContainerCreationService(ContainerBasePath, UserGroupName);
         //    Container1 = CreateContainer(containerService, Container1Handle);
-
         //    var pSpec = new ProcessSpec
         //    {
         //        ExecutablePath = "cmd.exe",
         //        DisablePathMapping = true,
         //        Arguments = new string[] { @"/C ""FOR /L %% IN () DO ping 127.0.0.1 -n 2""" },
         //    };
-
+        //
         //    // START THE LONG RUNNING PROCESS
         //    var io = new StringProcessIO();
         //    var process = Container1.Run(pSpec, io);
@@ -177,7 +176,6 @@ namespace IronFoundry.Container.Acceptance
         //    Assert.True(actualProcess.HasExited);
         //    Assert.True(io.Output.ToString().Length > 0);
         //}
-
 
         public IContainer CreateContainer(IContainerService containerService, string handle)
         {
@@ -227,7 +225,7 @@ namespace IronFoundry.Container.Acceptance
             return containerBasePath;
         }
 
-        static string GenerateRandomAlphaString(int length = 8)
+        static string GenerateRandomAlphaString(int length = 4)
         {
             const string alphabet = "abcdefghijklmnopqrstuvwxyz";
 

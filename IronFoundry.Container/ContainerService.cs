@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container
@@ -67,27 +68,74 @@ namespace IronFoundry.Container
         {
             Guard.NotNull(containerSpec, "containerSpec");
 
-            var handle = containerSpec.Handle;
-            if (String.IsNullOrEmpty(handle))
-                handle = handleHelper.GenerateHandle();
+            List<Action> undoList = new List<Action>();
+            Container container;
 
-            var id = handleHelper.GenerateId(handle);
-            var user = ContainerUser.Create(userManager, id);
-            var directory = ContainerDirectory.Create(fileSystem, containerBasePath, id, user);
+            try
+            {
+                var handle = containerSpec.Handle;
+                if (String.IsNullOrEmpty(handle))
+                  handle = handleHelper.GenerateHandle();
 
-            var jobObject = new JobObject(id);
+                var id = handleHelper.GenerateId(handle);
+                var user = ContainerUser.Create(userManager, id);
+                undoList.Add(() => user.Delete());
 
-            var containerHostClient = containerHostService.StartContainerHost(id, directory, jobObject, user.GetCredential());
+                var directory = ContainerDirectory.Create(fileSystem, containerBasePath, id, user);
+                undoList.Add(() => fileSystem.DeleteDirectory(containerBasePath));
 
-            var constrainedProcessRunner = new ConstrainedProcessRunner(containerHostClient);
+                var jobObjectName = handle;
+                var jobObject = new JobObject(jobObjectName);
+                undoList.Add(() => jobObject.Dispose());
 
-            var container = new Container(id, handle, user, directory, tcpPortManager, jobObject, processRunner, constrainedProcessRunner);
+                var containerHostClient = containerHostService.StartContainerHost(id, directory, jobObject, user.GetCredential());
+                undoList.Add(() => containerHostClient.Shutdown());
 
-            containers.Add(container);
+                var constrainedProcessRunner = new ConstrainedProcessRunner(containerHostClient);
+                undoList.Add(() => constrainedProcessRunner.Dispose());
+
+                container = new Container(id, handle, user, directory, tcpPortManager, jobObject, processRunner, constrainedProcessRunner);
+                containers.Add(container);
+            }
+            catch (Exception e)
+            {
+                var exceptions = AttemptActions(undoList);
+                if (exceptions.Count > 0)
+                {
+                    throw new AggregateException(exceptions.Concat(e.AsSingleItemEnumerable()));
+                }
+                else
+                {
+                    throw;
+                }
+            }
 
             return container;
         }
 
+        /// <summary>
+        /// Attempt to invoke a list of actions and return any exceptions thrown.
+        /// </summary>
+        private static List<Exception> AttemptActions(List<Action> undoList)
+        {
+            List<Exception> cleanupExceptions = new List<Exception>();
+
+            // Attempt to undo the resources we created
+            foreach (var undo in undoList)
+            {
+                try
+                {
+                    undo();
+                }
+                catch (Exception e)
+                {
+                    cleanupExceptions.Add(e);
+                }
+            }
+
+            return cleanupExceptions;
+        }
+        
         public void DestroyContainer(string handle)
         {
             var container = FindContainer(handle);
