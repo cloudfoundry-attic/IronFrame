@@ -61,6 +61,7 @@
     <Compile Include="Container.cs" />
     <Compile Include="ContainerCreationService.cs" />
     <Compile Include="ContainerHostClient.cs" />
+    <Compile Include="ContainerHostDependencyHelper.cs" />
     <Compile Include="ContainerUser.cs" />
     <Compile Include="IContainerHostService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

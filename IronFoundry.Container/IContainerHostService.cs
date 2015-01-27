@@ -18,47 +18,6 @@ namespace IronFoundry.Container
         IContainerHostClient StartContainerHost(string containerId, IContainerDirectory directory, JobObject jobObject, NetworkCredential credentials);
     }
 
-    public class ContainerHostDependencyHelper
-    {
-        public virtual string ContainerHostExe
-        {
-            get { return "IronFoundry.Container.Host.exe"; }
-        }
-
-        public virtual string ContainerHostExePath
-        {
-            get { return Path.Combine(Directory.GetCurrentDirectory(), ContainerHostExe); }
-        }
-
-        public virtual IReadOnlyList<string> GetContainerHostDependencies()
-        {
-            var hostAssembly = Assembly.ReflectionOnlyLoadFrom(ContainerHostExePath);
-            var hostDirectoryPath = Path.GetDirectoryName(ContainerHostExePath);
-
-            return EnumerateLocalReferencedAssemblies(hostDirectoryPath, hostAssembly)
-                .ToList();
-        }
-
-        IEnumerable<string> EnumerateLocalReferencedAssemblies(string basePath, Assembly assembly)
-        {
-            foreach (var dependency in assembly.GetReferencedAssemblies())
-            {
-                var fileName = dependency.Name + ".dll";
-                var filePath = Path.Combine(basePath, fileName);
-                if (File.Exists(filePath))
-                {
-                    var localAssembly = Assembly.ReflectionOnlyLoadFrom(filePath);
-                    foreach (var localAssemblyDependency in EnumerateLocalReferencedAssemblies(basePath, localAssembly))
-                    {
-                        yield return localAssemblyDependency;
-                    }
-
-                    yield return filePath;
-                }
-            }
-        }
-    }
-
     public class ContainerHostService : IContainerHostService
     {
         static readonly TimeSpan HostProcessStartTimeout = TimeSpan.FromSeconds(5);

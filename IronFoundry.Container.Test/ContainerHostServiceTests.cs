@@ -113,6 +113,11 @@ namespace IronFoundry.Container
         }
 
         [Fact]
+        public void WhenContainerHostDoesNotStartWithinTimeout_Throws()
+        {
+        }
+
+        [Fact]
         public void WhenCredentialsAreInvalid_Throws()
         {
             ProcessRunner.Run(null).ThrowsForAnyArgs(new SecurityException());
