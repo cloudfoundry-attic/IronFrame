@@ -8,49 +8,44 @@ namespace IronFoundry.Container
 {
     public class ContainerHostDependencyHelper
     {
-        readonly string basePath;
+        const string ContainerHostAssemblyName = "IronFoundry.Container.Host";
+
+        readonly Assembly containerHostAssembly;
 
         public ContainerHostDependencyHelper()
-            : this(GetAssemblyBinPath())
         {
-        }
-
-        public ContainerHostDependencyHelper(string basePath)
-        {
-            this.basePath = basePath;
+            this.containerHostAssembly = GetContainerHostAssembly();
         }
 
         public virtual string ContainerHostExe
         {
-            get { return "IronFoundry.Container.Host.exe"; }
+            get { return ContainerHostAssemblyName + ".exe"; }
         }
 
         public virtual string ContainerHostExePath
         {
-            get { return Path.Combine(basePath, ContainerHostExe); }
+            get { return containerHostAssembly.Location; }
         }
 
-        static string GetAssemblyBinPath()
+        static Assembly GetContainerHostAssembly()
         {
-            return AppDomain.CurrentDomain.BaseDirectory;
+            return Assembly.ReflectionOnlyLoad(ContainerHostAssemblyName);
         }
 
         public virtual IReadOnlyList<string> GetContainerHostDependencies()
         {
-            var hostAssembly = Assembly.ReflectionOnlyLoadFrom(ContainerHostExePath);
-            return EnumerateLocalReferences(hostAssembly).ToList();
+            return EnumerateLocalReferences(containerHostAssembly).ToList();
         }
 
         IEnumerable<string> EnumerateLocalReferences(Assembly assembly)
         {
-            foreach (var assemblyName in assembly.GetReferencedAssemblies())
+            foreach (var referencedAssemblyName in assembly.GetReferencedAssemblies())
             {
-                var fileName = assemblyName.Name + ".dll";
-                var filePath = Path.Combine(basePath, fileName);
-                if (File.Exists(filePath))
+                var referencedAssembly = Assembly.ReflectionOnlyLoad(referencedAssemblyName.FullName);
+
+                if (!assembly.GlobalAssemblyCache)
                 {
-                    var referencedAssembly = Assembly.ReflectionOnlyLoadFrom(filePath);
-                    yield return filePath;
+                    yield return referencedAssembly.Location;
 
                     foreach (var nestedReferenceFilePath in EnumerateLocalReferences(referencedAssembly))
                         yield return nestedReferenceFilePath;
