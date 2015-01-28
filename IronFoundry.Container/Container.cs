@@ -28,6 +28,7 @@ namespace IronFoundry.Container
         string Id { get; }
         string Handle { get; }
         //ContainerState State { get; }
+        IContainerDirectory Directory { get; }
 
         //void BindMounts(IEnumerable<BindMount> mounts);
         //void CreateTarFile(string sourcePath, string tarFilePath, bool compress);
