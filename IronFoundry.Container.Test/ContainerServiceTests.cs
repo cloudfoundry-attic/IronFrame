@@ -236,7 +236,7 @@ namespace IronFoundry.Container
                     }
                 }
 
-                public class WithContainer : Acceptance
+                public class WithAcceptanceContainer : Acceptance
                 {
                     const string RunBatFileContent = @"
 @echo off
@@ -245,7 +245,7 @@ cmd.exe /C %*
 
                     IContainer Container { get; set; }
                     
-                    public WithContainer(AcceptanceFixture fixture) : base(fixture)
+                    public WithAcceptanceContainer(AcceptanceFixture fixture) : base(fixture)
                     {
                         var spec = new ContainerSpec
                         {
