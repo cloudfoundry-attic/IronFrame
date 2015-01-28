@@ -13,7 +13,7 @@ using Xunit;
 
 namespace IronFoundry.Container
 {
-    public class ContainerCreationServiceTests
+    public class ContainerServiceTests
     {
         string ContainerBasePath { get; set; }
         string ContainerUserGroup { get; set; }
@@ -24,9 +24,9 @@ namespace IronFoundry.Container
         IContainerHostClient ContainerHostClient { get; set; }
         IUserManager UserManager { get; set; }
         ILocalTcpPortManager TcpPortManager { get; set; }
-        ContainerCreationService Service { get; set; }
+        ContainerService Service { get; set; }
 
-        public ContainerCreationServiceTests()
+        public ContainerServiceTests()
         {
             ContainerBasePath = @"C:\Containers";
             ContainerUserGroup = "ContainerUsers";
@@ -45,10 +45,10 @@ namespace IronFoundry.Container
 
             UserManager.CreateUser(null).ReturnsForAnyArgs(new NetworkCredential("username", "password"));
 
-            Service = new ContainerCreationService(HandleHelper, UserManager, FileSystem, TcpPortManager, ProcessRunner, ContainerHostService, ContainerBasePath);
+            Service = new ContainerService(HandleHelper, UserManager, FileSystem, TcpPortManager, ProcessRunner, ContainerHostService, ContainerBasePath);
         }
 
-        public class CreateContainer : ContainerCreationServiceTests
+        public class CreateContainer : ContainerServiceTests
         {
             [Fact]
             public void WhenSpecIsNull_Throws()
@@ -181,7 +181,7 @@ namespace IronFoundry.Container
                 }
             }
 
-            public class Acceptance : ContainerCreationServiceTests, IDisposable, IClassFixture<AcceptanceFixture>
+            public class Acceptance : ContainerServiceTests, IDisposable, IClassFixture<AcceptanceFixture>
             {
                 AcceptanceFixture Fixture { get; set; }
 
@@ -199,7 +199,7 @@ namespace IronFoundry.Container
 
                     UserManager = new LocalPrincipalManager(new DesktopPermissionManager(), Fixture.SecurityGroupName);
 
-                    Service = new ContainerCreationService(HandleHelper, UserManager, FileSystem, TcpPortManager, ProcessRunner, ContainerHostService, ContainerBasePath);
+                    Service = new ContainerService(HandleHelper, UserManager, FileSystem, TcpPortManager, ProcessRunner, ContainerHostService, ContainerBasePath);
                 }
 
                 public virtual void Dispose()

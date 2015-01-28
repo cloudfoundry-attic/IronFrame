@@ -69,7 +69,7 @@ namespace IronFoundry.Container.Acceptance
         [FactAdminRequired]
         public void UniqueUserPerContainer()
         {
-            var containerService = new ContainerCreationService(ContainerBasePath, UserGroupName);
+            var containerService = new ContainerService(ContainerBasePath, UserGroupName);
 
             Container1 = CreateContainer(containerService, Container1Handle);
             Container2 = CreateContainer(containerService, Container2Handle);
@@ -97,7 +97,7 @@ namespace IronFoundry.Container.Acceptance
         [FactAdminRequired]
         public void ContainerUserInContainerGroup()
         {
-            var containerService = new ContainerCreationService(ContainerBasePath, UserGroupName);
+            var containerService = new ContainerService(ContainerBasePath, UserGroupName);
             Container1 = CreateContainer(containerService, Container1Handle);
 
             var pSpec = new ProcessSpec
@@ -117,7 +117,7 @@ namespace IronFoundry.Container.Acceptance
         [FactAdminRequired]
         public void StartShortLivedTask()
         {
-            var containerService = new ContainerCreationService(ContainerBasePath, UserGroupName);
+            var containerService = new ContainerService(ContainerBasePath, UserGroupName);
             Container1 = CreateContainer(containerService, Container1Handle);
 
             var pSpec = new ProcessSpec
@@ -187,7 +187,7 @@ namespace IronFoundry.Container.Acceptance
         //}
 
 
-        public IContainer CreateContainer(IContainerCreationService containerService, string handle)
+        public IContainer CreateContainer(IContainerService containerService, string handle)
         {
             var bindMounts = new BindMount[]
             {

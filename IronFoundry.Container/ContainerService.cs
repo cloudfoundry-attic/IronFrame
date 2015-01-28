@@ -12,12 +12,14 @@ namespace IronFoundry.Container
         public Dictionary<string, string> Environment { get; set; }
     }
 
-    public interface IContainerCreationService : IDisposable
+    public interface IContainerService : IDisposable
     {
         IContainer CreateContainer(ContainerSpec containerSpec);
+        IContainer GetContainerByHandle(string handle);
+        IReadOnlyList<IContainer> GetContainers();
     }
 
-    public class ContainerCreationService : IContainerCreationService
+    public class ContainerService : IContainerService
     {
         readonly string containerBasePath;
         readonly FileSystemManager fileSystem;
@@ -27,7 +29,7 @@ namespace IronFoundry.Container
         readonly IProcessRunner processRunner;
         readonly IContainerHostService containerHostService;
 
-        public ContainerCreationService(
+        public ContainerService(
             ContainerHandleHelper handleHelper,
             IUserManager userManager,
             FileSystemManager fileSystem,
@@ -46,7 +48,7 @@ namespace IronFoundry.Container
             this.containerBasePath = containerBasePath;
         }
 
-        public ContainerCreationService(string containerBasePath, string userGroupName)
+        public ContainerService(string containerBasePath, string userGroupName)
             : this(
                 new ContainerHandleHelper(),
                 new LocalPrincipalManager(userGroupName),
@@ -82,6 +84,16 @@ namespace IronFoundry.Container
 
         public void Dispose()
         {
+        }
+
+        public IContainer GetContainerByHandle(string handle)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IReadOnlyList<IContainer> GetContainers()
+        {
+            throw new NotImplementedException();
         }
     }
 }
