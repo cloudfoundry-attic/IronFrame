@@ -15,6 +15,7 @@ namespace IronFoundry.Container
     public interface IContainerService : IDisposable
     {
         IContainer CreateContainer(ContainerSpec containerSpec);
+        void DestroyContainer(string handle);
         IContainer GetContainerByHandle(string handle);
         IReadOnlyList<IContainer> GetContainers();
     }
@@ -87,13 +88,28 @@ namespace IronFoundry.Container
             return container;
         }
 
+        public void DestroyContainer(string handle)
+        {
+            var container = FindContainer(handle);
+            if (container != null)
+            {
+                container.Destroy();
+                containers.Remove(container);
+            }
+        }
+
         public void Dispose()
         {
         }
 
-        public IContainer GetContainerByHandle(string handle)
+        Container FindContainer(string handle)
         {
             return containers.Find(x => x.Handle.Equals(handle, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public IContainer GetContainerByHandle(string handle)
+        {
+            return FindContainer(handle);
         }
 
         public IReadOnlyList<IContainer> GetContainers()

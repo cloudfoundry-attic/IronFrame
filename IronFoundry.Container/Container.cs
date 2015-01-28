@@ -38,7 +38,6 @@ namespace IronFoundry.Container
 
         //ContainerInfo GetInfo();
 
-        void Destroy();
         void Stop(bool kill);
 
         int ReservePort(int requestedPort);

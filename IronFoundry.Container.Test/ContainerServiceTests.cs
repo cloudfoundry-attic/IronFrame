@@ -231,7 +231,7 @@ namespace IronFoundry.Container
                         finally
                         {
                             if (container != null)
-                                container.Destroy();
+                                Service.DestroyContainer(container.Handle);
                         }
                     }
                 }
@@ -259,8 +259,7 @@ cmd.exe /C %*
 
                     void WriteUserFileToContainer(string path, string contents)
                     {
-                        var containerImpl = (IronFoundry.Container.Container)Container;
-                        var mappedPath = containerImpl.Directory.MapUserPath(path);
+                        var mappedPath = Container.Directory.MapUserPath(path);
 
                         var directoryName = Path.GetDirectoryName(mappedPath);
                         Directory.CreateDirectory(directoryName);
@@ -269,7 +268,7 @@ cmd.exe /C %*
 
                     public override void Dispose()
                     {
-                        Container.Destroy();
+                        Service.DestroyContainer(Container.Handle);
                         base.Dispose();
                     }
 

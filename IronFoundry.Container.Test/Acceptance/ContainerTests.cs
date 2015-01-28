@@ -20,6 +20,7 @@ namespace IronFoundry.Container.Acceptance
         string ReadWriteBindMountPath { get; set; }
 
         LocalUserGroupManager UserGroupManager { get; set; }
+        IContainerService ContainerService { get; set; }
         IContainer Container1 { get; set; }
         IContainer Container2 { get; set; }
 
@@ -34,19 +35,14 @@ namespace IronFoundry.Container.Acceptance
             UserGroupName = "ContainerServiceTestsUserGroup_" + GenerateRandomAlphaString();
             UserGroupManager = new LocalUserGroupManager();
             UserGroupManager.CreateLocalGroup(UserGroupName);
+
+            ContainerService = new ContainerService(ContainerBasePath, UserGroupName);
         }
 
         public void Dispose()
         {
-            if (Container1 != null)
-            {
-                Container1.Destroy();
-            }
-
-            if (Container2 != null)
-            {
-                Container2.Destroy();
-            }
+            ContainerService.DestroyContainer(Container1Handle);
+            ContainerService.DestroyContainer(Container2Handle);
 
             UserGroupManager.DeleteLocalGroup(UserGroupName);
         }
@@ -69,10 +65,8 @@ namespace IronFoundry.Container.Acceptance
         [FactAdminRequired]
         public void UniqueUserPerContainer()
         {
-            var containerService = new ContainerService(ContainerBasePath, UserGroupName);
-
-            Container1 = CreateContainer(containerService, Container1Handle);
-            Container2 = CreateContainer(containerService, Container2Handle);
+            Container1 = CreateContainer(ContainerService, Container1Handle);
+            Container2 = CreateContainer(ContainerService, Container2Handle);
 
             var pSpec = new ProcessSpec
             {
@@ -97,8 +91,7 @@ namespace IronFoundry.Container.Acceptance
         [FactAdminRequired]
         public void ContainerUserInContainerGroup()
         {
-            var containerService = new ContainerService(ContainerBasePath, UserGroupName);
-            Container1 = CreateContainer(containerService, Container1Handle);
+            Container1 = CreateContainer(ContainerService, Container1Handle);
 
             var pSpec = new ProcessSpec
             {
@@ -117,8 +110,7 @@ namespace IronFoundry.Container.Acceptance
         [FactAdminRequired]
         public void StartShortLivedTask()
         {
-            var containerService = new ContainerService(ContainerBasePath, UserGroupName);
-            Container1 = CreateContainer(containerService, Container1Handle);
+            Container1 = CreateContainer(ContainerService, Container1Handle);
 
             var pSpec = new ProcessSpec
             {
