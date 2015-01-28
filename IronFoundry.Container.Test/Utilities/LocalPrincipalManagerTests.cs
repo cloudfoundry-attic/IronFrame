@@ -58,13 +58,6 @@ namespace IronFoundry.Container.Utilities
         }
 
         [FactAdminRequired]
-        void AddedUserAppearsInIISGroup()
-        {
-            manager.CreateUser(testUserName);
-            AssertUserInGroup("IIS_IUSRS", testUserName);
-        }
-
-        [FactAdminRequired]
         void AddedUserAppearsInWardenGroup()
         {
             manager.CreateUser(testUserName);

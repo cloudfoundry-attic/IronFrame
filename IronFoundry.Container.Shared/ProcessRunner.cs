@@ -58,6 +58,12 @@ namespace IronFoundry.Container
                 RedirectStandardOutput = true,
             };
 
+            if (runSpec.Credentials != null)
+            {
+                startInfo.UserName = runSpec.Credentials.UserName;
+                startInfo.Password = runSpec.Credentials.SecurePassword;
+            }
+
             if (runSpec.Environment != null && runSpec.Environment.Count > 0)
             {
                 startInfo.EnvironmentVariables.Clear();
