@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -10,7 +11,7 @@ namespace IronFoundry.Container
         readonly string basePath;
 
         public ContainerHostDependencyHelper()
-            : this(Directory.GetCurrentDirectory())
+            : this(GetAssemblyBinPath())
         {
         }
 
@@ -27,6 +28,11 @@ namespace IronFoundry.Container
         public virtual string ContainerHostExePath
         {
             get { return Path.Combine(basePath, ContainerHostExe); }
+        }
+
+        static string GetAssemblyBinPath()
+        {
+            return AppDomain.CurrentDomain.BaseDirectory;
         }
 
         public virtual IReadOnlyList<string> GetContainerHostDependencies()
