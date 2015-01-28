@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using IronFoundry.Warden.Containers;
@@ -17,7 +18,8 @@ namespace IronFoundry.Container
         IProcessRunner ProcessRunner { get; set; }
         IProcessRunner ConstrainedProcessRunner { get; set; }
         ILocalTcpPortManager TcpPortManager { get; set; }
-        Dictionary<string, string> ContainerEnvironment { get; set; } 
+        Dictionary<string, string> ContainerEnvironment { get; set; }
+        ProcessHelper ProcessHelper { get; set; }
 
         public ContainerTests()
         {
@@ -31,8 +33,9 @@ namespace IronFoundry.Container
             TcpPortManager = Substitute.For<ILocalTcpPortManager>();
             JobObject = Substitute.For<JobObject>();
             ContainerEnvironment = new Dictionary<string, string>() { { "Handle", "handle" } };
+            ProcessHelper = Substitute.For<ProcessHelper>();
 
-            Container = new Container("id", "handle", User, Directory, TcpPortManager, JobObject, ProcessRunner, ConstrainedProcessRunner, ContainerEnvironment);
+            Container = new Container("id", "handle", User, Directory, TcpPortManager, JobObject, ProcessRunner, ConstrainedProcessRunner, ProcessHelper, ContainerEnvironment);
         }
 
         public class ReservePort : ContainerTests
@@ -267,6 +270,58 @@ namespace IronFoundry.Container
 
                 ProcessRunner.Received(1).Dispose();
                 ConstrainedProcessRunner.Received(1).Dispose();
+            }
+        }
+
+        public class GetInfo : ContainerTests
+        {
+            [Fact]
+            public void WhenManagingNoProcess()
+            {
+                JobObject.GetCpuStatistics().Returns(new CpuStatistics
+                {
+                    TotalKernelTime = TimeSpan.Zero,
+                    TotalUserTime = TimeSpan.Zero,
+                });
+                JobObject.GetProcessIds().Returns(new int[0]);
+
+
+                var info = Container.GetInfo();
+
+                Assert.Equal(TimeSpan.Zero, info.CpuStat.TotalProcessorTime);
+                Assert.Equal(0ul, info.MemoryStat.PrivateBytes);
+            }
+
+            [Fact]
+            public void WhenManagingMultipleProcesses()
+            {
+                const long oneProcessPrivateMemory = 1024;
+                TimeSpan expectedTotalKernelTime = TimeSpan.FromSeconds(2);
+                TimeSpan expectedTotalUserTime = TimeSpan.FromSeconds(2);
+
+                var expectedCpuStats = new CpuStatistics
+                {
+                    TotalKernelTime = expectedTotalKernelTime,
+                    TotalUserTime = expectedTotalUserTime,
+                };
+
+                var firstProcess = Substitute.For<IProcess>();
+                firstProcess.Id.Returns(1);
+                firstProcess.PrivateMemoryBytes.Returns(oneProcessPrivateMemory);
+                
+                var secondProcess = Substitute.For<IProcess>();
+                secondProcess.Id.Returns(2);
+                secondProcess.PrivateMemoryBytes.Returns(oneProcessPrivateMemory);
+                
+                JobObject.GetCpuStatistics().Returns(expectedCpuStats);
+                JobObject.GetProcessIds().Returns(new int[] { 1, 2 });
+
+                ProcessHelper.GetProcesses(null).ReturnsForAnyArgs(new[] { firstProcess, secondProcess });
+
+                var info = Container.GetInfo();
+
+                Assert.Equal(expectedTotalKernelTime + expectedTotalUserTime,info.CpuStat.TotalProcessorTime);
+                Assert.Equal((ulong)firstProcess.PrivateMemoryBytes + (ulong)secondProcess.PrivateMemoryBytes, info.MemoryStat.PrivateBytes);
             }
         }
 

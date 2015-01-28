@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using IronFoundry.Container;
 using IronFoundry.Container.Utilities;
 using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Containers.Messages;

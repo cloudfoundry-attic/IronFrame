@@ -45,7 +45,7 @@ namespace IronFoundry.Container.Acceptance
             UserGroupManager.DeleteLocalGroup(UserGroupName);
         }
 
-        //[FactAdminRequired]
+        //[FactAdminRequired(Skip = "Can't implement until we can copy files in.")]
         //public void DoNotShareSpaces()
         //{
         //    var containerService = new ContainerCreationService(ContainerBasePath, UserGroupName);
