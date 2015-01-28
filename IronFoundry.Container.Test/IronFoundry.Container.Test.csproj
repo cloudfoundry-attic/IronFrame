@@ -68,7 +68,7 @@
     <Compile Include="ConstrainedProcessTests.cs" />
     <Compile Include="ContainerCreationServiceTests.cs" />
     <Compile Include="ContainerDirectoryTests.cs" />
-    <Compile Include="ContainerHandleGeneratorTests.cs" />
+    <Compile Include="ContainerHandleHelperTests.cs" />
     <Compile Include="ContainerHostClientTests.cs" />
     <Compile Include="ContainerHostServiceTests.cs" />
     <Compile Include="ContainerProcessTests.cs" />

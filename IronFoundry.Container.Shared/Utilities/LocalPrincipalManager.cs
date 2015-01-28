@@ -32,6 +32,11 @@ namespace IronFoundry.Container.Utilities
             this.wardenUserGroupName = userGroupName;
         }
 
+        public LocalPrincipalManager(string userGroupName)
+            : this(new DesktopPermissionManager(), userGroupName)
+        {
+        }
+
         public void DeleteUser(string userName)
         {
             // Don't need to cleanup desktop permissions as they are managed by the group.

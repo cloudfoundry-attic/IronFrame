@@ -60,7 +60,7 @@
     </Compile>
     <Compile Include="BindMount.cs" />
     <Compile Include="Concurrency\AsyncLock.cs" />
-    <Compile Include="ContainerHandleGenerator.cs" />
+    <Compile Include="ContainerHandleHelper.cs" />
     <Compile Include="Utilities\EnvironmentBlock.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Utilities\FileSystemManager.cs" />

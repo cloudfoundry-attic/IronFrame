@@ -18,6 +18,7 @@ namespace IronFoundry.Container
         string ContainerBasePath { get; set; }
         string ContainerUserGroup { get; set; }
         FileSystemManager FileSystem { get; set; }
+        ContainerHandleHelper HandleHelper { get; set; }
         IProcessRunner ProcessRunner { get; set; }
         IContainerHostService ContainerHostService { get; set; }
         IContainerHostClient ContainerHostClient { get; set; }
@@ -31,6 +32,7 @@ namespace IronFoundry.Container
             ContainerUserGroup = "ContainerUsers";
 
             FileSystem = Substitute.For<FileSystemManager>();
+            HandleHelper = Substitute.For<ContainerHandleHelper>();
             ProcessRunner = Substitute.For<IProcessRunner>();
             TcpPortManager = Substitute.For<ILocalTcpPortManager>();
             UserManager = Substitute.For<IUserManager>();
@@ -43,7 +45,7 @@ namespace IronFoundry.Container
 
             UserManager.CreateUser(null).ReturnsForAnyArgs(new NetworkCredential("username", "password"));
 
-            Service = new ContainerCreationService(UserManager, FileSystem, TcpPortManager, ProcessRunner, ContainerHostService, ContainerBasePath);
+            Service = new ContainerCreationService(HandleHelper, UserManager, FileSystem, TcpPortManager, ProcessRunner, ContainerHostService, ContainerBasePath);
         }
 
         public class CreateContainer : ContainerCreationServiceTests
@@ -74,6 +76,7 @@ namespace IronFoundry.Container
             [Theory]
             public void WhenHandleIsNotProvided_GeneratesHandle(string handle)
             {
+                HandleHelper.GenerateHandle().Returns(Guid.NewGuid().ToString("N"));
                 var spec = new ContainerSpec
                 {
                     Handle = handle,
@@ -86,8 +89,23 @@ namespace IronFoundry.Container
             }
 
             [Fact]
+            public void GeneratesIdFromHandle()
+            {
+                HandleHelper.GenerateId("handle").Returns("derived-id");
+                var spec = new ContainerSpec
+                {
+                    Handle = "handle",
+                };
+
+                var container = Service.CreateContainer(spec);
+
+                Assert.Equal("derived-id", container.Id);
+            }
+
+            [Fact]
             public void CreatesContainerSpecificUser()
             {
+                HandleHelper.GenerateId("handle").Returns("DEADBEEF");
                 UserManager.CreateUser("").ReturnsForAnyArgs(new NetworkCredential());
                 var spec = new ContainerSpec
                 {
@@ -96,12 +114,13 @@ namespace IronFoundry.Container
 
                 Service.CreateContainer(spec);
 
-                UserManager.Received(1).CreateUser("c_handle");
+                UserManager.Received(1).CreateUser("c_DEADBEEF");
             }
 
             [Fact]
             public void CreatesContainerSpecificDirectory()
             {
+                HandleHelper.GenerateId("handle").Returns("DEADBEEF");
                 var spec = new ContainerSpec
                 {
                     Handle = "handle",
@@ -109,7 +128,7 @@ namespace IronFoundry.Container
 
                 Service.CreateContainer(spec);
 
-                var expectedPath = Path.Combine(ContainerBasePath, "handle");
+                var expectedPath = Path.Combine(ContainerBasePath, "DEADBEEF");
                 FileSystem.Received(1).CreateDirectory(expectedPath, Arg.Any<IEnumerable<UserAccess>>());
             }
 
@@ -151,9 +170,14 @@ namespace IronFoundry.Container
 
                 public virtual void Dispose()
                 {
-                    Directory.Delete(TempDirectory, true);
-
-                    userGroupManager.DeleteLocalGroup(SecurityGroupName);
+                    try
+                    {
+                        Directory.Delete(TempDirectory, true);
+                    }
+                    finally
+                    {
+                        userGroupManager.DeleteLocalGroup(SecurityGroupName);
+                    }
                 }
             }
 
@@ -168,13 +192,14 @@ namespace IronFoundry.Container
                     ContainerBasePath = Fixture.TempDirectory;
 
                     FileSystem = new FileSystemManager();
+                    HandleHelper = new ContainerHandleHelper();
                     ProcessRunner = new ProcessRunner();
                     
                     ContainerHostService = new ContainerHostService(FileSystem, ProcessRunner, new ContainerHostDependencyHelper());
 
                     UserManager = new LocalPrincipalManager(new DesktopPermissionManager(), Fixture.SecurityGroupName);
 
-                    Service = new ContainerCreationService(UserManager, FileSystem, TcpPortManager, ProcessRunner, ContainerHostService, ContainerBasePath);
+                    Service = new ContainerCreationService(HandleHelper, UserManager, FileSystem, TcpPortManager, ProcessRunner, ContainerHostService, ContainerBasePath);
                 }
 
                 public virtual void Dispose()
@@ -193,7 +218,7 @@ namespace IronFoundry.Container
                     {
                         var spec = new ContainerSpec
                         {
-                            Handle = ContainerHandleGenerator.Generate(),
+                            Handle = Guid.NewGuid().ToString("N"),
                         };
 
                         IContainer container = null;
@@ -224,7 +249,7 @@ cmd.exe /C %*
                     {
                         var spec = new ContainerSpec
                         {
-                            Handle = ContainerHandleGenerator.Generate(),
+                            Handle = Guid.NewGuid().ToString("N"),
                         };
 
                         Container = Service.CreateContainer(spec);

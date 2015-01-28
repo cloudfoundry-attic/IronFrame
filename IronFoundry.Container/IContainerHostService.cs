@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using IronFoundry.Container.Messaging;
 using IronFoundry.Container.Utilities;
 using NLog;
-using System.Collections.Generic;
 
 namespace IronFoundry.Container
 {
@@ -32,6 +28,15 @@ namespace IronFoundry.Container
             this.fileSystem = fileSystem;
             this.processRunner = processRunner;
             this.dependencyHelper = dependencyHelper;
+        }
+
+        public ContainerHostService()
+            : this(
+                new FileSystemManager(),
+                new ProcessRunner(),
+                new ContainerHostDependencyHelper()
+            )
+        {
         }
 
         void CopyHostToContainer(IContainerDirectory directory)

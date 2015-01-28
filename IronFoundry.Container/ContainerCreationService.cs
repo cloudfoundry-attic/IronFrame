@@ -21,12 +21,14 @@ namespace IronFoundry.Container
     {
         readonly string containerBasePath;
         readonly FileSystemManager fileSystem;
+        readonly ContainerHandleHelper handleHelper;
         readonly IUserManager userManager;
         readonly ILocalTcpPortManager tcpPortManager;
         readonly IProcessRunner processRunner;
         readonly IContainerHostService containerHostService;
 
         public ContainerCreationService(
+            ContainerHandleHelper handleHelper,
             IUserManager userManager,
             FileSystemManager fileSystem,
             ILocalTcpPortManager tcpPortManager,
@@ -35,6 +37,7 @@ namespace IronFoundry.Container
             string containerBasePath
             )
         {
+            this.handleHelper = handleHelper;
             this.userManager = userManager;
             this.fileSystem = fileSystem;
             this.tcpPortManager = tcpPortManager;
@@ -44,15 +47,16 @@ namespace IronFoundry.Container
         }
 
         public ContainerCreationService(string containerBasePath, string userGroupName)
+            : this(
+                new ContainerHandleHelper(),
+                new LocalPrincipalManager(userGroupName),
+                new FileSystemManager(),
+                new LocalTcpPortManager(),
+                new ProcessRunner(),
+                new ContainerHostService(),
+                containerBasePath
+            )
         {
-            var permissionManager = new DesktopPermissionManager();
-            this.userManager = new LocalPrincipalManager(permissionManager, userGroupName);
-
-            this.fileSystem = new FileSystemManager();
-            this.tcpPortManager = new LocalTcpPortManager();
-            this.processRunner = new ProcessRunner();
-            this.containerHostService = new ContainerHostService(this.fileSystem, this.processRunner, new ContainerHostDependencyHelper());
-            this.containerBasePath = containerBasePath;
         }
 
         public IContainer CreateContainer(ContainerSpec containerSpec)
@@ -61,14 +65,13 @@ namespace IronFoundry.Container
 
             var handle = containerSpec.Handle;
             if (String.IsNullOrEmpty(handle))
-                handle = ContainerHandleGenerator.Generate();
+                handle = handleHelper.GenerateHandle();
 
-            var id = ContainerHandleGenerator.GenerateId(handle);
-            var user = ContainerUser.Create(userManager, handle);
-            var directory = ContainerDirectory.Create(fileSystem, containerBasePath, handle, user);
+            var id = handleHelper.GenerateId(handle);
+            var user = ContainerUser.Create(userManager, id);
+            var directory = ContainerDirectory.Create(fileSystem, containerBasePath, id, user);
 
-            var jobObjectName = handle;
-            var jobObject = new JobObject(jobObjectName);
+            var jobObject = new JobObject(id);
 
             var containerHostClient = containerHostService.StartContainerHost(id, directory, jobObject, user.GetCredential());
 

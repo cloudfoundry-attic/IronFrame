@@ -4,12 +4,13 @@ using System.Text;
 
 namespace IronFoundry.Container
 {
-    public static class ContainerHandleGenerator
+    public class ContainerHandleHelper
     {
         static readonly string Alphabet = "abcdefghijklmnopqrstuvwyxz0123456789";
-        static readonly Random Random = new Random();
 
-        public static string Generate(Random random)
+        readonly Random Random = new Random();
+
+        public virtual string GenerateHandle(Random random)
         {
             // TODO: Consider a better algorithm for generating unique handles
             //       It's worth noting that the consumer should be responsible for
@@ -27,12 +28,12 @@ namespace IronFoundry.Container
             }
         }
 
-        public static string Generate()
+        public virtual string GenerateHandle()
         {
-            return Generate(Random);
+            return GenerateHandle(Random);
         }
 
-        public static string GenerateId(string handle)
+        public virtual string GenerateId(string handle)
         {
             var sha = new SHA1Managed();
             var handleBytes = Encoding.UTF8.GetBytes(handle);
