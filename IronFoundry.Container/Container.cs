@@ -44,6 +44,7 @@ namespace IronFoundry.Container
         int ReservePort(int requestedPort);
         ContainerProcess Run(ProcessSpec spec, IProcessIO io);
 
+        void LimitMemory(ulong limitInBytes);
 
         //void Initialize(IContainerDirectory containerDirectory, ContainerHandle containerHandle, IContainerUser userInfo);
         //string ContainerDirectoryPath { get; }
@@ -151,6 +152,11 @@ namespace IronFoundry.Container
             var process = runner.Run(runSpec);
 
             return new ContainerProcess(process);
+        }
+
+        public void LimitMemory(ulong limitInBytes)
+        {
+            this.jobObject.SetJobMemoryLimit(limitInBytes);
         }
 
         public void Destroy()

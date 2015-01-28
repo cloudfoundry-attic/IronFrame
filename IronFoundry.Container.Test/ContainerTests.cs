@@ -325,6 +325,17 @@ namespace IronFoundry.Container
             }
         }
 
+        public class LimitMemory : ContainerTests
+        {
+            [Fact]
+            public void SetsJobMemoryLimit()
+            {
+                Container.LimitMemory(2048);
+
+                JobObject.Received(1).SetJobMemoryLimit(2048);
+            }
+        }
+
         public class Dispose : ContainerTests
         {
         }
