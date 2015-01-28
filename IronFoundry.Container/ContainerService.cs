@@ -28,6 +28,7 @@ namespace IronFoundry.Container
         readonly ILocalTcpPortManager tcpPortManager;
         readonly IProcessRunner processRunner;
         readonly IContainerHostService containerHostService;
+        private List<Container> containers = new List<Container>();
 
         public ContainerService(
             ContainerHandleHelper handleHelper,
@@ -79,7 +80,11 @@ namespace IronFoundry.Container
 
             var constrainedProcessRunner = new ConstrainedProcessRunner(containerHostClient);
 
-            return new Container(id, handle, user, directory, tcpPortManager, jobObject, processRunner, constrainedProcessRunner);
+            var container = new Container(id, handle, user, directory, tcpPortManager, jobObject, processRunner, constrainedProcessRunner);
+
+            containers.Add(container);
+
+            return container;
         }
 
         public void Dispose()
@@ -88,12 +93,12 @@ namespace IronFoundry.Container
 
         public IContainer GetContainerByHandle(string handle)
         {
-            throw new NotImplementedException();
+            return containers.Find(x => x.Handle.Equals(handle, StringComparison.OrdinalIgnoreCase));
         }
 
         public IReadOnlyList<IContainer> GetContainers()
         {
-            throw new NotImplementedException();
+            return containers;
         }
     }
 }

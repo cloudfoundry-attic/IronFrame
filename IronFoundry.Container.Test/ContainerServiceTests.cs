@@ -279,7 +279,7 @@ cmd.exe /C %*
                         var spec = new ProcessSpec
                         {
                             ExecutablePath = "run.bat",
-                            Arguments = new [] { "exit 0" },
+                            Arguments = new[] { "exit 0" },
                         };
                         var io = new TestProcessIO();
 
@@ -344,7 +344,7 @@ cmd.exe /C %*
                         {
                             ExecutablePath = "run.bat",
                             Arguments = new[] { "set" },
-                            Environment = new Dictionary<string,string>
+                            Environment = new Dictionary<string, string>
                             {
                                 { "FOO", "1" },
                                 { "BAR", "two" },
@@ -359,6 +359,62 @@ cmd.exe /C %*
                         Assert.Contains("FOO=1", stdout);
                         Assert.Contains("BAR=two", stdout);
                     }
+                }
+            }
+        }
+
+        public class WithContainer : ContainerServiceTests
+        {
+            string Handle { get; set; }
+            IContainer Container { get; set; }
+            
+            public WithContainer()
+            {
+                Handle = "KnownHandle";
+                var spec = new ContainerSpec
+                {
+                    Handle = Handle,
+                };
+
+                Container = Service.CreateContainer(spec);
+            }
+
+            public class GetContainers : WithContainer
+            {
+                [Fact]
+                public void CreateShouldAddToTheList()
+                {
+                    var containers = Service.GetContainers();
+                    Assert.Collection(containers,
+                        x => Assert.Same(Container, x)
+                    );
+                }
+            }
+
+            public class GetContainerByHandle : WithContainer
+            {
+                [Fact]
+                public void CanGetContainerByHandle()
+                {
+                    var container = Service.GetContainerByHandle(Handle);
+
+                    Assert.Same(Container, container);
+                }
+
+                [Fact]
+                public void IsNotCaseSensitive()
+                {
+                    var container = Service.GetContainerByHandle("knOwnhAndlE");
+
+                    Assert.Same(Container, container);
+                }
+
+                [Fact]
+                public void WhenHandleDoesNotExist_ReturnsNull()
+                {
+                    var container = Service.GetContainerByHandle("UnknownHandle");
+
+                    Assert.Null(container);
                 }
             }
         }
