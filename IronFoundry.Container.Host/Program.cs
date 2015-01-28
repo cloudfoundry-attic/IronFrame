@@ -39,6 +39,7 @@ namespace IronFoundry.Container.Host
 
                 var createProcessHandler = new CreateProcessHandler(new ProcessRunner(), processTracker);
                 var pingHandler = new PingHandler();
+                var stopProcessHandler = new StopProcessHandler(processTracker);
                 var stopAllProcessesHandler = new StopAllProcessesHandler(processTracker);
                 var waitForProcessExitHandler = new WaitForProcessExitHandler(processTracker);
 
@@ -56,6 +57,13 @@ namespace IronFoundry.Container.Host
                     {
                         await pingHandler.ExecuteAsync();
                         return new PingResponse(request.id);
+                    });
+                dispatcher.RegisterMethod<StopProcessRequest>(
+                    StopProcessRequest.MethodName,
+                    async (request) =>
+                    {
+                        await stopProcessHandler.ExecuteAsync(request.@params);
+                        return new StopProcessResponse(request.id);
                     });
                 dispatcher.RegisterMethod<StopAllProcessesRequest>(
                     StopAllProcessesRequest.MethodName,

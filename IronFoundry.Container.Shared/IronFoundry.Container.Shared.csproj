@@ -62,6 +62,7 @@
     <Compile Include="BindMount.cs" />
     <Compile Include="Concurrency\AsyncLock.cs" />
     <Compile Include="ContainerHandleHelper.cs" />
+    <Compile Include="Messages\StopProcessMessage.cs" />
     <Compile Include="Utilities\EffectiveAccessComputer.cs" />
     <Compile Include="Utilities\EnvironmentBlock.cs" />
     <Compile Include="ExtensionMethods.cs" />

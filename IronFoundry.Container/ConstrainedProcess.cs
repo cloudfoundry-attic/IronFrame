@@ -59,7 +59,7 @@ namespace IronFoundry.Container
 
         public void Kill()
         {
-            throw new NotImplementedException();
+            hostClient.StopProcess(key, ConstrainedProcessRunner.DefaultStopTimeout);
         }
 
         public void WaitForExit()

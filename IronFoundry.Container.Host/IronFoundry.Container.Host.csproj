@@ -55,6 +55,7 @@
     <Compile Include="Handlers\CreateProcessHandler.cs" />
     <Compile Include="Handlers\PingHandler.cs" />
     <Compile Include="Handlers\StopAllProcessesHandler.cs" />
+    <Compile Include="Handlers\StopProcessHandler.cs" />
     <Compile Include="Handlers\WaitForProcessExitHandler.cs" />
     <Compile Include="ProcessTracker.cs" />
     <Compile Include="Program.cs" />
