@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security.AccessControl;
+using System.Security.Principal;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
 using IronFoundry.Container.Win32;
@@ -48,6 +49,11 @@ namespace IronFoundry.Container.Utilities
 
                 tarWriter.Finish();
             }
+        }
+
+        public virtual void DeleteDirectory(string path)
+        {
+            Directory.Delete(path, true);
         }
 
         public virtual bool Exists(string path)
@@ -120,7 +126,7 @@ namespace IronFoundry.Container.Utilities
             foreach (var fileInfo in directoryInfo.GetFiles())
             {
                 var relativeFilePath = Path.Combine(basePath, fileInfo.Name);
-                
+
                 yield return new TarFileRecord
                 {
                     Name = GetTarRecordNameFromFilePath(relativeFilePath),
@@ -180,65 +186,11 @@ namespace IronFoundry.Container.Utilities
             public string FilePath { get; set; }
         }
 
-
-        /// <summary>
-        /// Returns true if the user has read access to the directory
-        /// </summary>
-        public bool HasDirectoryReadAccess(string directory, NetworkCredential credential)
+        public FileSystemRights ComputeEffectiveAccessRights(string directory, IdentityReference identity)
         {
-            // TODO - Change this to use the Windows API to determine the effective rights:
-            // Either:
-            // http://msdn.microsoft.com/en-us/library/windows/desktop/aa446637%28v=vs.85%29.aspx
-            // OR
-            // https://code.msdn.microsoft.com/windowsapps/Effective-access-rights-dd5b13a8#content
-
-            bool hasReadAccess = false;
-
-            using (Impersonator.GetContext(credential, true))
-            {
-                // Test for READ access
-                var dirInfo = new DirectoryInfo(directory);
-                Action readAcl = () => dirInfo.GetAccessControl(AccessControlSections.Access);
-                if (!readAcl.ThrowsException<UnauthorizedAccessException>())
-                {
-                    hasReadAccess = true;
-                }
-            }
-
-            return hasReadAccess;
-        }
-
-        /// <summary>
-        /// Returns true if the specified user can write to the directory
-        /// </summary>
-        public bool HasDirectoryWriteAccess(string directory, NetworkCredential credential)
-        {
-            // TODO - Change this to use the Windows API to determine the effective rights:
-            // Either:
-            // http://msdn.microsoft.com/en-us/library/windows/desktop/aa446637%28v=vs.85%29.aspx
-            // OR
-            // https://code.msdn.microsoft.com/windowsapps/Effective-access-rights-dd5b13a8#content
-
-            bool hasWriteAccess = false;
-
-            using (Impersonator.GetContext(credential, true))
-            {
-                string testFileName = "IF_WARDEN_WRITE_TEST." + Path.GetRandomFileName();
-                string testFilePath = Path.Combine(directory, testFileName);
-                try
-                {
-                    FileInfo file = new FileInfo(testFilePath);
-                    file.Create().Close();
-                    file.Delete();
-
-                    hasWriteAccess = true;
-                }
-                catch (UnauthorizedAccessException)
-                {
-                }
-            }
-
-            return hasWriteAccess;
+            FileSystemEffectiveAccessComputer effectiveAccess = new FileSystemEffectiveAccessComputer();
+            var rights = effectiveAccess.ComputeAccess(directory, identity);
+            return rights;
         }
 
         public DirectorySecurity GetDirectoryAccessSecurity(string path)
@@ -261,7 +213,7 @@ namespace IronFoundry.Container.Utilities
         private readonly PlatformFileSystem fileSystem;
 
         public FileSystemManager() : this(new PlatformFileSystem())
-        { 
+        {
         }
 
         public FileSystemManager(PlatformFileSystem fileSystem)
@@ -331,6 +283,11 @@ namespace IronFoundry.Container.Utilities
             }
         }
 
+        public virtual void DeleteDirectory(string path)
+        {
+            fileSystem.DeleteDirectory(path);
+        }
+
         public virtual void ExtractTarFile(string tarFilePath, string destinationPath, bool decompress)
         {
             if (fileSystem.Exists(destinationPath) &&
@@ -381,18 +338,18 @@ namespace IronFoundry.Container.Utilities
         /// <summary>
         /// Get the access that the specified user has to the specified directory.
         /// </summary>
-        public virtual FileAccess GetEffectiveDirectoryAccess(string directory, NetworkCredential credential)
+        public virtual FileAccess GetEffectiveDirectoryAccess(string directory, IdentityReference identity)
         {
-            // TODO Modify this so it doesn't require the network credentials, only the username.
-
             FileAccess access = new FileAccess();
 
-            if (fileSystem.HasDirectoryReadAccess(directory, credential))
+            FileSystemRights effectiveRights = fileSystem.ComputeEffectiveAccessRights(directory, identity);
+
+            if (effectiveRights.HasFlag(FileSystemRights.ReadAndExecute))
             {
                 access |= FileAccess.Read;
             }
 
-            if (fileSystem.HasDirectoryWriteAccess(directory, credential))
+            if (effectiveRights.HasFlag(FileSystemRights.Write | FileSystemRights.Delete))
             {
                 access |= FileAccess.Write;
             }

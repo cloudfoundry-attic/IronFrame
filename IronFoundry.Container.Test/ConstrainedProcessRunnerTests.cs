@@ -122,11 +122,7 @@ namespace IronFoundry.Container
             {
                 Runner.StopAll(kill: false);
 
-                Client.Received(1).StopAllProcesses(
-                    Arg.Is<StopAllProcessesParams>(actual =>
-                        actual.timeout == 10000
-                    )
-                );
+                Client.Received(1).StopAllProcesses(10000);
             }
 
             [Fact]
@@ -134,11 +130,7 @@ namespace IronFoundry.Container
             {
                 Runner.StopAll(kill: true);
 
-                Client.Received(1).StopAllProcesses(
-                    Arg.Is<StopAllProcessesParams>(actual =>
-                        actual.timeout == 0
-                    )
-                );
+                Client.Received(1).StopAllProcesses(0);
             }
         }
 

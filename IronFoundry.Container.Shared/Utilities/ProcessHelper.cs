@@ -103,13 +103,34 @@ namespace IronFoundry.Container.Utilities
 
             public void Kill()
             {
+                // FROM: https://msdn.microsoft.com/en-us/library/windows/desktop/ms681382%28v=vs.85%29.aspx
+                const int accessDeniedErrorCode = 0x5;
+
                 if (process.HasExited) return;
-                process.Kill();
+                try
+                {
+                    process.Kill();
+                }
+                catch (Win32Exception ex)
+                {
+                    // Access Denied can be thrown if we attempt to kill a process while it is exiting.
+                    // See notes at: https://msdn.microsoft.com/en-us/library/system.diagnostics.process.kill%28v=vs.110%29.aspx
+                    if (ex.ErrorCode != accessDeniedErrorCode)
+                    {
+                        throw;
+                    }
+                }
             }
 
             public void RequestExit()
             {
+                // MO: We can't do this anymore.  RequestForExit as currently implemented uses
+                // GenerateConsoleCtrlEvent which will send the request to the whole console
+                // group.  At the moment that console group includes the ContainerHost.  We don't
+                // want to kill the ContainerHost.
+                //
                 //ProcessHelper.SendSignal(process.Id, false);
+                Kill();
             }
 
             public void WaitForExit()

@@ -26,7 +26,7 @@ namespace IronFoundry.Warden.Handlers
         [Fact]
         public async void RequestsDestroyContainerFromManager()
         {
-            container.GetInfoAsync().ReturnsTask(new Containers.Messages.ContainerInfo() { State = IronFoundry.Warden.Containers.Messages.ContainerState.Active });
+            container.GetInfoAsync().ReturnsTask(new Container.ContainerInfo() { State = IronFoundry.Container.ContainerState.Active });
 
             var request = new DestroyRequest()
             {

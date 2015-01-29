@@ -231,7 +231,7 @@
         {
             using (var allocation = SafeAllocation.Create<NativeMethods.JobObjectLimitViolationInformation>())
             {
-                if (!NativeMethods.QueryInformationJobObject(handle, NativeMethods.JobObjectInfoClass.LimitViolationInformation, allocation.Pointer, allocation.Size, IntPtr.Zero))
+                if (!NativeMethods.QueryInformationJobObject(handle, NativeMethods.JobObjectInfoClass.LimitViolationInformation, allocation.DangerousGetHandle(), allocation.Size, IntPtr.Zero))
                     throw Win32LastError("Unable to query limit violation information");
 
                 return allocation.ToStructure();
@@ -277,7 +277,7 @@
         {
             using (var allocation = SafeAllocation.Create(notificationLimit))
             {
-                if (!NativeMethods.SetInformationJobObject(handle, NativeMethods.JobObjectInfoClass.NotificationLimitInformation, allocation.Pointer, allocation.Size))
+                if (!NativeMethods.SetInformationJobObject(handle, NativeMethods.JobObjectInfoClass.NotificationLimitInformation, allocation.DangerousGetHandle(), allocation.Size))
                     throw Win32LastError("Unable to set limit violation information");
             }
         }
@@ -340,70 +340,6 @@
                 error, 
                 String.Format(message, args) + 
                     String.Format(" (Win32 Error Code {0})", error));
-        }
-
-        class SafeAllocation : IDisposable
-        {
-            IntPtr pointer;
-            readonly int size;
-
-            public SafeAllocation(Type type)
-            {
-                this.size = Marshal.SizeOf(type);
-                this.pointer = Marshal.AllocHGlobal(size);
-            }
-
-            public SafeAllocation(Type type, object value) : this(type)
-            {
-                Marshal.StructureToPtr(value, this.pointer, false);
-            }
-
-            public IntPtr Pointer
-            {
-                get { return pointer; }
-            }
-
-            public int Size
-            {
-                get { return size; }
-            }
-
-            public void Dispose()
-            {
-                if (pointer != IntPtr.Zero)
-                    Marshal.FreeHGlobal(pointer);
-
-                pointer = IntPtr.Zero;
-            }
-
-            public static SafeAllocation<T> Create<T>(T value)
-                where T : struct
-            {
-                return new SafeAllocation<T>(value);
-            }
-
-            public static SafeAllocation<T> Create<T>()
-                where T : struct
-            {
-                return new SafeAllocation<T>();
-            }
-        }
-
-        class SafeAllocation<T> : SafeAllocation
-            where T : struct
-        {
-            public SafeAllocation() : base(typeof(T))
-            {
-            }
-
-            public SafeAllocation(T value) : base(typeof(T), value)
-            {
-            }
-
-            public T ToStructure()
-            {
-                return (T)Marshal.PtrToStructure(Pointer, typeof(T));
-            }
         }
     }
 }

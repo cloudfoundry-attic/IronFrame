@@ -36,12 +36,13 @@
       <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.6.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="NLog, Version=2.1.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\NLog.2.1.0\lib\net45\NLog.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog, Version=3.2.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\NLog.3.2.0.0\lib\net45\NLog.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -61,12 +62,17 @@
     <Compile Include="BindMount.cs" />
     <Compile Include="Concurrency\AsyncLock.cs" />
     <Compile Include="ContainerHandleHelper.cs" />
+    <Compile Include="ContainerInfo.cs" />
+    <Compile Include="Messages\StopProcessMessage.cs" />
+    <Compile Include="Utilities\EffectiveAccessComputer.cs" />
     <Compile Include="Utilities\EnvironmentBlock.cs" />
     <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="Utilities\FileSystemEffectiveAccessComputer.cs" />
     <Compile Include="Utilities\FileSystemManager.cs" />
     <Compile Include="Guard.cs" />
     <Compile Include="IContainerDirectory.cs" />
     <Compile Include="IContainerUser.cs" />
+    <Compile Include="Utilities\FileSystemSecurityDescriptorReader.cs" />
     <Compile Include="Utilities\ILocalTcpPortManager.cs" />
     <Compile Include="ContainerProcess.cs" />
     <Compile Include="Utilities\JobObjectLimits.cs" />
@@ -88,6 +94,8 @@
     <Compile Include="Utilities\NetShRunner.cs" />
     <Compile Include="Utilities\WindowStationSecurity.cs" />
     <Compile Include="WardenException.cs" />
+    <Compile Include="Win32\AccessCheck.cs" />
+    <Compile Include="Win32\AccessMask.cs" />
     <Compile Include="Win32\DesktopRights.cs" />
     <Compile Include="Win32\DesktopSecurity.cs" />
     <Compile Include="Win32\DuplicateTokenEx.cs" />
@@ -110,11 +118,16 @@
     <Compile Include="Win32\JobObject.cs" />
     <Compile Include="Win32\LocalPrincipalData.cs" />
     <Compile Include="Win32\LogonUser.cs" />
+    <Compile Include="Win32\NativeDll.cs" />
     <Compile Include="Win32\NativeMethods.cs" />
     <Compile Include="Win32\RevertToSelf.cs" />
+    <Compile Include="Win32\SafeAllocation.cs" />
+    <Compile Include="Win32\SafeAuthzContextHandle.cs" />
+    <Compile Include="Win32\SafeAuthzRMHandle.cs" />
     <Compile Include="Win32\SafeUserTokenHandle.cs" />
     <Compile Include="Win32\SecurityAttributes.cs" />
     <Compile Include="Win32\StandardRights.cs" />
+    <Compile Include="Utilities\UndoStack.cs" />
     <Compile Include="Win32\Utils.cs" />
     <Compile Include="Utilities\ProcessDataReceivedEventArgs.cs" />
     <Compile Include="Utilities\ProcessHelper.cs" />
@@ -137,7 +150,7 @@
     </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

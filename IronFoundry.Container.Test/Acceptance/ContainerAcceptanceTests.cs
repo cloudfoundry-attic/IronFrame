@@ -2,15 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
+using System.Threading;
 using IronFoundry.Container.Utilities;
-using IronFoundry.Warden.Test;
-using NSubstitute;
 using Xunit;
 
 namespace IronFoundry.Container.Acceptance
 {
-    public class ContainerTests : IDisposable
+    public class ContainerAcceptanceTests : IDisposable
     {
         string Container1Handle { get; set; }
         string Container2Handle { get; set; }
@@ -24,7 +22,7 @@ namespace IronFoundry.Container.Acceptance
         IContainer Container1 { get; set; }
         IContainer Container2 { get; set; }
 
-        public ContainerTests()
+        public ContainerAcceptanceTests()
         {
             Container1Handle = GenerateRandomAlphaString();
             Container2Handle = GenerateRandomAlphaString();
@@ -47,7 +45,7 @@ namespace IronFoundry.Container.Acceptance
             UserGroupManager.DeleteLocalGroup(UserGroupName);
         }
 
-        //[FactAdminRequired]
+        //[FactAdminRequired(Skip = "Can't implement until we can copy files in.")]
         //public void DoNotShareSpaces()
         //{
         //    var containerService = new ContainerCreationService(ContainerBasePath, UserGroupName);
@@ -72,6 +70,7 @@ namespace IronFoundry.Container.Acceptance
             {
                 ExecutablePath = "whoami.exe",
                 DisablePathMapping = true,
+                Privileged = false
             };
 
             var io1 = new StringProcessIO();
@@ -80,8 +79,8 @@ namespace IronFoundry.Container.Acceptance
             Container1.Run(pSpec, io1).WaitForExit();
             Container2.Run(pSpec, io2).WaitForExit();
 
-            string user1 = io1.Output.ToString();
-            string user2 = io2.Output.ToString();
+            var user1 = io1.Output.ToString();
+            var user2 = io2.Output.ToString();
 
             Assert.NotEmpty(user1);
             Assert.NotEmpty(user2);
@@ -131,8 +130,8 @@ namespace IronFoundry.Container.Acceptance
             int exitCode;
             bool exited = process.TryWaitForExit(2000, out exitCode);
 
-            var output = io.Output.ToString();
-            var error = io.Error.ToString();
+            var output = io.Output.ToString().Trim();
+            var error = io.Error.ToString().Trim();
 
             // VERIFY THE PROCESS RAN AND EXITED
             Assert.True(exited);
@@ -148,14 +147,13 @@ namespace IronFoundry.Container.Acceptance
         //{
         //    var containerService = new ContainerCreationService(ContainerBasePath, UserGroupName);
         //    Container1 = CreateContainer(containerService, Container1Handle);
-
         //    var pSpec = new ProcessSpec
         //    {
         //        ExecutablePath = "cmd.exe",
         //        DisablePathMapping = true,
         //        Arguments = new string[] { @"/C ""FOR /L %% IN () DO ping 127.0.0.1 -n 2""" },
         //    };
-
+        //
         //    // START THE LONG RUNNING PROCESS
         //    var io = new StringProcessIO();
         //    var process = Container1.Run(pSpec, io);
@@ -178,22 +176,31 @@ namespace IronFoundry.Container.Acceptance
         //    Assert.True(io.Output.ToString().Length > 0);
         //}
 
-
         public IContainer CreateContainer(IContainerService containerService, string handle)
         {
-            var bindMounts = new BindMount[]
+            var bindMounts = new[]
             {
-                new BindMount { Access = FileAccess.Read, SourcePath = ReadOnlyBindMountPath, DestinationPath = ReadOnlyBindMountPath },
-                new BindMount { Access = FileAccess.ReadWrite, SourcePath = ReadWriteBindMountPath, DestinationPath = ReadWriteBindMountPath },
+                new BindMount
+                {
+                    Access = FileAccess.Read,
+                    SourcePath = ReadOnlyBindMountPath,
+                    DestinationPath = ReadOnlyBindMountPath
+                },
+                new BindMount
+                {
+                    Access = FileAccess.ReadWrite,
+                    SourcePath = ReadWriteBindMountPath,
+                    DestinationPath = ReadWriteBindMountPath
+                }
             };
 
             var environment = new Dictionary<string, string>
             {
-                { "CONTAINER_HANDLE", handle },
-                { "CONTAINER_ENV1", "ENV1" },
+                {"CONTAINER_HANDLE", handle},
+                {"CONTAINER_ENV1", "ENV1"}
             };
 
-            ContainerSpec spec = new ContainerSpec
+            var spec = new ContainerSpec
             {
                 BindMounts = bindMounts,
                 Environment = environment,
@@ -205,12 +212,12 @@ namespace IronFoundry.Container.Acceptance
             return container;
         }
 
-        static string CreateTempDirectory()
+        private static string CreateTempDirectory()
         {
             string containerBasePath = null;
-            for(int attempt = 0; attempt < 10 && string.IsNullOrWhiteSpace(containerBasePath); attempt++)
+            for (var attempt = 0; attempt < 10 && string.IsNullOrWhiteSpace(containerBasePath); attempt++)
             {
-                string tempPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                var tempPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
                 if (!Directory.Exists(tempPath))
                 {
                     containerBasePath = tempPath;
@@ -227,15 +234,15 @@ namespace IronFoundry.Container.Acceptance
             return containerBasePath;
         }
 
-        static string GenerateRandomAlphaString(int length = 8)
+        private static string GenerateRandomAlphaString(int length = 8)
         {
             const string alphabet = "abcdefghijklmnopqrstuvwxyz";
 
-            Random r = RandomFactory.Create();
-            string handle = "";
-            for (int count = 0; count < length; count++)
+            var r = RandomFactory.Create();
+            var handle = "";
+            for (var count = 0; count < length; count++)
             {
-                int chosenCharIndex = r.Next(0, alphabet.Length);
+                var chosenCharIndex = r.Next(0, alphabet.Length);
                 handle += alphabet[chosenCharIndex];
             }
 
@@ -245,8 +252,8 @@ namespace IronFoundry.Container.Acceptance
 
     internal class StringProcessIO : IProcessIO
     {
-        public StringWriter Output = new StringWriter();
         public StringWriter Error = new StringWriter();
+        public StringWriter Output = new StringWriter();
 
         public TextWriter StandardOutput
         {

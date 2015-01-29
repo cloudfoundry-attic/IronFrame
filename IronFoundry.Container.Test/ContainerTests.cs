@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using IronFoundry.Warden.Containers;
@@ -17,6 +18,8 @@ namespace IronFoundry.Container
         IProcessRunner ProcessRunner { get; set; }
         IProcessRunner ConstrainedProcessRunner { get; set; }
         ILocalTcpPortManager TcpPortManager { get; set; }
+        Dictionary<string, string> ContainerEnvironment { get; set; }
+        ProcessHelper ProcessHelper { get; set; }
 
         public ContainerTests()
         {
@@ -28,9 +31,19 @@ namespace IronFoundry.Container
             ProcessRunner = Substitute.For<IProcessRunner>();
             ConstrainedProcessRunner = Substitute.For<IProcessRunner>();
             TcpPortManager = Substitute.For<ILocalTcpPortManager>();
-            JobObject = Substitute.For<JobObject>();
 
-            Container = new Container("id", "handle", User, Directory, TcpPortManager, JobObject, ProcessRunner, ConstrainedProcessRunner);
+            JobObject = Substitute.For<JobObject>();
+            JobObject.GetCpuStatistics().Returns(new CpuStatistics
+            {
+                TotalKernelTime = TimeSpan.Zero,
+                TotalUserTime = TimeSpan.Zero,
+            });
+            JobObject.GetProcessIds().Returns(new int[0]);
+
+            ContainerEnvironment = new Dictionary<string, string>() { { "Handle", "handle" } };
+            ProcessHelper = Substitute.For<ProcessHelper>();
+
+            Container = new Container("id", "handle", User, Directory, TcpPortManager, JobObject, ProcessRunner, ConstrainedProcessRunner, ProcessHelper, ContainerEnvironment);
         }
 
         public class ReservePort : ContainerTests
@@ -51,6 +64,14 @@ namespace IronFoundry.Container
                 var port = Container.ReservePort(3000);
 
                 Assert.Equal(5000, port);
+            }
+
+            [Fact]
+            public void WhenContainerNotActive_Throws()
+            {
+                Container.Stop(false);
+                Action action = () => Container.ReservePort(3000);
+                Assert.Throws<InvalidOperationException>(action);
             }
         }
 
@@ -135,6 +156,34 @@ namespace IronFoundry.Container
                     var actual = ProcessRunner.Captured(x => x.Run(null)).Arg<ProcessRunSpec>();
                     Assert.Equal("cmd.exe", actual.ExecutablePath);
                 }
+
+                [Fact]
+                public void WhenProcessSpecHasNoEnvironment()
+                {
+                    var io = Substitute.For<IProcessIO>();
+                    var process = Container.Run(Spec, io);
+
+                    var actualSpec = ProcessRunner.Captured(x => x.Run(null)).Arg<ProcessRunSpec>();
+
+                    Assert.Equal(ContainerEnvironment, actualSpec.Environment);
+                }
+
+                [Fact]
+                public void WhenProcessEnvironmentConflictsWithContainerEnvironment()
+                {
+                    Spec.Environment = new Dictionary<string, string>
+                    {
+                        { "Handle", "procHandle" },
+                        { "ProcEnv", "ProcEnv" }
+                    };
+
+                    var io = Substitute.For<IProcessIO>();
+                    var process = Container.Run(Spec, io);
+
+                    var actualSpec = ProcessRunner.Captured(x => x.Run(null)).Arg<ProcessRunSpec>();
+
+                    Assert.Equal(Spec.Environment, actualSpec.Environment);
+                }
             }
 
             public class WhenNotPrivileged : Run
@@ -194,6 +243,15 @@ namespace IronFoundry.Container
                     Assert.Equal("cmd.exe", actual.ExecutablePath);
                 }
             }
+
+            [Fact]
+            public void WhenContainerNotActive_Throws()
+            {
+                var io = Substitute.For<IProcessIO>();
+                Container.Stop(false);
+                Action action = () => Container.Run(Spec, io);
+                Assert.Throws<InvalidOperationException>(action);
+            }
         }
 
         public class Destroy : ContainerTests
@@ -237,6 +295,134 @@ namespace IronFoundry.Container
 
                 ProcessRunner.Received(1).Dispose();
                 ConstrainedProcessRunner.Received(1).Dispose();
+            }
+
+            [Fact]
+            public void WhenContainerStopped_Runs()
+            {
+                Container.Stop(false);
+                Container.Destroy();
+
+                ProcessRunner.Received(1).Dispose();
+            }
+        }
+
+        public class GetInfo : ContainerTests
+        {
+            [Fact]
+            public void WhenManagingNoProcess()
+            {
+                JobObject.GetCpuStatistics().Returns(new CpuStatistics
+                {
+                    TotalKernelTime = TimeSpan.Zero,
+                    TotalUserTime = TimeSpan.Zero,
+                });
+                JobObject.GetProcessIds().Returns(new int[0]);
+
+
+                var info = Container.GetInfo();
+
+                Assert.Equal(TimeSpan.Zero, info.CpuStat.TotalProcessorTime);
+                Assert.Equal(0ul, info.MemoryStat.PrivateBytes);
+            }
+
+            [Fact]
+            public void WhenManagingMultipleProcesses()
+            {
+                const long oneProcessPrivateMemory = 1024;
+                TimeSpan expectedTotalKernelTime = TimeSpan.FromSeconds(2);
+                TimeSpan expectedTotalUserTime = TimeSpan.FromSeconds(2);
+
+                var expectedCpuStats = new CpuStatistics
+                {
+                    TotalKernelTime = expectedTotalKernelTime,
+                    TotalUserTime = expectedTotalUserTime,
+                };
+
+                var firstProcess = Substitute.For<IProcess>();
+                firstProcess.Id.Returns(1);
+                firstProcess.PrivateMemoryBytes.Returns(oneProcessPrivateMemory);
+                
+                var secondProcess = Substitute.For<IProcess>();
+                secondProcess.Id.Returns(2);
+                secondProcess.PrivateMemoryBytes.Returns(oneProcessPrivateMemory);
+                
+                JobObject.GetCpuStatistics().Returns(expectedCpuStats);
+                JobObject.GetProcessIds().Returns(new int[] { 1, 2 });
+
+                ProcessHelper.GetProcesses(null).ReturnsForAnyArgs(new[] { firstProcess, secondProcess });
+
+                var info = Container.GetInfo();
+
+                Assert.Equal(expectedTotalKernelTime + expectedTotalUserTime,info.CpuStat.TotalProcessorTime);
+                Assert.Equal((ulong)firstProcess.PrivateMemoryBytes + (ulong)secondProcess.PrivateMemoryBytes, info.MemoryStat.PrivateBytes);
+            }
+
+            [Fact]
+            public void WhenContainerStopped_Runs()
+            {
+                JobObject.GetCpuStatistics().Returns(new CpuStatistics
+                {
+                    TotalKernelTime = TimeSpan.Zero,
+                    TotalUserTime = TimeSpan.Zero,
+                });
+                JobObject.GetProcessIds().Returns(new int[0]);
+
+                Container.Stop(false);
+                var info = Container.GetInfo();
+
+                Assert.NotNull(info);
+            }
+
+            [Fact]
+            public void WhenContainerDestroyed_Throws()
+            {
+                Container.Destroy();
+                Action action = () => Container.GetInfo();
+
+                Assert.Throws<InvalidOperationException>(action);
+            }
+        }
+
+        public class LimitMemory : ContainerTests
+        {
+            [Fact]
+            public void SetsJobMemoryLimit()
+            {
+                Container.LimitMemory(2048);
+
+                JobObject.Received(1).SetJobMemoryLimit(2048);
+            }
+
+            [Fact]
+            public void WhenContainerNotActive_Throws()
+            {
+                Container.Stop(false);
+                Action action = () => Container.LimitMemory(3000);
+
+                Assert.Throws<InvalidOperationException>(action);
+            }
+        }
+
+        public class Stop : ContainerTests
+        {
+            [Fact]
+            public void WhenContainerDestroyed_Throws()
+            {
+                Container.Destroy();
+
+                Action action = () => Container.Stop(false);
+
+                Assert.Throws<InvalidOperationException>(action);
+            }
+
+            [Fact]
+            public void ChangesStateToStopped()
+            {
+                Container.Stop(false);
+                var info = Container.GetInfo();
+
+                Assert.Equal(ContainerState.Stopped, info.State);
             }
         }
 

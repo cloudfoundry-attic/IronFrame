@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -147,218 +148,29 @@ namespace IronFoundry.Container
                 ContainerHostService.Received(1).StartContainerHost(Arg.Any<string>(), Arg.Any<IContainerDirectory>(), Arg.Any<JobObject>(), expectedCredentials);
             }
 
-            public class AcceptanceFixture : IDisposable
+            [Fact]
+            public void CleansUpWhenItFails()
             {
-                private LocalUserGroupManager userGroupManager;
-
-                public string TempDirectory { get; set; }
-                public string SecurityGroupName { get; set; }
-
-                public AcceptanceFixture()
+                var spec = new ContainerSpec
                 {
-                    userGroupManager = new LocalUserGroupManager();
+                    Handle = "handle",
+                };
 
-                    var uniqueId = Guid.NewGuid().ToString("N");
+                ContainerHostService.StartContainerHost(null, null, null, null)
+                    .ThrowsForAnyArgs(new Exception());
 
-                    SecurityGroupName = "ContainerUsers_" + uniqueId;
-                    
-                    userGroupManager.CreateLocalGroup(SecurityGroupName);
-
-                    TempDirectory = Path.Combine(Path.GetTempPath(), "Containers_" + uniqueId);
-                    Directory.CreateDirectory(TempDirectory);
+                try
+                {
+                    Service.CreateContainer(spec);
+                }
+                catch (Exception)
+                {
+                    // Expect this exception.
                 }
 
-                public virtual void Dispose()
-                {
-                    try
-                    {
-                        Directory.Delete(TempDirectory, true);
-                    }
-                    finally
-                    {
-                        userGroupManager.DeleteLocalGroup(SecurityGroupName);
-                    }
-                }
-            }
-
-            public class Acceptance : ContainerServiceTests, IDisposable, IClassFixture<AcceptanceFixture>
-            {
-                AcceptanceFixture Fixture { get; set; }
-
-                public Acceptance(AcceptanceFixture fixture)
-                {
-                    Fixture = fixture;
-
-                    ContainerBasePath = Fixture.TempDirectory;
-
-                    FileSystem = new FileSystemManager();
-                    HandleHelper = new ContainerHandleHelper();
-                    ProcessRunner = new ProcessRunner();
-                    
-                    ContainerHostService = new ContainerHostService(FileSystem, ProcessRunner, new ContainerHostDependencyHelper());
-
-                    UserManager = new LocalPrincipalManager(new DesktopPermissionManager(), Fixture.SecurityGroupName);
-
-                    Service = new ContainerService(HandleHelper, UserManager, FileSystem, TcpPortManager, ProcessRunner, ContainerHostService, ContainerBasePath);
-                }
-
-                public virtual void Dispose()
-                {
-                    Service.Dispose();
-                }
-
-                public class Create : Acceptance
-                {
-                    public Create(AcceptanceFixture fixture) : base(fixture)
-                    {
-                    }
-
-                    [FactAdminRequired]
-                    public void CanCreateContainer()
-                    {
-                        var spec = new ContainerSpec
-                        {
-                            Handle = Guid.NewGuid().ToString("N"),
-                        };
-
-                        IContainer container = null;
-                        try
-                        {
-                            container = Service.CreateContainer(spec);
-
-                            Assert.NotNull(container);
-                        }
-                        finally
-                        {
-                            if (container != null)
-                                Service.DestroyContainer(container.Handle);
-                        }
-                    }
-                }
-
-                public class WithAcceptanceContainer : Acceptance
-                {
-                    const string RunBatFileContent = @"
-@echo off
-cmd.exe /C %*
-                    ";
-
-                    IContainer Container { get; set; }
-                    
-                    public WithAcceptanceContainer(AcceptanceFixture fixture) : base(fixture)
-                    {
-                        var spec = new ContainerSpec
-                        {
-                            Handle = Guid.NewGuid().ToString("N"),
-                        };
-
-                        Container = Service.CreateContainer(spec);
-
-                        WriteUserFileToContainer("run.bat", RunBatFileContent);
-                    }
-
-                    void WriteUserFileToContainer(string path, string contents)
-                    {
-                        var mappedPath = Container.Directory.MapUserPath(path);
-
-                        var directoryName = Path.GetDirectoryName(mappedPath);
-                        Directory.CreateDirectory(directoryName);
-                        File.WriteAllText(mappedPath, contents);
-                    }
-
-                    public override void Dispose()
-                    {
-                        Service.DestroyContainer(Container.Handle);
-                        base.Dispose();
-                    }
-
-                    [FactAdminRequired]
-                    public void CanRunAProcess()
-                    {
-                        var spec = new ProcessSpec
-                        {
-                            ExecutablePath = "run.bat",
-                            Arguments = new[] { "exit 0" },
-                        };
-                        var io = new TestProcessIO();
-
-                        var process = Container.Run(spec, io);
-                        var exitCode = process.WaitForExit();
-
-                        Assert.Equal(0, exitCode);
-                    }
-
-                    [FactAdminRequired]
-                    public void CanGetExitCode()
-                    {
-                        var spec = new ProcessSpec
-                        {
-                            ExecutablePath = "run.bat",
-                            Arguments = new[] { "exit 100" },
-                        };
-                        var io = new TestProcessIO();
-
-                        var process = Container.Run(spec, io);
-                        var exitCode = process.WaitForExit();
-
-                        Assert.Equal(100, exitCode);
-                    }
-
-                    [FactAdminRequired]
-                    public void CanGetProcessOutput()
-                    {
-                        var spec = new ProcessSpec
-                        {
-                            ExecutablePath = "run.bat",
-                            Arguments = new[] { "echo This is STDOUT" },
-                        };
-                        var io = new TestProcessIO();
-
-                        var process = Container.Run(spec, io);
-                        process.WaitForExit();
-
-                        Assert.Contains("This is STDOUT", io.Output.ToString());
-                    }
-
-                    [FactAdminRequired]
-                    public void CanGetProcessErrors()
-                    {
-                        var spec = new ProcessSpec
-                        {
-                            ExecutablePath = "run.bat",
-                            Arguments = new[] { "echo This is STDERR >&2" },
-                        };
-                        var io = new TestProcessIO();
-
-                        var process = Container.Run(spec, io);
-                        process.WaitForExit();
-
-                        Assert.Contains("This is STDERR", io.Error.ToString());
-                    }
-
-                    [FactAdminRequired]
-                    public void CanSetEnvironmentVariables()
-                    {
-                        var spec = new ProcessSpec
-                        {
-                            ExecutablePath = "run.bat",
-                            Arguments = new[] { "set" },
-                            Environment = new Dictionary<string, string>
-                            {
-                                { "FOO", "1" },
-                                { "BAR", "two" },
-                            },
-                        };
-                        var io = new TestProcessIO();
-
-                        var process = Container.Run(spec, io);
-                        process.WaitForExit();
-
-                        var stdout = io.Output.ToString();
-                        Assert.Contains("FOO=1", stdout);
-                        Assert.Contains("BAR=two", stdout);
-                    }
-                }
+                // Created and deleted the user
+                UserManager.Received(1).CreateUser(Arg.Any<string>());
+                UserManager.Received(1).DeleteUser(Arg.Any<string>());
             }
         }
 

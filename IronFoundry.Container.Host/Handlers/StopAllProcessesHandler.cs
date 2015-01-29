@@ -14,22 +14,15 @@ namespace IronFoundry.Container.Host.Handlers
             this.processTracker = processTracker;
         }
 
-        public async Task ExecuteAsync(StopAllProcessesParams p)
+        public Task ExecuteAsync(StopAllProcessesParams p)
         {
             var processes = processTracker.GetAllChildProcesses();
 
             var tasks = processes
-                .Select(process => Task.Run(() => StopProcess(process, p.timeout)))
-                .ToList();
+                .Select(process => StopProcessHandler.StopProcessAsync(process, p.timeout));
 
-            await Task.WhenAll(tasks);
+            return Task.WhenAll(tasks);
         }
 
-        static void StopProcess(IProcess process, int timeout)
-        {
-            process.RequestExit();
-            if (!process.WaitForExit(timeout))
-                process.Kill();
-        }
     }
 }

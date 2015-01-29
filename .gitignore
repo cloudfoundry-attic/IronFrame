@@ -65,6 +65,7 @@ _ReSharper*
 # NCrunch
 *.ncrunch*
 .*crunch*.local.xml
+nCrunchTemp_
 
 # Installshield output folder 
 [Ee]xpress

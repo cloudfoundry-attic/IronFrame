@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
+using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Web.Security;
@@ -24,12 +27,12 @@ namespace IronFoundry.Container.Utilities
         private readonly string directoryPath = String.Format("WinNT://{0}", Environment.MachineName);
         private readonly Logger log = LogManager.GetCurrentClassLogger();
         private readonly IDesktopPermissionManager permissionManager;
-        private readonly string wardenUserGroupName;
+        private readonly IEnumerable<string> wardenUserGroups;
 
-        public LocalPrincipalManager(IDesktopPermissionManager permissionManager, string userGroupName)
+        public LocalPrincipalManager(IDesktopPermissionManager permissionManager, params string[] userGroupNames)
         {
             this.permissionManager = permissionManager;
-            this.wardenUserGroupName = userGroupName;
+            this.wardenUserGroups = userGroupNames ?? new String[0];
         }
 
         public LocalPrincipalManager(string userGroupName)
@@ -53,7 +56,12 @@ namespace IronFoundry.Container.Utilities
         public NetworkCredential CreateUser(string userName)
         {
             var data = InnerCreateUser(userName);
-            permissionManager.AddDesktopPermission(wardenUserGroupName);
+
+            foreach (string userGroupName in wardenUserGroups)
+            {
+                permissionManager.AddDesktopPermission(userGroupName);
+            }
+
             return new NetworkCredential(data.UserName, data.Password);
         }
 
@@ -121,7 +129,12 @@ namespace IronFoundry.Container.Utilities
                 {
                     rvUserName = user.SamAccountName;
                     //AddUserToGroup(context, IIS_IUSRS_NAME, user);
-                    AddUserToGroup(context, wardenUserGroupName, user);
+
+                    foreach(string userGroupName in this.wardenUserGroups)
+                    {
+                        AddUserToGroup(context, userGroupName, user);
+                    }
+
                     rv = new LocalPrincipalData(rvUserName, rvPassword);
                 }
             }

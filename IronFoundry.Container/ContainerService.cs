@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container
@@ -67,27 +68,54 @@ namespace IronFoundry.Container
         {
             Guard.NotNull(containerSpec, "containerSpec");
 
-            var handle = containerSpec.Handle;
-            if (String.IsNullOrEmpty(handle))
-                handle = handleHelper.GenerateHandle();
+            UndoStack undoStack = new UndoStack();
+            Container container;
 
-            var id = handleHelper.GenerateId(handle);
-            var user = ContainerUser.Create(userManager, id);
-            var directory = ContainerDirectory.Create(fileSystem, containerBasePath, id, user);
+            try
+            {
+                var handle = containerSpec.Handle;
+                if (String.IsNullOrEmpty(handle))
+                  handle = handleHelper.GenerateHandle();
 
-            var jobObject = new JobObject(id);
+                var id = handleHelper.GenerateId(handle);
 
-            var containerHostClient = containerHostService.StartContainerHost(id, directory, jobObject, user.GetCredential());
+                var user = ContainerUser.Create(userManager, id);
+                undoStack.Push(() => user.Delete());
 
-            var constrainedProcessRunner = new ConstrainedProcessRunner(containerHostClient);
+                var directory = ContainerDirectory.Create(fileSystem, containerBasePath, id, user);
+                undoStack.Push(() => fileSystem.DeleteDirectory(containerBasePath));
 
-            var container = new Container(id, handle, user, directory, tcpPortManager, jobObject, processRunner, constrainedProcessRunner);
+                var jobObjectName = handle;
+                var jobObject = new JobObject(jobObjectName);
+                undoStack.Push(() => jobObject.Dispose());
 
-            containers.Add(container);
+                var containerHostClient = containerHostService.StartContainerHost(id, directory, jobObject, user.GetCredential());
+                undoStack.Push(() => containerHostClient.Shutdown());
+
+                var constrainedProcessRunner = new ConstrainedProcessRunner(containerHostClient);
+                undoStack.Push(() => constrainedProcessRunner.Dispose());
+
+                var processHelper = new ProcessHelper();
+
+                container = new Container(id, handle, user, directory, tcpPortManager, jobObject, processRunner, constrainedProcessRunner, processHelper, containerSpec.Environment);
+                containers.Add(container);
+            }
+            catch (Exception e)
+            {
+                try
+                {
+                    undoStack.UndoAll();
+                    throw;
+                }
+                catch (AggregateException undoException)
+                {
+                    throw new AggregateException(new [] { e, undoException });
+                }
+            }
 
             return container;
         }
-
+        
         public void DestroyContainer(string handle)
         {
             var container = FindContainer(handle);

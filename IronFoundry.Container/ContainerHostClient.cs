@@ -14,7 +14,8 @@ namespace IronFoundry.Container
         CreateProcessResult CreateProcess(CreateProcessParams @params);
         bool Ping(TimeSpan timeout);
         void Shutdown();
-        void StopAllProcesses(StopAllProcessesParams @params);
+        void StopProcess(Guid key, int timeout);
+        void StopAllProcesses(int timeout);
         void SubscribeToProcessData(Guid processKey, Action<ProcessDataEvent> callback);
         WaitForProcessExitResult WaitForProcessExit(WaitForProcessExitParams @params);
     }
@@ -137,8 +138,24 @@ namespace IronFoundry.Container
             containerJobObject = null;
         }
 
-        public void StopAllProcesses(StopAllProcessesParams @params)
+        public void StopProcess(Guid key, int timeout)
         {
+            var @params = new StopProcessParams
+            {
+                key = key,
+                timeout = timeout
+            };
+
+            SendMessage<StopProcessRequest, StopAllProcessesResponse>(new StopProcessRequest(@params));
+        }
+
+        public void StopAllProcesses(int timeout)
+        {
+            var @params = new StopAllProcessesParams
+            {
+                timeout = timeout,
+            };
+
             SendMessage<StopAllProcessesRequest, StopAllProcessesResponse>(new StopAllProcessesRequest(@params));
         }
 

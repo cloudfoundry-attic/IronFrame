@@ -79,7 +79,7 @@ namespace IronFoundry.Container
             };
 
             p.EnableRaisingEvents = true;
-
+            
             var wrapped = ProcessHelper.WrapProcess(p);
 
             if (!runSpec.BufferedInputOutput)

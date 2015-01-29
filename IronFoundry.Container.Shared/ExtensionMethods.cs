@@ -1,12 +1,34 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 namespace System
 {
-    public static class StringExtensionMethods
+    public static class ObjectExtensionMethods
+    {
+        public static IEnumerable<T> AsSingleItemEnumerable<T>(this T argThis)
+        {
+            yield return argThis;
+        }
+
+        public static IEnumerable<T> AsSingleItemOrEmptyEnumerable<T>(this T argThis)
+        {
+            if (argThis == null)
+            {
+                yield break;
+            }
+            else
+            {
+                yield return argThis;
+            }
+        }
+    }
+
+public static class StringExtensionMethods
     {
         private static readonly Regex backslashCleanup = new Regex(@"\\+",
             RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
@@ -88,6 +110,11 @@ namespace System.Collections
         {
             return null == argThis || false == argThis.GetEnumerator().MoveNext();
         }
+
+        public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T> source)
+        {
+            return source ?? Enumerable.Empty<T>();
+        }
     }
 }
 
@@ -133,6 +160,22 @@ namespace System.Collections.Generic
             {
                 dictionary[key] = val;
             }
+        }
+
+        /// <summary>
+        /// Create a new dictionary which merges the right dictionary into the left one.
+        /// Any conflicting keys are replaced by the right dictionary values.
+        /// </summary>
+        public static Dictionary<TKey, TVal> Merge<TKey, TVal>(this Dictionary<TKey, TVal> leftDic, Dictionary<TKey, TVal> rightDic)
+        {
+            Dictionary<TKey, TVal> merged = new Dictionary<TKey, TVal>(leftDic, leftDic.Comparer);
+
+            foreach (var kv in rightDic)
+            {
+                merged[kv.Key] = rightDic[kv.Key];
+            }
+
+            return merged;
         }
     }
 }

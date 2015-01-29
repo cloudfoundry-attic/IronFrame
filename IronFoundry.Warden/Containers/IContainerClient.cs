@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Security;
 using System.Threading.Tasks;
+using IronFoundry.Container;
+
 namespace IronFoundry.Warden.Containers
 {
     public interface IContainerClient

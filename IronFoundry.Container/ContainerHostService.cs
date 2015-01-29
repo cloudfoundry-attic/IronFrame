@@ -98,7 +98,7 @@ namespace IronFoundry.Container
                 }
                 catch (Exception e)
                 {
-                    log.LogException(LogLevel.Error, e.ToString(), e);
+                    log.Log(LogLevel.Error, e.ToString(), e);
                 }
                 return Task.FromResult(0);
             });
