@@ -31,7 +31,15 @@ namespace IronFoundry.Container
             ProcessRunner = Substitute.For<IProcessRunner>();
             ConstrainedProcessRunner = Substitute.For<IProcessRunner>();
             TcpPortManager = Substitute.For<ILocalTcpPortManager>();
+
             JobObject = Substitute.For<JobObject>();
+            JobObject.GetCpuStatistics().Returns(new CpuStatistics
+            {
+                TotalKernelTime = TimeSpan.Zero,
+                TotalUserTime = TimeSpan.Zero,
+            });
+            JobObject.GetProcessIds().Returns(new int[0]);
+
             ContainerEnvironment = new Dictionary<string, string>() { { "Handle", "handle" } };
             ProcessHelper = Substitute.For<ProcessHelper>();
 
@@ -369,13 +377,6 @@ namespace IronFoundry.Container
             [Fact]
             public void WhenContainerDestroyed_Throws()
             {
-                JobObject.GetCpuStatistics().Returns(new CpuStatistics
-                {
-                    TotalKernelTime = TimeSpan.Zero,
-                    TotalUserTime = TimeSpan.Zero,
-                });
-                JobObject.GetProcessIds().Returns(new int[0]);
-
                 Container.Destroy();
                 Action action = () => Container.GetInfo();
 
@@ -413,6 +414,15 @@ namespace IronFoundry.Container
                 Action action = () => Container.Stop(false);
 
                 Assert.Throws<InvalidOperationException>(action);
+            }
+
+            [Fact]
+            public void ChangesStateToStopped()
+            {
+                Container.Stop(false);
+                var info = Container.GetInfo();
+
+                Assert.Equal(ContainerState.Stopped, info.State);
             }
         }
 
