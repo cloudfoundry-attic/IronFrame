@@ -84,8 +84,8 @@ namespace IronFoundry.Container.Utilities
             request.OptionalArguments = IntPtr.Zero;
 
 
-            using (var grantedAccessBuffer = new SafeHGlobal(sizeof (ACCESS_MASK)))
-            using (var errorBuffer = new SafeHGlobal(sizeof (uint)))
+            using (var grantedAccessBuffer = SafeAllocation.Create<ACCESS_MASK>())
+            using (var errorBuffer = SafeAllocation.Create<uint>())
             {
                 // Prepare the access check reply
                 var reply = new NativeMethods.AUTHZ_ACCESS_REPLY();
@@ -112,7 +112,7 @@ namespace IronFoundry.Container.Utilities
                     throw new Win32Exception(Marshal.GetLastWin32Error());
                 }
 
-                accessGranted = (ACCESS_MASK) Marshal.ReadInt32(grantedAccessBuffer.DangerousGetHandle());
+                accessGranted = grantedAccessBuffer.ToStructure();
             }
 
             return accessGranted;

@@ -121,9 +121,9 @@
     <Compile Include="Win32\NativeDll.cs" />
     <Compile Include="Win32\NativeMethods.cs" />
     <Compile Include="Win32\RevertToSelf.cs" />
+    <Compile Include="Win32\SafeAllocation.cs" />
     <Compile Include="Win32\SafeAuthzContextHandle.cs" />
     <Compile Include="Win32\SafeAuthzRMHandle.cs" />
-    <Compile Include="Win32\SafeHGlobal.cs" />
     <Compile Include="Win32\SafeUserTokenHandle.cs" />
     <Compile Include="Win32\SecurityAttributes.cs" />
     <Compile Include="Win32\StandardRights.cs" />
