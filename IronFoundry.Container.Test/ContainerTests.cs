@@ -57,6 +57,14 @@ namespace IronFoundry.Container
 
                 Assert.Equal(5000, port);
             }
+
+            [Fact]
+            public void WhenContainerNotActive_Throws()
+            {
+                Container.Stop(false);
+                Action action = () => Container.ReservePort(3000);
+                Assert.Throws<InvalidOperationException>(action);
+            }
         }
 
         public class Run : ContainerTests
@@ -227,6 +235,15 @@ namespace IronFoundry.Container
                     Assert.Equal("cmd.exe", actual.ExecutablePath);
                 }
             }
+
+            [Fact]
+            public void WhenContainerNotActive_Throws()
+            {
+                var io = Substitute.For<IProcessIO>();
+                Container.Stop(false);
+                Action action = () => Container.Run(Spec, io);
+                Assert.Throws<InvalidOperationException>(action);
+            }
         }
 
         public class Destroy : ContainerTests
@@ -270,6 +287,15 @@ namespace IronFoundry.Container
 
                 ProcessRunner.Received(1).Dispose();
                 ConstrainedProcessRunner.Received(1).Dispose();
+            }
+
+            [Fact]
+            public void WhenContainerStopped_Runs()
+            {
+                Container.Stop(false);
+                Container.Destroy();
+
+                ProcessRunner.Received(1).Dispose();
             }
         }
 
@@ -323,6 +349,38 @@ namespace IronFoundry.Container
                 Assert.Equal(expectedTotalKernelTime + expectedTotalUserTime,info.CpuStat.TotalProcessorTime);
                 Assert.Equal((ulong)firstProcess.PrivateMemoryBytes + (ulong)secondProcess.PrivateMemoryBytes, info.MemoryStat.PrivateBytes);
             }
+
+            [Fact]
+            public void WhenContainerStopped_Runs()
+            {
+                JobObject.GetCpuStatistics().Returns(new CpuStatistics
+                {
+                    TotalKernelTime = TimeSpan.Zero,
+                    TotalUserTime = TimeSpan.Zero,
+                });
+                JobObject.GetProcessIds().Returns(new int[0]);
+
+                Container.Stop(false);
+                var info = Container.GetInfo();
+
+                Assert.NotNull(info);
+            }
+
+            [Fact]
+            public void WhenContainerDestroyed_Throws()
+            {
+                JobObject.GetCpuStatistics().Returns(new CpuStatistics
+                {
+                    TotalKernelTime = TimeSpan.Zero,
+                    TotalUserTime = TimeSpan.Zero,
+                });
+                JobObject.GetProcessIds().Returns(new int[0]);
+
+                Container.Destroy();
+                Action action = () => Container.GetInfo();
+
+                Assert.Throws<InvalidOperationException>(action);
+            }
         }
 
         public class LimitMemory : ContainerTests
@@ -333,6 +391,28 @@ namespace IronFoundry.Container
                 Container.LimitMemory(2048);
 
                 JobObject.Received(1).SetJobMemoryLimit(2048);
+            }
+
+            [Fact]
+            public void WhenContainerNotActive_Throws()
+            {
+                Container.Stop(false);
+                Action action = () => Container.LimitMemory(3000);
+
+                Assert.Throws<InvalidOperationException>(action);
+            }
+        }
+
+        public class Stop : ContainerTests
+        {
+            [Fact]
+            public void WhenContainerDestroyed_Throws()
+            {
+                Container.Destroy();
+
+                Action action = () => Container.Stop(false);
+
+                Assert.Throws<InvalidOperationException>(action);
             }
         }
 

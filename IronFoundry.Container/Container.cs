@@ -121,6 +121,8 @@ namespace IronFoundry.Container
 
         public int ReservePort(int requestedPort)
         {
+            ThrowIfNotActive();
+
             var reservedPort = tcpPortManager.ReserveLocalPort(requestedPort, user.UserName);
             reservedPorts.Add(reservedPort);
             return reservedPort;
@@ -128,6 +130,8 @@ namespace IronFoundry.Container
 
         public ContainerProcess Run(ProcessSpec spec, IProcessIO io)
         {
+            ThrowIfNotActive();
+
             var runner = spec.Privileged ?
                 processRunner :
                 constrainedProcessRunner;
@@ -156,6 +160,8 @@ namespace IronFoundry.Container
 
         public void LimitMemory(ulong limitInBytes)
         {
+            ThrowIfNotActive();
+
             this.jobObject.SetJobMemoryLimit(limitInBytes);
         }
 
@@ -185,6 +191,8 @@ namespace IronFoundry.Container
 
         public ContainerInfo GetInfo()
         {
+            ThrowIfDestroyed();
+
             var ipAddress = IPUtilities.GetLocalIPAddress();
             var ipAddressString = ipAddress != null ? ipAddress.ToString() : "";
 
@@ -234,6 +242,8 @@ namespace IronFoundry.Container
 
         public void Stop(bool kill)
         {
+            ThrowIfDestroyed();
+
             if (constrainedProcessRunner != null)
                 constrainedProcessRunner.StopAll(kill);
 
@@ -241,6 +251,22 @@ namespace IronFoundry.Container
                 processRunner.StopAll(kill);
 
             this.currentState = ContainerState.Stopped;
+        }
+
+        private void ThrowIfNotActive()
+        {
+            if (currentState != ContainerState.Active)
+            {
+                throw new InvalidOperationException("Container must be active for this operation.");
+            }
+        }
+
+        private void ThrowIfDestroyed()
+        {
+            if (currentState == ContainerState.Destroyed)
+            {
+                throw new InvalidOperationException("The container has been destroyed.");
+            }
         }
     }
 }
