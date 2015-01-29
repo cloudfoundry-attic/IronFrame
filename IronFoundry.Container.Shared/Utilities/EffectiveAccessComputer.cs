@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
@@ -20,68 +19,82 @@ namespace IronFoundry.Container.Utilities
     {
         public ACCESS_MASK ComputeAccess(RawSecurityDescriptor descriptor, IdentityReference identity)
         {
-            var disposables = new List<IDisposable>();
             var accessGranted = ACCESS_MASK.NONE;
 
-            try
+            // Create the Resource Manager
+            using (SafeAuthzRMHandle authzRM = InitializeResourceManager())
+            using (SafeAuthzContextHandle userClientCtxt = InitializeContextFromSid(authzRM, identity))
             {
-                // Create the Resource Manager
-                SafeAuthzRMHandle authzRM;
-                if (!NativeMethods.AuthzInitializeResourceManager(
-                    NativeMethods.AuthzResourceManagerFlags.NO_AUDIT,
-                    IntPtr.Zero,
-                    IntPtr.Zero,
-                    IntPtr.Zero,
-                    "EffectiveAccessCheck",
-                    out authzRM))
-                {
-                    throw new Win32Exception(Marshal.GetLastWin32Error());
-                }
-                disposables.Add(authzRM);
+                accessGranted = AccessCheck(userClientCtxt, descriptor);
+            }
+
+            return accessGranted;
+        }
+
+        private SafeAuthzRMHandle InitializeResourceManager()
+        {
+            SafeAuthzRMHandle authzRM;
+            if (!NativeMethods.AuthzInitializeResourceManager(
+                NativeMethods.AuthzResourceManagerFlags.NO_AUDIT,
+                IntPtr.Zero,
+                IntPtr.Zero,
+                IntPtr.Zero,
+                "EffectiveAccessCheck",
+                out authzRM))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
+
+            return authzRM;
+        }
+
+        private SafeAuthzContextHandle InitializeContextFromSid(SafeAuthzRMHandle authzRM, IdentityReference identity)
+        {
+            // Create the context for the user
+            var securityIdentifier = (SecurityIdentifier) identity.Translate(typeof (SecurityIdentifier));
+            var rawSid = new byte[securityIdentifier.BinaryLength];
+            securityIdentifier.GetBinaryForm(rawSid, 0);
+
+            SafeAuthzContextHandle userClientCtxt;
+            if (!NativeMethods.AuthzInitializeContextFromSid(
+                NativeMethods.AuthzInitFlags.Default,
+                rawSid,
+                authzRM,
+                IntPtr.Zero,
+                NativeMethods.LUID.NullLuid,
+                IntPtr.Zero,
+                out userClientCtxt))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
+
+            return userClientCtxt;
+        }
+
+        private ACCESS_MASK AccessCheck(SafeAuthzContextHandle userClientCtxt, RawSecurityDescriptor descriptor)
+        {
+            ACCESS_MASK accessGranted;
+
+            // Prepare the Access Check request
+            var request = new NativeMethods.AUTHZ_ACCESS_REQUEST();
+            request.DesiredAccess = ACCESS_MASK.MAXIMUM_ALLOWED;
+            request.PrincipalSelfSid = null;
+            request.ObjectTypeList = IntPtr.Zero;
+            request.ObjectTypeListLength = 0;
+            request.OptionalArguments = IntPtr.Zero;
 
 
-                // Create the context for the user
-                var securityIdentifier = (SecurityIdentifier) identity.Translate(typeof (SecurityIdentifier));
-                var rawSid = new byte[securityIdentifier.BinaryLength];
-                securityIdentifier.GetBinaryForm(rawSid, 0);
-
-                SafeAuthzContextHandle userClientCtxt;
-                if (!NativeMethods.AuthzInitializeContextFromSid(
-                    NativeMethods.AuthzInitFlags.Default,
-                    rawSid,
-                    authzRM,
-                    IntPtr.Zero,
-                    NativeMethods.LUID.NullLuid,
-                    IntPtr.Zero,
-                    out userClientCtxt))
-                {
-                    throw new Win32Exception(Marshal.GetLastWin32Error());
-                }
-                disposables.Add(userClientCtxt);
-
-
-                // Prepare the Access Check request
-                var request = new NativeMethods.AUTHZ_ACCESS_REQUEST();
-                request.DesiredAccess = ACCESS_MASK.MAXIMUM_ALLOWED;
-                request.PrincipalSelfSid = null;
-                request.ObjectTypeList = IntPtr.Zero;
-                request.ObjectTypeListLength = 0;
-                request.OptionalArguments = IntPtr.Zero;
-
+            using (var grantedAccessBuffer = new SafeHGlobal(sizeof (ACCESS_MASK)))
+            using (var errorBuffer = new SafeHGlobal(sizeof (uint)))
+            {
                 // Prepare the access check reply
-                var grantedAccessBuffer = new SafeHGlobal(sizeof (ACCESS_MASK));
-                disposables.Add(grantedAccessBuffer);
-
-                var errorBuffer = new SafeHGlobal(sizeof (uint));
-                disposables.Add(errorBuffer);
-
                 var reply = new NativeMethods.AUTHZ_ACCESS_REPLY();
                 reply.ResultListLength = 1;
                 reply.SaclEvaluationResults = IntPtr.Zero;
                 reply.GrantedAccessMask = grantedAccessBuffer.DangerousGetHandle();
                 reply.Error = errorBuffer.DangerousGetHandle();
 
-                // Do the access check
+
                 var rawSD = new byte[descriptor.BinaryLength];
                 descriptor.GetBinaryForm(rawSD, 0);
 
@@ -100,14 +113,6 @@ namespace IronFoundry.Container.Utilities
                 }
 
                 accessGranted = (ACCESS_MASK) Marshal.ReadInt32(grantedAccessBuffer.DangerousGetHandle());
-            }
-            finally
-            {
-                // Clean up all the unmanaged memory
-                foreach (var disposable in disposables)
-                {
-                    disposable.Dispose();
-                }
             }
 
             return accessGranted;
