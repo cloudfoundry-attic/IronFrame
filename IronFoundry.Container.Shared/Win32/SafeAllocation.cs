@@ -3,7 +3,10 @@ using System.Runtime.InteropServices;
 
 namespace IronFoundry.Container.Win32
 {
-    class SafeAllocation : SafeBuffer
+    // TODO - Make all of this work well with enums. Some of these won't work with enums 
+    // because their layour is Auto, not sequential.  In practice the layout for enums doesn't matter
+    // and we should be able to just copy the data
+    public class SafeAllocation : SafeBuffer
     {
         public int Size
         {
@@ -13,7 +16,9 @@ namespace IronFoundry.Container.Win32
         public SafeAllocation(Type type)
             : base(true)
         {
-            int size = Marshal.SizeOf(type);
+            Type outputType = type.IsEnum ? Enum.GetUnderlyingType(type) : type;
+
+            int size = Marshal.SizeOf(outputType);
             this.SetHandle(Marshal.AllocHGlobal(size));
             this.Initialize((ulong)size);
         }
@@ -43,7 +48,7 @@ namespace IronFoundry.Container.Win32
         }
     }
 
-    class SafeAllocation<T> : SafeAllocation
+    public class SafeAllocation<T> : SafeAllocation
         where T : struct
     {
         public SafeAllocation()
