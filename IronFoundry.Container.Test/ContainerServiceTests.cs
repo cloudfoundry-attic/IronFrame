@@ -253,6 +253,18 @@ namespace IronFoundry.Container
                     Assert.Null(container);
                 }
             }
+
+            public class DestroyContainer : WithContainer
+            {
+                [Fact]
+                public void CanDestroyEnumeratedContainers()
+                {
+                    foreach (var container in Service.GetContainers())
+                    {
+                        Service.DestroyContainer(container.Handle);
+                    }
+                }
+            }
         }
     }
 }
