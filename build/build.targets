@@ -172,7 +172,7 @@
 
         <MakeDir Directories="$(NugetOutputDir)" />
         
-        <Exec Command=" $(NuGetExe) pack %(NugetPackage.Identity) -OutputDirectory $(NugetOutputDir) -Version $(NuGetVersion)" />
+        <Exec Command='"$(NuGetExe)" pack "%(NugetPackage.Identity)" -Prop "Configuration=$(Configuration)" -OutputDirectory "$(NugetOutputDir.TrimEnd(&quot;\&quot;))" -Version "$(NuGetVersion)"' />
     </Target>
 
     <Target Name="Package" DependsOnTargets="PackageBinaries;PackageNuget">
