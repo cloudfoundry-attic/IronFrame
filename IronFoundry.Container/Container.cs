@@ -204,6 +204,7 @@ namespace IronFoundry.Container
                 State = this.currentState,
                 CpuStat = GetCpuStat(),
                 MemoryStat = GetMemoryStat(),
+                ReservedPorts = new List<int>(reservedPorts),
             };
         }
 

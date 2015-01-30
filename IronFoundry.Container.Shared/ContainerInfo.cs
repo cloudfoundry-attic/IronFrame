@@ -12,6 +12,7 @@ namespace IronFoundry.Container
             Events = new List<string>();
             MemoryStat = new ContainerMemoryStat();
             State = ContainerState.Born;
+            ReservedPorts = new List<int>();
         }
 
         public ContainerCpuStat CpuStat { get; set; }
@@ -21,8 +22,10 @@ namespace IronFoundry.Container
         public string HostIPAddress { get; set; }
         public ContainerMemoryStat MemoryStat { get; set; }
         //public List<int> ProcessIds { get; set; }
+        public List<int> ReservedPorts { get; set; }
         public ContainerState State { get; set; }
 
+        // BR: Kill this method
         public bool Equals(ContainerInfo other)
         {
             return other != null &&
@@ -32,6 +35,7 @@ namespace IronFoundry.Container
                 this.Events.SequenceEqual(other.Events, StringComparer.OrdinalIgnoreCase) &&
                 String.Equals(HostIPAddress, other.HostIPAddress) &&
                 this.MemoryStat.Equals(other.MemoryStat) &&
+                this.ReservedPorts.SequenceEqual(other.ReservedPorts) &&
                 State.Equals(other.State);
         }
     }

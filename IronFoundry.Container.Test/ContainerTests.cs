@@ -310,6 +310,23 @@ namespace IronFoundry.Container
         public class GetInfo : ContainerTests
         {
             [Fact]
+            public void ReturnsListOfReservedPorts()
+            {
+                TcpPortManager.ReserveLocalPort(1000, Arg.Any<string>()).Returns(1000);
+                TcpPortManager.ReserveLocalPort(1001, Arg.Any<string>()).Returns(1001);
+
+                Container.ReservePort(1000);
+                Container.ReservePort(1001);
+
+                var info = Container.GetInfo();
+
+                Assert.Collection(info.ReservedPorts,
+                    x => Assert.Equal(1000, x),
+                    x => Assert.Equal(1001, x)
+                );
+            }
+
+            [Fact]
             public void WhenManagingNoProcess()
             {
                 JobObject.GetCpuStatistics().Returns(new CpuStatistics
