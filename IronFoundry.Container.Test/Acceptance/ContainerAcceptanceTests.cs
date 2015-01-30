@@ -118,7 +118,6 @@ namespace IronFoundry.Container.Acceptance
                 Arguments = new string[] { "/C set" },
                 Environment = new Dictionary<string, string> 
                 { 
-                    { "CONTAINER_HANDLE", Container1.Handle },
                     { "PROC_ENV", "VAL1" } 
                 },
             };
