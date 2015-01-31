@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -176,6 +177,18 @@ namespace System.Collections.Generic
             }
 
             return merged;
+        }
+
+        public static Dictionary<string, string> ToDictionary(this StringDictionary dictionary, IEqualityComparer<string> comparer)
+        {
+            var dict = new Dictionary<string, string>(comparer);
+
+            foreach (DictionaryEntry de in dictionary)
+            {
+                dict[(string) de.Key] = (string)de.Value;
+            }
+
+            return dict;
         }
     }
 }

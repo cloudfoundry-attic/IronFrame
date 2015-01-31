@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -229,6 +230,18 @@ namespace IronFoundry.Container
                         Assert.Contains(expected, output);
                     }
                 }
+            }
+
+            [Fact]
+            public void ReturnsProcessWithEnvironment()
+            {
+                var si = CreateRunSpec("cmd.exe", new[] { "/C" });
+
+                var p = Runner.Run(si);
+
+                Assert.NotNull(p.Environment);
+                Assert.True(p.Environment.Count > 0);
+                Assert.Equal(WindowsIdentity.GetCurrent().GetUserName(), p.Environment["USERNAME"]);
             }
 
         }

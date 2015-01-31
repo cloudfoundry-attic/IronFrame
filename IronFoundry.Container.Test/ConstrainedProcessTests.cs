@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using IronFoundry.Container.Messages;
 using NSubstitute;
@@ -23,7 +24,7 @@ namespace IronFoundry.Container
             OutputCallback = delegate { };
             ErrorCallback = delegate { };
 
-            Process = new ConstrainedProcess(HostClient, ProcessKey, 100);
+            Process = new ConstrainedProcess(HostClient, ProcessKey, 100, new Dictionary<string, string>());
         }
 
         public class WaitForExit : ConstrainedProcessTests

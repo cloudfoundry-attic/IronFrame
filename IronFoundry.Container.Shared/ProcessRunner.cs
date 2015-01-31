@@ -66,11 +66,10 @@ namespace IronFoundry.Container
                 startInfo.Password = runSpec.Credentials.SecurePassword;
             }
 
-            Dictionary<string,string> environment = CreateDefaultProcessEnvironment(runSpec.Credentials);
-            if (runSpec.Environment != null && runSpec.Environment.Count > 0)
-            {
-                environment = runSpec.Environment;
-            }
+            bool runSpecSpecifiesEnvironment = runSpec.Environment != null && runSpec.Environment.Count > 0;
+            var environment = runSpecSpecifiesEnvironment
+                ? runSpec.Environment
+                : CreateDefaultProcessEnvironment(runSpec.Credentials);
 
             startInfo.EnvironmentVariables.Clear();
             foreach (var variable in environment)

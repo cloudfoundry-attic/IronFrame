@@ -106,6 +106,29 @@ namespace IronFoundry.Container
 
                 Assert.Equal(expectedId, process.Id);
             }
+
+            [Fact]
+            public void ReturnsProcessWithEnvironment()
+            {
+                int expectedId = 123;
+                Client.CreateProcess(Arg.Any<CreateProcessParams>()).Returns(
+                new CreateProcessResult()
+                {
+                    id = expectedId
+                }
+                );
+
+                var spec = new ProcessRunSpec
+                {
+                    Environment = new Dictionary<string, string> {{"FOO", "BAR"}}
+                };
+
+                var process = Runner.Run(spec);
+
+                Assert.NotNull(process.Environment);
+                Assert.True(process.Environment.Count > 0);
+                Assert.Equal("BAR", process.Environment["FOO"]);
+            }
         }
 
         public class StopAll : ConstrainedProcessRunnerTests

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -59,6 +60,8 @@ namespace IronFoundry.Container.Utilities
 
                 this.process.OutputDataReceived += WrappedOutputDataReceived;
                 this.process.ErrorDataReceived += WrappedErrorDataReceived;
+
+                //this.Environment = this.process.StartInfo.EnvironmentVariables.
             }
 
             public int Id
@@ -75,6 +78,16 @@ namespace IronFoundry.Container.Utilities
             {
                 get { return process.Handle; }
             }
+
+            public IReadOnlyDictionary<string, string> Environment
+            {
+                get
+                {
+                    var dictionary = process.StartInfo.EnvironmentVariables.ToDictionary(StringComparer.OrdinalIgnoreCase);
+                    return new ReadOnlyDictionary<string, string>(dictionary);
+                }
+            }
+
 
             public long PrivateMemoryBytes
             {
