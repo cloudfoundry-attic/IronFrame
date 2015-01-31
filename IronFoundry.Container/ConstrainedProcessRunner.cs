@@ -44,7 +44,7 @@ namespace IronFoundry.Container
         {
             Guid processKey = Guid.NewGuid();
             
-            var defaultEnvironmentBlock = EnvironmentBlock.GenerateDefault();
+            var defaultEnvironmentBlock = EnvironmentBlock.CreateSystemDefault();
 
             CreateProcessParams @params = new CreateProcessParams
             {
