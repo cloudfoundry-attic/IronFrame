@@ -11,6 +11,8 @@ using IronFoundry.Warden.Containers;
 using IronFoundry.Container.Utilities;
 using NSubstitute;
 using Xunit;
+using Newtonsoft.Json;
+using IronFoundry.Container.Internal;
 
 namespace IronFoundry.Container
 {
@@ -23,6 +25,7 @@ namespace IronFoundry.Container
         IProcessRunner ProcessRunner { get; set; }
         IContainerHostService ContainerHostService { get; set; }
         IContainerHostClient ContainerHostClient { get; set; }
+        IContainerPropertyService ContainerPropertiesService { get; set; }
         IUserManager UserManager { get; set; }
         ILocalTcpPortManager TcpPortManager { get; set; }
         ContainerService Service { get; set; }
@@ -32,8 +35,13 @@ namespace IronFoundry.Container
             ContainerBasePath = @"C:\Containers";
             ContainerUserGroup = "ContainerUsers";
 
+            ContainerPropertiesService = Substitute.For<IContainerPropertyService>();
+
             FileSystem = Substitute.For<FileSystemManager>();
+
             HandleHelper = Substitute.For<ContainerHandleHelper>();
+            HandleHelper.GenerateId(null).ReturnsForAnyArgs("DEADBEEF");
+
             ProcessRunner = Substitute.For<IProcessRunner>();
             TcpPortManager = Substitute.For<ILocalTcpPortManager>();
             UserManager = Substitute.For<IUserManager>();
@@ -46,7 +54,7 @@ namespace IronFoundry.Container
 
             UserManager.CreateUser(null).ReturnsForAnyArgs(new NetworkCredential("username", "password"));
 
-            Service = new ContainerService(HandleHelper, UserManager, FileSystem, TcpPortManager, ProcessRunner, ContainerHostService, ContainerBasePath);
+            Service = new ContainerService(HandleHelper, UserManager, FileSystem, ContainerPropertiesService, TcpPortManager, ProcessRunner, ContainerHostService, ContainerBasePath);
         }
 
         public class CreateContainer : ContainerServiceTests
@@ -77,7 +85,8 @@ namespace IronFoundry.Container
             [Theory]
             public void WhenHandleIsNotProvided_GeneratesHandle(string handle)
             {
-                HandleHelper.GenerateHandle().Returns(Guid.NewGuid().ToString("N"));
+                var expectedHandle = Guid.NewGuid().ToString("N");
+                HandleHelper.GenerateHandle().Returns(expectedHandle);
                 var spec = new ContainerSpec
                 {
                     Handle = handle,
@@ -85,8 +94,8 @@ namespace IronFoundry.Container
 
                 var container = Service.CreateContainer(spec);
 
-                Assert.NotNull(container.Handle);
-                Assert.NotEmpty(container.Handle);
+                Assert.NotEqual(handle, container.Handle);
+                Assert.Equal(expectedHandle, container.Handle);
             }
 
             [Fact]
@@ -106,7 +115,6 @@ namespace IronFoundry.Container
             [Fact]
             public void CreatesContainerSpecificUser()
             {
-                HandleHelper.GenerateId("handle").Returns("DEADBEEF");
                 UserManager.CreateUser("").ReturnsForAnyArgs(new NetworkCredential());
                 var spec = new ContainerSpec
                 {
@@ -121,7 +129,6 @@ namespace IronFoundry.Container
             [Fact]
             public void CreatesContainerSpecificDirectory()
             {
-                HandleHelper.GenerateId("handle").Returns("DEADBEEF");
                 var spec = new ContainerSpec
                 {
                     Handle = "handle",
@@ -146,6 +153,24 @@ namespace IronFoundry.Container
                 Service.CreateContainer(spec);
 
                 ContainerHostService.Received(1).StartContainerHost(Arg.Any<string>(), Arg.Any<IContainerDirectory>(), Arg.Any<JobObject>(), expectedCredentials);
+            }
+
+            [Fact]
+            public void SetsProperties()
+            {
+                var spec = new ContainerSpec
+                {
+                    Handle = "handle",
+                    Properties = new Dictionary<string,string>
+                    {
+                        { "name1", "value1" },
+                        { "name2", "value2" },
+                    },
+                };
+
+                var container = Service.CreateContainer(spec);
+
+                ContainerPropertiesService.Received(1).SetProperties(container, spec.Properties);
             }
 
             [Fact]

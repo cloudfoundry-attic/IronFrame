@@ -78,6 +78,7 @@
     <Compile Include="ContainerTests.cs" />
     <Compile Include="ContainerUserTests.cs" />
     <Compile Include="Handlers\StopProcessHandlerTests.cs" />
+    <Compile Include="Internal\LocalFilePropertyServiceTests.cs" />
     <Compile Include="Messaging\MessageDispatcherTest.cs" />
     <Compile Include="Messaging\MessageTransportTest.cs" />
     <Compile Include="Messaging\MessagingClientTest.cs" />

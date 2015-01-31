@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using IronFoundry.Container.Internal;
 using IronFoundry.Container.Utilities;
 using IronFoundry.Warden.Containers;
 
@@ -46,10 +47,9 @@ namespace IronFoundry.Container
 
         void LimitMemory(ulong limitInBytes);
 
-        //void Initialize(IContainerDirectory containerDirectory, ContainerHandle containerHandle, IContainerUser userInfo);
-        //string ContainerDirectoryPath { get; }
-        //string ContainerUserName { get; }
-        //void Copy(string source, string destination);
+        void SetProperty(string name, string value);
+        string GetProperty(string name);
+        void RemoveProperty(string name);
     }
 
     public class Container : IContainer
@@ -65,6 +65,7 @@ namespace IronFoundry.Container
         readonly IProcessRunner processRunner;
         readonly IProcessRunner constrainedProcessRunner;
         readonly ProcessHelper processHelper;
+        readonly IContainerPropertyService propertyService;
         readonly Dictionary<string, string> defaultEnvironment;
         readonly List<int> reservedPorts = new List<int>();
 
@@ -75,6 +76,7 @@ namespace IronFoundry.Container
             string handle,
             IContainerUser user,
             IContainerDirectory directory, 
+            IContainerPropertyService propertyService,
             ILocalTcpPortManager tcpPortManager,
             JobObject jobObject,
             IProcessRunner processRunner,
@@ -87,6 +89,7 @@ namespace IronFoundry.Container
             this.handle = handle;
             this.user = user;
             this.directory = directory;
+            this.propertyService = propertyService;
             this.tcpPortManager = tcpPortManager;
             this.jobObject = jobObject;
             this.processRunner = processRunner;
@@ -111,12 +114,6 @@ namespace IronFoundry.Container
         public IContainerDirectory Directory
         {
             get { return directory; }
-        }
-
-        public void Initialize()
-        {
-            // Start the 'host' process
-            // Initialize the host (or wait for the host to initialize if it's implicit)
         }
 
         public int ReservePort(int requestedPort)
@@ -200,10 +197,11 @@ namespace IronFoundry.Container
             {
                 HostIPAddress = ipAddressString,
                 ContainerIPAddress = ipAddressString,
-                ContainerPath = directory.UserPath,
+                ContainerPath = directory.RootPath,
                 State = this.currentState,
                 CpuStat = GetCpuStat(),
                 MemoryStat = GetMemoryStat(),
+                Properties = propertyService.GetProperties(this),
                 ReservedPorts = new List<int>(reservedPorts),
             };
         }
@@ -268,6 +266,21 @@ namespace IronFoundry.Container
             {
                 throw new InvalidOperationException("The container has been destroyed.");
             }
+        }
+
+        public void SetProperty(string name, string value)
+        {
+            propertyService.SetProperty(this, name, value);
+        }
+
+        public string GetProperty(string name)
+        {
+            return propertyService.GetProperty(this, name);
+        }
+
+        public void RemoveProperty(string name)
+        {
+            propertyService.RemoveProperty(this, name);
         }
     }
 }

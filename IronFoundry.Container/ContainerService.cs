@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using IronFoundry.Container.Internal;
 using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container
@@ -23,19 +24,23 @@ namespace IronFoundry.Container
 
     public class ContainerService : IContainerService
     {
+        const string PropertiesFileName = "properties.json";
+
         readonly string containerBasePath;
         readonly FileSystemManager fileSystem;
         readonly ContainerHandleHelper handleHelper;
         readonly IUserManager userManager;
         readonly ILocalTcpPortManager tcpPortManager;
         readonly IProcessRunner processRunner;
+        readonly IContainerPropertyService containerPropertiesService;
         readonly IContainerHostService containerHostService;
-        private List<Container> containers = new List<Container>();
+        readonly List<Container> containers = new List<Container>();
 
         public ContainerService(
             ContainerHandleHelper handleHelper,
             IUserManager userManager,
             FileSystemManager fileSystem,
+            IContainerPropertyService containerPropertiesService,
             ILocalTcpPortManager tcpPortManager,
             IProcessRunner processRunner,
             IContainerHostService containerHostService,
@@ -45,6 +50,7 @@ namespace IronFoundry.Container
             this.handleHelper = handleHelper;
             this.userManager = userManager;
             this.fileSystem = fileSystem;
+            this.containerPropertiesService = containerPropertiesService;
             this.tcpPortManager = tcpPortManager;
             this.processRunner = processRunner;
             this.containerHostService = containerHostService;
@@ -56,6 +62,7 @@ namespace IronFoundry.Container
                 new ContainerHandleHelper(),
                 new LocalPrincipalManager(userGroupName),
                 new FileSystemManager(),
+                new LocalFilePropertyService(new FileSystemManager(), PropertiesFileName),
                 new LocalTcpPortManager(),
                 new ProcessRunner(),
                 new ContainerHostService(),
@@ -83,10 +90,10 @@ namespace IronFoundry.Container
                 undoStack.Push(() => user.Delete());
 
                 var directory = ContainerDirectory.Create(fileSystem, containerBasePath, id, user);
+                // BR: This is wrong. This should destroy the ContainerDirectory object, not delete the entire base path!
                 undoStack.Push(() => fileSystem.DeleteDirectory(containerBasePath));
 
-                var jobObjectName = handle;
-                var jobObject = new JobObject(jobObjectName);
+                var jobObject = new JobObject(handle);
                 undoStack.Push(() => jobObject.Dispose());
 
                 var containerHostClient = containerHostService.StartContainerHost(id, directory, jobObject, user.GetCredential());
@@ -97,8 +104,22 @@ namespace IronFoundry.Container
 
                 var processHelper = new ProcessHelper();
 
-                container = new Container(id, handle, user, directory, tcpPortManager, jobObject, processRunner, constrainedProcessRunner, processHelper, containerSpec.Environment);
+                container = new Container(
+                    id, 
+                    handle, 
+                    user, 
+                    directory, 
+                    containerPropertiesService, 
+                    tcpPortManager, 
+                    jobObject, 
+                    processRunner, 
+                    constrainedProcessRunner, 
+                    processHelper, 
+                    containerSpec.Environment);
+
                 containers.Add(container);
+
+                containerPropertiesService.SetProperties(container, containerSpec.Properties);
             }
             catch (Exception e)
             {

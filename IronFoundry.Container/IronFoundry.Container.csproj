@@ -64,7 +64,10 @@
     <Compile Include="ContainerHostDependencyHelper.cs" />
     <Compile Include="ContainerUser.cs" />
     <Compile Include="ContainerHostService.cs" />
+    <Compile Include="Internal\Clock.cs" />
+    <Compile Include="Internal\IContainerPropertyService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Internal\LocalFilePropertyService.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IronFoundry.Container.Host\IronFoundry.Container.Host.csproj">

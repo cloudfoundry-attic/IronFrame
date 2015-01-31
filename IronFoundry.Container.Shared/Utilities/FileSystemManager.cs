@@ -155,6 +155,11 @@ namespace IronFoundry.Container.Utilities
             return path.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase);
         }
 
+        public virtual Stream Open(string path, FileMode fileMode, FileAccess fileAccess, FileShare fileShare)
+        {
+            return new FileStream(path, fileMode, fileAccess, fileShare);
+        }
+
         public virtual Stream OpenRead(string path)
         {
             return File.OpenRead(path);
@@ -413,6 +418,11 @@ namespace IronFoundry.Container.Utilities
             }
 
             fileSystem.SetDirectoryAccessSecurity(path, security);
+        }
+
+        public virtual Stream OpenFile(string path, FileMode fileMode, FileAccess fileAccess, FileShare fileShare)
+        {
+            return fileSystem.Open(path, fileMode, fileAccess, fileShare);
         }
     }
 

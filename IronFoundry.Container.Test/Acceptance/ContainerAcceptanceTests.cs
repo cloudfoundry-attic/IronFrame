@@ -45,137 +45,204 @@ namespace IronFoundry.Container.Acceptance
             UserGroupManager.DeleteLocalGroup(UserGroupName);
         }
 
-        //[FactAdminRequired(Skip = "Can't implement until we can copy files in.")]
-        //public void DoNotShareSpaces()
-        //{
-        //    var containerService = new ContainerCreationService(ContainerBasePath, UserGroupName);
-
-        //    Container1 = CreateContainer(containerService, Container1Handle);
-        //    Container2 = CreateContainer(containerService, Container2Handle);
-
-        //    Assert.Equal(Container1.Handle, Container1Handle);
-        //    Assert.Equal(Container2.Handle, Container2Handle);
-
-        //    // Copy a file into one container and attempt to copy out from other?
-        //    throw new NotImplementedException();
-        //}
-
-        [FactAdminRequired]
-        public void UniqueUserPerContainer()
+        public class Security : ContainerAcceptanceTests
         {
-            Container1 = CreateContainer(ContainerService, Container1Handle);
-            Container2 = CreateContainer(ContainerService, Container2Handle);
-
-            var pSpec = new ProcessSpec
+            [FactAdminRequired]
+            public void UniqueUserPerContainer()
             {
-                ExecutablePath = "whoami.exe",
-                DisablePathMapping = true,
-                Privileged = false
-            };
+                Container1 = CreateContainer(Container1Handle);
+                Container2 = CreateContainer(Container2Handle);
 
-            var io1 = new StringProcessIO();
-            var io2 = new StringProcessIO();
+                var pSpec = new ProcessSpec
+                {
+                    ExecutablePath = "whoami.exe",
+                    DisablePathMapping = true,
+                    Privileged = false
+                };
 
-            Container1.Run(pSpec, io1).WaitForExit();
-            Container2.Run(pSpec, io2).WaitForExit();
+                var io1 = new StringProcessIO();
+                var io2 = new StringProcessIO();
 
-            var user1 = io1.Output.ToString();
-            var user2 = io2.Output.ToString();
+                Container1.Run(pSpec, io1).WaitForExit();
+                Container2.Run(pSpec, io2).WaitForExit();
 
-            Assert.NotEmpty(user1);
-            Assert.NotEmpty(user2);
-            Assert.NotEqual(user1, user2);
+                var user1 = io1.Output.ToString();
+                var user2 = io2.Output.ToString();
+
+                Assert.NotEmpty(user1);
+                Assert.NotEmpty(user2);
+                Assert.NotEqual(user1, user2);
+            }
+
+            [FactAdminRequired]
+            public void ContainerUserInContainerGroup()
+            {
+                Container1 = CreateContainer(Container1Handle);
+
+                var pSpec = new ProcessSpec
+                {
+                    ExecutablePath = "whoami.exe",
+                    DisablePathMapping = true,
+                    Arguments = new string[] { "/GROUPS" }
+                };
+
+                var io = new StringProcessIO();
+                Container1.Run(pSpec, io).WaitForExit();
+                var groupOutput = io.Output.ToString();
+
+                Assert.Contains(UserGroupName, groupOutput);
+            }
+
+            //[FactAdminRequired(Skip = "Can't implement until we can copy files in.")]
+            //public void DoNotShareSpaces()
+            //{
+            //    var containerService = new ContainerCreationService(ContainerBasePath, UserGroupName);
+
+            //    Container1 = CreateContainer(containerService, Container1Handle);
+            //    Container2 = CreateContainer(containerService, Container2Handle);
+
+            //    Assert.Equal(Container1.Handle, Container1Handle);
+            //    Assert.Equal(Container2.Handle, Container2Handle);
+
+            //    // Copy a file into one container and attempt to copy out from other?
+            //    throw new NotImplementedException();
+            //}
         }
 
-        [FactAdminRequired]
-        public void ContainerUserInContainerGroup()
+        public class Processes : ContainerAcceptanceTests
         {
-            Container1 = CreateContainer(ContainerService, Container1Handle);
-
-            var pSpec = new ProcessSpec
+            [FactAdminRequired]
+            public void StartShortLivedTask()
             {
-                ExecutablePath = "whoami.exe",
-                DisablePathMapping = true,
-                Arguments = new string[] { "/GROUPS" }
-            };
+                Container1 = CreateContainer(Container1Handle);
 
-            var io = new StringProcessIO();
-            Container1.Run(pSpec, io).WaitForExit();
-            var groupOutput = io.Output.ToString();
+                var pSpec = new ProcessSpec
+                {
+                    ExecutablePath = "cmd.exe",
+                    DisablePathMapping = true,
+                    Arguments = new string[] { "/C set" },
+                    Environment = new Dictionary<string, string> 
+                    { 
+                        { "PROC_ENV", "VAL1" } 
+                    },
+                };
 
-            Assert.Contains(UserGroupName, groupOutput);
+                // RUN THE SHORT LIVED PROCESS
+                var io = new StringProcessIO();
+                var process = Container1.Run(pSpec, io);
+
+                int exitCode;
+                bool exited = process.TryWaitForExit(2000, out exitCode);
+
+                var output = io.Output.ToString().Trim();
+                var error = io.Error.ToString().Trim();
+
+                // VERIFY THE PROCESS RAN AND EXITED
+                Assert.True(exited);
+                Assert.Equal(exitCode, 0);
+
+                // VERIFY THE ENVIRONMENT WAS SET
+                Assert.Contains("CONTAINER_HANDLE=" + Container1.Handle, output);
+                Assert.Contains("PROC_ENV=VAL1", output);
+            }
+
+            //[FactAdminRequired]
+            //public void StartAndStopLongRunningProcess()
+            //{
+            //    var containerService = new ContainerCreationService(ContainerBasePath, UserGroupName);
+            //    Container1 = CreateContainer(containerService, Container1Handle);
+            //    var pSpec = new ProcessSpec
+            //    {
+            //        ExecutablePath = "cmd.exe",
+            //        DisablePathMapping = true,
+            //        Arguments = new string[] { @"/C ""FOR /L %% IN () DO ping 127.0.0.1 -n 2""" },
+            //    };
+            //
+            //    // START THE LONG RUNNING PROCESS
+            //    var io = new StringProcessIO();
+            //    var process = Container1.Run(pSpec, io);
+
+            //    int exitCode;
+            //    bool exited = process.TryWaitForExit(500, out exitCode);
+
+            //    // VERIFY IT HASNT EXITED YET
+            //    Assert.False(exited);
+
+            //    var actualProcess = Process.GetProcessById(process.Id);
+
+            //    // KILL THE PROCESS AND WAIT FOR EXIT
+            //    process.Kill();
+            //    exited = process.TryWaitForExit(2000, out exitCode);
+
+            //    // VERIFY THE PROCESS WAS KILLED
+            //    Assert.True(exited);
+            //    Assert.True(actualProcess.HasExited);
+            //    Assert.True(io.Output.ToString().Length > 0);
+            //}
         }
 
-        [FactAdminRequired]
-        public void StartShortLivedTask()
+        public class Properties : ContainerAcceptanceTests
         {
-            Container1 = CreateContainer(ContainerService, Container1Handle);
+            ContainerSpec ContainerSpec { get; set; }
 
-            var pSpec = new ProcessSpec
+            public Properties()
             {
-                ExecutablePath = "cmd.exe",
-                DisablePathMapping = true,
-                Arguments = new string[] { "/C set" },
-                Environment = new Dictionary<string, string> 
-                { 
-                    { "PROC_ENV", "VAL1" } 
-                },
-            };
+                ContainerSpec = new ContainerSpec
+                {
+                    Handle = Container1Handle,
+                };
+            }
 
-            // RUN THE SHORT LIVED PROCESS
-            var io = new StringProcessIO();
-            var process = Container1.Run(pSpec, io);
+            [FactAdminRequired]
+            public void SetsPropertiesOnCreation()
+            {
+                ContainerSpec.Properties = new Dictionary<string, string>
+                {
+                    { "Foo", "The quick brown fox..." },
+                    { "Bar", "...jumped over the lazy dog." },
+                };
 
-            int exitCode;
-            bool exited = process.TryWaitForExit(2000, out exitCode);
+                Container1 = CreateContainer(ContainerSpec);
 
-            var output = io.Output.ToString().Trim();
-            var error = io.Error.ToString().Trim();
+                var fooValue = Container1.GetProperty("Foo");
+                var barValue = Container1.GetProperty("Bar");
 
-            // VERIFY THE PROCESS RAN AND EXITED
-            Assert.True(exited);
-            Assert.Equal(exitCode, 0);
+                Assert.Equal("The quick brown fox...", fooValue);
+                Assert.Equal("...jumped over the lazy dog.", barValue);
+            }
 
-            // VERIFY THE ENVIRONMENT WAS SET
-            Assert.Contains("CONTAINER_HANDLE=" + Container1.Handle, output);
-            Assert.Contains("PROC_ENV=VAL1", output);
+            [FactAdminRequired]
+            public void PersistsProperties()
+            {
+                Container1 = CreateContainer(ContainerSpec);
+
+                Container1.SetProperty("Phrase", "The quick brown fox...");
+
+                var value = Container1.GetProperty("Phrase");
+                Assert.Equal("The quick brown fox...", value);
+
+                Container1.RemoveProperty("Phrase");
+
+                value = Container1.GetProperty("Phrase");
+                Assert.Null(value);
+            }
+
+            [FactAdminRequired]
+            public void ReturnsPropertiesInContainerInfo()
+            {
+                Container1 = CreateContainer(ContainerSpec);
+
+                Container1.SetProperty("Foo", "The quick brown fox...");
+                Container1.SetProperty("Bar", "...jumped over the lazy dog.");
+
+                var info = Container1.GetInfo();
+
+                Assert.Equal("The quick brown fox...", info.Properties["Foo"]);
+                Assert.Equal("...jumped over the lazy dog.", info.Properties["Bar"]);
+            }
         }
 
-        //[FactAdminRequired]
-        //public void StartAndStopLongRunningProcess()
-        //{
-        //    var containerService = new ContainerCreationService(ContainerBasePath, UserGroupName);
-        //    Container1 = CreateContainer(containerService, Container1Handle);
-        //    var pSpec = new ProcessSpec
-        //    {
-        //        ExecutablePath = "cmd.exe",
-        //        DisablePathMapping = true,
-        //        Arguments = new string[] { @"/C ""FOR /L %% IN () DO ping 127.0.0.1 -n 2""" },
-        //    };
-        //
-        //    // START THE LONG RUNNING PROCESS
-        //    var io = new StringProcessIO();
-        //    var process = Container1.Run(pSpec, io);
-
-        //    int exitCode;
-        //    bool exited = process.TryWaitForExit(500, out exitCode);
-
-        //    // VERIFY IT HASNT EXITED YET
-        //    Assert.False(exited);
-
-        //    var actualProcess = Process.GetProcessById(process.Id);
-
-        //    // KILL THE PROCESS AND WAIT FOR EXIT
-        //    process.Kill();
-        //    exited = process.TryWaitForExit(2000, out exitCode);
-
-        //    // VERIFY THE PROCESS WAS KILLED
-        //    Assert.True(exited);
-        //    Assert.True(actualProcess.HasExited);
-        //    Assert.True(io.Output.ToString().Length > 0);
-        //}
-
-        public IContainer CreateContainer(IContainerService containerService, string handle)
+        public IContainer CreateContainer(string handle)
         {
             var bindMounts = new[]
             {
@@ -206,7 +273,12 @@ namespace IronFoundry.Container.Acceptance
                 Handle = handle
             };
 
-            var container = containerService.CreateContainer(spec);
+            return CreateContainer(spec);
+        }
+
+        public IContainer CreateContainer(ContainerSpec spec)
+        {
+            var container = ContainerService.CreateContainer(spec);
 
             return container;
         }

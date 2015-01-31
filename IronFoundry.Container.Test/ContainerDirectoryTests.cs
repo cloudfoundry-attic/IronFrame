@@ -163,6 +163,49 @@ namespace IronFoundry.Container
             }
         }
 
+        public class MapPrivatePath : ContainerDirectoryTests
+        {
+            [InlineData("/", @"C:\Containers\handle\")]
+            [InlineData("/path/to/data", @"C:\Containers\handle\path\to\data")]
+            [Theory]
+            public void MapsRootedPathRelativeToContainerRootPath(string containerPath, string expectedMappedPath)
+            {
+                var mappedPath = Directory.MapPrivatePath(containerPath);
+
+                Assert.Equal(expectedMappedPath, mappedPath);
+            }
+
+            [Fact]
+            public void ConvertsForwardSlashesToBackSlashes()
+            {
+                var mappedPath = Directory.MapPrivatePath("/path/to/data");
+
+                Assert.Equal(@"C:\Containers\handle\path\to\data", mappedPath);
+            }
+
+            [Fact]
+            public void CanonicalizesPath()
+            {
+                var mappedPath = Directory.MapPrivatePath("/path/to/../../data");
+
+                Assert.Equal(@"C:\Containers\handle\data", mappedPath);
+            }
+
+            [InlineData("/data/../..")]
+            [InlineData("/../../..")]
+            [InlineData("../")]
+            [InlineData("..")]
+            [InlineData("/..")]
+            [InlineData("/../")]
+            [Theory]
+            public void WhenPathIsOutsideOfContainerBinPath_Throws(string containerPath)
+            {
+                var ex = Record.Exception(() => Directory.MapPrivatePath(containerPath));
+
+                Assert.IsAssignableFrom<ArgumentException>(ex);
+            }
+        }
+
         public class MapUserPath : ContainerDirectoryTests
         {
             [InlineData("/", @"C:\Containers\handle\user\")]

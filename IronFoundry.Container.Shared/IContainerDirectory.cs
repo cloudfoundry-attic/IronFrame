@@ -10,10 +10,11 @@ namespace IronFoundry.Container
 {
     public interface IContainerDirectory
     {
-        string BinPath { get; }
+        string RootPath { get; }
         string UserPath { get; }
 
         string MapBinPath(string containerPath);
+        string MapPrivatePath(string containerPath);
         string MapUserPath(string containerPath);
     }
 
@@ -34,9 +35,9 @@ namespace IronFoundry.Container
             this.containerUserPath = CanonicalizePath(Path.Combine(containerPath, UserRelativePath), ensureTrailingSlash: true);
         }
 
-        public string BinPath
+        public string RootPath
         {
-            get { return containerBinPath; }
+            get { return containerPath; }
         }
 
         public string UserPath
@@ -76,6 +77,11 @@ namespace IronFoundry.Container
                 throw new ArgumentException("The path is not a valid container path.", "path");
 
             return mappedPath;
+        }
+
+        public string MapPrivatePath(string path)
+        {
+            return MapContainerPath("", path);
         }
 
         public string MapUserPath(string path)

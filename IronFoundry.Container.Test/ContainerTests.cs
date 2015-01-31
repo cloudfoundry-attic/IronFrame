@@ -6,31 +6,29 @@ using IronFoundry.Warden.Containers;
 using IronFoundry.Container.Utilities;
 using NSubstitute;
 using Xunit;
+using IronFoundry.Container.Internal;
 
 namespace IronFoundry.Container
 {
     public class ContainerTests
     {
         Container Container { get; set; }
-        IContainerUser User { get; set; }
+        IProcessRunner ConstrainedProcessRunner { get; set; }
+        Dictionary<string, string> ContainerEnvironment { get; set; }
         IContainerDirectory Directory { get; set; }
         JobObject JobObject { get; set; }
-        IProcessRunner ProcessRunner { get; set; }
-        IProcessRunner ConstrainedProcessRunner { get; set; }
-        ILocalTcpPortManager TcpPortManager { get; set; }
-        Dictionary<string, string> ContainerEnvironment { get; set; }
         ProcessHelper ProcessHelper { get; set; }
+        IProcessRunner ProcessRunner { get; set; }
+        IContainerPropertyService ContainerPropertiesService { get; set; }
+        ILocalTcpPortManager TcpPortManager { get; set; }
+        IContainerUser User { get; set; }
 
         public ContainerTests()
-        {
-            User = Substitute.For<IContainerUser>();
-            User.UserName.Returns("container-username");
-            
-            Directory = Substitute.For<IContainerDirectory>();
-
-            ProcessRunner = Substitute.For<IProcessRunner>();
+        {            
             ConstrainedProcessRunner = Substitute.For<IProcessRunner>();
-            TcpPortManager = Substitute.For<ILocalTcpPortManager>();
+            ContainerEnvironment = new Dictionary<string, string>() { { "Handle", "handle" } };
+
+            Directory = Substitute.For<IContainerDirectory>();
 
             JobObject = Substitute.For<JobObject>();
             JobObject.GetCpuStatistics().Returns(new CpuStatistics
@@ -40,10 +38,55 @@ namespace IronFoundry.Container
             });
             JobObject.GetProcessIds().Returns(new int[0]);
 
-            ContainerEnvironment = new Dictionary<string, string>() { { "Handle", "handle" } };
             ProcessHelper = Substitute.For<ProcessHelper>();
+            ProcessRunner = Substitute.For<IProcessRunner>();
+            ContainerPropertiesService = Substitute.For<IContainerPropertyService>();
 
-            Container = new Container("id", "handle", User, Directory, TcpPortManager, JobObject, ProcessRunner, ConstrainedProcessRunner, ProcessHelper, ContainerEnvironment);
+            TcpPortManager = Substitute.For<ILocalTcpPortManager>();
+
+            User = Substitute.For<IContainerUser>();
+            User.UserName.Returns("container-username");
+
+            Container = new Container(
+                "id", 
+                "handle", 
+                User, 
+                Directory, 
+                ContainerPropertiesService, 
+                TcpPortManager, 
+                JobObject, 
+                ProcessRunner, 
+                ConstrainedProcessRunner, 
+                ProcessHelper, 
+                ContainerEnvironment);
+        }
+
+        public class GetProperty : ContainerTests
+        {
+            public GetProperty()
+            {
+                ContainerPropertiesService.GetProperty(Container, "Name").Returns("Value");
+            }
+
+            [Fact]
+            public void ReturnsPropertyValue()
+            {
+                var value = Container.GetProperty("Name");
+
+                Assert.Equal("Value", value);
+                ContainerPropertiesService.Received(1).GetProperty(Container, "Name");
+            }
+
+            [Fact]
+            public void WhenPropertyDoesNotExist_ReturnsNull()
+            {
+                ContainerPropertiesService.GetProperty(Container, "Unknown").Returns((string)null);
+
+                var value = Container.GetProperty("Unknown");
+
+                Assert.Null(value);
+                ContainerPropertiesService.Received(1).GetProperty(Container, "Unknown");
+            }
         }
 
         public class ReservePort : ContainerTests
@@ -327,6 +370,24 @@ namespace IronFoundry.Container
             }
 
             [Fact]
+            public void ReturnsProperties()
+            {
+                var properties = new Dictionary<string, string>()
+                {
+                    { "name1", "value1" },
+                    { "name2", "value2" },
+                };
+                ContainerPropertiesService.GetProperties(Container).Returns(properties);
+
+                var info = Container.GetInfo();
+
+                Assert.Equal(
+                    new HashSet<string>(properties.Keys),
+                    new HashSet<string>(info.Properties.Keys)
+                );
+            }
+
+            [Fact]
             public void WhenManagingNoProcess()
             {
                 JobObject.GetCpuStatistics().Returns(new CpuStatistics
@@ -418,6 +479,28 @@ namespace IronFoundry.Container
                 Action action = () => Container.LimitMemory(3000);
 
                 Assert.Throws<InvalidOperationException>(action);
+            }
+        }
+
+        public class RemoveProperty : ContainerTests
+        {
+            [Fact]
+            public void RemovesProperty()
+            {
+                Container.RemoveProperty("Name");
+
+                ContainerPropertiesService.Received(1).RemoveProperty(Container, "Name");
+            }
+        }
+
+        public class SetProperty : ContainerTests
+        {
+            [Fact]
+            public void SetsProperty()
+            {                
+                Container.SetProperty("Name", "Value");
+
+                ContainerPropertiesService.Received(1).SetProperty(Container, "Name", "Value");
             }
         }
 
