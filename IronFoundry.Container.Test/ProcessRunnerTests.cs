@@ -1,9 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using IronFoundry.Container.Utilities;
 using Xunit;
+using System.Threading.Tasks;
 
 namespace IronFoundry.Container
 {
@@ -178,6 +180,57 @@ namespace IronFoundry.Container
 
                 var ex = Assert.Throws<System.ComponentModel.Win32Exception>(() => Runner.Run(si));
             }
+
+            [FactAdminRequired]
+            public async Task WhenCredentialsGiven_LoadsUserEnvironment()
+            {
+                LocalPrincipalManager manager = new LocalPrincipalManager(new DesktopPermissionManager());
+                var user = manager.CreateUser("Test_UserEnvironment");
+
+                try
+                {
+                    var si = CreateRunSpec("cmd.exe", new[] {"/C", "set"});
+                    si.Credentials = user;
+                    si.BufferedInputOutput = true;
+
+                    using (var p = Runner.Run(si))
+                    {
+                        WaitForGoodExit(p);
+
+                        var output = await p.StandardOutput.ReadToEndAsync();
+
+                        string expectedUserName = string.Format("USERNAME={0}", user.UserName);
+                        Assert.Contains(expectedUserName, output);
+                    }
+                }
+                finally
+                {
+                    manager.DeleteUser(user.UserName);
+                }
+            }
+
+            [Fact]
+            public void WhenCredentialsNotGiven_InheritsEnvironment()
+            {
+                var uniqueId = Guid.NewGuid().ToString("N");
+                Environment.SetEnvironmentVariable(uniqueId, "FOO");
+
+                using (var tempFile = CreateTempFile())
+                {
+                    var si = CreateRunSpec("cmd.exe", new[] { "/C", String.Format(@"set > {0}", tempFile.FullName) });
+
+                    using (var p = Runner.Run(si))
+                    {
+                        WaitForGoodExit(p);
+
+                        var output = tempFile.ReadAllText();
+
+                        string expected= string.Format("{0}={1}", uniqueId, "FOO");
+                        Assert.Contains(expected, output);
+                    }
+                }
+            }
+
         }
     }
 }
