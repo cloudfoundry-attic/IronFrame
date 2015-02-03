@@ -47,8 +47,9 @@ namespace IronFoundry.Container
                 {
                     yield return referencedAssembly.Location;
 
-                    foreach (var nestedReferenceFilePath in EnumerateLocalReferences(referencedAssembly))
-                        yield return nestedReferenceFilePath;
+                    if (!referencedAssembly.Location.Contains("ICSharpCode.SharpZipLib.dll"))
+                        foreach (var nestedReferenceFilePath in EnumerateLocalReferences(referencedAssembly))
+                            yield return nestedReferenceFilePath;
                 }
             }
         }
