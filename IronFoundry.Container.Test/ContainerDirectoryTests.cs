@@ -15,13 +15,15 @@ namespace IronFoundry.Container
     public class ContainerDirectoryTests
     {
         ContainerDirectory Directory { get; set; }
+        FileSystemManager FileSystem { get; set; }
 
         public ContainerDirectoryTests()
         {
-            Directory = new ContainerDirectory(@"C:\Containers\handle");
+            FileSystem = Substitute.For<FileSystemManager>();
+            Directory = new ContainerDirectory(FileSystem, @"C:\Containers\handle");
         }
 
-        public class Create
+        public class Create : ContainerDirectoryTests
         {
             FileSystemManager FileSystem { get; set; }
             IContainerUser ContainerUser { get; set; }
@@ -117,6 +119,25 @@ namespace IronFoundry.Container
                         Assert.Equal("username", x.UserName);
                         Assert.Equal(FileAccess.ReadWrite, x.Access);
                     });
+            }
+        }
+
+        public class Destroy : ContainerDirectoryTests
+        {
+            private IContainerUser ContainerUser { get; set; }
+
+            public Destroy()
+            {
+                ContainerUser = Substitute.For<IContainerUser>();
+                ContainerUser.UserName.Returns("username");
+            }
+
+            [Fact]
+            public void DeletesContainerDirectory()
+            {
+                ContainerDirectory directory = ContainerDirectory.Create(FileSystem, @"c:\Containers", "handle", ContainerUser);
+                directory.Destroy();
+                FileSystem.Received(1).DeleteDirectory(@"c:\Containers\handle");
             }
         }
 
