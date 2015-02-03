@@ -91,8 +91,7 @@ namespace IronFoundry.Container
                 undoStack.Push(() => user.Delete());
 
                 var directory = ContainerDirectory.Create(fileSystem, containerBasePath, id, user);
-                // BR: This is wrong. This should destroy the ContainerDirectory object, not delete the entire base path!
-                undoStack.Push(() => fileSystem.DeleteDirectory(containerBasePath));
+                undoStack.Push(() => fileSystem.DeleteDirectory(directory.RootPath));
 
                 var jobObject = new JobObject(handle);
                 undoStack.Push(() => jobObject.Dispose());

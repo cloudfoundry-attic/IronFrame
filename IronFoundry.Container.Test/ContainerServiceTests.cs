@@ -29,6 +29,7 @@ namespace IronFoundry.Container
         IUserManager UserManager { get; set; }
         ILocalTcpPortManager TcpPortManager { get; set; }
         ContainerService Service { get; set; }
+        public string Id { get; set; }
 
         public ContainerServiceTests()
         {
@@ -39,8 +40,10 @@ namespace IronFoundry.Container
 
             FileSystem = Substitute.For<FileSystemManager>();
 
+            Id = "DEADBEEF";
+
             HandleHelper = Substitute.For<ContainerHandleHelper>();
-            HandleHelper.GenerateId(null).ReturnsForAnyArgs("DEADBEEF");
+            HandleHelper.GenerateId(null).ReturnsForAnyArgs(Id);
 
             ProcessRunner = Substitute.For<IProcessRunner>();
             TcpPortManager = Substitute.For<ILocalTcpPortManager>();
@@ -196,6 +199,9 @@ namespace IronFoundry.Container
                 // Created and deleted the user
                 UserManager.Received(1).CreateUser(Arg.Any<string>());
                 UserManager.Received(1).DeleteUser(Arg.Any<string>());
+                
+                // Deleted the container directory
+                FileSystem.Received(1).DeleteDirectory(ContainerBasePath + "\\" + Id);
             }
         }
 
