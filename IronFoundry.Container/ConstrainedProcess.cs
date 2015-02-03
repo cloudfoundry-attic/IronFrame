@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using IronFoundry.Container.Messages;
 using IronFoundry.Container.Utilities;
@@ -16,11 +17,13 @@ namespace IronFoundry.Container
         public ConstrainedProcess(
             IContainerHostClient hostClient, 
             Guid key, 
-            int id)
+            int id,
+            Dictionary<string,string> environment)
         {
             this.hostClient = hostClient;
             this.key = key;
             this.id = id;
+            this.Environment = environment;
         }
 
         public int ExitCode
@@ -43,6 +46,8 @@ namespace IronFoundry.Container
         {
             get { return id; }
         }
+
+        public IReadOnlyDictionary<string, string> Environment { get; private set; }
 
         public long PrivateMemoryBytes
         {

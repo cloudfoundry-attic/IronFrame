@@ -43,7 +43,7 @@ namespace IronFoundry.Container
         void Stop(bool kill);
 
         int ReservePort(int requestedPort);
-        ContainerProcess Run(ProcessSpec spec, IProcessIO io);
+        IContainerProcess Run(ProcessSpec spec, IProcessIO io);
 
         void LimitMemory(ulong limitInBytes);
 
@@ -125,7 +125,7 @@ namespace IronFoundry.Container
             return reservedPort;
         }
 
-        public ContainerProcess Run(ProcessSpec spec, IProcessIO io)
+        public IContainerProcess Run(ProcessSpec spec, IProcessIO io)
         {
             ThrowIfNotActive();
 

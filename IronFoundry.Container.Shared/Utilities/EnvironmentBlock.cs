@@ -1,5 +1,8 @@
 ﻿
 
+using System.ComponentModel;
+using IronFoundry.Container.Win32;
+
 namespace IronFoundry.Container.Utilities
 {
     using System;
@@ -12,18 +15,14 @@ namespace IronFoundry.Container.Utilities
     {
         private readonly Dictionary<string,string> _environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        public static EnvironmentBlock GenerateDefault()
+        public static EnvironmentBlock CreateSystemDefault()
         {
-            var defaultEnvBlock = CreateDefaultEnvBlock();
-            var environment = new EnvironmentBlock();
-            environment.Merge(defaultEnvBlock);
-
-            return environment;
+            return CreateForUser(userToken: IntPtr.Zero);
         }
 
         public static EnvironmentBlock Create(IDictionary dictionary)
         {
-            Dictionary<string, string> typedDictionary = new Dictionary<string, string>();
+            Dictionary<string, string> typedDictionary = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var key in dictionary.Keys)
             {
@@ -33,6 +32,15 @@ namespace IronFoundry.Container.Utilities
             var envBlock = new EnvironmentBlock().Merge(typedDictionary);
 
             return envBlock;
+        }
+
+        public static EnvironmentBlock CreateForUser(IntPtr userToken)
+        {
+            var defaultEnvBlock = CreateEnvBlock(userToken);
+            var environment = new EnvironmentBlock();
+            environment.Merge(defaultEnvBlock);
+
+            return environment;
         }
 
 
@@ -61,17 +69,17 @@ namespace IronFoundry.Container.Utilities
         }
 
 
-        private static IDictionary<string, string> CreateDefaultEnvBlock()
+        private static IDictionary<string, string> CreateEnvBlock(IntPtr userToken)
         {
             IntPtr unmanagedEnv;
-            IntPtr hToken = IntPtr.Zero;
+            IntPtr hToken = userToken;
             if (!CreateEnvironmentBlock(out unmanagedEnv, hToken, false))
             {
                 int lastError = Marshal.GetLastWin32Error();
-                throw new System.ComponentModel.Win32Exception(lastError, "Error calling CreateEnvironmentBlock: " + lastError);
+                throw new Win32Exception(lastError, "Error calling CreateEnvironmentBlock: " + lastError);
             }
 
-            Dictionary<string, string> envBlock = new Dictionary<string, string>();
+            Dictionary<string, string> envBlock = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             try
             {
                 var stringList = SplitDoubleNullTerminatedUniStrings(unmanagedEnv);

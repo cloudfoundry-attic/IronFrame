@@ -44,14 +44,15 @@ namespace IronFoundry.Container
         {
             Guid processKey = Guid.NewGuid();
             
-            var defaultEnvironmentBlock = EnvironmentBlock.GenerateDefault();
+            var defaultEnvironmentBlock = EnvironmentBlock.CreateSystemDefault();
+            var environment = defaultEnvironmentBlock.Merge(runSpec.Environment).ToDictionary();
 
             CreateProcessParams @params = new CreateProcessParams
             {
                 key = processKey,
                 executablePath = runSpec.ExecutablePath,
                 arguments = runSpec.Arguments,
-                environment = defaultEnvironmentBlock.Merge(runSpec.Environment).ToDictionary(),
+                environment = environment,
                 workingDirectory = runSpec.WorkingDirectory
             };
 
@@ -60,7 +61,7 @@ namespace IronFoundry.Container
             hostClient.SubscribeToProcessData(processKey, processDataCallback);
 
             var result = hostClient.CreateProcess(@params);
-            var process = new ConstrainedProcess(hostClient, processKey, result.id);
+            var process = new ConstrainedProcess(hostClient, processKey, result.id, environment);
 
             return process;
         }

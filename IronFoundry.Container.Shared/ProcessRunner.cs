@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
 using IronFoundry.Container.Utilities;
+using IronFoundry.Container.Win32;
 
 namespace IronFoundry.Container
 {
@@ -64,13 +66,15 @@ namespace IronFoundry.Container
                 startInfo.Password = runSpec.Credentials.SecurePassword;
             }
 
-            if (runSpec.Environment != null && runSpec.Environment.Count > 0)
+            bool runSpecSpecifiesEnvironment = runSpec.Environment != null && runSpec.Environment.Count > 0;
+            var environment = runSpecSpecifiesEnvironment
+                ? runSpec.Environment
+                : CreateDefaultProcessEnvironment(runSpec.Credentials);
+
+            startInfo.EnvironmentVariables.Clear();
+            foreach (var variable in environment)
             {
-                startInfo.EnvironmentVariables.Clear();
-                foreach (var variable in runSpec.Environment)
-                {
-                    startInfo.EnvironmentVariables[variable.Key] = variable.Value;
-                }
+                startInfo.EnvironmentVariables[variable.Key] = variable.Value;
             }
 
             Process p = new Process
@@ -115,6 +119,30 @@ namespace IronFoundry.Container
 
         public void StopAll(bool kill)
         {
+        }
+
+        /// <summary>
+        /// Returns default environment for the process.
+        /// If credentials are specified then the default environment is the default for that user.
+        /// Otherwise the default is to inherit from this process.
+        /// </summary>
+        private Dictionary<string, string> CreateDefaultProcessEnvironment(NetworkCredential credential)
+        {
+            EnvironmentBlock envBlock = new EnvironmentBlock();
+
+            if (credential == null)
+            {
+                envBlock = EnvironmentBlock.Create(Environment.GetEnvironmentVariables());
+            }
+            else
+            {
+                using (var safeUserToken = Utils.LogonAndGetUserPrimaryToken(credential))
+                {
+                    envBlock = EnvironmentBlock.CreateForUser(safeUserToken.DangerousGetHandle());
+                }
+            }
+
+            return envBlock.ToDictionary();
         }
     }
 }

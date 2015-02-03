@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace IronFoundry.Container.Utilities
@@ -10,6 +11,7 @@ namespace IronFoundry.Container.Utilities
         int ExitCode { get; }
         IntPtr Handle { get; }
         int Id { get; }
+        IReadOnlyDictionary<string, string> Environment { get; }
         
         long PrivateMemoryBytes { get; }
 

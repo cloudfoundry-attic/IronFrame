@@ -1,4 +1,6 @@
-﻿namespace IronFoundry.Container.Utilities
+﻿using System.Security.Principal;
+
+namespace IronFoundry.Container.Utilities
 {
     using System.Collections;
     using System.Collections.Generic;
@@ -18,7 +20,7 @@
         [Fact]
         public void GeneratesDefaultEnvironment()
         {
-            var env = EnvironmentBlock.GenerateDefault();
+            var env = EnvironmentBlock.CreateSystemDefault();
             var dict = env.ToDictionary();
 
             Assert.True(dict.Count > 0);
@@ -32,12 +34,24 @@
         [Fact]
         public void MergeOverwritesOld()
         {
-            var env = EnvironmentBlock.GenerateDefault();
+            var env = EnvironmentBlock.CreateSystemDefault();
             var newEnv = EnvironmentBlock.Create(new Hashtable {{"COMPUTERNAME", "FOOBAR"}});
             var dict = env.Merge(newEnv).ToDictionary();
 
             Assert.Equal(env.ToDictionary().Count, dict.Count);
             Assert.Equal("FOOBAR", dict["COMPUTERNAME"]);
+        }
+
+        [Fact]
+        public void GeneratesEnvironmentForUseToken()
+        {
+            var identity = WindowsIdentity.GetCurrent();
+            var userToken = identity.Token;
+            
+            var env = EnvironmentBlock.CreateForUser(userToken);
+            var dict = env.ToDictionary();
+
+            Assert.Equal(identity.GetUserName(), dict["USERNAME"]);
         }
     }
 }

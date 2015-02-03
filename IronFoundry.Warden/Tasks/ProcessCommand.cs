@@ -153,7 +153,7 @@ namespace IronFoundry.Warden.Tasks
             var rootedEnv = env.ToDictionary(kv => kv.Key, kv => container.ConvertToPathWithin(kv.Value));
 
             // Generate a new environment containing all the default values.
-            EnvironmentBlock defaultEnv = EnvironmentBlock.GenerateDefault();
+            EnvironmentBlock defaultEnv = EnvironmentBlock.CreateSystemDefault();
 
             // Merge the default envs with the machine and user provided variables
             var envHash = defaultEnv.Merge(rootedEnv).ToDictionary();

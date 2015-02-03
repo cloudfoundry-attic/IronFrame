@@ -4,8 +4,15 @@ using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container
 {
-    // BR: Move this to IronFoundry.Container.Shared
-    public class ContainerProcess
+    public interface IContainerProcess
+    {
+        int Id { get; }
+        void Kill();
+        int WaitForExit();
+        bool TryWaitForExit(int milliseconds, out int exitCode);
+    }
+
+    public class ContainerProcess : IContainerProcess
     {
         readonly IProcess process;
 

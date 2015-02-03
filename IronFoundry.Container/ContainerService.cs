@@ -163,7 +163,7 @@ namespace IronFoundry.Container
 
         public IReadOnlyList<IContainer> GetContainers()
         {
-            return containers;
+            return containers.ToArray();
         }
     }
 }

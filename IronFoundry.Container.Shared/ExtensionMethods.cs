@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -177,6 +178,18 @@ namespace System.Collections.Generic
 
             return merged;
         }
+
+        public static Dictionary<string, string> ToDictionary(this StringDictionary dictionary, IEqualityComparer<string> comparer)
+        {
+            var dict = new Dictionary<string, string>(comparer);
+
+            foreach (DictionaryEntry de in dictionary)
+            {
+                dict[(string) de.Key] = (string)de.Value;
+            }
+
+            return dict;
+        }
     }
 }
 
@@ -268,6 +281,19 @@ namespace System.Threading
         public static void Restart(this Timer argThis, TimeSpan argInterval)
         {
             argThis.Change(argInterval, argInterval);
+        }
+    }
+}
+
+namespace System.Security.Principal
+{
+    public static class WindowsIdentityExtensionMethods
+    {
+        public static string GetUserName(this WindowsIdentity identity)
+        {
+            int splitIndex = identity.Name.IndexOf("\\");
+            string username = (splitIndex < 0) ? string.Empty : identity.Name.Substring(splitIndex + 1);
+            return username;
         }
     }
 }
