@@ -30,6 +30,7 @@ namespace IronFoundry.Container
         string Id { get; }
         string Handle { get; }
         //ContainerState State { get; }
+
         IContainerDirectory Directory { get; }
 
         //void BindMounts(IEnumerable<BindMount> mounts);
@@ -137,6 +138,11 @@ namespace IronFoundry.Container
                 directory.MapUserPath(spec.ExecutablePath) :
                 spec.ExecutablePath;
 
+            var workingDirectory = spec.WorkingDirectory ?? DefaultWorkingDirectory;
+            workingDirectory = !spec.DisablePathMapping
+                ? directory.MapUserPath(workingDirectory)
+                : workingDirectory;
+
             var specEnvironment = spec.Environment ?? new Dictionary<string, string>();
             var processEnvironment = this.defaultEnvironment.Merge(specEnvironment);
 
@@ -145,7 +151,7 @@ namespace IronFoundry.Container
                 ExecutablePath = executablePath,
                 Arguments = spec.Arguments,
                 Environment = processEnvironment,
-                WorkingDirectory = directory.MapUserPath(spec.WorkingDirectory ?? DefaultWorkingDirectory),
+                WorkingDirectory = workingDirectory,
                 OutputCallback = data => io.StandardOutput.Write(data),
                 ErrorCallback = data => io.StandardError.Write(data),
             };
