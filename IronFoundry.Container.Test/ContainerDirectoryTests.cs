@@ -25,7 +25,6 @@ namespace IronFoundry.Container
 
         public class Create : ContainerDirectoryTests
         {
-            FileSystemManager FileSystem { get; set; }
             IContainerUser ContainerUser { get; set; }
 
             public Create()
