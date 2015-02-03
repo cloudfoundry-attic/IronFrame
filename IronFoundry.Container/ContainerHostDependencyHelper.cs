@@ -27,6 +27,16 @@ namespace IronFoundry.Container
             get { return containerHostAssembly.Location; }
         }
 
+        public string ContainerHostExeConfig
+        {
+            get { return ContainerHostExe + ".config"; }
+        }
+
+        public string ContainerHostExeConfigPath
+        {
+            get { return ContainerHostExePath + ".config"; }
+        }
+
         static Assembly GetContainerHostAssembly()
         {
             return Assembly.ReflectionOnlyLoad(ContainerHostAssemblyName);
