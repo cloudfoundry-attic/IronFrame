@@ -287,6 +287,22 @@ namespace IronFoundry.Container
                 }
 
                 [Fact]
+                public void ProcessIoCanBeNull()
+                {
+                    var io = new TestProcessIO();
+                    io.Output = null;
+                    io.Error = null;
+
+                    Container.Run(Spec, io);
+
+                    var proc = ConstrainedProcessRunner.Captured(x => x.Run(null)).Arg<ProcessRunSpec>();
+
+                    Assert.Equal(null, proc.OutputCallback);
+                    Assert.Equal(null, proc.ErrorCallback);
+                }
+
+
+                [Fact]
                 public void WhenPathMappingIsDisabled_DoesNotMapExecutablePath()
                 {
                     var io = Substitute.For<IProcessIO>();
