@@ -36,27 +36,6 @@ namespace IronFoundry.Warden.Test
 
                 Assert.Null(destroyedClient);
             }
-
-            [Fact]
-            public async void DelegatesDestroyToContainerJanitor()
-            {
-                await containerManager.DestroyContainerAsync(new ContainerHandle("containerHandle"));
-                
-                janitor.Received(1, x => x.DestroyContainerAsync("containerHandle",config.ContainerBasePath, config.TcpPort.ToString(), config.DeleteContainerDirectories, null));
-            }
-
-            [Fact]
-            public async void IncludesPortContainerIfAvailable()
-            {
-                var client = Substitute.For<IContainerClient>();
-                client.AssignedPort.Returns(100);
-                client.Handle.Returns(new ContainerHandle("asdfghjkl"));
-                containerManager.AddContainer(client);
-
-                await containerManager.DestroyContainerAsync(client);
-
-                janitor.Received(1, x => x.DestroyContainerAsync("asdfghjkl", config.ContainerBasePath, config.TcpPort.ToString(), config.DeleteContainerDirectories, 100));
-            }
         }
     }
 }

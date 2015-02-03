@@ -60,13 +60,17 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\IronFoundry.Container.Host\IronFoundry.Container.Host.csproj">
+      <Project>{6e4dd8fc-91e8-4c70-946d-4c37df84c8cf}</Project>
+      <Name>IronFoundry.Container.Host</Name>
+    </ProjectReference>
     <ProjectReference Include="..\IronFoundry.Container.Shared\IronFoundry.Container.Shared.csproj">
       <Project>{cb7ba555-21fd-4c57-a629-a925b6a83a31}</Project>
       <Name>IronFoundry.Container.Shared</Name>
     </ProjectReference>
-    <ProjectReference Include="..\IronFoundry.Warden.ContainerHost\IronFoundry.Warden.ContainerHost.csproj">
-      <Project>{586784cf-de8a-411f-ad99-18f00dc2a75b}</Project>
-      <Name>IronFoundry.Warden.ContainerHost</Name>
+    <ProjectReference Include="..\IronFoundry.Container\IronFoundry.Container.csproj">
+      <Project>{5de07f79-b758-4a04-b908-626e7577313e}</Project>
+      <Name>IronFoundry.Container</Name>
     </ProjectReference>
     <ProjectReference Include="..\IronFoundry.Warden.Protocol\IronFoundry.Warden.Protocol.csproj">
       <Project>{ddd0537b-4afe-4beb-bf30-4df0a5367a18}</Project>

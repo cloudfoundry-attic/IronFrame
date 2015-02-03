@@ -5,6 +5,7 @@
     using Protocol;
     using System.Threading.Tasks;
 
+    // MO: Added to ContainerClient
     public abstract class ContainerRequestHandler : RequestHandler
     {
         protected readonly IContainerManager containerManager;

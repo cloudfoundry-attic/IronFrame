@@ -5,6 +5,7 @@
     using IronFoundry.Warden.Protocol;
     using NLog;
 
+    // MO: Added to ContainerClient
     public class LimitMemoryRequestHandler : ContainerRequestHandler
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();

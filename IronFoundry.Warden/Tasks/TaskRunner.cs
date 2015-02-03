@@ -107,11 +107,12 @@
 
                 try
                 {
-                    var commandResult = await container.RunCommandAsync(new RemoteCommand(request.Privileged, cmd.Command, cmd.Args, cmd.Environment, cmd.WorkingDirectory));
+                    var commandResult = await container.RunCommandAsync(new RemoteCommandArgs(request.Privileged, cmd.Command, cmd.Args, cmd.Environment, cmd.WorkingDirectory));
                     results.Add(commandResult);
                 }
                 catch (Exception ex)
                 {
+                    log.Error("Exception running command ({0}): {1}", cmd.Command, ex.ToString());
                     results.Add(new CommandResult() { ExitCode = 1, StdOut = null, StdErr = ex.Message });
                     break;
                 }

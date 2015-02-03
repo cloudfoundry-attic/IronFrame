@@ -1,6 +1,7 @@
 ﻿using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Containers.Messages;
-using IronFoundry.Container.Messaging;
+using IronFoundry.Warden.Shared.Data;
+using IronFoundry.Warden.Shared.Messaging;
 using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Test.TestSupport;
 using IronFoundry.Warden.Utilities;
@@ -14,7 +15,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
-using IronFoundry.Container;
 
 namespace IronFoundry.Warden.Test
 {
@@ -27,14 +27,14 @@ namespace IronFoundry.Warden.Test
             protected readonly string containerHandle = "ContainerHandle";
 
             protected ContainerProxy proxy;
-            protected Containers.IContainerHostLauncher launcher;
+            protected IContainerHostLauncher launcher;
             protected ILogEmitter logEmitter;
 
             protected string tempDirectory;
 
             public ProxyContainerContext()
             {
-                this.launcher = Substitute.For<Containers.IContainerHostLauncher>();
+                this.launcher = Substitute.For<IContainerHostLauncher>();
                 this.launcher.When(x => x.Start(null, null));
 
                 this.logEmitter = Substitute.For<ILogEmitter>();
@@ -132,7 +132,7 @@ namespace IronFoundry.Warden.Test
 
         public class OnStop : ContainerInitializedContext
         {
-           
+
             [Fact]
             public async void SendsStopMessageToStub()
             {
@@ -229,14 +229,14 @@ namespace IronFoundry.Warden.Test
             }
 
             [Theory]
-            [InlineData(LogMessageType.STDOUT)]
-            [InlineData(LogMessageType.STDERR)]
-            public async void LogEventEmitsLogMessage(LogMessageType messageType)
+            [InlineData(LogMessage.MessageType.OUT)]
+            [InlineData(LogMessage.MessageType.ERR)]
+            public async void LogEventEmitsLogMessage(LogMessage.MessageType messageType)
             {
                 await CompleteInitializationAsync();
 
                 proxy.EnableLogging(logEmitter);
-                launcher.LogEvent += Raise.Event<EventHandler<LogEventArgs>>(this, new LogEventArgs() {Data = messageType.ToString(), Type = messageType});
+                launcher.LogEvent += Raise.Event<EventHandler<LogEventArgs>>(this, new LogEventArgs() { Data = messageType.ToString(), Type = messageType });
 
                 logEmitter.Received(e => e.EmitLogMessage(messageType, messageType.ToString()));
             }
@@ -246,7 +246,7 @@ namespace IronFoundry.Warden.Test
             {
                 await CompleteInitializationAsync();
 
-                launcher.LogEvent += Raise.Event<EventHandler<LogEventArgs>>(this, new LogEventArgs() { Data = "log me", Type = LogMessageType.STDOUT });
+                launcher.LogEvent += Raise.Event<EventHandler<LogEventArgs>>(this, new LogEventArgs() { Data = "log me", Type = LogMessage.MessageType.OUT });
 
                 // Should not throw
             }
@@ -360,13 +360,13 @@ namespace IronFoundry.Warden.Test
         }
 
         public class WhenRunningCommand : ContainerInitializedContext
-        {          
+        {
             [Fact]
             public async void WhenRunningCommand_ShouldSendRunCommandRequestToHost()
             {
                 this.launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(Arg.Any<RunCommandRequest>()).ReturnsTask(new RunCommandResponse("", new RunCommandResponseData()));
 
-                var response = await proxy.RunCommandAsync(new RemoteCommand(true, "test", new [] { "test" }));
+                var response = await proxy.RunCommandAsync(new RemoteCommand(true, "test", new[] { "test" }));
 
                 this.launcher.Received(x => x.SendMessageAsync<RunCommandRequest, RunCommandResponse>(Arg.Any<RunCommandRequest>()));
             }
@@ -375,7 +375,7 @@ namespace IronFoundry.Warden.Test
             public async void WhenRunningCommand_ShouldSendRunCommandRequestWithCommandToHost()
             {
                 this.launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(Arg.Any<RunCommandRequest>()).ReturnsTask(new RunCommandResponse("", new RunCommandResponseData()));
-                var command = new RemoteCommand(true, "tar", new []{ "foo.zip" });
+                var command = new RemoteCommand(true, "tar", new[] { "foo.zip" });
 
                 var response = await proxy.RunCommandAsync(command);
 
@@ -386,7 +386,7 @@ namespace IronFoundry.Warden.Test
             public async void WhenRunningCommand_ExitCodeShouldBeReturned()
             {
                 this.launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(Arg.Any<RunCommandRequest>()).ReturnsTask(new RunCommandResponse("", new RunCommandResponseData() { exitCode = 10 }));
-                var command = new RemoteCommand(true, "tar", new [] { "foo.zip" });
+                var command = new RemoteCommand(true, "tar", new[] { "foo.zip" });
 
                 var response = await proxy.RunCommandAsync(command);
 
@@ -397,7 +397,7 @@ namespace IronFoundry.Warden.Test
             public async void WhenRunningCommand_StdOutIsReturned()
             {
                 this.launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(Arg.Any<RunCommandRequest>()).ReturnsTask(new RunCommandResponse("", new RunCommandResponseData() { exitCode = 0, stdOut = "StdOutMessage" }));
-                var command = new RemoteCommand(true, "tar", new [] { "foo.zip" });
+                var command = new RemoteCommand(true, "tar", new[] { "foo.zip" });
 
                 var response = await proxy.RunCommandAsync(command);
 
@@ -408,7 +408,7 @@ namespace IronFoundry.Warden.Test
             public async void WhenRunningCommand_StdErrIsReturned()
             {
                 this.launcher.SendMessageAsync<RunCommandRequest, RunCommandResponse>(Arg.Any<RunCommandRequest>()).ReturnsTask(new RunCommandResponse("", new RunCommandResponseData() { exitCode = 0, stdErr = "StdErrMessage" }));
-                var command = new RemoteCommand(true, "tar", new [] { "foo.zip" });
+                var command = new RemoteCommand(true, "tar", new[] { "foo.zip" });
 
                 var response = await proxy.RunCommandAsync(command);
 
@@ -418,7 +418,7 @@ namespace IronFoundry.Warden.Test
 
         public class WhenReservingPort : ContainerInitializedContext
         {
-           
+
             [Fact]
             public async void ReturnsRespondedPort()
             {
@@ -436,7 +436,7 @@ namespace IronFoundry.Warden.Test
             public async void CachesFirstReservation()
             {
                 var request = new ReservePortRequest(100);
-                
+
                 launcher.SendMessageAsync<ReservePortRequest, ReservePortResponse>(Arg.Any<ReservePortRequest>())
                    .ReturnsTask(new ReservePortResponse("", 100));
 
@@ -453,7 +453,7 @@ namespace IronFoundry.Warden.Test
             [Fact]
             public void PriorToReservationPropertyReturnsNull()
             {
-                Assert.Null(proxy.AssignedPort);    
+                Assert.Null(proxy.AssignedPort);
             }
 
             [Fact]
@@ -503,7 +503,7 @@ namespace IronFoundry.Warden.Test
             }
         }
 
-        public class TestableContainerHostLauncher : Containers.ContainerHostLauncher
+        public class TestableContainerHostLauncher : ContainerHostLauncher
         {
             public void RaiseOnHostStopped(int exitCode)
             {

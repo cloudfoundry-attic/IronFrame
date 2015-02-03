@@ -8,6 +8,7 @@
     using Protocol;
     using Utilities;
 
+    // MO: Added to ContainerClient
     public class DestroyRequestHandler : ContainerRequestHandler
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();
@@ -24,6 +25,7 @@
             if (request.Handle.IsNullOrWhiteSpace()) throw new WardenException("Container handle is required.");
 
             log.Trace("Destroying container with handle: '{0}'", request.Handle);
+
 
             return Task.Run<Response>(async () =>
                 {

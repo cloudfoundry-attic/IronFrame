@@ -1,4 +1,7 @@
-﻿namespace IronFoundry.Warden.Handlers
+﻿using IronFoundry.Container;
+using IronFoundry.Container.Utilities;
+
+namespace IronFoundry.Warden.Handlers
 {
     using System.Collections.Generic;
     using System.IO;
@@ -10,6 +13,7 @@
     using NLog;
     using Protocol;
 
+    // MO: Added to ContainerClient
     public class CreateRequestHandler : ContainerRequestHandler
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();
@@ -40,14 +44,23 @@
                     var config = new WardenConfig();
                     var handle = new ContainerHandle();
 
-                    var container = new ContainerProxy(new ContainerHostLauncher());
-                    await container.InitializeAsync(config.ContainerBasePath, handle.ToString(), config.WardenUsersGroup);
-                    
-                    containerManager.AddContainer(container);
+                    var containerService = new ContainerService(
+                        config.ContainerBasePath,
+                        config.WardenUsersGroup);
 
-                    await container.BindMountsAsync(GetBindMounts(request));
-                    
-                    return new CreateResponse { Handle = container.Handle };
+                    var containerSpec = new ContainerSpec
+                    {
+                        Handle = handle,
+                        BindMounts = GetBindMounts(request).ToArray(),
+                    };
+
+                    var container = containerService.CreateContainer(containerSpec);
+                    var containerClient = new ContainerClient(containerService, container, new FileSystemManager());
+                    await containerClient.InitializeAsync(null, null, null);
+
+                    containerManager.AddContainer(containerClient);
+
+                    return new CreateResponse { Handle = handle };
                 });
         }
     }

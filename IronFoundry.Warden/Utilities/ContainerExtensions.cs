@@ -1,93 +1,63 @@
-﻿using IronFoundry.Warden.Containers;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using IronFoundry.Container;
 
 namespace IronFoundry.Warden.Utilities
 {
     public static class ContainerExtensions
     {
-        public static IEnumerable<string> ConvertToPathsWithin(this IContainerClient container, string[] arguments)
+        private const string RootMarker = "@ROOT@";
+
+        public static string ConvertToUserPathWithin(this IContainer container, string path)
         {
-            foreach (string arg in arguments)
+            if (path == null)
+                return null;
+
+            string mappedPath;
+            if (container.TryConvertToUserRelativePath(path, out mappedPath))
             {
-                string rv = null;
-
-                if (arg.Contains("@ROOT@"))
-                {
-                    rv = arg.Replace("@ROOT@", container.ContainerDirectoryPath).ToWinPathString();
-                }
-                else
-                {
-                    rv = arg;
-                }
-
-                yield return rv;
+                mappedPath = container.Directory.MapUserPath(mappedPath).ToWinPathString();
             }
+
+            return mappedPath;
         }
 
-        public static string ConvertToPathWithin(this IContainerClient container, string path)
+        public static bool TryConvertToUserRelativePath(this IContainer container, string path, out string convertedPath)
         {
-            string pathTmp = path.Trim();
-            if (pathTmp.StartsWith("@ROOT@"))
+            bool madeConversion = false;
+            convertedPath = path;
+
+            if (path == null)
+                return madeConversion;
+
+            if (path.Trim().StartsWith(RootMarker))
             {
-                return pathTmp.Replace("@ROOT@", container.ContainerDirectoryPath).ToWinPathString();
+                convertedPath = path.Trim().Substring(RootMarker.Length);
+                madeConversion = true;
             }
-            else
-            {
-                return pathTmp;
-            }
+
+            return madeConversion;
         }
 
-        public static TempFile TempFileInContainer(this IContainerClient container, string extension)
+        public static string ReplaceRootTokensWithUserPath(this IContainer container, string line)
         {
-            return new TempFile(container.ContainerDirectoryPath, extension);
-        }
+            if (line == null)
+                return null;
 
-        public static IEnumerable<string> ConvertToPathsWithin(this IContainer container, string[] arguments)
-        {
-            foreach (string arg in arguments)
-            {
-                string rv = null;
+            string convertedLine = line.Contains(RootMarker)
+                ? line.Replace(RootMarker, container.Directory.UserPath)
+                : line;
 
-                if (arg.Contains("@ROOT@"))
-                {
-                    rv = arg.Replace("@ROOT@", container.ContainerDirectoryPath).ToWinPathString();
-                }
-                else
-                {
-                    rv = arg;
-                }
-
-                yield return rv;
-            }
-        }
-
-        public static string ConvertToPathWithin(this IContainer container, string path)
-        {
-            string pathTmp = path.Trim();
-            if (pathTmp.StartsWith("@ROOT@"))
-            {
-                return pathTmp.Replace("@ROOT@", container.ContainerDirectoryPath).ToWinPathString();
-            }
-            else
-            {
-                return pathTmp;
-            }
+            return convertedLine;
         }
 
         public static TempFile TempFileInContainer(this IContainer container, string extension)
         {
-            return new TempFile(container.ContainerDirectoryPath, extension);
+            return new TempFile(container.Directory.UserPath, extension);
         }
-
         public static TempFile FileInContainer(this IContainer container, string relativePath)
         {
-            string pathInContainer = Path.Combine(container.ContainerDirectoryPath, relativePath);
-            return new TempFile(pathInContainer, deleteIfExists:true);
+            string pathInContainer = container.Directory.MapUserPath(relativePath);
+            return new TempFile(pathInContainer, deleteIfExists: true);
         }
     }
 }

@@ -1,23 +1,29 @@
-﻿namespace IronFoundry.Warden.Tasks
-{
-    using System;
-    using System.IO;
-    using Containers;
-    using ICSharpCode.SharpZipLib.GZip;
-    using ICSharpCode.SharpZipLib.Tar;
-    using Warden.Utilities;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ICSharpCode.SharpZipLib.GZip;
+using ICSharpCode.SharpZipLib.Tar;
+using IronFoundry.Warden.Utilities;
+using NLog;
 
-    public class TarCommand : TaskCommand
+namespace IronFoundry.Warden.Tasks
+{
+    class TarCommand : RemoteCommand
     {
+        private readonly Logger log = LogManager.GetCurrentClassLogger();
         private const string CurrentDirectory = ".";
         private static readonly char[] trimChars = new[] { '/' };
-        private readonly string command;
-        private readonly string directory;
-        private readonly string tarFile;
+        private string command;
+        private string directory;
+        private string tarFile;
 
-        public TarCommand(IContainer container, string[] arguments)
-            : base(container, arguments)
+        private void Initialize()
         {
+            var arguments = this.CommandArgs.Arguments;
+
             if (arguments.Length != 3)
             {
                 throw new ArgumentException("tar command must have three arguments: operation (x or c), directory and file name.");
@@ -29,7 +35,7 @@
                 throw new ArgumentException("tar command: first argument must be x (extract) or c (create).");
             }
 
-            this.directory = container.ConvertToPathWithin(arguments[1]);
+            this.directory = this.Container.ConvertToUserPathWithin(arguments[1]);
             if (!Directory.Exists(this.directory))
             {
                 throw new ArgumentException(String.Format("tar command: second argument must be directory that exists ('{0}')", this.directory));
@@ -41,7 +47,7 @@
             }
             else
             {
-                this.tarFile = container.ConvertToPathWithin(arguments[2]);
+                this.tarFile = this.Container.ConvertToUserPathWithin(arguments[2]);
                 if (this.command == "x" && !File.Exists(this.tarFile))
                 {
                     throw new ArgumentException("tar command: third argument must be a file name that exists.");
@@ -49,31 +55,29 @@
             }
         }
 
-        public override TaskCommandResult Execute()
+        protected override TaskCommandResult Invoke()
         {
-            string currentDirectory = Directory.GetCurrentDirectory();
-            try
+            Initialize();
+
+            switch (command)
             {
-                Directory.SetCurrentDirectory(directory);
-                switch (command)
-                {
-                    case "c" :
-                        CreateTarArchive();
-                        break;
-                    case "x" :
-                        ExtractTarArchive();
-                        break;
-                }
+                case "c":
+                    CreateTarArchive();
+                    break;
+                case "x":
+                    ExtractTarArchive();
+                    break;
+                default:
+                    throw new NotImplementedException(string.Format("Unknown tar command '{0}'", command));
             }
-            finally
-            {
-                Directory.SetCurrentDirectory(currentDirectory);
-            }
-            return new TaskCommandResult(0, String.Format("tar: '{0}' -> '{1}'", directory, tarFile), null); 
+
+            return new TaskCommandResult(0, String.Format("tar: '{0}' -> '{1}'", directory, tarFile), null);
         }
 
         private void CreateTarArchive()
         {
+            log.Trace("TAR (Create): '{0}' -> '{1}'", directory, tarFile);
+
             if (File.Exists(tarFile))
             {
                 File.Delete(tarFile);
@@ -85,9 +89,15 @@
                 {
                     using (var tarArchive = TarArchive.CreateOutputTarArchive(gzipStream))
                     {
-                        tarArchive.RootPath = CurrentDirectory;
-                        var tarEntry = TarEntry.CreateEntryFromFile(CurrentDirectory);
+                        tarArchive.RootPath = directory.Replace('\\', '/');
+                        if (tarArchive.RootPath.EndsWith("/"))
+                            tarArchive.RootPath = tarArchive.RootPath.Remove(tarArchive.RootPath.Length - 1);
+
+                        var tarEntry = TarEntry.CreateEntryFromFile(directory);
                         tarArchive.WriteEntry(tarEntry, true);
+
+                        log.Debug("TAR DIRECTORY {0}", directory);
+                        log.Debug("TAR ROOT {0}", tarArchive.RootPath);
                     }
                 }
             }
@@ -95,13 +105,15 @@
 
         private void ExtractTarArchive()
         {
+            log.Trace("TAR (Extract): '{0}' -> '{1}'", tarFile, directory);
+
             using (var fs = File.Open(tarFile, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 using (var gzipStream = new GZipInputStream(fs))
                 {
                     using (var tarArchive = TarArchive.CreateInputTarArchive(gzipStream))
                     {
-                        tarArchive.ExtractContents(CurrentDirectory);
+                        tarArchive.ExtractContents(directory);
                     }
                 }
             }

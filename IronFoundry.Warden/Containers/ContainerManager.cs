@@ -8,6 +8,7 @@ using NLog;
 using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Configuration;
 using IronFoundry.Container;
+using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Warden.Containers
 {
@@ -60,10 +61,9 @@ namespace IronFoundry.Warden.Containers
                                    // Recover containers primarily for deletion
                                    foreach (var dirPath in Directory.GetDirectories(containerRoot))
                                    {
-                                       var handle = Path.GetFileName(dirPath);
                                        try
                                        {
-                                           var container = ContainerProxy.Restore(handle);
+                                           var container = ContainerClient.RestoreFromFileSystem(dirPath);
                                            containers.TryAdd(container.Handle, container);
                                        }
                                        catch (Exception ex)
@@ -96,15 +96,11 @@ namespace IronFoundry.Warden.Containers
                 throw new ArgumentNullException("handle");
             }
 
-            int? containerPort = null;
-
             IContainerClient removed;
             if (containers.TryRemove(handle, out removed))
             {
-                containerPort = removed.AssignedPort;
+                await removed.Destroy();
             }
-
-            await janitor.DestroyContainerAsync(handle, wardenConfig.ContainerBasePath, wardenConfig.TcpPort.ToString(), wardenConfig.DeleteContainerDirectories, containerPort);
         }
 
         public void Dispose()

@@ -36,39 +36,37 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Acceptance\ContainerClientAcceptanceTests.cs" />
+    <Compile Include="Containers\ProcessCommandTests.cs" />
+    <None Include="Disabled\ContainerProxyTests.cs" />
+    <None Include="Disabled\ProcessCommandTests.cs" />
     <Compile Include="Tasks\TaskCommandDTODeserializationTests.cs" />
     <Compile Include="TestSupport\AssertHelper.cs" />
-    <Compile Include="Tasks\CommandRunnerTests.cs" />
     <Compile Include="Containers\ContainerHandleTests.cs" />
     <Compile Include="Containers\ContainerLogEmitterTest.cs" />
     <Compile Include="Containers\ContainerManagerTests.cs" />
-    <Compile Include="Containers\ContainerProxyTest.cs" />
     <Compile Include="Containers\ContainerResourceHolderTest.cs" />
-    <Compile Include="Containers\ContainerStubTests.cs" />
     <Compile Include="Containers\ContainerUserTests.cs" />
     <Compile Include="Handlers\LinkRequestHandlerTests.cs" />
     <Compile Include="Handlers\DestroyRequestHandlerTests.cs" />
     <Compile Include="Handlers\LimitMemoryRequestHandlerTest.cs" />
     <Compile Include="Handlers\LoggingRequestHandlerTest.cs" />
-    <Compile Include="Containers\ProcessCommandTests.cs" />
-    <Compile Include="Containers\ContainerHostLauncherTests.cs" />
     <Compile Include="Containers\ProcessMonitorTests.cs" />
     <Compile Include="TestSupport\ArgMatchers.cs" />
     <Compile Include="TestSupport\Asserts.cs" />
     <Compile Include="TestSupport\FactAdminRequired.cs" />
-    <Compile Include="Containers\ContainerStubStatsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestSupport\NSubstituteExtensions.cs" />
     <Compile Include="TestSupport\TestUserHolder.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\IronFoundry.Container.Host\IronFoundry.Container.Host.csproj">
+      <Project>{6e4dd8fc-91e8-4c70-946d-4c37df84c8cf}</Project>
+      <Name>IronFoundry.Container.Host</Name>
+    </ProjectReference>
     <ProjectReference Include="..\IronFoundry.Container\IronFoundry.Container.csproj">
       <Project>{5de07f79-b758-4a04-b908-626e7577313e}</Project>
       <Name>IronFoundry.Container</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\IronFoundry.Warden.ContainerHost\IronFoundry.Warden.ContainerHost.csproj">
-      <Project>{586784cf-de8a-411f-ad99-18f00dc2a75b}</Project>
-      <Name>IronFoundry.Warden.ContainerHost</Name>
     </ProjectReference>
     <ProjectReference Include="..\IronFoundry.Warden.Protocol\IronFoundry.Warden.Protocol.csproj">
       <Project>{ddd0537b-4afe-4beb-bf30-4df0a5367a18}</Project>
