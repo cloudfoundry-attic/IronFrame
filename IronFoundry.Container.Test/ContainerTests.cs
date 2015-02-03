@@ -546,6 +546,15 @@ namespace IronFoundry.Container
         public class Stop : ContainerTests
         {
             [Fact]
+            public void DisposesProcessRunners()
+            {
+                Container.Stop(false);
+
+                ProcessRunner.Received(1).Dispose();
+                ConstrainedProcessRunner.Received(1).Dispose();
+            }
+
+            [Fact]
             public void WhenContainerDestroyed_Throws()
             {
                 Container.Destroy();

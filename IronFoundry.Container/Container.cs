@@ -63,13 +63,13 @@ namespace IronFoundry.Container
         readonly IContainerDirectory directory;
         readonly ILocalTcpPortManager tcpPortManager;
         readonly JobObject jobObject;
-        readonly IProcessRunner processRunner;
-        readonly IProcessRunner constrainedProcessRunner;
         readonly ProcessHelper processHelper;
         readonly IContainerPropertyService propertyService;
         readonly Dictionary<string, string> defaultEnvironment;
         readonly List<int> reservedPorts = new List<int>();
 
+        IProcessRunner processRunner;
+        IProcessRunner constrainedProcessRunner;
         ContainerState currentState;
 
         public Container(
@@ -191,12 +191,6 @@ namespace IronFoundry.Container
             if (user != null)
                 user.Delete();
 
-            if (constrainedProcessRunner != null)
-                constrainedProcessRunner.Dispose();
-
-            if (processRunner != null)
-                processRunner.Dispose();
-
             if (directory != null)
                 directory.Destroy();
             
@@ -261,10 +255,18 @@ namespace IronFoundry.Container
             ThrowIfDestroyed();
 
             if (constrainedProcessRunner != null)
+            {
                 constrainedProcessRunner.StopAll(kill);
+                constrainedProcessRunner.Dispose();
+                constrainedProcessRunner = null;
+            }
 
             if (processRunner != null)
+            {
                 processRunner.StopAll(kill);
+                processRunner.Dispose();
+                processRunner = null;
+            }
 
             this.currentState = ContainerState.Stopped;
         }
