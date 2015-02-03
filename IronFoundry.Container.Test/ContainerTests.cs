@@ -354,6 +354,15 @@ namespace IronFoundry.Container
                 ConstrainedProcessRunner.Received(1).Dispose();
             }
 
+
+            [Fact]
+            public void DeletesContainerDirectory()
+            {
+                Container.Destroy();
+
+                this.Directory.Received(1).Destroy();
+            }
+
             [Fact]
             public void WhenContainerStopped_Runs()
             {

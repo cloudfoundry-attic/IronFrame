@@ -189,6 +189,9 @@ namespace IronFoundry.Container
             if (processRunner != null)
                 processRunner.Dispose();
 
+            if (directory != null)
+                directory.Destroy();
+            
             this.currentState = ContainerState.Destroyed;
         }
 
