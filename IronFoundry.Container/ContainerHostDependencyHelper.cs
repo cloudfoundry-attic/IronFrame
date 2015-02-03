@@ -43,7 +43,7 @@ namespace IronFoundry.Container
             {
                 var referencedAssembly = Assembly.ReflectionOnlyLoad(referencedAssemblyName.FullName);
 
-                if (!assembly.GlobalAssemblyCache)
+                if (!referencedAssembly.GlobalAssemblyCache)
                 {
                     yield return referencedAssembly.Location;
 
