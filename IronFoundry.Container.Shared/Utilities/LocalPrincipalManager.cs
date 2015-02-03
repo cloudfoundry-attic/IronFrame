@@ -35,8 +35,8 @@ namespace IronFoundry.Container.Utilities
             this.wardenUserGroups = userGroupNames ?? new String[0];
         }
 
-        public LocalPrincipalManager(string userGroupName)
-            : this(new DesktopPermissionManager(), userGroupName)
+        public LocalPrincipalManager(params string [] userGroupNames)
+            : this(new DesktopPermissionManager(), userGroupNames)
         {
         }
 
