@@ -24,6 +24,7 @@ namespace IronFoundry.Container
 
     public class ContainerService : IContainerService
     {
+        const string IIS_USRS_GROUP = "IIS_IUSRS";
         const string PropertiesFileName = "properties.json";
 
         readonly string containerBasePath;
@@ -60,7 +61,7 @@ namespace IronFoundry.Container
         public ContainerService(string containerBasePath, string userGroupName)
             : this(
                 new ContainerHandleHelper(),
-                new LocalPrincipalManager(userGroupName),
+                new LocalPrincipalManager(userGroupName, IIS_USRS_GROUP),
                 new FileSystemManager(),
                 new LocalFilePropertyService(new FileSystemManager(), PropertiesFileName),
                 new LocalTcpPortManager(),
