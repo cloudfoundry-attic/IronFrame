@@ -6,6 +6,7 @@ using System.DirectoryServices.AccountManagement;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Security.Permissions;
 using System.Web.Security;
 using IronFoundry.Container.Win32;
 using NLog;
@@ -146,7 +147,8 @@ namespace IronFoundry.Container.Utilities
         {
             var groupQuery = new GroupPrincipal(context, groupName);
             var searcher = new PrincipalSearcher(groupQuery);
-            var group = searcher.FindOne() as GroupPrincipal;
+            var group = InvokeSearcherWithRetries(searcher);
+
 
             if (group == null)
             {
@@ -162,5 +164,29 @@ namespace IronFoundry.Container.Utilities
 
             group.Save();
         }
+
+        private Principal InvokeSearcherWithRetries(PrincipalSearcher searcher)
+        {
+            Principal group = null;
+
+            Func<bool> findGroup = () =>
+            {
+                try
+                {
+                    group = searcher.FindOne() as GroupPrincipal;
+                }
+                catch (COMException)
+                {
+                }
+
+                return group != null;
+            };
+
+            findGroup.RetryUpToNTimes(5, 200);
+
+            return group;
+        }
+
+
     }
 }
