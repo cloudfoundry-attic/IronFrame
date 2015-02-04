@@ -159,7 +159,10 @@ $AclMap = [ordered] @{
   "${RootDataPath}\dea_ng\admin_buildpacks" = { Allow-ReadAccess }
 }
 
-Apply-AclMap -Verbose $AclMap
+#
+# TODO : The container library doesn't yet support bindmounts so we can't restrict write permissions.
+#
+#Apply-AclMap -Verbose $AclMap
 
 
 $Global:LastExitCode = 0
