@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace System
 {
@@ -81,7 +82,31 @@ public static class StringExtensionMethods
             return threwException;
         }
     }
+
+    public static class FuncExtensionMethods
+    {
+        /// <summary>
+        /// Retries the specified action until it returns true or up to the specified number
+        /// of retries.
+        /// </summary>
+        public static void RetryUpToNTimes(this Func<bool> action, int maxRetry, int sleepInMilli = 200)
+        {
+            for (int count = 0; count < maxRetry; count++)
+            {
+                if (action())
+                {
+                    break;
+                }
+                else
+                {
+                    Thread.Sleep(sleepInMilli);
+                }
+            }
+        }
+    }
 }
+
+
 
 public static class SecureStringExtensionMethod
 {
