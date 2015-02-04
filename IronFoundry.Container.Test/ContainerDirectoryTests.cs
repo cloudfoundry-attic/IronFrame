@@ -228,8 +228,11 @@ namespace IronFoundry.Container
 
         public class MapUserPath : ContainerDirectoryTests
         {
+            [InlineData("", @"C:\Containers\handle\user\")]
+            [InlineData("\\", @"C:\Containers\handle\user\")]
             [InlineData("/", @"C:\Containers\handle\user\")]
             [InlineData("/path/to/app", @"C:\Containers\handle\user\path\to\app")]
+            [InlineData(@"\path\to\app", @"C:\Containers\handle\user\path\to\app")]
             [Theory]
             public void MapsRootedPathRelativeToContainerUserPath(string containerPath, string expectedMappedPath)
             {

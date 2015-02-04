@@ -82,7 +82,7 @@ namespace IronFoundry.Container
         {
             var basePath = CanonicalizePath(Path.Combine(containerPath, pathPrefix));
 
-            path = path.TrimStart('/');
+            path = path.TrimStart('/', '\\');
             var isRootPath = String.IsNullOrWhiteSpace(path);
 
             var mappedPath = CanonicalizePath(Path.Combine(basePath, path), ensureTrailingSlash: isRootPath);
