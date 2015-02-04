@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace IronFoundry.Container.Internal
+namespace IronFoundry.Container
 {
     public interface IContainerPropertyService
     {
