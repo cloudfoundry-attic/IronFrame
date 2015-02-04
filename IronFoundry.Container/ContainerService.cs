@@ -24,6 +24,7 @@ namespace IronFoundry.Container
 
     public class ContainerService : IContainerService
     {
+        const string IIS_USRS_GROUP = "IIS_IUSRS";
         const string PropertiesFileName = "properties.json";
 
         readonly string containerBasePath;
@@ -60,7 +61,7 @@ namespace IronFoundry.Container
         public ContainerService(string containerBasePath, string userGroupName)
             : this(
                 new ContainerHandleHelper(),
-                new LocalPrincipalManager(userGroupName),
+                new LocalPrincipalManager(userGroupName, IIS_USRS_GROUP),
                 new FileSystemManager(),
                 new LocalFilePropertyService(new FileSystemManager(), PropertiesFileName),
                 new LocalTcpPortManager(),
@@ -90,8 +91,7 @@ namespace IronFoundry.Container
                 undoStack.Push(() => user.Delete());
 
                 var directory = ContainerDirectory.Create(fileSystem, containerBasePath, id, user);
-                // BR: This is wrong. This should destroy the ContainerDirectory object, not delete the entire base path!
-                undoStack.Push(() => fileSystem.DeleteDirectory(containerBasePath));
+                undoStack.Push(() => fileSystem.DeleteDirectory(directory.RootPath));
 
                 var jobObject = new JobObject(handle);
                 undoStack.Push(() => jobObject.Dispose());

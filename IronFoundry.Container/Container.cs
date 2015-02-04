@@ -62,13 +62,13 @@ namespace IronFoundry.Container
         readonly IContainerDirectory directory;
         readonly ILocalTcpPortManager tcpPortManager;
         readonly JobObject jobObject;
-        readonly IProcessRunner processRunner;
-        readonly IProcessRunner constrainedProcessRunner;
         readonly ProcessHelper processHelper;
         readonly IContainerPropertyService propertyService;
         readonly Dictionary<string, string> defaultEnvironment;
         readonly List<int> reservedPorts = new List<int>();
 
+        IProcessRunner processRunner;
+        IProcessRunner constrainedProcessRunner;
         ContainerState currentState;
 
         public Container(
@@ -140,14 +140,22 @@ namespace IronFoundry.Container
             var specEnvironment = spec.Environment ?? new Dictionary<string, string>();
             var processEnvironment = this.defaultEnvironment.Merge(specEnvironment);
 
+            Action<string> stdOut = io == null || io.StandardOutput == null 
+                ? (Action<string>)null 
+                : data => io.StandardOutput.Write(data);
+
+            Action<string> stdErr = io == null || io.StandardError == null 
+                ? (Action<string>)null 
+                : data => io.StandardError.Write(data);
+
             var runSpec = new ProcessRunSpec
             {
                 ExecutablePath = executablePath,
                 Arguments = spec.Arguments,
                 Environment = processEnvironment,
                 WorkingDirectory = directory.MapUserPath(spec.WorkingDirectory ?? DefaultWorkingDirectory),
-                OutputCallback = data => io.StandardOutput.Write(data),
-                ErrorCallback = data => io.StandardError.Write(data),
+                OutputCallback = stdOut,
+                ErrorCallback = stdErr,
             };
 
             var process = runner.Run(runSpec);
@@ -177,12 +185,9 @@ namespace IronFoundry.Container
             if (user != null)
                 user.Delete();
 
-            if (constrainedProcessRunner != null)
-                constrainedProcessRunner.Dispose();
-
-            if (processRunner != null)
-                processRunner.Dispose();
-
+            if (directory != null)
+                directory.Destroy();
+            
             this.currentState = ContainerState.Destroyed;
         }
 
@@ -244,10 +249,18 @@ namespace IronFoundry.Container
             ThrowIfDestroyed();
 
             if (constrainedProcessRunner != null)
+            {
                 constrainedProcessRunner.StopAll(kill);
+                constrainedProcessRunner.Dispose();
+                constrainedProcessRunner = null;
+            }
 
             if (processRunner != null)
+            {
                 processRunner.StopAll(kill);
+                processRunner.Dispose();
+                processRunner = null;
+            }
 
             this.currentState = ContainerState.Stopped;
         }

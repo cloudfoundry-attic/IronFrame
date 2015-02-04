@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using IronFoundry.Container.Utilities;
 
@@ -7,6 +8,7 @@ namespace IronFoundry.Container
     public interface IContainerProcess
     {
         int Id { get; }
+        IReadOnlyDictionary<string, string> Environment { get; }
         void Kill();
         int WaitForExit();
         bool TryWaitForExit(int milliseconds, out int exitCode);
@@ -24,6 +26,10 @@ namespace IronFoundry.Container
         public int Id
         {
             get { return process.Id; }
+        }
+        public IReadOnlyDictionary<string, string> Environment
+        {
+            get { return process.Environment; }
         }
 
         public void Kill()

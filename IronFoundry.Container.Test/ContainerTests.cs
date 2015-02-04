@@ -162,7 +162,7 @@ namespace IronFoundry.Container
                     Assert.Equal(ExpectedRunSpec.ExecutablePath, actual.ExecutablePath);
                     Assert.Equal(ExpectedRunSpec.Arguments, actual.Arguments);
                     Assert.Superset(
-                        new HashSet<string>(ExpectedRunSpec.Environment.Keys), 
+                        new HashSet<string>(ExpectedRunSpec.Environment.Keys),
                         new HashSet<string>(actual.Environment.Keys));
                     Assert.Equal(ExpectedRunSpec.WorkingDirectory, actual.WorkingDirectory);
                 }
@@ -273,6 +273,22 @@ namespace IronFoundry.Container
                 }
 
                 [Fact]
+                public void ProcessIoCanBeNull()
+                {
+                    var io = new TestProcessIO();
+                    io.Output = null;
+                    io.Error = null;
+
+                    Container.Run(Spec, io);
+
+                    var proc = ConstrainedProcessRunner.Captured(x => x.Run(null)).Arg<ProcessRunSpec>();
+
+                    Assert.Equal(null, proc.OutputCallback);
+                    Assert.Equal(null, proc.ErrorCallback);
+                }
+
+
+                [Fact]
                 public void WhenPathMappingIsDisabled_DoesNotMapExecutablePath()
                 {
                     var io = Substitute.For<IProcessIO>();
@@ -338,6 +354,15 @@ namespace IronFoundry.Container
 
                 ProcessRunner.Received(1).Dispose();
                 ConstrainedProcessRunner.Received(1).Dispose();
+            }
+
+
+            [Fact]
+            public void DeletesContainerDirectory()
+            {
+                Container.Destroy();
+
+                this.Directory.Received(1).Destroy();
             }
 
             [Fact]
@@ -506,6 +531,15 @@ namespace IronFoundry.Container
 
         public class Stop : ContainerTests
         {
+            [Fact]
+            public void DisposesProcessRunners()
+            {
+                Container.Stop(false);
+
+                ProcessRunner.Received(1).Dispose();
+                ConstrainedProcessRunner.Received(1).Dispose();
+            }
+
             [Fact]
             public void WhenContainerDestroyed_Throws()
             {

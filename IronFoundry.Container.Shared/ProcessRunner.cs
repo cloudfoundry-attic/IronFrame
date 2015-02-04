@@ -6,6 +6,7 @@ using System.IO;
 using System.Net;
 using IronFoundry.Container.Utilities;
 using IronFoundry.Container.Win32;
+using NLog;
 
 namespace IronFoundry.Container
 {
@@ -40,6 +41,8 @@ namespace IronFoundry.Container
 
     public class ProcessRunner : IProcessRunner
     {
+        private readonly Logger log = LogManager.GetCurrentClassLogger();
+
         static readonly string[] EmptyArguments = new string[0];
 
         public void Dispose()
@@ -104,6 +107,11 @@ namespace IronFoundry.Container
                     };
                 }
             }
+
+            log.Trace("Starting Process - FileName: {0} Arguments: {1} WorkingDirectory: {2}", 
+                p.StartInfo.FileName,
+                p.StartInfo.Arguments,
+                p.StartInfo.WorkingDirectory);
 
             bool started = p.Start();
             Debug.Assert(started); // TODO: Should we throw an exception here? Fail fast?

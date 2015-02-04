@@ -6,6 +6,7 @@ using System.DirectoryServices.AccountManagement;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Security.Permissions;
 using System.Web.Security;
 using IronFoundry.Container.Win32;
 using NLog;
@@ -20,6 +21,8 @@ namespace IronFoundry.Container.Utilities
         private static extern int NetUserDel(string serverName, string userName);
 
         private const uint COM_EXCEPT_UNKNOWN_DIRECTORY_OBJECT = 0x80005004;
+        private const uint COM_EXCEPT_ERROR_NONE_MAPPED = 0x80070534;
+
         // TODO: Determine if adding the user to IIS_USRS is really a requirement for the
         // IISHost.  If it is, then pass an array of groups for the user instead of having this hardcoded.
         //private const string IIS_IUSRS_NAME = "IIS_IUSRS";
@@ -35,8 +38,8 @@ namespace IronFoundry.Container.Utilities
             this.wardenUserGroups = userGroupNames ?? new String[0];
         }
 
-        public LocalPrincipalManager(string userGroupName)
-            : this(new DesktopPermissionManager(), userGroupName)
+        public LocalPrincipalManager(params string [] userGroupNames)
+            : this(new DesktopPermissionManager(), userGroupNames)
         {
         }
 
@@ -146,7 +149,8 @@ namespace IronFoundry.Container.Utilities
         {
             var groupQuery = new GroupPrincipal(context, groupName);
             var searcher = new PrincipalSearcher(groupQuery);
-            var group = searcher.FindOne() as GroupPrincipal;
+            var group = InvokeSearcherWithRetries(searcher);
+
 
             if (group == null)
             {
@@ -162,5 +166,34 @@ namespace IronFoundry.Container.Utilities
 
             group.Save();
         }
+
+        private Principal InvokeSearcherWithRetries(PrincipalSearcher searcher)
+        {
+            Principal group = null;
+
+            Func<bool> findGroup = () =>
+            {
+                try
+                {
+                    group = searcher.FindOne() as GroupPrincipal;
+                }
+                catch (COMException ex)
+                {
+                    // No mapping between account names and security IDs was done.
+                    if ((uint)ex.ErrorCode != COM_EXCEPT_ERROR_NONE_MAPPED)
+                    {
+                        throw;
+                    }
+                }
+
+                return group != null;
+            };
+
+            findGroup.RetryUpToNTimes(5, 200);
+
+            return group;
+        }
+
+
     }
 }

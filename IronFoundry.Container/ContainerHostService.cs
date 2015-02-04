@@ -39,11 +39,22 @@ namespace IronFoundry.Container
         {
         }
 
-        void CopyHostToContainer(IContainerDirectory directory)
+        private void CopyHostToContainer(IContainerDirectory directory)
         {
             fileSystem.CopyFile(
-                dependencyHelper.ContainerHostExePath, 
+                dependencyHelper.ContainerHostExePath,
                 directory.MapBinPath(dependencyHelper.ContainerHostExe));
+
+            // This check is here for the acceptance tests.
+            // They get ContainerHost.exe by referencing the project.  However, msbuild does
+            // not copy .config files of referenced assemblies.  Thus when running the acceptance
+            // tests, the ContainerHost.exe used does not have an app.config.
+            if (fileSystem.FileExists(dependencyHelper.ContainerHostExeConfigPath))
+            {
+                fileSystem.CopyFile(
+                    dependencyHelper.ContainerHostExeConfigPath,
+                    directory.MapBinPath(dependencyHelper.ContainerHostExeConfig));
+            }
 
             foreach (var dependencyFilePath in dependencyHelper.GetContainerHostDependencies())
             {

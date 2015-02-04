@@ -15,15 +15,16 @@ namespace IronFoundry.Container
     public class ContainerDirectoryTests
     {
         ContainerDirectory Directory { get; set; }
+        FileSystemManager FileSystem { get; set; }
 
         public ContainerDirectoryTests()
         {
-            Directory = new ContainerDirectory(@"C:\Containers\handle");
+            FileSystem = Substitute.For<FileSystemManager>();
+            Directory = new ContainerDirectory(FileSystem, @"C:\Containers\handle");
         }
 
-        public class Create
+        public class Create : ContainerDirectoryTests
         {
-            FileSystemManager FileSystem { get; set; }
             IContainerUser ContainerUser { get; set; }
 
             public Create()
@@ -120,6 +121,25 @@ namespace IronFoundry.Container
             }
         }
 
+        public class Destroy : ContainerDirectoryTests
+        {
+            private IContainerUser ContainerUser { get; set; }
+
+            public Destroy()
+            {
+                ContainerUser = Substitute.For<IContainerUser>();
+                ContainerUser.UserName.Returns("username");
+            }
+
+            [Fact]
+            public void DeletesContainerDirectory()
+            {
+                ContainerDirectory directory = ContainerDirectory.Create(FileSystem, @"c:\Containers", "handle", ContainerUser);
+                directory.Destroy();
+                FileSystem.Received(1).DeleteDirectory(@"c:\Containers\handle");
+            }
+        }
+
         public class MapBinPath : ContainerDirectoryTests
         {
             [InlineData("/", @"C:\Containers\handle\bin\")]
@@ -208,8 +228,11 @@ namespace IronFoundry.Container
 
         public class MapUserPath : ContainerDirectoryTests
         {
+            [InlineData("", @"C:\Containers\handle\user\")]
+            [InlineData("\\", @"C:\Containers\handle\user\")]
             [InlineData("/", @"C:\Containers\handle\user\")]
             [InlineData("/path/to/app", @"C:\Containers\handle\user\path\to\app")]
+            [InlineData(@"\path\to\app", @"C:\Containers\handle\user\path\to\app")]
             [Theory]
             public void MapsRootedPathRelativeToContainerUserPath(string containerPath, string expectedMappedPath)
             {

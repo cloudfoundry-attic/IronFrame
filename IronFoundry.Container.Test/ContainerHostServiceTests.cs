@@ -46,6 +46,8 @@ namespace IronFoundry.Container
             DependencyHelper.ContainerHostExePath.Returns(@"C:\Path\To\IronFoundry.Container.Host.exe");
             DependencyHelper.GetContainerHostDependencies().Returns(new [] { @"C:\Path\To\IronFoundry.Container.Shared.dll" });
 
+            FileSystem.FileExists(DependencyHelper.ContainerHostExeConfigPath).Returns(true);
+
             Service = new ContainerHostService(FileSystem, ProcessRunner, DependencyHelper);
         }
 
@@ -58,6 +60,7 @@ namespace IronFoundry.Container
                 client = Service.StartContainerHost(ContainerId, Directory, JobObject, null);
                 
                 FileSystem.Received(1).CopyFile(@"C:\Path\To\IronFoundry.Container.Host.exe", @"C:\Containers\handle\bin\IronFoundry.Container.Host.exe");
+                FileSystem.Received(1).CopyFile(@"C:\Path\To\IronFoundry.Container.Host.exe.config", @"C:\Containers\handle\bin\IronFoundry.Container.Host.exe.config");
                 FileSystem.Received(1).CopyFile(@"C:\Path\To\IronFoundry.Container.Shared.dll", @"C:\Containers\handle\bin\IronFoundry.Container.Shared.dll");
             }
             finally

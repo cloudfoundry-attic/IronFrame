@@ -16,6 +16,7 @@ namespace IronFoundry.Container
         string MapBinPath(string containerPath);
         string MapPrivatePath(string containerPath);
         string MapUserPath(string containerPath);
+        void Destroy();
     }
 
     public class ContainerDirectory : IContainerDirectory
@@ -23,12 +24,14 @@ namespace IronFoundry.Container
         const string BinRelativePath = "bin";
         const string UserRelativePath = "user";
 
+        readonly FileSystemManager fileSystem;
         readonly string containerPath;
         readonly string containerBinPath;
         readonly string containerUserPath;
 
-        public ContainerDirectory(string containerPath)
+        public ContainerDirectory(FileSystemManager fileSystem, string containerPath)
         {
+            this.fileSystem = fileSystem;
             this.containerPath = containerPath;
 
             this.containerBinPath = CanonicalizePath(Path.Combine(containerPath, BinRelativePath), ensureTrailingSlash: true);
@@ -56,7 +59,18 @@ namespace IronFoundry.Container
             fileSystem.CreateDirectory(containerBinPath, GetContainerUserAccess(containerUser.UserName, FileAccess.Read));
             fileSystem.CreateDirectory(containerUserPath, GetContainerUserAccess(containerUser.UserName, FileAccess.ReadWrite));
 
-            return new ContainerDirectory(containerPath);
+            return new ContainerDirectory(fileSystem, containerPath);
+        }
+
+        public void Destroy()
+        {
+            try
+            {
+                fileSystem.DeleteDirectory(containerPath);
+            }
+            catch (DirectoryNotFoundException)
+            {
+            }
         }
 
         public string MapBinPath(string path)
@@ -68,7 +82,7 @@ namespace IronFoundry.Container
         {
             var basePath = CanonicalizePath(Path.Combine(containerPath, pathPrefix));
 
-            path = path.TrimStart('/');
+            path = path.TrimStart('/', '\\');
             var isRootPath = String.IsNullOrWhiteSpace(path);
 
             var mappedPath = CanonicalizePath(Path.Combine(basePath, path), ensureTrailingSlash: isRootPath);

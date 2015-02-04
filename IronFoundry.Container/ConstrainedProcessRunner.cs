@@ -8,7 +8,7 @@ namespace IronFoundry.Container
     {
         public const int DefaultStopTimeout = 10000;
 
-        readonly IContainerHostClient hostClient;
+        IContainerHostClient hostClient;
 
         public ConstrainedProcessRunner(IContainerHostClient hostClient)
         {
@@ -37,7 +37,10 @@ namespace IronFoundry.Container
         public void Dispose()
         {
             if (hostClient != null)
+            {
                 hostClient.Dispose();
+                hostClient = null;
+            }
         }
 
         public IProcess Run(ProcessRunSpec runSpec)
@@ -68,8 +71,11 @@ namespace IronFoundry.Container
 
         public void StopAll(bool kill)
         {
-            var timeout = kill ? 0 : DefaultStopTimeout;
-            hostClient.StopAllProcesses(timeout);
+            if (hostClient != null)
+            {
+                var timeout = kill ? 0 : DefaultStopTimeout;
+                hostClient.StopAllProcesses(timeout);
+            }
         }
     }
 }
