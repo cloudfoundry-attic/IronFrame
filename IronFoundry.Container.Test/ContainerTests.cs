@@ -227,20 +227,6 @@ namespace IronFoundry.Container
 
                     Assert.Equal(Spec.Environment, actualSpec.Environment);
                 }
-
-                [Fact]
-                public void WhenPathMappingDisabled_DoesntMapWorkingDir()
-                {
-                    Spec.WorkingDirectory = @"c:\workingdir";
-                    Spec.DisablePathMapping = true;
-
-                    var io = Substitute.For<IProcessIO>();
-                    var process = Container.Run(Spec, io);
-
-                    var actual = ProcessRunner.Captured(x => x.Run(null)).Arg<ProcessRunSpec>();
-
-                    Assert.Equal(@"c:\workingdir", actual.WorkingDirectory);
-                }
             }
 
             public class WhenNotPrivileged : Run
