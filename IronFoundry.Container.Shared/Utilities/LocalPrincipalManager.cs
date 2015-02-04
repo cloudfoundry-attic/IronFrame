@@ -21,6 +21,8 @@ namespace IronFoundry.Container.Utilities
         private static extern int NetUserDel(string serverName, string userName);
 
         private const uint COM_EXCEPT_UNKNOWN_DIRECTORY_OBJECT = 0x80005004;
+        private const uint COM_EXCEPT_ERROR_NONE_MAPPED = 0x80070534;
+
         // TODO: Determine if adding the user to IIS_USRS is really a requirement for the
         // IISHost.  If it is, then pass an array of groups for the user instead of having this hardcoded.
         //private const string IIS_IUSRS_NAME = "IIS_IUSRS";
@@ -175,8 +177,13 @@ namespace IronFoundry.Container.Utilities
                 {
                     group = searcher.FindOne() as GroupPrincipal;
                 }
-                catch (COMException)
+                catch (COMException ex)
                 {
+                    // No mapping between account names and security IDs was done.
+                    if ((uint)ex.ErrorCode != COM_EXCEPT_ERROR_NONE_MAPPED)
+                    {
+                        throw;
+                    }
                 }
 
                 return group != null;
