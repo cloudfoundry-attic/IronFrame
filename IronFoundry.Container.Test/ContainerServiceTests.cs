@@ -227,6 +227,19 @@ namespace IronFoundry.Container
                 }
             }
 
+            public class GetContainerHandles : WithContainer
+            {
+                [Fact]
+                public void ShouldReturnAllHandles()
+                {
+                    var handles = Service.GetContainerHandles();
+                    Assert.Collection(handles,
+                        x => Assert.Equal(Container.Handle, x)
+                    );
+                }
+            }
+
+
             public class GetContainerByHandle : WithContainer
             {
                 [Fact]
