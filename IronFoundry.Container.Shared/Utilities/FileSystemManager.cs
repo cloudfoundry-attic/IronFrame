@@ -5,8 +5,6 @@ using System.Linq;
 using System.Net;
 using System.Security.AccessControl;
 using System.Security.Principal;
-using ICSharpCode.SharpZipLib.GZip;
-using ICSharpCode.SharpZipLib.Tar;
 using IronFoundry.Container.Win32;
 
 namespace IronFoundry.Container.Utilities
@@ -34,23 +32,6 @@ namespace IronFoundry.Container.Utilities
             Directory.CreateDirectory(path, security);
         }
 
-        public virtual void CreateTarArchive(string sourceDirectoryPath, Stream tarStream)
-        {
-            DirectoryInfo directoryInfo = new DirectoryInfo(sourceDirectoryPath);
-
-            var tarFileRecords = GetTarFileRecords(directoryInfo, "").ToList();
-
-            using (var tarWriter = new TarOutputStream(tarStream))
-            {
-                foreach (var tarFileRecord in tarFileRecords)
-                {
-                    WriteFileToTar(tarWriter, tarFileRecord);
-                }
-
-                tarWriter.Finish();
-            }
-        }
-
         public virtual void DeleteDirectory(string path)
         {
             Directory.Delete(path, true);
@@ -64,41 +45,6 @@ namespace IronFoundry.Container.Utilities
         public virtual bool DirectoryExists(string directoryPath)
         {
             return Directory.Exists(directoryPath);
-        }
-
-        public virtual void ExtractTarArchive(Stream tarStream, string destinationDirectoryPath)
-        {
-            using (var tarReader = new TarInputStream(tarStream))
-            {
-                for (var tarEntry = tarReader.GetNextEntry(); tarEntry != null; tarEntry = tarReader.GetNextEntry())
-                {
-                    if (tarEntry.IsDirectory)
-                        continue;
-
-                    string relativeFilePath = GetFilePathFromTarRecordName(tarEntry.Name);
-                    string filePath = Path.GetFullPath(Path.Combine(destinationDirectoryPath, relativeFilePath));
-
-                    if (!IsPathRelative(destinationDirectoryPath, filePath))
-                    {
-                        throw new InvalidOperationException(
-                            String.Format(
-                                "The normalized path '{0}' is not relative to the destination path '{1}'.",
-                                filePath,
-                                destinationDirectoryPath));
-                    }
-
-                    string directoryPath = Path.GetDirectoryName(filePath);
-                    Directory.CreateDirectory(directoryPath);
-
-                    using (var fs = OpenWrite(filePath))
-                    {
-                        tarReader.CopyEntryContents(fs);
-                    }
-
-                    var modifiedTime = DateTime.SpecifyKind(tarEntry.ModTime, DateTimeKind.Utc);
-                    File.SetLastWriteTimeUtc(filePath, modifiedTime);
-                }
-            }
         }
 
         public virtual FileAttributes GetAttributes(string file)
@@ -119,27 +65,6 @@ namespace IronFoundry.Container.Utilities
                 path = path.Substring(Path.GetPathRoot(path).Length);
 
             return path;
-        }
-
-        IEnumerable<TarFileRecord> GetTarFileRecords(DirectoryInfo directoryInfo, string basePath)
-        {
-            foreach (var fileInfo in directoryInfo.GetFiles())
-            {
-                var relativeFilePath = Path.Combine(basePath, fileInfo.Name);
-
-                yield return new TarFileRecord
-                {
-                    Name = GetTarRecordNameFromFilePath(relativeFilePath),
-                    Size = fileInfo.Length,
-                    FilePath = fileInfo.FullName,
-                };
-            }
-
-            foreach (var childDirectoryInfo in directoryInfo.GetDirectories())
-            {
-                foreach (var childRecord in GetTarFileRecords(childDirectoryInfo, Path.Combine(basePath, childDirectoryInfo.Name)))
-                    yield return childRecord;
-            }
         }
 
         string GetTarRecordNameFromFilePath(string path)
@@ -168,27 +93,6 @@ namespace IronFoundry.Container.Utilities
         public virtual Stream OpenWrite(string path)
         {
             return File.OpenWrite(path);
-        }
-
-        void WriteFileToTar(TarOutputStream tarWriter, TarFileRecord tarFileRecord)
-        {
-            var tarEntry = TarEntry.CreateTarEntry(tarFileRecord.Name);
-            tarEntry.Size = tarFileRecord.Size;
-            tarEntry.ModTime = File.GetLastWriteTimeUtc(tarFileRecord.FilePath);
-
-            tarWriter.PutNextEntry(tarEntry);
-            using (var fs = OpenRead(tarFileRecord.FilePath))
-            {
-                fs.CopyTo(tarWriter);
-                tarWriter.CloseEntry();
-            }
-        }
-
-        class TarFileRecord
-        {
-            public string Name { get; set; }
-            public long Size { get; set; }
-            public string FilePath { get; set; }
         }
 
         public FileSystemRights ComputeEffectiveAccessRights(string directory, IdentityReference identity)
@@ -269,62 +173,9 @@ namespace IronFoundry.Container.Utilities
             }
         }
 
-        public virtual void CreateTarFile(string sourcePath, string tarFilePath, bool compress)
-        {
-            if (fileSystem.Exists(tarFilePath) &&
-                fileSystem.GetAttributes(tarFilePath).HasFlag(FileAttributes.Directory))
-            {
-                throw new InvalidOperationException("The tar file path must not refer to a directory.");
-            }
-
-            using (var fileStream = fileSystem.OpenWrite(tarFilePath))
-            {
-                using (var tarStream = GetTarOutputStream(fileStream, compress))
-                {
-                    var tarDirectoryPath = Path.GetDirectoryName(tarFilePath);
-                    fileSystem.CreateDirectory(tarDirectoryPath);
-                    fileSystem.CreateTarArchive(sourcePath, tarStream);
-                }
-            }
-        }
-
         public virtual void DeleteDirectory(string path)
         {
             fileSystem.DeleteDirectory(path);
-        }
-
-        public virtual void ExtractTarFile(string tarFilePath, string destinationPath, bool decompress)
-        {
-            if (fileSystem.Exists(destinationPath) &&
-                !fileSystem.GetAttributes(destinationPath).HasFlag(FileAttributes.Directory))
-            {
-                throw new InvalidOperationException("The destination path must not refer to a file.");
-            }
-
-            using (var fileStream = fileSystem.OpenRead(tarFilePath))
-            {
-                using (var tarStream = GetTarInputStream(fileStream, decompress))
-                {
-                    fileSystem.CreateDirectory(destinationPath);
-                    fileSystem.ExtractTarArchive(tarStream, destinationPath);
-                }
-            }
-        }
-
-        Stream GetTarInputStream(Stream stream, bool decompress)
-        {
-            if (decompress)
-                return new GZipInputStream(stream);
-            else
-                return stream;
-        }
-
-        Stream GetTarOutputStream(Stream stream, bool compress)
-        {
-            if (compress)
-                return new GZipOutputStream(stream);
-            else
-                return stream;
         }
 
         public virtual bool FileExists(string path)
