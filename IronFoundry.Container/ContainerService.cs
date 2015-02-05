@@ -165,5 +165,10 @@ namespace IronFoundry.Container
         {
             return containers.ToArray();
         }
+
+        public IReadOnlyList<string> GetContainerHandles()
+        {
+            return GetContainers().Select(x => x.Handle).ToList();
+        }
     }
 }
