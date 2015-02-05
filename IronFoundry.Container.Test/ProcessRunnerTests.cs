@@ -193,6 +193,7 @@ namespace IronFoundry.Container
                     var si = CreateRunSpec("cmd.exe", new[] {"/C", "set"});
                     si.Credentials = user;
                     si.BufferedInputOutput = true;
+                    si.WorkingDirectory = @"c:\";
 
                     using (var p = Runner.Run(si))
                     {
