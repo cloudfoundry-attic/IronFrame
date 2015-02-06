@@ -37,7 +37,17 @@ public class FactAdminRequired : FactAttribute
         {
             var identity = WindowsIdentity.GetCurrent();
             var principal = new WindowsPrincipal(identity);
-            isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
+            isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator)
+                // The system account, while an admin, cannot start processes as another user.
+                //
+                // From MSDN:
+                // You cannot call CreateProcessWithLogonW from a process that is running under
+                // the "LocalSystem" account, because the function uses the logon SID in the
+                // caller token, and the token for the "LocalSystem" account does not contain
+                // this SID
+                //
+                // Thus, if running as System, skip.
+                && !identity.IsSystem;
         }
         catch
         {
