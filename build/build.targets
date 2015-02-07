@@ -154,7 +154,7 @@
     </Target>
     
     <Target Name="_TestSingle">
-        <xunit Assemblies="$(File)" />
+        <xunit Assemblies="$(File)" ParallelizeAssemblies="$(XUnitParallelizeAssemblies)" ParallelizeTestCollections="$(XUnitParallelizeTestCollections)" />
     </Target>
 
     <Target Name="PackageBinaries" DependsOnTargets="Build">
