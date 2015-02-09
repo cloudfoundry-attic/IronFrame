@@ -235,7 +235,7 @@ namespace IronFoundry.Container
                     var handles = Service.GetContainerHandles();
                     Assert.Collection(handles,
                         x => Assert.Equal(Container.Handle, x)
-                    );
+                        );
                 }
             }
 
@@ -279,5 +279,27 @@ namespace IronFoundry.Container
                 }
             }
         }
+        
+        public class WithoutContainer : ContainerServiceTests
+        {
+            private IContainer Container { get; set; }
+
+            public WithoutContainer()
+            {
+                Container = null;
+            }
+
+            public class GetContainerHandles : WithoutContainer
+            {
+                // We test the "no containers" cases by simply not creating containers
+                [Fact]
+                public void ShouldReturnEmptyList()
+                {
+                    var handles = Service.GetContainerHandles();
+                    Assert.Equal(handles.Count(), 0);
+                }
+            }
+        }
+         
     }
 }
