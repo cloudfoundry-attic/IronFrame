@@ -109,20 +109,6 @@ namespace IronFoundry.Warden.Containers
             containerDirectory.BindMounts(mounts);
         }
 
-        public void CreateTarFile(string sourcePath, string tarFilePath, bool compress)
-        {
-            if (String.IsNullOrWhiteSpace(sourcePath))
-                throw new InvalidOperationException("The source path is empty.");
-
-            if (String.IsNullOrWhiteSpace(tarFilePath))
-                throw new InvalidOperationException("The tar file path is empty.");
-
-            var containerSourcePath = ConvertToContainerPath(sourcePath);
-
-            // NOTE: tarFilePath should not be contained within the container.
-            fileSystemManager.CreateTarFile(containerSourcePath, tarFilePath, compress);
-        }
-
         string ConvertToContainerPath(string path)
         {
             // Expect the incoming path to be a unix style path.  The root is relative to the root of the container.
@@ -205,19 +191,6 @@ namespace IronFoundry.Warden.Containers
             jobObject.AssignProcessToJob(p);
 
             return wrapped;
-        }
-
-        public void ExtractTarFile(string tarFilePath, string destinationPath, bool decompress)
-        {
-            if (String.IsNullOrWhiteSpace(tarFilePath))
-                throw new InvalidOperationException("The tar file path is empty.");
-
-            if (String.IsNullOrWhiteSpace(destinationPath))
-                throw new InvalidOperationException("The destination path is empty.");
-
-            var containerDestinationPath = ConvertToContainerPath(destinationPath);
-
-            fileSystemManager.ExtractTarFile(tarFilePath, containerDestinationPath, decompress);
         }
 
         public async Task<CommandResult> RunCommandAsync(RemoteCommand remoteCommand)

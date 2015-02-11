@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
-using ICSharpCode.SharpZipLib.GZip;
 
 namespace IronFoundry.Container.Utilities
 {
@@ -105,102 +104,5 @@ namespace IronFoundry.Container.Utilities
             }
         }
 
-        public class CreateTarFile : FileSystemManagerTestContext
-        {
-            [Fact]
-            public void CreatesTarFile()
-            {
-                Stream tarStream = new MemoryStream();
-                fileSystem.OpenWrite("destination.tar").Returns(tarStream);
-
-                manager.CreateTarFile("source", "destination.tar", false);
-
-                fileSystem.Received(x => x.CreateTarArchive("source", tarStream));
-            }
-
-            [Fact]
-            public void CompressesTarFile()
-            {
-                Stream tarStream = new MemoryStream();
-                fileSystem.OpenWrite("destination.tar").Returns(tarStream);
-
-                manager.CreateTarFile("source", "destination.tar", true);
-
-                fileSystem.Received(x => x.CreateTarArchive(
-                    "source",
-                    Arg.Any<GZipOutputStream>()));
-            }
-
-            [Fact]
-            public void CreatesDestinationDirectoriesIfNecessary()
-            {
-                Stream tarStream = new MemoryStream();
-                fileSystem.OpenWrite(@"path\to\destination.tar").Returns(tarStream);
-
-                manager.CreateTarFile("source", @"path\to\destination.tar", false);
-
-                fileSystem.Received(x => x.CreateDirectory(@"path\to"));
-                fileSystem.Received(x => x.CreateTarArchive(@"source", tarStream));
-            }
-
-            [Fact]
-            public void WhenDestinationPathExists_ThrowsIfDestinationIsADirectory()
-            {
-                fileSystem.Exists("destination.tar").Returns(true);
-                fileSystem.GetAttributes("destination.tar").Returns(FileAttributes.Directory);
-
-                var ex = Record.Exception(() => manager.CreateTarFile("source", "destination.tar", false));
-                Assert.IsType<InvalidOperationException>(ex);
-            }
-        }
-
-        public class ExtractTarFile : FileSystemManagerTestContext
-        {
-            [Fact]
-            public void ExtractsTarFile()
-            {
-                Stream tarStream = new MemoryStream();
-                fileSystem.OpenRead("source.tar").Returns(tarStream);
-
-                manager.ExtractTarFile("source.tar", "destination", false);
-
-                fileSystem.Received(x => x.ExtractTarArchive(tarStream, "destination"));
-            }
-
-            [Fact]
-            public void DecompressesTarFile()
-            {
-                Stream tarStream = new MemoryStream();
-                fileSystem.OpenRead("source.tar").Returns(tarStream);
-
-                manager.ExtractTarFile("source.tar", "destination", true);
-
-                fileSystem.Received(x => x.ExtractTarArchive(
-                    Arg.Any<GZipInputStream>(), 
-                    "destination"));
-            }
-
-            [Fact]
-            public void CreatesDestinationDirectoriesIfNecessary()
-            {
-                Stream tarStream = new MemoryStream();
-                fileSystem.OpenRead("source.tar").Returns(tarStream);
-
-                manager.ExtractTarFile("source.tar", @"path\to\destination", false);
-
-                fileSystem.Received(x => x.CreateDirectory(@"path\to\destination"));
-                fileSystem.Received(x => x.ExtractTarArchive(tarStream, @"path\to\destination"));
-            }
-
-            [Fact]
-            public void WhenDestinationPathExists_ThrowsIfDestinationIsAFile()
-            {
-                fileSystem.Exists("destination").Returns(true);
-                fileSystem.GetAttributes("destination").Returns(FileAttributes.Normal);
-
-                var ex = Record.Exception(() => manager.ExtractTarFile("source.tar", "destination", false));
-                Assert.IsType<InvalidOperationException>(ex);
-            }
-        }
     }
 }
