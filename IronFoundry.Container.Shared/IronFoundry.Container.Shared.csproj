@@ -78,7 +78,6 @@
     <Compile Include="Messages\ProcessDataEvent.cs" />
     <Compile Include="Messages\StopAllProcessesMessage.cs" />
     <Compile Include="Messages\WaitForProcessExitMessage.cs" />
-    <Compile Include="Utilities\BackgroundProcess.cs" />
     <Compile Include="Utilities\DesktopPermissionManager.cs" />
     <Compile Include="Utilities\FirewallManager.cs" />
     <Compile Include="Utilities\IFirewallManager.cs" />

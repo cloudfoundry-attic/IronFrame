@@ -27,9 +27,18 @@ namespace IronFoundry.Container.Utilities
             log.Info("Running netsh.exe for {0}", arguments);
 
             bool success;
-            using (var process = new BackgroundProcess(workingDirectory, "netsh.exe", arguments))
+
+            using (ProcessRunner runner = new ProcessRunner())
             {
-                process.StartAndWait(false);
+                var spec = new ProcessRunSpec
+                {
+                    ExecutablePath = "netsh.exe",
+                    Arguments = new[] {arguments},
+                    WorkingDirectory = workingDirectory
+                };
+
+                var process = runner.Run(spec);
+                process.WaitForExit();
                 success = process.ExitCode == 0;
             }
 
