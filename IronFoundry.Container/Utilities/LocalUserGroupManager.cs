@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 
 namespace IronFoundry.Container.Utilities
 {
+    // Kept public because it is used by the acceptance tests to create/delete user groups.
+
     // TODO: Either change LocalPrincipalManager to use the LocalUserGroupManager for its group operations
     // or have the container use both to create the user and then add it to the appropriate groups
     public sealed class LocalUserGroupManager

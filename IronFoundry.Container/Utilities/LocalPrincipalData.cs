@@ -2,7 +2,6 @@
 {
     using System;
 
-    // BR: Move this to IronFoundry.Container
     internal sealed class LocalPrincipalData
     {
         private readonly string userName;

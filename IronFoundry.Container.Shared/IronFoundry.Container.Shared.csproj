@@ -70,7 +70,6 @@
     <Compile Include="Messages\WaitForProcessExitMessage.cs" />
     <Compile Include="Utilities\JobObject.cs" />
     <Compile Include="Utilities\JobObjectLimits.cs" />
-    <Compile Include="Utilities\LocalUserGroupManager.cs" />
     <Compile Include="ProcessDataReceivedEventArgs.cs" />
     <Compile Include="Utilities\ProcessHelper.cs" />
     <Compile Include="Utilities\SafeJobObjectHandle.cs" />

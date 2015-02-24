@@ -65,7 +65,7 @@ namespace IronFoundry.Container.Acceptance
             {
                 // Delete the test user
                 var principalManager =
-                    new LocalPrincipalManager(new DesktopPermissionManager());
+                    new LocalPrincipalManager();
                 principalManager.DeleteUser(UserCredential.UserName);
             }
         }

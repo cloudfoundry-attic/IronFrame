@@ -9,7 +9,6 @@ namespace IronFoundry.Container.Utilities
         bool DeleteRule(int port);
     }
 
-    // BR: Don't use BackgroundProcess, convert to use one of the newer process helpers (IProcess, ProcessHelper, etc).
     internal sealed class NetShRunner : INetShRunner
     {
         private static readonly string workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.System);

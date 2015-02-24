@@ -5,7 +5,6 @@ using System.DirectoryServices.AccountManagement;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Web.Security;
-using IronFoundry.Container.Win32;
 using NLog;
 
 namespace IronFoundry.Container.Utilities
@@ -16,7 +15,8 @@ namespace IronFoundry.Container.Utilities
         void DeleteUser(string userName);
     }
 
-    internal sealed class LocalPrincipalManager : IUserManager
+    // Public because it is used by the acceptance tests to create/delete users.
+    public sealed class LocalPrincipalManager : IUserManager
     {
         const int NERR_Success = 0;
         [DllImport("netapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
@@ -34,7 +34,7 @@ namespace IronFoundry.Container.Utilities
         private readonly IDesktopPermissionManager permissionManager;
         private readonly IEnumerable<string> wardenUserGroups;
 
-        public LocalPrincipalManager(IDesktopPermissionManager permissionManager, params string[] userGroupNames)
+        internal LocalPrincipalManager(IDesktopPermissionManager permissionManager, params string[] userGroupNames)
         {
             this.permissionManager = permissionManager;
             this.wardenUserGroups = userGroupNames ?? new String[0];

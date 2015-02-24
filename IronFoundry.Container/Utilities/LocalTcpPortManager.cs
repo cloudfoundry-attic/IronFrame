@@ -9,7 +9,6 @@ namespace IronFoundry.Container.Utilities
         void ReleaseLocalPort(int? port, string userName);
     }
 
-    // BR: Move this to IronFoundry.Container
     internal sealed class LocalTcpPortManager : ILocalTcpPortManager
     {
         private readonly IFirewallManager firewallManager;

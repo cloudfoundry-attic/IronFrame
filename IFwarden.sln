@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Container.Test"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Container.Host", "IronFoundry.Container.Host\IronFoundry.Container.Host.csproj", "{6E4DD8FC-91E8-4C70-946D-4C37DF84C8CF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Container.Acceptance.Test", "IronFoundry.Container.Acceptance.Test\IronFoundry.Container.Acceptance.Test.csproj", "{95081EA9-CA53-4B69-8213-1AF5F30C2EA1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,10 @@ Global
 		{6E4DD8FC-91E8-4C70-946D-4C37DF84C8CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E4DD8FC-91E8-4C70-946D-4C37DF84C8CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E4DD8FC-91E8-4C70-946D-4C37DF84C8CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95081EA9-CA53-4B69-8213-1AF5F30C2EA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95081EA9-CA53-4B69-8213-1AF5F30C2EA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95081EA9-CA53-4B69-8213-1AF5F30C2EA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95081EA9-CA53-4B69-8213-1AF5F30C2EA1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

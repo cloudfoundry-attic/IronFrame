@@ -62,8 +62,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Acceptance\ContainerCreationServiceAcceptanceTests.cs" />
-    <Compile Include="Acceptance\ContainerAcceptanceTests.cs" />
     <Compile Include="ConstrainedProcessRunnerTests.cs" />
     <Compile Include="ConstrainedProcessTests.cs" />
     <Compile Include="ContainerServiceTests.cs" />
@@ -131,9 +129,7 @@
       <Name>IronFoundry.Container</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Helpers\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
