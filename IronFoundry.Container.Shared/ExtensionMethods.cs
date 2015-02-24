@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
@@ -319,6 +318,27 @@ namespace System.Security.Principal
             int splitIndex = identity.Name.IndexOf("\\");
             string username = (splitIndex < 0) ? string.Empty : identity.Name.Substring(splitIndex + 1);
             return username;
+        }
+    }
+}
+
+namespace NLog
+{
+    public static class LoggerExtensionMethods
+    {
+        public static void DebugException(this Logger logger, Exception exception)
+        {
+            logger.Log(LogLevel.Debug, String.Empty, exception);
+        }
+
+        public static void ErrorException(this Logger logger, Exception exception)
+        {
+            logger.Log(LogLevel.Error, String.Empty, exception);
+        }
+
+        public static void WarnException(this Logger logger, Exception exception)
+        {
+            logger.Log(LogLevel.Warn, String.Empty, exception);
         }
     }
 }

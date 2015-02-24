@@ -3,7 +3,7 @@ using IronFoundry.Container.Messages;
 
 namespace IronFoundry.Container.Host.Handlers
 {
-    public class CreateProcessHandler
+    internal sealed class CreateProcessHandler
     {
         readonly IProcessRunner processRunner;
         readonly IProcessTracker processTracker;

@@ -42,20 +42,11 @@
     </Compile>
     <Compile Include="Configuration\WardenConfig.cs" />
     <Compile Include="Configuration\WardenSection.cs" />
-    <Compile Include="Containers\ContainerDirectory.cs" />
     <Compile Include="Containers\ContainerHandle.cs" />
     <Compile Include="Containers\ContainerLogEmitter.cs" />
     <Compile Include="Containers\ContainerManager.cs" />
-    <Compile Include="Containers\ContainerResourceHolder.cs" />
-    <Compile Include="Containers\ContainerUser.cs" />
     <Compile Include="Containers\IContainerClient.cs" />
-    <Compile Include="Containers\IContainerHostLauncher.cs" />
-    <Compile Include="Containers\IContainerJanitor.cs" />
     <Compile Include="Containers\IContainerManager.cs" />
-    <Compile Include="Containers\ContainerHostLauncher.cs" />
-    <Compile Include="Containers\Messages\LogEvent.cs" />
-    <Compile Include="Containers\Messages\StopMessage.cs" />
-    <Compile Include="Containers\ProcessMonitor.cs" />
     <Compile Include="Containers\ContainerClient.cs" />
     <Compile Include="Handlers\LoggingRequestHandler.cs" />
     <Compile Include="PInvoke\IoCompletionPort.cs" />
@@ -147,6 +138,10 @@
     <Compile Include="Server\Buffer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\IronFoundry.Container.Shared\IronFoundry.Container.Shared.csproj">
+      <Project>{cb7ba555-21fd-4c57-a629-a925b6a83a31}</Project>
+      <Name>IronFoundry.Container.Shared</Name>
+    </ProjectReference>
     <ProjectReference Include="..\IronFoundry.Container\IronFoundry.Container.csproj">
       <Project>{5de07f79-b758-4a04-b908-626e7577313e}</Project>
       <Name>IronFoundry.Container</Name>
@@ -154,10 +149,6 @@
     <ProjectReference Include="..\IronFoundry.Warden.Protocol\IronFoundry.Warden.Protocol.csproj">
       <Project>{ddd0537b-4afe-4beb-bf30-4df0a5367a18}</Project>
       <Name>IronFoundry.Warden.Protocol</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\IronFoundry.Container.Shared\IronFoundry.Container.Shared.csproj">
-      <Project>{cb7ba555-21fd-4c57-a629-a925b6a83a31}</Project>
-      <Name>IronFoundry.Container.Shared</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -203,6 +194,7 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

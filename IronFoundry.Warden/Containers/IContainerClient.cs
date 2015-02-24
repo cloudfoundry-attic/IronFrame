@@ -1,5 +1,4 @@
-﻿using IronFoundry.Warden.Containers.Messages;
-using IronFoundry.Warden.Tasks;
+﻿using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Utilities;
 using System;
 using System.Collections.Generic;

@@ -4,7 +4,7 @@ using Microsoft.Win32.SafeHandles;
 
 namespace IronFoundry.Container.Win32
 {
-    internal class SafeAuthzContextHandle : SafeHandleZeroOrMinusOneIsInvalid
+    public class SafeAuthzContextHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
         public SafeAuthzContextHandle()
             : base(true)

@@ -44,7 +44,7 @@ namespace IronFoundry.Warden.Service
 
                 if (wardenServer.ClientListenException != null)
                 {
-                    log.ErrorException(wardenServer.ClientListenException);
+                    log.Log(LogLevel.Error, String.Empty, wardenServer.ClientListenException);
                 }
 
                 var destroyTasks = new List<Task>();
@@ -57,7 +57,7 @@ namespace IronFoundry.Warden.Service
                     }
                     catch (Exception e)
                     {
-                        log.ErrorException(e);
+                        log.Log(LogLevel.Error, String.Empty, e);
                     }
                 }
                 Task.WaitAll(destroyTasks.ToArray(), 2000);
@@ -65,7 +65,7 @@ namespace IronFoundry.Warden.Service
             }
             catch (Exception ex)
             {
-                log.ErrorException(ex);
+                log.Log(LogLevel.Error, String.Empty, ex);
             }
 
             return true;

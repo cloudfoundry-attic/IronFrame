@@ -5,7 +5,7 @@
     using System.Text;
 
     [Serializable]
-    public class WardenException : Exception, ISerializable
+    public sealed class WardenException : Exception, ISerializable
     {
         public WardenException() : base()
         {

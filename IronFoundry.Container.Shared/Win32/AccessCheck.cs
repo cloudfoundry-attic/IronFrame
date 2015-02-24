@@ -20,7 +20,7 @@ namespace IronFoundry.Container.Win32
     {
         [DllImport(NativeDll.AUTHZ_DLL, CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool AuthzInitializeResourceManager(
+        public static extern bool AuthzInitializeResourceManager(
             AuthzResourceManagerFlags flags,
             PFN_AUTHZ_DYNAMIC_ACCESS_CHECK pfnAccessCheck,
             PFN_AUTHZ_COMPUTE_DYNAMIC_GROUPS pfnComputeDynamicGroups,
@@ -30,7 +30,7 @@ namespace IronFoundry.Container.Win32
 
         [DllImport(NativeDll.AUTHZ_DLL, CharSet = CharSet.Unicode, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool AuthzInitializeContextFromSid(
+        public static extern bool AuthzInitializeContextFromSid(
             AuthzInitFlags flags,
             byte[] rawUserSid,
             SafeAuthzRMHandle authzRM,
@@ -41,7 +41,7 @@ namespace IronFoundry.Container.Win32
 
         [DllImport(NativeDll.AUTHZ_DLL, CharSet = CharSet.Unicode, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool AuthzAccessCheck(
+        public static extern bool AuthzAccessCheck(
             AuthzACFlags flags,
             SafeAuthzContextHandle hAuthzClientContext,
             ref AUTHZ_ACCESS_REQUEST pRequest,
@@ -53,7 +53,7 @@ namespace IronFoundry.Container.Win32
             AUTHZ_ACCESS_CHECK_RESULTS_HANDLE cachedResults);
 
         [Flags]
-        internal enum AuthzResourceManagerFlags : uint
+        public enum AuthzResourceManagerFlags : uint
         {
             NO_AUDIT = 0x1
         }
@@ -78,7 +78,7 @@ namespace IronFoundry.Container.Win32
         }
 
         [Flags]
-        internal enum AuthzInitFlags : uint
+        public enum AuthzInitFlags : uint
         {
             Default = 0x0,
             SkipTokenGroups = 0x2,
@@ -86,14 +86,14 @@ namespace IronFoundry.Container.Win32
             ComputePrivileges = 0x8
         }
 
-        internal enum AuthzACFlags : uint // DWORD
+        public enum AuthzACFlags : uint // DWORD
         {
             None = 0,
             NoDeepCopySD
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct AUTHZ_ACCESS_REQUEST
+        public struct AUTHZ_ACCESS_REQUEST
         {
             public ACCESS_MASK DesiredAccess;
             public byte[] PrincipalSelfSid;
@@ -103,7 +103,7 @@ namespace IronFoundry.Container.Win32
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct AUTHZ_ACCESS_REPLY
+        public struct AUTHZ_ACCESS_REPLY
         {
             public int ResultListLength;
             public PACCESS_MASK GrantedAccessMask;

@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using IronFoundry.Warden.Containers;
 using IronFoundry.Container.Utilities;
 using NSubstitute;
 using Xunit;
@@ -12,7 +9,7 @@ namespace IronFoundry.Container
 {
     public class ContainerTests
     {
-        Container Container { get; set; }
+        Internal.Container Container { get; set; }
         IProcessRunner ConstrainedProcessRunner { get; set; }
         Dictionary<string, string> ContainerEnvironment { get; set; }
         IContainerDirectory Directory { get; set; }
@@ -47,7 +44,7 @@ namespace IronFoundry.Container
             User = Substitute.For<IContainerUser>();
             User.UserName.Returns("container-username");
 
-            Container = new Container(
+            Container = new Internal.Container(
                 "id", 
                 "handle", 
                 User, 

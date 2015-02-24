@@ -5,13 +5,14 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using IronFoundry.Container;
+using IronFoundry.Container.Internal;
 using IronFoundry.Container.Utilities;
 using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Utilities;
 
 namespace IronFoundry.Warden.Containers
 {
-    public class ContainerClient : IContainerClient
+    internal sealed class ContainerClient : IContainerClient
     {
         private const string RootPrefix = "@ROOT@";
         private readonly IronFoundry.Container.IContainerService containerService;
@@ -143,7 +144,7 @@ namespace IronFoundry.Warden.Containers
             IContainerUser user = new TempUser(id, userManager);
 
             FileSystemManager fileSystem = new FileSystemManager();
-            var directory = new IronFoundry.Container.ContainerDirectory(fileSystem, containerPath);
+            var directory = new IronFoundry.Container.Internal.ContainerDirectory(fileSystem, containerPath);
 
             var jobObjectName = handle;
             var jobObject = new JobObject(jobObjectName);
@@ -154,7 +155,7 @@ namespace IronFoundry.Warden.Containers
             var tcpPortManager = new LocalTcpPortManager();
             IContainerPropertyService propertyService = null;
 
-            Container.Container container = new IronFoundry.Container.Container(
+            IronFoundry.Container.Internal.Container container = new IronFoundry.Container.Internal.Container(
                 id, 
                 handle, 
                 user, 
@@ -237,7 +238,7 @@ namespace IronFoundry.Warden.Containers
             public TempUser(string uniqueId, IUserManager userManager)
             {
                 this.userManager = userManager;
-                UserName = ContainerUser.CreateUserName(uniqueId);
+                UserName = uniqueId;
             }
 
             public string UserName { get; private set; }
@@ -255,9 +256,9 @@ namespace IronFoundry.Warden.Containers
 
         class TempContainerService : IContainerService
         {
-            private IronFoundry.Container.Container container;
+            private IronFoundry.Container.Internal.Container container;
 
-            public TempContainerService(IronFoundry.Container.Container container)
+            public TempContainerService(IronFoundry.Container.Internal.Container container)
             {
                 this.container = container;
             }

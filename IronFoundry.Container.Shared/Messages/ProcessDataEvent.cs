@@ -8,7 +8,7 @@ namespace IronFoundry.Container.Messages
         STDERR = 2,
     }
 
-    public class ProcessDataEvent
+    public sealed class ProcessDataEvent
     {
         public ProcessDataEvent()
         {

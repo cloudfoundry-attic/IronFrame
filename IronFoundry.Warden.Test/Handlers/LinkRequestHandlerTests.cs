@@ -2,7 +2,6 @@
 using IronFoundry.Container;
 using IronFoundry.Container.Messaging;
 using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Handlers;
 using IronFoundry.Warden.Jobs;
 using IronFoundry.Warden.Protocol;

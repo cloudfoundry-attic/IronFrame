@@ -32,7 +32,7 @@ namespace IronFoundry.Container.Utilities
 
         public class GetSecurityDescriptor : FileSystemSecurityDescriptorReaderTests
         {
-            public ISecurityDescriptorReader Reader { get; set; }
+            internal ISecurityDescriptorReader Reader { get; set; }
 
             [Fact]
             public void WhenPathDoesNotExist_Throws()

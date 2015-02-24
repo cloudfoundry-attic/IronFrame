@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Container.Messages
 {
-    public class CreateProcessParams
+    public sealed class CreateProcessParams
     {
         public Guid key;
         public string executablePath;
@@ -14,7 +14,7 @@ namespace IronFoundry.Container.Messages
         public string workingDirectory;
     }
 
-    public class CreateProcessRequest : JsonRpcRequest<CreateProcessParams>
+    public sealed class CreateProcessRequest : JsonRpcRequest<CreateProcessParams>
     {
         public static string MethodName = "Container.CreateProcess";
 
@@ -25,12 +25,12 @@ namespace IronFoundry.Container.Messages
         }
     }
 
-    public class CreateProcessResult
+    public sealed class CreateProcessResult
     {
         public int id;
     }
 
-    public class CreateProcessResponse : JsonRpcResponse<CreateProcessResult>
+    public sealed class CreateProcessResponse : JsonRpcResponse<CreateProcessResult>
     {
         public CreateProcessResponse(JToken id, CreateProcessResult result)
             : base(id, result)

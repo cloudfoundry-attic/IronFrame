@@ -1,7 +1,6 @@
 ﻿
 
 using System.ComponentModel;
-using IronFoundry.Container.Win32;
 
 namespace IronFoundry.Container.Utilities
 {
@@ -11,7 +10,7 @@ namespace IronFoundry.Container.Utilities
     using System.Runtime.InteropServices;
     using System.Text;
 
-    public class EnvironmentBlock
+    public sealed class EnvironmentBlock
     {
         private readonly Dictionary<string,string> _environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 

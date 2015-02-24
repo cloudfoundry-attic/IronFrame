@@ -45,13 +45,10 @@
     <Compile Include="Containers\ContainerHandleTests.cs" />
     <Compile Include="Containers\ContainerLogEmitterTest.cs" />
     <Compile Include="Containers\ContainerManagerTests.cs" />
-    <Compile Include="Containers\ContainerResourceHolderTest.cs" />
-    <Compile Include="Containers\ContainerUserTests.cs" />
     <Compile Include="Handlers\LinkRequestHandlerTests.cs" />
     <Compile Include="Handlers\DestroyRequestHandlerTests.cs" />
     <Compile Include="Handlers\LimitMemoryRequestHandlerTest.cs" />
     <Compile Include="Handlers\LoggingRequestHandlerTest.cs" />
-    <Compile Include="Containers\ProcessMonitorTests.cs" />
     <Compile Include="TestSupport\ArgMatchers.cs" />
     <Compile Include="TestSupport\Asserts.cs" />
     <Compile Include="TestSupport\FactAdminRequired.cs" />

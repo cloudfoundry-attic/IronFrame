@@ -6,8 +6,8 @@ namespace IronFoundry.Container.Utilities
 {
     public class LocalTcpPortManagerTests
     {
-        protected INetShRunner NetShRunner;
-        protected IFirewallManager FirewallManager;
+        internal INetShRunner NetShRunner;
+        internal IFirewallManager FirewallManager;
 
         public LocalTcpPortManagerTests()
         {

@@ -15,6 +15,13 @@ namespace IronFoundry.Warden.Containers
         void EmitLogMessage(LogMessageType type, string message);
     }
 
+    public enum LogMessageType
+    {
+        STDIN = 0,
+        STDOUT = 1,
+        STDERR = 2,
+    }
+
     public class InstanceLoggingInfo
     {
         public InstanceLoggingInfo ()

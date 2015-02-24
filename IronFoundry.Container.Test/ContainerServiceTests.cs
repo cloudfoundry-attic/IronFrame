@@ -1,18 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using IronFoundry.Warden.Containers;
+using IronFoundry.Container.Internal;
 using IronFoundry.Container.Utilities;
 using NSubstitute;
 using Xunit;
-using Newtonsoft.Json;
-using IronFoundry.Container.Internal;
 
 namespace IronFoundry.Container
 {

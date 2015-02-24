@@ -64,10 +64,6 @@
       <Project>{6e4dd8fc-91e8-4c70-946d-4c37df84c8cf}</Project>
       <Name>IronFoundry.Container.Host</Name>
     </ProjectReference>
-    <ProjectReference Include="..\IronFoundry.Container.Shared\IronFoundry.Container.Shared.csproj">
-      <Project>{cb7ba555-21fd-4c57-a629-a925b6a83a31}</Project>
-      <Name>IronFoundry.Container.Shared</Name>
-    </ProjectReference>
     <ProjectReference Include="..\IronFoundry.Container\IronFoundry.Container.csproj">
       <Project>{5de07f79-b758-4a04-b908-626e7577313e}</Project>
       <Name>IronFoundry.Container</Name>

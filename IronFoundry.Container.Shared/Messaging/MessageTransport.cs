@@ -14,10 +14,17 @@ namespace IronFoundry.Container.Messaging
         void Start();
         void Stop();
 
+        void SubscribeResponse(Func<JObject, Task> callback);
+        void SubscribeRequest(Func<JObject, Task> callback);
+
+        Task PublishResponseAsync(JObject message);
+        Task PublishRequestAsync(JObject message);
+
+        void SubscribeEvent(Func<JObject, Task> callback);
         Task PublishEventAsync<T>(string eventTopic, T @event);
     }
 
-    public class MessageTransport : IMessageTransport
+    public sealed class MessageTransport : IMessageTransport
     {
         private TextReader reader;
         private TextWriter writer;
@@ -38,10 +45,15 @@ namespace IronFoundry.Container.Messaging
             Event
         }
 
-        public MessageTransport(TextReader reader, TextWriter writer)
+        internal MessageTransport(TextReader reader, TextWriter writer)
         {
             this.reader = reader;
             this.writer = writer;
+        }
+
+        public static IMessageTransport Create(TextReader reader, TextWriter writer)
+        {
+            return new MessageTransport(reader, writer);
         }
 
         public void Dispose()

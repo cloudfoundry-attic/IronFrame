@@ -11,7 +11,7 @@ namespace IronFoundry.Container.Utilities
 {
     public class FileSystemManagerTests
     {
-        public class FileSystemManagerTestContext
+        internal class FileSystemManagerTestContext
         {
             protected PlatformFileSystem fileSystem;
             protected FileSystemManager manager;
@@ -23,7 +23,7 @@ namespace IronFoundry.Container.Utilities
             }
         }
 
-        public class Copy : FileSystemManagerTestContext
+        class Copy : FileSystemManagerTestContext
         {
             [Fact]
             public void CopiesOneFileToAnother()
@@ -65,7 +65,7 @@ namespace IronFoundry.Container.Utilities
             }
         }
 
-        public class CopyFile : FileSystemManagerTestContext
+        class CopyFile : FileSystemManagerTestContext
         {
             [Fact]
             public void CopiesFile()

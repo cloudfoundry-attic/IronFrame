@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Security.Principal;
-using System.Threading;
-using IronFoundry.Warden.Containers;
+using IronFoundry.Container.Internal;
 using IronFoundry.Container.Utilities;
 using NSubstitute;
-using NSubstitute.Core;
 using Xunit;
 
 namespace IronFoundry.Container
@@ -141,7 +138,7 @@ namespace IronFoundry.Container
             [Fact]
             public void DeletesContainerDirectory()
             {
-                ContainerDirectory directory = ContainerDirectory.Create(FileSystem, @"c:\Containers", "handle", ContainerUser);
+                IContainerDirectory directory = ContainerDirectory.Create(FileSystem, @"c:\Containers", "handle", ContainerUser);
                 directory.Destroy();
                 FileSystem.Received(1).DeleteDirectory(@"c:\Containers\handle");
             }

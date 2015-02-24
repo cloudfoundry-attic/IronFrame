@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using IronFoundry.Container.Internal;
 using IronFoundry.Container.Messages;
 using NSubstitute;
 using Xunit;
@@ -13,6 +14,7 @@ namespace IronFoundry.Container
         public ConstrainedProcessRunnerTests()
         {
             Client = Substitute.For<IContainerHostClient>();
+            Client.CreateProcess(null).ReturnsForAnyArgs(new CreateProcessResult());
         }
 
         public class Run : ConstrainedProcessRunnerTests

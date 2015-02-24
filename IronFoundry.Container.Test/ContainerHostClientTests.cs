@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using IronFoundry.Container.Internal;
 using IronFoundry.Container.Messages;
 using IronFoundry.Container.Messaging;
-using IronFoundry.Warden.Containers;
 using IronFoundry.Container.Utilities;
 using Newtonsoft.Json.Linq;
 using NSubstitute;

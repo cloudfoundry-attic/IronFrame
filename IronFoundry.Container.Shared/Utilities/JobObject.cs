@@ -8,8 +8,7 @@
     using IronFoundry.Container.Win32;
     using Microsoft.Win32.SafeHandles;
 
-    // BR: Move this to IronFoundry.Container.Shared
-    public class CpuStatistics
+    public sealed class CpuStatistics
     {
         public TimeSpan TotalKernelTime { get; set; }
         public TimeSpan TotalUserTime { get; set; }

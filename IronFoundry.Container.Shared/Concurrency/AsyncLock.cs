@@ -11,7 +11,7 @@ namespace IronFoundry.Container.Concurrency
     /// Based on Stephen Toub's article(s) of Async Coordination primitives.
     /// See http://blogs.msdn.com/b/pfxteam/archive/2012/02/12/10266988.aspx
     /// </remarks>
-    public class AsyncLock
+    internal sealed class AsyncLock
     {
         private SemaphoreSlim semaphor = new SemaphoreSlim(1, 1);
         private Task<IDisposable> releaser;

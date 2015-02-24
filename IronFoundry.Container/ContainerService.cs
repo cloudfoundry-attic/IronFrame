@@ -6,14 +6,6 @@ using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container
 {
-    public class ContainerSpec
-    {
-        public string Handle { get; set; }
-        public BindMount[] BindMounts { get; set; }
-        public Dictionary<string, string> Properties { get; set; }
-        public Dictionary<string, string> Environment { get; set; }
-    }
-
     public interface IContainerService : IDisposable
     {
         IContainer CreateContainer(ContainerSpec containerSpec);
@@ -22,7 +14,15 @@ namespace IronFoundry.Container
         IReadOnlyList<IContainer> GetContainers();
     }
 
-    public class ContainerService : IContainerService
+    public sealed class ContainerSpec
+    {
+        public string Handle { get; set; }
+        public BindMount[] BindMounts { get; set; }
+        public Dictionary<string, string> Properties { get; set; }
+        public Dictionary<string, string> Environment { get; set; }
+    }
+
+    public sealed class ContainerService : IContainerService
     {
         const string IIS_USRS_GROUP = "IIS_IUSRS";
         const string PropertiesFileName = "properties.json";
@@ -35,9 +35,9 @@ namespace IronFoundry.Container
         readonly IProcessRunner processRunner;
         readonly IContainerPropertyService containerPropertiesService;
         readonly IContainerHostService containerHostService;
-        readonly List<Container> containers = new List<Container>();
+        readonly List<IContainer> containers = new List<IContainer>();
 
-        public ContainerService(
+        internal ContainerService(
             ContainerHandleHelper handleHelper,
             IUserManager userManager,
             FileSystemManager fileSystem,
@@ -77,7 +77,7 @@ namespace IronFoundry.Container
             Guard.NotNull(containerSpec, "containerSpec");
 
             UndoStack undoStack = new UndoStack();
-            Container container;
+            IContainer container;
 
             try
             {
@@ -104,7 +104,7 @@ namespace IronFoundry.Container
 
                 var processHelper = new ProcessHelper();
 
-                container = new Container(
+                container = new Internal.Container(
                     id, 
                     handle, 
                     user, 
@@ -151,7 +151,7 @@ namespace IronFoundry.Container
         {
         }
 
-        Container FindContainer(string handle)
+        IContainer FindContainer(string handle)
         {
             return containers.Find(x => x.Handle.Equals(handle, StringComparison.OrdinalIgnoreCase));
         }

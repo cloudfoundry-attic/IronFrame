@@ -5,7 +5,6 @@ using System.IO;
 using System.Threading.Tasks;
 using IronFoundry.Warden.Utilities;
 using NLog;
-using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Configuration;
 using IronFoundry.Container;
 using IronFoundry.Container.Utilities;
@@ -18,13 +17,9 @@ namespace IronFoundry.Warden.Containers
             new ConcurrentDictionary<ContainerHandle, IContainerClient>();
 
         private readonly Logger log = LogManager.GetCurrentClassLogger();
-        private readonly IContainerJanitor janitor;
-        private readonly IWardenConfig wardenConfig;
 
-        public ContainerManager(IContainerJanitor janitor, IWardenConfig wardenConfig)
+        public ContainerManager()
         {
-            this.janitor = janitor;
-            this.wardenConfig = wardenConfig;
         }
 
         public IEnumerable<ContainerHandle> Handles

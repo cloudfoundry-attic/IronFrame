@@ -4,10 +4,9 @@ using System.Runtime.InteropServices;
 
 namespace IronFoundry.Container.Utilities
 {
-    // BR: Move to IronFoundry.Container
     // TODO: Either change LocalPrincipalManager to use the LocalUserGroupManager for its group operations
     // or have the container use both to create the user and then add it to the appropriate groups
-    public class LocalUserGroupManager
+    public sealed class LocalUserGroupManager
     {
         public void CreateLocalGroup(string groupName)
         {

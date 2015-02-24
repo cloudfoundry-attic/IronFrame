@@ -33,7 +33,7 @@ namespace IronFoundry.Container.Messaging
     }
 
     
-    public class JsonRpcErrorInfo 
+    public sealed class JsonRpcErrorInfo 
     {
         public int Code { get; set; }
         public string Message { get; set; }

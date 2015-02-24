@@ -3,12 +3,12 @@ using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Container.Messages
 {
-    public class StopAllProcessesParams
+    public sealed class StopAllProcessesParams
     {
         public int timeout;
     }
 
-    public class StopAllProcessesRequest : JsonRpcRequest<StopAllProcessesParams>
+    public sealed class StopAllProcessesRequest : JsonRpcRequest<StopAllProcessesParams>
     {
         public static string MethodName = "Container.StopAllProcesses";
 

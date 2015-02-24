@@ -1,14 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FluentAssertions;
-using IronFoundry.Container;
-using IronFoundry.Container.Utilities;
+﻿using IronFoundry.Container;
 using IronFoundry.Warden.Tasks;
-using Xunit;
 using NSubstitute;
 
 namespace IronFoundry.Warden.Test.Containers

@@ -4,13 +4,13 @@ using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Container.Messages
 {
-    public class StopProcessParams
+    public sealed class StopProcessParams
     {
         public Guid key;
         public int timeout;
     }
 
-    public class StopProcessRequest : JsonRpcRequest<StopProcessParams>
+    public sealed class StopProcessRequest : JsonRpcRequest<StopProcessParams>
     {
         public static string MethodName = "Container.StopProcess";
 
@@ -21,7 +21,7 @@ namespace IronFoundry.Container.Messages
         }
     }
 
-    public class StopProcessResponse : JsonRpcResponse
+    public sealed class StopProcessResponse : JsonRpcResponse
     {
         public StopProcessResponse(JToken id)
             : base(id)
