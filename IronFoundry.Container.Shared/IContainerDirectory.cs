@@ -55,7 +55,7 @@ namespace IronFoundry.Container
             var containerUserPath = Path.Combine(containerPath, UserRelativePath);
             var containerBinPath = Path.Combine(containerPath, BinRelativePath);
 
-            fileSystem.CreateDirectory(containerPath, GetContainerDefaultAccess());
+            fileSystem.CreateDirectory(containerPath, GetContainerUserAccess(containerUser.UserName, FileAccess.Read));
             fileSystem.CreateDirectory(containerBinPath, GetContainerUserAccess(containerUser.UserName, FileAccess.Read));
             fileSystem.CreateDirectory(containerUserPath, GetContainerUserAccess(containerUser.UserName, FileAccess.ReadWrite));
 

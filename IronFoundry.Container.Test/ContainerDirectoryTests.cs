@@ -36,7 +36,7 @@ namespace IronFoundry.Container
             }
 
             [Fact]
-            public void CreatesContainerDirectoryWithAdminPermissions()
+            public void CreatesContainerDirectoryWithUserReadOnlyPermissions()
             {
                 IEnumerable<UserAccess> userAccess = null;
                 FileSystem.CreateDirectory(
@@ -48,14 +48,21 @@ namespace IronFoundry.Container
 
                 Assert.NotNull(directory);
                 Assert.Collection(userAccess,
-                    x => {
+                    x =>
+                    {
                         Assert.Equal(@"BUILTIN\Administrators", x.UserName);
                         Assert.Equal(FileAccess.ReadWrite, x.Access);
                     },
-                    x => {
+                    x =>
+                    {
                         Assert.NotEmpty(x.UserName);
                         Assert.Equal(WindowsIdentity.GetCurrent().Name, x.UserName);
                         Assert.Equal(FileAccess.ReadWrite, x.Access);
+                    },
+                    x =>
+                    {
+                        Assert.Equal("username", x.UserName);
+                        Assert.Equal(FileAccess.Read, x.Access);
                     });
             }
 
