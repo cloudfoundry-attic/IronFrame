@@ -51,12 +51,12 @@ namespace IronFoundry.Container.Utilities
                 }
                 catch (Exception ex)
                 {
-                    throw new WardenException(String.Format("Error adding firewall rule for port '{0}', user '{1}'", port, userName), ex);
+                    throw new Exception(String.Format("Error adding firewall rule for port '{0}', user '{1}'", port, userName), ex);
                 }
             }
             else
             {
-                throw new WardenException("Error reserving port '{0}' for user '{1}'", port, userName);
+                throw new Exception(String.Format("Error reserving port '{0}' for user '{1}'", port, userName));
             }
 
             return port;
@@ -78,7 +78,7 @@ namespace IronFoundry.Container.Utilities
             if (port.HasValue)
             {
                 if (!netShRunner.DeleteRule(port.Value))
-                    throw new WardenException("Error removing reservation for port '{0}'", port);
+                    throw new Exception(String.Format("Error removing reservation for port '{0}'", port));
             }
 
             try
@@ -87,7 +87,7 @@ namespace IronFoundry.Container.Utilities
             }
             catch (Exception ex)
             {
-                throw new WardenException(String.Format("Error removing firewall rule for port '{0}', user '{1}'", port, userName), ex);
+                throw new Exception(String.Format("Error removing firewall rule for port '{0}', user '{1}'", port, userName), ex);
             }
 
         }

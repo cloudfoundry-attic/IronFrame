@@ -12,7 +12,7 @@ namespace IronFoundry.Warden.Tasks
     {
         override protected void ProcessPath(string path, StringBuilder output)
         {
-            if (CommandArgs.Arguments.IsNullOrEmpty())
+            if (CommandArgs.Arguments == null || CommandArgs.Arguments.Length == 0)
             {
                 throw new ArgumentException("mkdir command requires at least one argument.");
             }

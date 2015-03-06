@@ -31,7 +31,7 @@ namespace IronFoundry.Warden.Tasks
         {
             string exePath = this.Container.ConvertToUserPathWithin(executable);
 
-            string workingDir = workingDirectory.IsNullOrWhiteSpace()
+            string workingDir = String.IsNullOrWhiteSpace(workingDirectory)
                 ? this.Container.Directory.UserPath
                 : this.Container.ConvertToUserPathWithin(workingDirectory);
 

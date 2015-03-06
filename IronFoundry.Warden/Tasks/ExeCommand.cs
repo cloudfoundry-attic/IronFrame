@@ -16,14 +16,14 @@ namespace IronFoundry.Warden.Tasks
         {
             var arguments = this.CommandArgs.Arguments;
 
-            if (arguments.IsNullOrEmpty())
+            if (arguments == null || arguments.Length == 0)
             {
                 throw new ArgumentNullException("arguments");
             }
             else
             {
                 this.executable = arguments[0];
-                if (this.executable.IsNullOrWhiteSpace())
+                if (String.IsNullOrWhiteSpace(this.executable))
                 {
                     throw new ArgumentNullException("First argument must be executable name.");
                 }

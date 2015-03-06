@@ -198,6 +198,39 @@ namespace IronFoundry.Container
                 FileSystem.Received(1).DeleteDirectory(ContainerBasePath + "\\" + Id);
             }
         }
+        
+        public class RestoreContainer : ContainerServiceTests
+        {
+            public RestoreContainer()
+            {
+            }
+
+            [Fact]
+            public void RestoresContainerForEachDirectory()
+            {
+                var containerPaths = new string[]
+                {
+                    ContainerBasePath + "\\Container1",
+                    ContainerBasePath + "\\Container2",
+                };
+                FileSystem.EnumerateDirectories(ContainerBasePath)
+                    .Returns(containerPaths);
+
+                Service.RestoreFromContainerBasePath();
+
+                Assert.Collection(Service.GetContainers(),
+                    x =>
+                    {
+                        Assert.Equal("Container1", x.Id);
+                        Assert.Equal(ContainerBasePath + "\\Container1", x.Directory.RootPath);
+                    },
+                    x =>
+                    {
+                        Assert.Equal("Container2", x.Id);
+                        Assert.Equal(ContainerBasePath + "\\Container2", x.Directory.RootPath);
+                    });
+            }
+        }
 
         public class WithContainer : ContainerServiceTests
         {

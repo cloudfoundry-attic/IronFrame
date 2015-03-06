@@ -30,7 +30,7 @@ namespace IronFoundry.Warden.Tasks
             }
 
             this.command = arguments[0];
-            if (this.command.IsNullOrWhiteSpace() || (!(this.command == "x" || this.command == "c")))
+            if (String.IsNullOrWhiteSpace(this.command) || (!(this.command == "x" || this.command == "c")))
             {
                 throw new ArgumentException("tar command: first argument must be x (extract) or c (create).");
             }
@@ -41,7 +41,7 @@ namespace IronFoundry.Warden.Tasks
                 throw new ArgumentException(String.Format("tar command: second argument must be directory that exists ('{0}')", this.directory));
             }
 
-            if (arguments[2].IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(arguments[2]))
             {
                 throw new ArgumentException("tar command: third argument must be a file name.");
             }

@@ -41,9 +41,9 @@ namespace IronFoundry.Container.Acceptance
         }
     }
 
-    public class ContainerCreationServiceAcceptanceTests : IDisposable, IClassFixture<AcceptanceFixture>
+    public class ContainerServiceAcceptanceTests : IDisposable, IClassFixture<AcceptanceFixture>
     {
-        public ContainerCreationServiceAcceptanceTests(AcceptanceFixture fixture)
+        public ContainerServiceAcceptanceTests(AcceptanceFixture fixture)
         {
             Fixture = fixture;
 
@@ -70,7 +70,7 @@ namespace IronFoundry.Container.Acceptance
             }
         }
 
-        public class Create : ContainerCreationServiceAcceptanceTests
+        public class Create : ContainerServiceAcceptanceTests
         {
             public Create(AcceptanceFixture fixture)
                 : base(fixture)
@@ -99,7 +99,7 @@ namespace IronFoundry.Container.Acceptance
             }
         }
 
-        public class WithContainer : ContainerCreationServiceAcceptanceTests
+        public class WithContainer : ContainerServiceAcceptanceTests
         {
             private const string RunBatFileContent = @"
 @echo off

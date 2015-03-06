@@ -121,61 +121,6 @@ namespace IronFoundry.Warden.Containers
             return Task.Run(() => containerService.DestroyContainer(this.container.Handle));
         }
 
-        /// <summary>
-        /// Temporary workaround to not having container restores in the container library.
-        /// </summary>
-        public static IContainerClient RestoreFromFileSystem(string containerPath)
-        {
-            const string DummyUserGroupName = "DummyUserGroup";
-
-            Guard.NotNullOrEmpty(containerPath, "containerPath");
-
-            DirectoryInfo containerDir = new DirectoryInfo(containerPath);
-
-            if (!containerDir.Exists)
-            {
-                throw new ArgumentException("Specified directory must exist.", "containerPath");
-            }
-
-            string id = containerDir.Name;
-            string handle = id;
-
-            IUserManager userManager = new LocalPrincipalManager(DummyUserGroupName);
-            IContainerUser user = new TempUser(id, userManager);
-
-            FileSystemManager fileSystem = new FileSystemManager();
-            var directory = new IronFoundry.Container.Internal.ContainerDirectory(fileSystem, containerPath);
-
-            var jobObjectName = handle;
-            var jobObject = new JobObject(jobObjectName);
-
-            IProcessRunner processRunner = null;
-            Dictionary<string, string> environment = null;            
-            var processHelper = new ProcessHelper();
-            var tcpPortManager = new LocalTcpPortManager();
-            IContainerPropertyService propertyService = null;
-
-            IronFoundry.Container.Internal.Container container = new IronFoundry.Container.Internal.Container(
-                id, 
-                handle, 
-                user, 
-                directory, 
-                propertyService,
-                tcpPortManager, 
-                jobObject, 
-                processRunner, 
-                processRunner, 
-                processHelper, 
-                environment);
-
-            IContainerService containerService = new TempContainerService(container);
-
-            IContainerClient containerClient = new ContainerClient(containerService, container, new FileSystemManager());
-
-            return containerClient;
-        }
-
-
         class ProcessIO : IProcessIO
         {
             private StringReader emptyReader = new StringReader(string.Empty);
@@ -196,7 +141,6 @@ namespace IronFoundry.Warden.Containers
             }
         }
 
-
         class NullLogEmitter : ILogEmitter
         {
             public void EmitLogMessage(LogMessageType type, string message)
@@ -204,7 +148,7 @@ namespace IronFoundry.Warden.Containers
             }
         }
 
-        public class LogWriter : TextWriter
+        class LogWriter : TextWriter
         {
             private ILogEmitter emitter;
             private LogMessageType messageType;
@@ -230,64 +174,5 @@ namespace IronFoundry.Warden.Containers
                 get { throw new NotImplementedException(); }
             }
         }
-
-        class TempUser : IContainerUser
-        {
-            private readonly IUserManager userManager;
-
-            public TempUser(string uniqueId, IUserManager userManager)
-            {
-                this.userManager = userManager;
-                UserName = uniqueId;
-            }
-
-            public string UserName { get; private set; }
-
-            public NetworkCredential GetCredential()
-            {
-                throw new System.NotImplementedException();
-            }
-
-            public void Delete()
-            {
-                userManager.DeleteUser(UserName);
-            }
-        }
-
-        class TempContainerService : IContainerService
-        {
-            private IronFoundry.Container.Internal.Container container;
-
-            public TempContainerService(IronFoundry.Container.Internal.Container container)
-            {
-                this.container = container;
-            }
-
-            public Container.IContainer CreateContainer(ContainerSpec containerSpec)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void DestroyContainer(string handle)
-            {
-                this.container.Destroy();
-            }
-
-            public Container.IContainer GetContainerByHandle(string handle)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IReadOnlyList<Container.IContainer> GetContainers()
-            {
-                throw new NotImplementedException();
-            }
-
-            public void Dispose()
-            {
-                throw new NotImplementedException();
-            }
-        }
     }
-
 }

@@ -42,7 +42,7 @@
             {
                 string containerPath = wardenConfig.ContainerBasePath;
                 Directory.CreateDirectory(containerPath);
-                ContainerManager.RestoreContainers(containerPath);
+                ContainerManager.RestoreContainers(containerPath, wardenConfig.WardenUsersGroup);
                 // TODO: Restore snapshots (SnapshotManager)
             }
             catch (Exception ex)

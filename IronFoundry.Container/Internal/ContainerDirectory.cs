@@ -131,5 +131,10 @@ namespace IronFoundry.Container.Internal
             var account = (NTAccount)sid.Translate(typeof(NTAccount));
             return account.Value;
         }
+
+        public static ContainerDirectory Restore(FileSystemManager fileSystem, string containerPath)
+        {
+            return new ContainerDirectory(fileSystem, containerPath);
+        }
     }
 }

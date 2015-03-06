@@ -102,7 +102,7 @@
     <Compile Include="Tasks\UnzipCommand.cs" />
     <Compile Include="Utilities\ContainerExtensions.cs" />
     <Compile Include="Utilities\IFilePermissionManager.cs" />
-    <Compile Include="Utilities\LoggedIEnumerableExtensionMethods.cs" />
+    <Compile Include="Utilities\LoggerExtensions.cs" />
     <Compile Include="Utilities\ProcessExtensionMethods.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -136,12 +136,9 @@
     <Compile Include="Utilities\Statics.cs" />
     <Compile Include="Utilities\TempFile.cs" />
     <Compile Include="Server\Buffer.cs" />
+    <Compile Include="Containers\WardenException.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\IronFoundry.Container.Shared\IronFoundry.Container.Shared.csproj">
-      <Project>{cb7ba555-21fd-4c57-a629-a925b6a83a31}</Project>
-      <Name>IronFoundry.Container.Shared</Name>
-    </ProjectReference>
     <ProjectReference Include="..\IronFoundry.Container\IronFoundry.Container.csproj">
       <Project>{5de07f79-b758-4a04-b908-626e7577313e}</Project>
       <Name>IronFoundry.Container</Name>

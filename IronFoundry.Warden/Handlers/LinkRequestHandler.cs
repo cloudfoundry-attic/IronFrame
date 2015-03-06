@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using IronFoundry.Container.Messaging;
 using IronFoundry.Warden.Containers;
 using IronFoundry.Warden.Jobs;
 using NLog;
@@ -59,7 +58,7 @@ namespace IronFoundry.Warden.Handlers
                         // via normal channels.  In this case, we return a stopped info response.
                         response.Info = new InfoResponse() { State = IronFoundry.Container.ContainerState.Stopped.ToString() };
                     }
-                    catch (MessagingException)
+                    catch (Exception)
                     {
                         response.Info = new InfoResponse() { State = IronFoundry.Container.ContainerState.Stopped.ToString() };
                     }

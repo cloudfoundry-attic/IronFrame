@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using IronFoundry.Container.Internal;
 using IronFoundry.Container.Utilities;
@@ -93,7 +94,7 @@ namespace IronFoundry.Container
                 var directory = ContainerDirectory.Create(fileSystem, containerBasePath, id, user);
                 undoStack.Push(() => fileSystem.DeleteDirectory(directory.RootPath));
 
-                var jobObject = new JobObject(handle);
+                var jobObject = new JobObject(id);
                 undoStack.Push(() => jobObject.Dispose());
 
                 var containerHostClient = containerHostService.StartContainerHost(id, directory, jobObject, user.GetCredential());
@@ -169,6 +170,54 @@ namespace IronFoundry.Container
         public IReadOnlyList<string> GetContainerHandles()
         {
             return containers.Select(x => x.Handle).ToList();
+        }
+
+        IContainer RestoreContainerFromPath(string containerPath)
+        {
+            var id = Path.GetFileName(containerPath);
+
+            var user = Internal.ContainerUser.Restore(userManager, id);
+            var directory = Internal.ContainerDirectory.Restore(fileSystem, containerPath);
+
+            var jobObjectName = id;
+            var jobObject = new JobObject(jobObjectName);
+
+            var environment = new Dictionary<string, string>();
+            var processHelper = new ProcessHelper();
+
+            var container = new Internal.Container(
+                id,
+                id, // TODO: Recover the handle from container metadata
+                user,
+                directory,
+                containerPropertiesService,
+                tcpPortManager,
+                jobObject,
+                processRunner,
+                processRunner,
+                processHelper,
+                environment);
+
+            return container;
+        }
+
+        internal void RestoreFromContainerBasePath()
+        {
+            foreach (var containerPath in fileSystem.EnumerateDirectories(containerBasePath))
+            {
+                var container = RestoreContainerFromPath(containerPath);
+
+                containers.Add(container);
+            }
+        }
+
+        internal static ContainerService RestoreFromContainerBasePath(string containerBasePath, string userGroupName)
+        {
+            var containerService = new ContainerService(containerBasePath, userGroupName);
+
+            containerService.RestoreFromContainerBasePath();
+
+            return containerService;
         }
     }
 }

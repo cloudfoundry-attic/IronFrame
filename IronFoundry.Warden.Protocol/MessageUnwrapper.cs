@@ -87,7 +87,7 @@
                     request = Deserialize<LoggingRequest>(message.Payload);
                     break;
                 default:
-                    throw new WardenException("Can't unwrap message type '{0}'", message.MessageType);
+                    throw new WardenProtocolException("Can't unwrap message type '{0}'", message.MessageType);
             }
 
             return request;

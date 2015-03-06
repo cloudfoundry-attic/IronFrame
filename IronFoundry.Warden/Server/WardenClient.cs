@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net.Sockets;
     using System.Threading;
     using System.Threading.Tasks;
@@ -112,8 +113,8 @@
                             break;
                         }
 
-                        IEnumerable<Message> messages = buffer.GetMessages();
-                        if (!messages.IsNullOrEmpty())
+                        IReadOnlyList<Message> messages = buffer.GetMessages().ToList();
+                        if (messages != null && messages.Count > 0)
                         {
                             var awaitables = new List<Task>();
                             foreach (Message message in messages)

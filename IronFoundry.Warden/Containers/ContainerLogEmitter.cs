@@ -99,7 +99,7 @@ namespace IronFoundry.Warden.Containers
 
         public void EmitLogMessage(LogMessageType type, string data)
         {
-            if (data.IsNullOrEmpty())
+            if (String.IsNullOrEmpty(data))
             {
                 return;
             }

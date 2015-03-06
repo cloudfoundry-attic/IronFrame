@@ -10,7 +10,7 @@ namespace IronFoundry.Warden.Containers
         Task DestroyContainerAsync(ContainerHandle handle);
         Task DestroyContainerAsync(IContainerClient container);
         void AddContainer(IContainerClient container);
-        void RestoreContainers(string containerRoot);
+        void RestoreContainers(string containerRoot, string wardenUsersGroup);
         IContainerClient GetContainer(string handle);
     }
 }

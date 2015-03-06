@@ -9,16 +9,18 @@ using IContainer = IronFoundry.Container.IContainer;
 
 namespace IronFoundry.Warden.Test.Acceptance
 {
-    public class ContainerClientAcceptanceTests : IDisposable
+    public class ContainerManagerAcceptanceTests : IDisposable
     {
         private LocalUserGroupManager userGroupManager;
 
         public string SecurityGroupName { get; set; }
         public string TempDirectory { get; set; }
-        ContainerService ContainerService { get; set; }
+        ContainerManager ContainerManager { get; set; }
 
-        public ContainerClientAcceptanceTests()
+        public ContainerManagerAcceptanceTests()
         {
+            ContainerManager = new ContainerManager();
+
             var uniqueId = Guid.NewGuid().ToString("N");
 
             SecurityGroupName = "ContainerUsers_" + uniqueId;
@@ -28,27 +30,13 @@ namespace IronFoundry.Warden.Test.Acceptance
 
             TempDirectory = Path.Combine(Path.GetTempPath(), "Containers_" + uniqueId);
             Directory.CreateDirectory(TempDirectory);
-
-            ContainerService = new ContainerService(TempDirectory, SecurityGroupName);
         }
 
         public void Dispose()
         {
             try
             {
-                try
-                {
-                    foreach (var container in ContainerService.GetContainers())
-                    {
-                        ContainerService.DestroyContainer(container.Handle);
-                    }
-
-                    ContainerService.Dispose();
-                }
-                finally
-                {
-                    Directory.Delete(TempDirectory, true);
-                }
+                Directory.Delete(TempDirectory, true);
             }
             finally
             {
@@ -56,29 +44,25 @@ namespace IronFoundry.Warden.Test.Acceptance
             }
         }
 
-        public class RestoreFromFileSystem : ContainerClientAcceptanceTests
+        public class RestoreContainers : ContainerManagerAcceptanceTests
         {
             public string Handle { get; set; }
-            public IContainer Container { get; set; }
             string ContainerPath { get; set; }
 
-            public RestoreFromFileSystem()
+            public RestoreContainers()
             {
-                Handle = Guid.NewGuid().ToString("N");
+                Handle = new ContainerHandle().ToString();
+                ContainerPath = Path.Combine(TempDirectory, Handle);
 
-                var containerSpec = new ContainerSpec
-                {
-                    Handle = Handle
-                };
-
-                Container = ContainerService.CreateContainer(containerSpec);
-                ContainerPath = Path.Combine(TempDirectory, Container.Id);
+                Directory.CreateDirectory(ContainerPath);
             }
 
             [FactAdminRequired]
             public void CanRestoreCreatedContainer()
             {
-                IContainerClient client = ContainerClient.RestoreFromFileSystem(ContainerPath);
+                ContainerManager.RestoreContainers(TempDirectory, SecurityGroupName);
+
+                var client = ContainerManager.GetContainer(Handle);
 
                 Assert.NotNull(client);
             }
@@ -86,9 +70,10 @@ namespace IronFoundry.Warden.Test.Acceptance
             [FactAdminRequired]
             public async Task RestoredCanBeDestroyed()
             {
-                Container.Stop(true);
-                IContainerClient client = ContainerClient.RestoreFromFileSystem(ContainerPath);
-                
+                ContainerManager.RestoreContainers(TempDirectory, SecurityGroupName);
+
+                var client = ContainerManager.GetContainer(Handle);
+
                 await client.Destroy();
 
                 Assert.False(Directory.Exists(ContainerPath));

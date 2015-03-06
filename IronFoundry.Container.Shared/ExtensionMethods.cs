@@ -44,11 +44,6 @@ public static class StringExtensionMethods
             return String.IsNullOrEmpty(argThis);
         }
 
-        public static string ToWinPathString(this string pathString)
-        {
-            return backslashCleanup.Replace(pathString.Replace('/', '\\'), @"\");
-        }
-
         public static Security.SecureString ToSecureString(this string unsecuredString)
         {
             var securedString = new Security.SecureString();
@@ -231,21 +226,6 @@ namespace System.IO
                     return BitConverter.ToString(sha1.ComputeHash(fs)).Replace("-", String.Empty).ToLowerInvariant();
                 }
             }
-        }
-    }
-}
-
-namespace System.Text
-{
-    public static class StringBuilderExtensionMethods
-    {
-        public static StringBuilder SmartAppendLine(this StringBuilder argThis, string toAppend)
-        {
-            if (!toAppend.IsNullOrWhiteSpace())
-            {
-                argThis.AppendLine(toAppend);
-            }
-            return argThis;
         }
     }
 }

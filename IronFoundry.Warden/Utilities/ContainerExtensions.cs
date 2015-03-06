@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 using IronFoundry.Container;
 
 namespace IronFoundry.Warden.Utilities
@@ -6,6 +7,8 @@ namespace IronFoundry.Warden.Utilities
     public static class ContainerExtensions
     {
         private const string RootMarker = "@ROOT@";
+        private static readonly Regex backslashCleanup = new Regex(@"\\+",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
         public static string ConvertToUserPathWithin(this IContainer container, string path)
         {
@@ -15,7 +18,7 @@ namespace IronFoundry.Warden.Utilities
             string mappedPath;
             if (container.TryConvertToUserRelativePath(path, out mappedPath))
             {
-                mappedPath = container.Directory.MapUserPath(mappedPath).ToWinPathString();
+                mappedPath = ToWinPathString(container.Directory.MapUserPath(mappedPath));
             }
 
             return mappedPath;
@@ -58,6 +61,11 @@ namespace IronFoundry.Warden.Utilities
         {
             string pathInContainer = container.Directory.MapUserPath(relativePath);
             return new TempFile(pathInContainer, deleteIfExists: true);
+        }
+
+        static string ToWinPathString(string pathString)
+        {
+            return backslashCleanup.Replace(pathString.Replace('/', '\\'), @"\");
         }
     }
 }

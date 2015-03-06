@@ -18,7 +18,7 @@ namespace IronFoundry.Warden.Tasks
             {
                 using (var tempFile = new TempFile(this.Container.Directory.UserPath))
                 {
-                    var lines = File.ReadLines(path, Encoding.ASCII).Select(this.Container.ReplaceRootTokensWithUserPath).ToArrayOrNull();
+                    var lines = File.ReadLines(path, Encoding.ASCII).Select(this.Container.ReplaceRootTokensWithUserPath).ToArray();
                     File.WriteAllLines(tempFile.FullName, lines, Encoding.ASCII);
                     File.Copy(tempFile.FullName, path, true);
                 }

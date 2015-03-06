@@ -74,7 +74,6 @@
     <Compile Include="Utilities\ProcessHelper.cs" />
     <Compile Include="Utilities\SafeJobObjectHandle.cs" />
     <Compile Include="Win32\SecurityAttributes.cs" />
-    <Compile Include="WardenException.cs" />
     <Compile Include="ProcessRunner.cs" />
     <Compile Include="Messaging\JsonRpcRequest.cs" />
     <Compile Include="Messaging\JsonRpcResponse.cs" />

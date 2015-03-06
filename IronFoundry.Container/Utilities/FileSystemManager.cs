@@ -36,6 +36,11 @@ namespace IronFoundry.Container.Utilities
             Directory.Delete(path, true);
         }
 
+        public virtual IEnumerable<string> EnumerateDirectories(string path)
+        {
+            return Directory.EnumerateDirectories(path);
+        }
+
         public virtual bool Exists(string path)
         {
             return File.Exists(path);
@@ -187,6 +192,11 @@ namespace IronFoundry.Container.Utilities
         public virtual bool DirectoryExists(string path)
         {
             return fileSystem.DirectoryExists(path);
+        }
+
+        public virtual IEnumerable<string> EnumerateDirectories(string path)
+        {
+            return fileSystem.EnumerateDirectories(path);
         }
 
         /// <summary>

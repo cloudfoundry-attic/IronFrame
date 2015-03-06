@@ -89,6 +89,7 @@
     <Compile Include="Messages.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResponseWrapper.cs" />
+    <Compile Include="WardenProtocolException.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="protobuf-net">

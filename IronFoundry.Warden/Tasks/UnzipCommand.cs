@@ -19,12 +19,12 @@ namespace IronFoundry.Warden.Tasks
         {
             var arguments = this.CommandArgs.Arguments;
 
-            if (arguments.IsNullOrEmpty() || arguments.Length != 2)
+            if (arguments == null || arguments.Length != 2)
             {
                 throw new ArgumentException("unzip: must have exactly two arguments.");
             }
 
-            if (arguments[0].IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(arguments[0]))
             {
                 throw new ArgumentNullException(Resources.UnzipCommand_MissingZipFileErrorMessage);
             }
@@ -35,7 +35,7 @@ namespace IronFoundry.Warden.Tasks
                 throw new ArgumentException(Resources.UnzipCommand_MissingZipFileErrorMessage);
             }
 
-            if (arguments[1].IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(arguments[1]))
             {
                 throw new ArgumentNullException(Resources.UnzipCommand_MissingDestDirErrorMessage);
             }

@@ -32,20 +32,26 @@ namespace IronFoundry.Container.Internal
             return credentials;
         }
 
-        static string BuildContainerUserName(string handle)
+        static string BuildContainerUserName(string id)
         {
-            return "c_" + handle;
+            return "c_" + id;
         }
 
-        public static ContainerUser Create(IUserManager userManager, string containerHandle)
+        public static ContainerUser Create(IUserManager userManager, string containerId)
         {
-            var credentials = userManager.CreateUser(BuildContainerUserName(containerHandle));
+            var credentials = userManager.CreateUser(BuildContainerUserName(containerId));
             return new ContainerUser(userManager, credentials);
         }
 
         public void Delete()
         {
             userManager.DeleteUser(UserName);
+        }
+
+        public static ContainerUser Restore(IUserManager userManager, string containerId)
+        {
+            var credentials = new NetworkCredential(BuildContainerUserName(containerId), "");
+            return new ContainerUser(userManager, credentials);
         }
     }
 }

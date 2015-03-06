@@ -57,7 +57,7 @@ namespace IronFoundry.Container.Utilities
 
                 var exception = Record.Exception(() =>  tcpPortManager.ReserveLocalPort(8888, "userName"));
 
-                Assert.IsType<WardenException>(exception);
+                Assert.IsType<Exception>(exception);
             }
 
             [Fact]
@@ -69,7 +69,7 @@ namespace IronFoundry.Container.Utilities
 
                 var exception = Record.Exception(() => tcpPortManager.ReserveLocalPort(8888, "userName"));
 
-                Assert.IsType<WardenException>(exception);
+                Assert.IsType<Exception>(exception);
             }
         }
 
@@ -103,7 +103,7 @@ namespace IronFoundry.Container.Utilities
 
                 var exception = Record.Exception(() => tcpPortManager.ReleaseLocalPort(8888, "userName"));
 
-                Assert.IsType<WardenException>(exception);
+                Assert.IsType<Exception>(exception);
             }
 
             [Fact]
@@ -126,7 +126,7 @@ namespace IronFoundry.Container.Utilities
 
                 var exception = Record.Exception(() => tcpPortManager.ReserveLocalPort(8888, "userName"));
 
-                Assert.IsType<WardenException>(exception);
+                Assert.IsType<Exception>(exception);
             }
         }
     }
