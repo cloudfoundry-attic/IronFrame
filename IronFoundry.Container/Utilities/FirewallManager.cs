@@ -25,7 +25,7 @@ namespace IronFoundry.Container.Utilities
                 throw new ArgumentException("port");
             }
 
-            if (name.IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(name))
             {
                 throw new ArgumentNullException("name");
             }
@@ -45,7 +45,7 @@ namespace IronFoundry.Container.Utilities
 
         public void ClosePort(string name)
         {
-            if (name.IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(name))
             {
                 throw new ArgumentNullException("name");
             }

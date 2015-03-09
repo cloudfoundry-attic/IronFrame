@@ -9,13 +9,13 @@
 
         public LocalPrincipalData(string userName, string password)
         {
-            if (userName.IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(userName))
             {
                 throw new ArgumentNullException("userName");
             }
             this.userName = userName;
 
-            if (password.IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(password))
             {
                 throw new ArgumentNullException("password");
             }

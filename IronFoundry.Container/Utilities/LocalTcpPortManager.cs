@@ -30,7 +30,7 @@ namespace IronFoundry.Container.Utilities
         /// </summary>
         public int ReserveLocalPort(int port, string userName)
         {
-            if (userName.IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(userName))
             {
                 throw new ArgumentNullException("userName");
             }
@@ -67,7 +67,7 @@ namespace IronFoundry.Container.Utilities
         /// </summary>
         public void ReleaseLocalPort(int? port, string userName)
         {
-            if (userName.IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(userName))
             {
                 throw new ArgumentNullException("userName");
             }

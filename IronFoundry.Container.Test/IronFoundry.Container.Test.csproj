@@ -79,6 +79,7 @@
     <Compile Include="Messaging\MessagingClientTest.cs" />
     <Compile Include="Messaging\SecureStringJsonConverterTest.cs" />
     <Compile Include="Messaging\TaskExtensions.cs" />
+    <Compile Include="TestSupport\ExtensionMethods.cs" />
     <Compile Include="TestSupport\FactAdminRequired.cs" />
     <Compile Include="TestSupport\IFTestHelper.cs" />
     <Compile Include="TestSupport\InputSource.cs" />

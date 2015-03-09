@@ -30,12 +30,12 @@
                     Data       = String.Empty,
                 };
 
-            if (!stdout.IsNullOrEmpty())
+            if (!String.IsNullOrEmpty(stdout))
             {
                 response.Name = Constants.STDOUT_NAME;
                 response.Data = stdout;
             }
-            else if (!stderr.IsNullOrEmpty())
+            else if (!String.IsNullOrEmpty(stderr))
             {
                 response.Name = Constants.STDERR_NAME;
                 response.Data = stderr;
