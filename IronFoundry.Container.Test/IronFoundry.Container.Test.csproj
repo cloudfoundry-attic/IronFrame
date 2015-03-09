@@ -78,7 +78,6 @@
     <Compile Include="Messaging\MessageTransportTest.cs" />
     <Compile Include="Messaging\MessagingClientTest.cs" />
     <Compile Include="Messaging\SecureStringJsonConverterTest.cs" />
-    <Compile Include="Messaging\TaskExtensions.cs" />
     <Compile Include="TestSupport\ExtensionMethods.cs" />
     <Compile Include="TestSupport\FactAdminRequired.cs" />
     <Compile Include="TestSupport\IFTestHelper.cs" />
@@ -87,7 +86,7 @@
     <Compile Include="TestSupport\TestProcessIO.cs" />
     <Compile Include="Utilities\EffectiveAccessComputerTests.cs" />
     <Compile Include="Utilities\EnvironmentBlockTests.cs" />
-    <Compile Include="Utilities\ExtensionMethodsTests.cs" />
+    <Compile Include="ExtensionMethodsTests.cs" />
     <Compile Include="Utilities\FileSystemEffectiveAccessComputerTests.cs" />
     <Compile Include="Utilities\FileSystemManagerTests.cs" />
     <Compile Include="Handlers\CreateProcessHandlerTests.cs" />

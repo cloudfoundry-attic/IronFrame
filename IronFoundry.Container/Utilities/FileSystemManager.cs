@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Security.AccessControl;
 using System.Security.Principal;
-using IronFoundry.Container.Win32;
 
 namespace IronFoundry.Container.Utilities
 {

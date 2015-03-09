@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using IronFoundry.Container;
-using IronFoundry.Container.Internal;
 using IronFoundry.Container.Utilities;
 using IronFoundry.Warden.Tasks;
 using IronFoundry.Warden.Utilities;
@@ -17,11 +15,11 @@ namespace IronFoundry.Warden.Containers
         private const string RootPrefix = "@ROOT@";
         private readonly IronFoundry.Container.IContainerService containerService;
         private readonly FileSystemManager fileSystem;
-        private readonly IronFoundry.Container.IContainer container;
+        private readonly IContainer container;
         
         private ILogEmitter logEmitter;
 
-        public ContainerClient(IContainerService containerService, IronFoundry.Container.IContainer container, FileSystemManager fileSystem)
+        public ContainerClient(IContainerService containerService, IContainer container, FileSystemManager fileSystem)
         {
             this.containerService = containerService;
             this.container = container;

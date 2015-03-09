@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using IronFoundry.Container.Internal;
 using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container
@@ -105,7 +104,7 @@ namespace IronFoundry.Container
 
                 var processHelper = new ProcessHelper();
 
-                container = new Internal.Container(
+                container = new Container(
                     id, 
                     handle, 
                     user, 
@@ -176,8 +175,8 @@ namespace IronFoundry.Container
         {
             var id = Path.GetFileName(containerPath);
 
-            var user = Internal.ContainerUser.Restore(userManager, id);
-            var directory = Internal.ContainerDirectory.Restore(fileSystem, containerPath);
+            var user = ContainerUser.Restore(userManager, id);
+            var directory = ContainerDirectory.Restore(fileSystem, containerPath);
 
             var jobObjectName = id;
             var jobObject = new JobObject(jobObjectName);
@@ -185,7 +184,7 @@ namespace IronFoundry.Container
             var environment = new Dictionary<string, string>();
             var processHelper = new ProcessHelper();
 
-            var container = new Internal.Container(
+            var container = new Container(
                 id,
                 id, // TODO: Recover the handle from container metadata
                 user,

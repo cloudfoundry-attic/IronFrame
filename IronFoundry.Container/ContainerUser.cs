@@ -1,7 +1,6 @@
 ﻿using System.Net;
-using IronFoundry.Container.Utilities;
 
-namespace IronFoundry.Container.Internal
+namespace IronFoundry.Container
 {
     // BR: Investigate if we would need this in the host??  Can't delete a user in the host...
     internal interface IContainerUser

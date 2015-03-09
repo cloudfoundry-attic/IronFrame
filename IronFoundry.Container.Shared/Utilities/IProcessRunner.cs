@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using IronFoundry.Container.Utilities;
 
-namespace IronFoundry.Container
+namespace IronFoundry.Container.Utilities
 {
     public interface IProcessRunner : IDisposable
     {

@@ -1,7 +1,8 @@
 ﻿using System;
+using IronFoundry.Container.Utilities;
 using NLog;
 
-namespace IronFoundry.Container.Utilities
+namespace IronFoundry.Container
 {
     internal interface ILocalTcpPortManager
     {

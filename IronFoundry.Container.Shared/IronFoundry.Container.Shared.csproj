@@ -56,9 +56,9 @@
     <Compile Include="..\shared\CommonAssemblyInfo.cs">
       <Link>CommonAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Concurrency\AsyncLock.cs" />
+    <Compile Include="Messaging\AsyncLock.cs" />
     <Compile Include="Guard.cs" />
-    <Compile Include="IProcessRunner.cs" />
+    <Compile Include="Utilities\IProcessRunner.cs" />
     <Compile Include="Utilities\EnvironmentBlock.cs" />
     <Compile Include="Utilities\IProcess.cs" />
     <Compile Include="Messages\StopProcessMessage.cs" />
@@ -70,11 +70,11 @@
     <Compile Include="Messages\WaitForProcessExitMessage.cs" />
     <Compile Include="Utilities\JobObject.cs" />
     <Compile Include="Utilities\JobObjectLimits.cs" />
-    <Compile Include="ProcessDataReceivedEventArgs.cs" />
+    <Compile Include="Utilities\ProcessDataReceivedEventArgs.cs" />
     <Compile Include="Utilities\ProcessHelper.cs" />
     <Compile Include="Utilities\SafeJobObjectHandle.cs" />
     <Compile Include="Win32\SecurityAttributes.cs" />
-    <Compile Include="ProcessRunner.cs" />
+    <Compile Include="Utilities\ProcessRunner.cs" />
     <Compile Include="Messaging\JsonRpcRequest.cs" />
     <Compile Include="Messaging\JsonRpcResponse.cs" />
     <Compile Include="Messaging\MessageDispatcher.cs" />
@@ -92,7 +92,6 @@
     <Compile Include="Win32\DesktopSecurity.cs" />
     <Compile Include="Win32\DuplicateTokenEx.cs" />
     <Compile Include="Win32\Enums.cs" />
-    <Compile Include="Win32\Impersonator.cs" />
     <Compile Include="Win32\JobObject.cs" />
     <Compile Include="Win32\LogonUser.cs" />
     <Compile Include="Win32\NativeDll.cs" />

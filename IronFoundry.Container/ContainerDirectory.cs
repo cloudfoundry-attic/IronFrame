@@ -5,7 +5,7 @@ using System.Linq;
 using System.Security.Principal;
 using IronFoundry.Container.Utilities;
 
-namespace IronFoundry.Container.Internal
+namespace IronFoundry.Container
 {
     internal sealed class ContainerDirectory : IContainerDirectory
     {

@@ -2,7 +2,6 @@
 
 namespace IronFoundry.Container.Win32
 {
-
     // From WinNT.h
     [Flags]
     public enum StandardRights

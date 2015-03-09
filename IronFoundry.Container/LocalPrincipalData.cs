@@ -1,7 +1,7 @@
-﻿namespace IronFoundry.Container.Utilities
-{
-    using System;
+﻿using System;
 
+namespace IronFoundry.Container
+{
     internal sealed class LocalPrincipalData
     {
         private readonly string userName;

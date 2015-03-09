@@ -1,11 +1,11 @@
-﻿namespace IronFoundry.Container.Utilities
-{
-    using System;
-    using System.Linq;
-    using System.Net;
-    using System.Net.NetworkInformation;
-    using System.Net.Sockets;
+﻿using System;
+using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 
+namespace IronFoundry.Container.Utilities
+{
     internal sealed class IPUtilities
     {
         public static ushort RandomFreePort()
@@ -34,6 +34,7 @@
             {
                 return null;
             }
+
             IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
             return host.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
         }

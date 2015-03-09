@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using IronFoundry.Container.Utilities;
 
-namespace IronFoundry.Container.Internal
+namespace IronFoundry.Container
 {
     internal sealed class ContainerProcess : IContainerProcess
     {

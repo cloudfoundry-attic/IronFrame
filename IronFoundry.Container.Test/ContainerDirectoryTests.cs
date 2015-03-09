@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Principal;
-using IronFoundry.Container.Internal;
 using IronFoundry.Container.Utilities;
 using NSubstitute;
 using Xunit;

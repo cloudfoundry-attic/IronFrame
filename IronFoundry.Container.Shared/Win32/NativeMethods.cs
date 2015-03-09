@@ -1,9 +1,9 @@
-﻿namespace IronFoundry.Container.Win32
-{
-    using System;
-    using System.Runtime.InteropServices;
-    using System.Security;
+﻿using System;
+using System.Runtime.InteropServices;
+using System.Security;
 
+namespace IronFoundry.Container.Win32
+{
     [SuppressUnmanagedCodeSecurity]
     public partial class NativeMethods
     {

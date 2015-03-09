@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Net;
-using IronFoundry.Container.Utilities;
 using IronFoundry.Container.Win32;
 using NLog;
 
-namespace IronFoundry.Container
+namespace IronFoundry.Container.Utilities
 {
     public sealed class ProcessRunner : IProcessRunner
     {

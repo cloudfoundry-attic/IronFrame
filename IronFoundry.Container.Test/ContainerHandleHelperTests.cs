@@ -1,5 +1,4 @@
 ﻿using System;
-using IronFoundry.Container.Internal;
 using Xunit;
 
 namespace IronFoundry.Container

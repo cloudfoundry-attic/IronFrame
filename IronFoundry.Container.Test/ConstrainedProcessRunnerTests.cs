@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using IronFoundry.Container.Internal;
 using IronFoundry.Container.Messages;
+using IronFoundry.Container.Utilities;
 using NSubstitute;
 using Xunit;
 

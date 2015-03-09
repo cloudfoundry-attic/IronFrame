@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reflection;
 
-namespace IronFoundry.Container.Internal
+namespace IronFoundry.Container
 {
     internal class ContainerHostDependencyHelper
     {

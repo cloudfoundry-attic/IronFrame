@@ -2,7 +2,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace IronFoundry.Container.Internal
+namespace IronFoundry.Container
 {
     internal class ContainerHandleHelper
     {

@@ -1,9 +1,9 @@
-﻿namespace IronFoundry.Container.Win32
-{
-    using System;
-    using System.ComponentModel;
-    using System.Net;
+﻿using System;
+using System.ComponentModel;
+using System.Net;
 
+namespace IronFoundry.Container.Win32
+{
     internal static class Utils
     {
         public static SafeUserTokenHandle LogonAndGetUserPrimaryToken(NetworkCredential credential)

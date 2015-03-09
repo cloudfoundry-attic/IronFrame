@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using IronFoundry.Container.Internal;
 using IronFoundry.Container.Utilities;
 using NSubstitute;
 using Xunit;

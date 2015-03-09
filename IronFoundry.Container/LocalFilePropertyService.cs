@@ -5,7 +5,7 @@ using System.Text;
 using IronFoundry.Container.Utilities;
 using Newtonsoft.Json;
 
-namespace IronFoundry.Container.Internal
+namespace IronFoundry.Container
 {
     internal interface IContainerPropertyService
     {

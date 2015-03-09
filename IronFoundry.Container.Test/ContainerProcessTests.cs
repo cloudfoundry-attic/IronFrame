@@ -1,5 +1,4 @@
-﻿using IronFoundry.Container.Internal;
-using IronFoundry.Container.Utilities;
+﻿using IronFoundry.Container.Utilities;
 using NSubstitute;
 using Xunit;
 

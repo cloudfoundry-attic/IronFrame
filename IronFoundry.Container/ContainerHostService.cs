@@ -7,7 +7,7 @@ using IronFoundry.Container.Messaging;
 using IronFoundry.Container.Utilities;
 using NLog;
 
-namespace IronFoundry.Container.Internal
+namespace IronFoundry.Container
 {
     internal interface IContainerHostService
     {

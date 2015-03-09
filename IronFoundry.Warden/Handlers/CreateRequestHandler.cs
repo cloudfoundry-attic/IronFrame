@@ -1,5 +1,4 @@
 ﻿using IronFoundry.Container;
-using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Warden.Handlers
 {
@@ -8,6 +7,7 @@ namespace IronFoundry.Warden.Handlers
     using System.Linq;
     using System.Threading.Tasks;
     using Containers;
+    using IronFoundry.Container.Utilities;
     using IronFoundry.Warden.Configuration;
     using NLog;
     using Protocol;

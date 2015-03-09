@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace IronFoundry.Container.Concurrency
+namespace IronFoundry.Container.Messaging
 {
     /// <summary>
     /// 

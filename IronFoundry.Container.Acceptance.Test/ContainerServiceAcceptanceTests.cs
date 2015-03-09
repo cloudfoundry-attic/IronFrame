@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using IronFoundry.Container.Utilities;
 using Xunit;
 
 namespace IronFoundry.Container.Acceptance

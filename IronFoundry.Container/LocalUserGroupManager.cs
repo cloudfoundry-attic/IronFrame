@@ -2,7 +2,7 @@
 using System.DirectoryServices;
 using System.Runtime.InteropServices;
 
-namespace IronFoundry.Container.Utilities
+namespace IronFoundry.Container
 {
     // Kept public because it is used by the acceptance tests to create/delete user groups.
 

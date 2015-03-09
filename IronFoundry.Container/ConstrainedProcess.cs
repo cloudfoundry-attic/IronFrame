@@ -4,7 +4,7 @@ using System.Threading;
 using IronFoundry.Container.Messages;
 using IronFoundry.Container.Utilities;
 
-namespace IronFoundry.Container.Internal
+namespace IronFoundry.Container
 {
     internal sealed class ConstrainedProcess : IProcess
     {

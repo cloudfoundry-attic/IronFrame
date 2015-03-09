@@ -2,11 +2,10 @@
 using System.IO;
 using System.Security.Principal;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using IronFoundry.Container.Utilities;
 using Xunit;
-using System.Threading.Tasks;
 
 namespace IronFoundry.Container
 {

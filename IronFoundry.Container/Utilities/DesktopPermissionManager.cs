@@ -1,11 +1,10 @@
-﻿using IronFoundry.Container.Win32;
+﻿using System;
+using System.Runtime.InteropServices;
+using System.Security.AccessControl;
+using IronFoundry.Container.Win32;
 
 namespace IronFoundry.Container.Utilities
 {
-    using System;
-    using System.Runtime.InteropServices;
-    using System.Security.AccessControl;
-
     internal interface IDesktopPermissionManager
     {
         void AddDesktopPermission(string userName);

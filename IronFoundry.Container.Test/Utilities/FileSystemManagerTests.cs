@@ -1,10 +1,6 @@
-﻿using NSubstitute;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using NSubstitute;
 using Xunit;
 
 namespace IronFoundry.Container.Utilities

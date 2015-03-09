@@ -1,7 +1,7 @@
-﻿namespace IronFoundry.Container.Win32
-{
-    using System;
+﻿using System;
 
+namespace IronFoundry.Container.Win32
+{
     public partial class NativeMethods
     {
         public class Constants

@@ -7,8 +7,6 @@ using IronFoundry.Container.Win32;
 
 namespace IronFoundry.Container.Utilities
 {
-    using PDWORD = IntPtr;
-    using PACCESS_MASK = IntPtr;
 
     internal interface IEffectiveAccessComputer
     {

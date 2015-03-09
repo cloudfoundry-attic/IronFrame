@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace IronFoundry.Container.Internal
+namespace IronFoundry.Container.Utilities
 {
     internal class Clock
     {

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
-using IronFoundry.Container.Win32;
 using Xunit;
 
 namespace IronFoundry.Container.Utilities

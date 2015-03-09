@@ -2,10 +2,8 @@
 using System.IO;
 using System.Threading.Tasks;
 using IronFoundry.Container;
-using IronFoundry.Container.Utilities;
 using IronFoundry.Warden.Containers;
 using Xunit;
-using IContainer = IronFoundry.Container.IContainer;
 
 namespace IronFoundry.Warden.Test.Acceptance
 {

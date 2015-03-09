@@ -5,9 +5,10 @@ using System.DirectoryServices.AccountManagement;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Web.Security;
+using IronFoundry.Container.Utilities;
 using NLog;
 
-namespace IronFoundry.Container.Utilities
+namespace IronFoundry.Container
 {
     internal interface IUserManager
     {

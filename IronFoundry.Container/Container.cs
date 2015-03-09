@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using IronFoundry.Container.Utilities;
 
-namespace IronFoundry.Container.Internal
+namespace IronFoundry.Container
 {
     internal sealed class Container : IContainer
     {

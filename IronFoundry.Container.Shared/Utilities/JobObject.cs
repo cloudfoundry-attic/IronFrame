@@ -1,13 +1,13 @@
-﻿namespace IronFoundry.Container.Utilities
-{
-    using System;
-    using System.ComponentModel;
-    using System.Diagnostics;
-    using System.Linq;
-    using System.Runtime.InteropServices;
-    using IronFoundry.Container.Win32;
-    using Microsoft.Win32.SafeHandles;
+﻿using System;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Linq;
+using System.Runtime.InteropServices;
+using IronFoundry.Container.Win32;
+using Microsoft.Win32.SafeHandles;
 
+namespace IronFoundry.Container.Utilities
+{
     public sealed class CpuStatistics
     {
         public TimeSpan TotalKernelTime { get; set; }

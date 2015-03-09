@@ -7,7 +7,7 @@ using IronFoundry.Container.Messages;
 using IronFoundry.Container.Messaging;
 using IronFoundry.Container.Utilities;
 
-namespace IronFoundry.Container.Internal
+namespace IronFoundry.Container
 {
     internal interface IContainerHostClient : IDisposable
     {
