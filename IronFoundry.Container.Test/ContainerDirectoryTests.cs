@@ -192,8 +192,8 @@ namespace IronFoundry.Container
 
         public class MapPrivatePath : ContainerDirectoryTests
         {
-            [InlineData("/", @"C:\Containers\handle\")]
-            [InlineData("/path/to/data", @"C:\Containers\handle\path\to\data")]
+            [InlineData("/", @"C:\Containers\handle\private\")]
+            [InlineData("/path/to/data", @"C:\Containers\handle\private\path\to\data")]
             [Theory]
             public void MapsRootedPathRelativeToContainerRootPath(string containerPath, string expectedMappedPath)
             {
@@ -207,7 +207,7 @@ namespace IronFoundry.Container
             {
                 var mappedPath = Directory.MapPrivatePath("/path/to/data");
 
-                Assert.Equal(@"C:\Containers\handle\path\to\data", mappedPath);
+                Assert.Equal(@"C:\Containers\handle\private\path\to\data", mappedPath);
             }
 
             [Fact]
@@ -215,7 +215,7 @@ namespace IronFoundry.Container
             {
                 var mappedPath = Directory.MapPrivatePath("/path/to/../../data");
 
-                Assert.Equal(@"C:\Containers\handle\data", mappedPath);
+                Assert.Equal(@"C:\Containers\handle\private\data", mappedPath);
             }
 
             [InlineData("/data/../..")]

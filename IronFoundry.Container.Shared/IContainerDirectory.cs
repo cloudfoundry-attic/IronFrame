@@ -23,6 +23,7 @@ namespace IronFoundry.Container
     {
         const string BinRelativePath = "bin";
         const string UserRelativePath = "user";
+        const string PrivateRelativePath = "private";
 
         readonly FileSystemManager fileSystem;
         readonly string containerPath;
@@ -52,10 +53,12 @@ namespace IronFoundry.Container
         {
             // TODO: Sanitize the container handle for use in the filesystem
             var containerPath = Path.Combine(containerBasePath, containerHandle);
+            var containerPrivatePath = Path.Combine(containerPath, PrivateRelativePath);
             var containerUserPath = Path.Combine(containerPath, UserRelativePath);
             var containerBinPath = Path.Combine(containerPath, BinRelativePath);
 
             fileSystem.CreateDirectory(containerPath, GetContainerUserAccess(containerUser.UserName, FileAccess.Read));
+            fileSystem.CreateDirectory(containerPrivatePath, GetContainerDefaultAccess());
             fileSystem.CreateDirectory(containerBinPath, GetContainerUserAccess(containerUser.UserName, FileAccess.Read));
             fileSystem.CreateDirectory(containerUserPath, GetContainerUserAccess(containerUser.UserName, FileAccess.ReadWrite));
 
@@ -95,7 +98,7 @@ namespace IronFoundry.Container
 
         public string MapPrivatePath(string path)
         {
-            return MapContainerPath("", path);
+            return MapContainerPath(PrivateRelativePath, path);
         }
 
         public string MapUserPath(string path)
