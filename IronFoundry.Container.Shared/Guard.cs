@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace IronFoundry.Container
 {
-    public static class Guard
+    internal static class Guard
     {
         public static void Equals<T>(T first, T second, string message)
             where T : IEquatable<T>

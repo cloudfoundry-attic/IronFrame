@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using IronFoundry.Container.Utilities;
 
-public static class IFTestHelper
+internal static class IFTestHelper
 {
     const string ExeName = "IFTestHelper.exe";
 

@@ -3,7 +3,7 @@ using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container
 {
-    internal sealed class ContainerProcess : IContainerProcess
+    internal class ContainerProcess : IContainerProcess
     {
         readonly IProcess process;
 

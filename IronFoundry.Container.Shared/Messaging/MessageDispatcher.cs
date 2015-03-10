@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Container.Messaging
 {
-    public sealed class MessageDispatcher
+    internal class MessageDispatcher
     {
         private NLog.Logger log = NLog.LogManager.GetCurrentClassLogger();
         Dictionary<string, Func<JObject, Task<object>>> methods = new Dictionary<string, Func<JObject, Task<object>>>(StringComparer.OrdinalIgnoreCase);

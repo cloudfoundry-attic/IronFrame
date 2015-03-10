@@ -10,7 +10,7 @@ namespace IronFoundry.Container
         void ReleaseLocalPort(int? port, string userName);
     }
 
-    internal sealed class LocalTcpPortManager : ILocalTcpPortManager
+    internal class LocalTcpPortManager : ILocalTcpPortManager
     {
         private readonly IFirewallManager firewallManager;
         private readonly Logger log = LogManager.GetCurrentClassLogger();

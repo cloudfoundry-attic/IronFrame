@@ -5,9 +5,9 @@ using System.Linq;
 using System.Security.AccessControl;
 using System.Security.Principal;
 
-namespace IronFoundry.Container.Utilities
+namespace IronFoundry.Warden.Utilities
 {
-    internal class PlatformFileSystem
+    public class PlatformFileSystem
     {
         public virtual void Copy(string source, string destination, bool overwrite)
         {
@@ -97,13 +97,6 @@ namespace IronFoundry.Container.Utilities
             return File.OpenWrite(path);
         }
 
-        public FileSystemRights ComputeEffectiveAccessRights(string directory, IdentityReference identity)
-        {
-            FileSystemEffectiveAccessComputer effectiveAccess = new FileSystemEffectiveAccessComputer();
-            var rights = effectiveAccess.ComputeAccess(directory, identity);
-            return rights;
-        }
-
         public DirectorySecurity GetDirectoryAccessSecurity(string path)
         {
             var dirInfo = new DirectoryInfo(path);
@@ -118,7 +111,7 @@ namespace IronFoundry.Container.Utilities
         }
     }
 
-    internal class FileSystemManager
+    public class FileSystemManager
     {
         private readonly PlatformFileSystem fileSystem;
 
@@ -197,28 +190,6 @@ namespace IronFoundry.Container.Utilities
             return fileSystem.EnumerateDirectories(path);
         }
 
-        /// <summary>
-        /// Get the access that the specified user has to the specified directory.
-        /// </summary>
-        public virtual FileAccess GetEffectiveDirectoryAccess(string directory, IdentityReference identity)
-        {
-            FileAccess access = new FileAccess();
-
-            FileSystemRights effectiveRights = fileSystem.ComputeEffectiveAccessRights(directory, identity);
-
-            if (effectiveRights.HasFlag(FileSystemRights.ReadAndExecute))
-            {
-                access |= FileAccess.Read;
-            }
-
-            if (effectiveRights.HasFlag(FileSystemRights.Write | FileSystemRights.Delete))
-            {
-                access |= FileAccess.Write;
-            }
-
-            return access;
-        }
-
         private IEnumerable<FileSystemAccessRule> GetAccessControlRules(FileAccess access, string username)
         {
             if ((int)access == 0)
@@ -283,7 +254,7 @@ namespace IronFoundry.Container.Utilities
         }
     }
 
-    internal class UserAccess
+    public class UserAccess
     {
         public FileAccess Access { get; set; }
         public string UserName { get; set; }

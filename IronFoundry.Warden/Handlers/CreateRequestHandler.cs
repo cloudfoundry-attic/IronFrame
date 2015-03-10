@@ -7,8 +7,8 @@ namespace IronFoundry.Warden.Handlers
     using System.Linq;
     using System.Threading.Tasks;
     using Containers;
-    using IronFoundry.Container.Utilities;
     using IronFoundry.Warden.Configuration;
+    using IronFoundry.Warden.Utilities;
     using NLog;
     using Protocol;
 

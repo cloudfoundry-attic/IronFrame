@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Container.Messaging
 {
-    public interface IMessagingClient : IDisposable
+    internal interface IMessagingClient : IDisposable
     {
         Task<TResult> SendMessageAsync<T, TResult>(T request)
             where T : JsonRpcRequest
@@ -20,7 +20,7 @@ namespace IronFoundry.Container.Messaging
         void PublishEvent(JObject @event);
     }
 
-    public sealed class MessagingClient : IMessagingClient
+    internal class MessagingClient : IMessagingClient
     {
         private Action<JObject> transportHandler;
         private ConcurrentDictionary<JToken, ResponsePublisher> awaitingResponse =
@@ -245,6 +245,5 @@ namespace IronFoundry.Container.Messaging
                 this.callback(eventMessage);
             }
         }
-
     }
 }

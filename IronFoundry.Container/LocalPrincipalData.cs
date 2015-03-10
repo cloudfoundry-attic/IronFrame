@@ -2,7 +2,7 @@
 
 namespace IronFoundry.Container
 {
-    internal sealed class LocalPrincipalData
+    internal class LocalPrincipalData
     {
         private readonly string userName;
         private readonly string password;

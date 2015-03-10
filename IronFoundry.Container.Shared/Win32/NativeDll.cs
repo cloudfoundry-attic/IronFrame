@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace IronFoundry.Container.Win32
 {
-    public static class NativeDll
+    internal static class NativeDll
     {
         public const string ADVAPI32_DLL = "advapi32.dll";
         public const string AUTHZ_DLL = "authz.dll";

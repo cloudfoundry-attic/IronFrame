@@ -10,7 +10,7 @@ namespace IronFoundry.Container
         void Delete();
     }
 
-    internal sealed class ContainerUser : IContainerUser
+    internal class ContainerUser : IContainerUser
     {
         readonly IUserManager userManager; // TODO: Refactor this out of this class
         readonly NetworkCredential credentials;

@@ -9,7 +9,7 @@ namespace IronFoundry.Container.Utilities
         RawSecurityDescriptor GetSecurityDescriptor();
     }
 
-    internal sealed class FileSystemSecurityDescriptorReader : ISecurityDescriptorReader
+    internal class FileSystemSecurityDescriptorReader : ISecurityDescriptorReader
     {
         private const AccessControlSections AccessSectionsNeeded =
             AccessControlSections.Access | AccessControlSections.Group | AccessControlSections.Owner;

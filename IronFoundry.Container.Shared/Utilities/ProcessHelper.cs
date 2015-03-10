@@ -10,7 +10,7 @@ using IronFoundry.Container.Win32;
 
 namespace IronFoundry.Container.Utilities
 {
-    public class ProcessHelper
+    internal class ProcessHelper
     {
         public virtual IProcess GetProcessById(int processId)
         {

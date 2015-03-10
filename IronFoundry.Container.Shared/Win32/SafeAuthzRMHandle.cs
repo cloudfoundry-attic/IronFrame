@@ -10,7 +10,7 @@ using Microsoft.Win32.SafeHandles;
 
 namespace IronFoundry.Container.Win32
 {
-    public class SafeAuthzRMHandle : SafeHandleZeroOrMinusOneIsInvalid
+    internal class SafeAuthzRMHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
         public SafeAuthzRMHandle()
             : base(true)

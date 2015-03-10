@@ -20,7 +20,7 @@ namespace IronFoundry.Container
         WaitForProcessExitResult WaitForProcessExit(WaitForProcessExitParams @params);
     }
 
-    internal sealed class ContainerHostClient : IContainerHostClient
+    internal class ContainerHostClient : IContainerHostClient
     {
         JobObject containerJobObject;
         IProcess hostProcess;

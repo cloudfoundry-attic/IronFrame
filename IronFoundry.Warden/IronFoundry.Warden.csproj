@@ -101,6 +101,7 @@
     <Compile Include="Tasks\TouchCommand.cs" />
     <Compile Include="Tasks\UnzipCommand.cs" />
     <Compile Include="Utilities\ContainerExtensions.cs" />
+    <Compile Include="Utilities\FileSystemManager.cs" />
     <Compile Include="Utilities\IFilePermissionManager.cs" />
     <Compile Include="Utilities\LoggerExtensions.cs" />
     <Compile Include="Utilities\ProcessExtensionMethods.cs" />

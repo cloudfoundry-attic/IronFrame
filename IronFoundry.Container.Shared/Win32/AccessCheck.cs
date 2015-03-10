@@ -16,7 +16,7 @@ namespace IronFoundry.Container.Win32
     using PACCESS_MASK = IntPtr;
     using PDWORD = IntPtr;
 
-    public partial class NativeMethods
+    internal partial class NativeMethods
     {
         [DllImport(NativeDll.AUTHZ_DLL, CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

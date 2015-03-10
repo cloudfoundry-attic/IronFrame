@@ -10,7 +10,7 @@ namespace IronFoundry.Container.Utilities
         bool DeleteRule(int port);
     }
 
-    internal sealed class NetShRunner : INetShRunner
+    internal class NetShRunner : INetShRunner
     {
         private static readonly string workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.System);
         private readonly Logger log = LogManager.GetCurrentClassLogger();

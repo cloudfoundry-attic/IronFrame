@@ -3,7 +3,7 @@ using System.Security.Principal;
 
 namespace IronFoundry.Container.Utilities
 {
-    internal sealed class FileSystemEffectiveAccessComputer
+    internal class FileSystemEffectiveAccessComputer
     {
         public FileSystemRights ComputeAccess(string path, IdentityReference identity)
         {

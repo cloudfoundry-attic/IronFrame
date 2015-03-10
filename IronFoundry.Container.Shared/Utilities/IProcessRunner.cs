@@ -4,13 +4,13 @@ using System.Net;
 
 namespace IronFoundry.Container.Utilities
 {
-    public interface IProcessRunner : IDisposable
+    internal interface IProcessRunner : IDisposable
     {
         IProcess Run(ProcessRunSpec runSpec);
         void StopAll(bool kill);
     }
 
-    public sealed class ProcessRunSpec
+    internal class ProcessRunSpec
     {
         static readonly string[] EmptyArguments = new string[0];
 

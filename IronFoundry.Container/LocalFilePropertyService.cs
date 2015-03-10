@@ -16,7 +16,7 @@ namespace IronFoundry.Container
         void SetProperties(IContainer container, Dictionary<string, string> properties);
     }
 
-    internal sealed class LocalFilePropertyService : IContainerPropertyService
+    internal class LocalFilePropertyService : IContainerPropertyService
     {
         readonly Clock clock;
         readonly string fileName;

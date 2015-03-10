@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace IronFoundry.Container.Utilities
 {
-    internal sealed class UndoStack
+    internal class UndoStack
     {
         private readonly Stack<Action> undoActions = new Stack<Action>();
 

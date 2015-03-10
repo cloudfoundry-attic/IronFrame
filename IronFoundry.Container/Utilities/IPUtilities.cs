@@ -6,7 +6,7 @@ using System.Net.Sockets;
 
 namespace IronFoundry.Container.Utilities
 {
-    internal sealed class IPUtilities
+    internal class IPUtilities
     {
         public static ushort RandomFreePort()
         {

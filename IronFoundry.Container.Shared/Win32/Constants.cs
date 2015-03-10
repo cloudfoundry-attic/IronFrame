@@ -2,7 +2,7 @@
 
 namespace IronFoundry.Container.Win32
 {
-    public partial class NativeMethods
+    internal partial class NativeMethods
     {
         public class Constants
         {

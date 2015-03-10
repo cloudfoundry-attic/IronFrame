@@ -104,7 +104,7 @@ namespace IronFoundry.Warden.Test.Handlers
         [Fact]
         public async void ReturnsStoppedInfoRequestWhenContainerThrowsMessagingException()
         {
-            containerClient.GetInfoAsync().ThrowsTask(new MessagingException());
+            containerClient.GetInfoAsync().ThrowsTask(new Exception());
             
             var response = (LinkResponse)await handler.HandleAsync();
 

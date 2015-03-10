@@ -8,13 +8,13 @@ using Microsoft.Win32.SafeHandles;
 
 namespace IronFoundry.Container.Utilities
 {
-    public sealed class CpuStatistics
+    internal class CpuStatistics
     {
         public TimeSpan TotalKernelTime { get; set; }
         public TimeSpan TotalUserTime { get; set; }
     }
 
-    public class JobObject : IDisposable
+    internal class JobObject : IDisposable
     {
         SafeJobObjectHandle handle;
 

@@ -4,7 +4,7 @@ using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container.Host.Handlers
 {
-    internal sealed class StopProcessHandler
+    internal class StopProcessHandler
     {
         private readonly IProcessTracker processTracker;
 

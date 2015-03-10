@@ -7,7 +7,7 @@ using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container
 {
-    internal sealed class ContainerDirectory : IContainerDirectory
+    internal class ContainerDirectory : IContainerDirectory
     {
         const string BinRelativePath = "bin";
         const string UserRelativePath = "user";

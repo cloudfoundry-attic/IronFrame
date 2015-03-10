@@ -8,7 +8,7 @@ using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Container.Messaging
 {
-    public interface IMessageTransport : IDisposable
+    internal interface IMessageTransport : IDisposable
     {
         void Start();
         void Stop();
@@ -23,7 +23,7 @@ namespace IronFoundry.Container.Messaging
         Task PublishEventAsync<T>(string eventTopic, T @event);
     }
 
-    public sealed class MessageTransport : IMessageTransport
+    internal class MessageTransport : IMessageTransport
     {
         private TextReader reader;
         private TextWriter writer;

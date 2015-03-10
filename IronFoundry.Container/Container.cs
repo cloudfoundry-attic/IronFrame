@@ -5,7 +5,7 @@ using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container
 {
-    internal sealed class Container : IContainer
+    internal class Container : IContainer
     {
         const string DefaultWorkingDirectory = "/";
 
@@ -24,7 +24,7 @@ namespace IronFoundry.Container
         IProcessRunner constrainedProcessRunner;
         ContainerState currentState;
 
-        internal Container(
+        public Container(
             string id,
             string handle,
             IContainerUser user,

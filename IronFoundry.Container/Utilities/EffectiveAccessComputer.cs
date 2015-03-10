@@ -7,13 +7,12 @@ using IronFoundry.Container.Win32;
 
 namespace IronFoundry.Container.Utilities
 {
-
     internal interface IEffectiveAccessComputer
     {
         ACCESS_MASK ComputeAccess(RawSecurityDescriptor descriptor, IdentityReference identity);
     }
 
-    internal sealed class EffectiveAccessComputer : IEffectiveAccessComputer
+    internal class EffectiveAccessComputer : IEffectiveAccessComputer
     {
         public ACCESS_MASK ComputeAccess(RawSecurityDescriptor descriptor, IdentityReference identity)
         {

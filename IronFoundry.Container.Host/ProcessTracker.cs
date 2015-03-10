@@ -16,7 +16,7 @@ namespace IronFoundry.Container.Host
         void TrackProcess(Guid key, IProcess process);
     }
 
-    internal sealed class ProcessTracker : IProcessTracker
+    internal class ProcessTracker : IProcessTracker
     {
         readonly IProcess hostProcess;
         readonly JobObject jobObject;

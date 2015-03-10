@@ -4,7 +4,7 @@ using IronFoundry.Container.Messages;
 
 namespace IronFoundry.Container.Host.Handlers
 {
-    internal sealed class WaitForProcessExitHandler
+    internal class WaitForProcessExitHandler
     {
         readonly IProcessTracker processTracker;
 

@@ -7,7 +7,7 @@ using System.Security;
 using System.Threading;
 using NLog;
 
-public static class StringExtensionMethods
+internal static class StringExtensionMethods
 {
     public static SecureString ToSecureString(this string unsecuredString)
     {
@@ -23,7 +23,7 @@ public static class StringExtensionMethods
     }
 }
 
-public static class FuncExtensionMethods
+internal static class FuncExtensionMethods
 {
     /// <summary>
     /// Retries the specified action until it returns true or up to the specified number
@@ -45,7 +45,7 @@ public static class FuncExtensionMethods
     }
 }
 
-public static class SecureStringExtensionMethod
+internal static class SecureStringExtensionMethod
 {
     public static string ToUnsecureString(this System.Security.SecureString secureString)
     {
@@ -65,7 +65,7 @@ public static class SecureStringExtensionMethod
     }
 }
 
-public static class DictionaryExtensionMethods
+internal static class DictionaryExtensionMethods
 {
 
     /// <summary>
@@ -97,7 +97,7 @@ public static class DictionaryExtensionMethods
     }
 }
 
-public static class LoggerExtensionMethods
+internal static class LoggerExtensionMethods
 {
     public static void DebugException(this Logger logger, Exception exception)
     {

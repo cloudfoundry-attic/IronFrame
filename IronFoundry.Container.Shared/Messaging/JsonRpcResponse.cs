@@ -6,7 +6,7 @@ namespace IronFoundry.Container.Messaging
     /// Represents a JsonRpcResponse but must have either a result filed so derive from JsonRcpResponse<TResult>
     /// or from JsonRpcErrorResponse.
     /// </summary>
-    public abstract class JsonRpcResponse
+    internal abstract class JsonRpcResponse
     {
         private JsonRpcResponse()
         {
@@ -22,7 +22,7 @@ namespace IronFoundry.Container.Messaging
         public JToken id { get; set; }
     }
 
-    public class JsonRpcResponse<TResult> : JsonRpcResponse
+    internal class JsonRpcResponse<TResult> : JsonRpcResponse
     {
         public JsonRpcResponse(JToken id, TResult result) : base(id)
         {
@@ -33,14 +33,14 @@ namespace IronFoundry.Container.Messaging
     }
 
     
-    public sealed class JsonRpcErrorInfo 
+    internal class JsonRpcErrorInfo 
     {
         public int Code { get; set; }
         public string Message { get; set; }
         public string Data { get; set; }
     }
 
-    public class JsonRpcErrorResponse : JsonRpcResponse
+    internal class JsonRpcErrorResponse : JsonRpcResponse
     {
         public JsonRpcErrorResponse(JToken id) : base (id)
         {

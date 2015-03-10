@@ -4,9 +4,10 @@ using IronFoundry.Container.Win32;
 
 namespace IronFoundry.Container.Utilities
 {
-    internal sealed class WindowStationSecurity : ObjectSecurity<NativeMethods.WindowStationRights>
+    internal class WindowStationSecurity : ObjectSecurity<NativeMethods.WindowStationRights>
     {
         private SafeHandle hWindowStation;
+
         public WindowStationSecurity(SafeHandle hWindowStation)
             : base(false, ResourceType.WindowObject, hWindowStation, AccessControlSections.Access)
         {

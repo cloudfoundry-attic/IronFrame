@@ -11,7 +11,7 @@ namespace IronFoundry.Container.Utilities
         void RemoveDesktopPermission(string userName);
     }
 
-    internal sealed class DesktopPermissionManager : IDesktopPermissionManager
+    internal class DesktopPermissionManager : IDesktopPermissionManager
     {
         // No need to close handle.
         // http://msdn.microsoft.com/en-us/library/windows/desktop/ms683225(v=vs.85).aspx

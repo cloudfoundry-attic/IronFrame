@@ -6,7 +6,7 @@ using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container
 {
-    internal sealed class ConstrainedProcess : IProcess
+    internal class ConstrainedProcess : IProcess
     {
         readonly IContainerHostClient hostClient;
         readonly Guid key;

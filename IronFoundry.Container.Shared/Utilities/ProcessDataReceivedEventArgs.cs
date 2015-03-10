@@ -2,7 +2,7 @@
 
 namespace IronFoundry.Container.Utilities
 {
-    public sealed class ProcessDataReceivedEventArgs : EventArgs
+    internal class ProcessDataReceivedEventArgs : EventArgs
     {
         public ProcessDataReceivedEventArgs(string data)
         {

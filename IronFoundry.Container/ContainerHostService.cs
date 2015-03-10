@@ -14,7 +14,7 @@ namespace IronFoundry.Container
         IContainerHostClient StartContainerHost(string containerId, IContainerDirectory directory, JobObject jobObject, NetworkCredential credentials);
     }
 
-    internal sealed class ContainerHostService : IContainerHostService
+    internal class ContainerHostService : IContainerHostService
     {
         static readonly TimeSpan HostProcessStartTimeout = TimeSpan.FromSeconds(5);
 

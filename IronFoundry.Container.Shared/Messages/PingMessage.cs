@@ -3,7 +3,7 @@ using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Container.Messages
 {
-    public sealed class PingRequest : JsonRpcRequest
+    internal class PingRequest : JsonRpcRequest
     {
         public static string MethodName = "Container.Ping";
 
@@ -12,7 +12,7 @@ namespace IronFoundry.Container.Messages
         }
     }
 
-    public sealed class PingResponse : JsonRpcResponse
+    internal class PingResponse : JsonRpcResponse
     {
         public PingResponse(JToken id) : base(id)
         {

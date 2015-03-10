@@ -37,5 +37,4 @@ using System.Runtime.InteropServices;
 
 // For unit testing
 [assembly: InternalsVisibleTo("IronFoundry.Container.Test")]
-// Necessary for NSubstitute
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]

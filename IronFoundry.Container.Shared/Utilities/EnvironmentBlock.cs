@@ -7,7 +7,7 @@ using System.Text;
 
 namespace IronFoundry.Container.Utilities
 {
-    public sealed class EnvironmentBlock
+    internal class EnvironmentBlock
     {
         private readonly Dictionary<string,string> _environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 

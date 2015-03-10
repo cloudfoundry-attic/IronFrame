@@ -4,7 +4,7 @@ using System.Security.AccessControl;
 namespace IronFoundry.Container.Win32
 {
     // BR: Move this to IronFoundry.Container
-    public class DesktopSecurity : ObjectSecurity<NativeMethods.DesktopRights>
+    internal class DesktopSecurity : ObjectSecurity<NativeMethods.DesktopRights>
     {
         private SafeHandle hDesktopHandle;
 

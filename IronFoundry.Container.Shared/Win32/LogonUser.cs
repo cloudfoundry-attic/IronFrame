@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace IronFoundry.Container.Win32
 {
-    public partial class NativeMethods
+    internal partial class NativeMethods
     {
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern Boolean LogonUser(

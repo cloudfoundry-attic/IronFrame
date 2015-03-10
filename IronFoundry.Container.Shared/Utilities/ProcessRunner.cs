@@ -7,7 +7,7 @@ using NLog;
 
 namespace IronFoundry.Container.Utilities
 {
-    public sealed class ProcessRunner : IProcessRunner
+    internal class ProcessRunner : IProcessRunner
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();
 

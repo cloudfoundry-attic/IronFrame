@@ -13,7 +13,7 @@ namespace IronFoundry.Container.Utilities
     ///     http://www.shafqatahmed.com/2008/01/controlling-win.html
     ///     http://blogs.msdn.com/b/securitytools/archive/2009/08/21/automating-windows-firewall-settings-with-c.aspx
     /// </summary>
-    internal sealed class FirewallManager : IFirewallManager
+    internal class FirewallManager : IFirewallManager
     {
         private const string NetFwPolicy2ProgID = "HNetCfg.FwPolicy2";
         private const string NetFwRuleProgID = "HNetCfg.FWRule";

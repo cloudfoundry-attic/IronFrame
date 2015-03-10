@@ -4,7 +4,7 @@ using System;
 
 namespace IronFoundry.Container.Utilities
 {
-    public sealed class SafeJobObjectHandle : SafeHandleZeroOrMinusOneIsInvalid
+    internal class SafeJobObjectHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
         public SafeJobObjectHandle(IntPtr handle)
             : base(true)
@@ -18,7 +18,7 @@ namespace IronFoundry.Container.Utilities
         }
     }
 
-    public sealed class JobObjectWaitHandle : System.Threading.WaitHandle
+    internal class JobObjectWaitHandle : System.Threading.WaitHandle
     {
         public JobObjectWaitHandle(SafeJobObjectHandle jobObject) 
         {
