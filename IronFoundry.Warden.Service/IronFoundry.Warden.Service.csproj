@@ -41,7 +41,7 @@
   <PropertyGroup />
   <ItemGroup>
     <Compile Include="..\shared\CommonAssemblyInfo.cs">
-      <Link>CommonAssemblyInfo.cs</Link>
+      <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Constants.cs" />
     <Compile Include="Program.cs" />

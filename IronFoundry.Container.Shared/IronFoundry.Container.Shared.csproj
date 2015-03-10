@@ -54,7 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\shared\CommonAssemblyInfo.cs">
-      <Link>CommonAssemblyInfo.cs</Link>
+      <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Messaging\AsyncLock.cs" />
     <Compile Include="Guard.cs" />

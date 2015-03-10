@@ -47,6 +47,9 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\shared\CommonAssemblyInfo.cs">
+      <Link>Properties\CommonAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Handlers\CreateProcessHandler.cs" />
     <Compile Include="Handlers\PingHandler.cs" />
     <Compile Include="Handlers\StopAllProcessesHandler.cs" />

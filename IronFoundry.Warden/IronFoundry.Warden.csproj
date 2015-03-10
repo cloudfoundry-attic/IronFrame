@@ -38,7 +38,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\shared\CommonAssemblyInfo.cs">
-      <Link>CommonAssemblyInfo.cs</Link>
+      <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Configuration\WardenConfig.cs" />
     <Compile Include="Configuration\WardenSection.cs" />

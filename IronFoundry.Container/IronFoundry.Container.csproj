@@ -54,7 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\shared\CommonAssemblyInfo.cs">
-      <Link>CommonAssemblyInfo.cs</Link>
+      <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="BindMount.cs" />
     <Compile Include="ContainerHandleHelper.cs" />
