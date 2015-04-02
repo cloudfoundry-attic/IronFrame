@@ -184,7 +184,8 @@ namespace IronFoundry.Container
             [FactAdminRequired]
             public async Task WhenCredentialsGiven_LoadsUserEnvironment()
             {
-                LocalPrincipalManager manager = new LocalPrincipalManager(new DesktopPermissionManager());
+                var desktopPermissionManager = new DesktopPermissionManager();
+                LocalPrincipalManager manager = new LocalPrincipalManager(desktopPermissionManager);
                 
                 string userName = "Test_UserEnvironment";
                 if (manager.FindUser(userName) != null)
@@ -192,6 +193,7 @@ namespace IronFoundry.Container
                     manager.DeleteUser(userName);
                 }
                 var user = manager.CreateUser(userName);
+                desktopPermissionManager.AddDesktopPermission(userName);
 
                 try
                 {
@@ -212,6 +214,7 @@ namespace IronFoundry.Container
                 }
                 finally
                 {
+                    desktopPermissionManager.RemoveDesktopPermission(userName);
                     manager.DeleteUser(userName);
                 }
             }
