@@ -79,12 +79,6 @@ namespace IronFoundry.Container
         }
 
         [FactAdminRequired]
-        void CanFindWellKnownUser()
-        {
-            Assert.Equal("Administrator", manager.FindUser("Administrator"));
-        }
-
-        [FactAdminRequired]
         void FindReturnsNullOnUnlocatableUser()
         {
             Assert.Null(manager.FindUser("ThisUserShouldNeverExist"));

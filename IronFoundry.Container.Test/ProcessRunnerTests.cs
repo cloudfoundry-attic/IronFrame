@@ -133,7 +133,8 @@ namespace IronFoundry.Container
                 spec.OutputCallback = (data) => 
                 {
                     output.Append(data);
-                    outputSignal.Set();
+                    if (!String.IsNullOrWhiteSpace(data))
+                        outputSignal.Set();
                 };
 
                 var error = new StringBuilder();
@@ -141,7 +142,8 @@ namespace IronFoundry.Container
                 spec.ErrorCallback = (data) =>
                 {
                     error.Append(data);
-                    errorSignal.Set();
+                    if (!String.IsNullOrWhiteSpace(data))
+                        errorSignal.Set();
                 };
 
                 using (var p = Runner.Run(spec))
