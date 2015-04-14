@@ -46,6 +46,7 @@ namespace IronFoundry.Container
         IContainerProcess Run(ProcessSpec spec, IProcessIO io);
 
         void LimitMemory(ulong limitInBytes);
+        ulong CurrentMemoryLimit();
 
         void SetProperty(string name, string value);
         string GetProperty(string name);
@@ -168,6 +169,11 @@ namespace IronFoundry.Container
             ThrowIfNotActive();
 
             this.jobObject.SetJobMemoryLimit(limitInBytes);
+        }
+
+        public ulong CurrentMemoryLimit()
+        {
+            return jobObject.GetJobMemoryLimit();
         }
 
         public void Destroy()
