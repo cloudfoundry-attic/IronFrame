@@ -13,6 +13,7 @@ namespace IronFoundry.Container
         int ReservePort(int requestedPort);
         IContainerProcess Run(ProcessSpec spec, IProcessIO io);
         void LimitMemory(ulong limitInBytes);
+        ulong CurrentMemoryLimit();
         void SetProperty(string name, string value);
         string GetProperty(string name);
         void RemoveProperty(string name);

@@ -501,6 +501,14 @@ namespace IronFoundry.Container
 
                 Assert.Throws<InvalidOperationException>(action);
             }
+
+            [Fact]
+            public void ReturnsMemoryLimit()
+            {
+                ulong limitInBytes = 2048;
+                JobObject.GetJobMemoryLimit().Returns(limitInBytes);
+                Assert.Equal(limitInBytes, Container.CurrentMemoryLimit());
+            }
         }
 
         public class RemoveProperty : ContainerTests

@@ -123,6 +123,11 @@ namespace IronFoundry.Container
             this.jobObject.SetJobMemoryLimit(limitInBytes);
         }
 
+        public ulong CurrentMemoryLimit()
+        {
+            return jobObject.GetJobMemoryLimit();
+        }
+
         public void Destroy()
         {
             Stop(true);
