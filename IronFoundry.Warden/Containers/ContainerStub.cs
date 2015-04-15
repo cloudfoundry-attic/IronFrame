@@ -301,6 +301,11 @@ namespace IronFoundry.Warden.Containers
             jobObjectLimits.LimitMemory(info.LimitInBytes);
         }
 
+        public ulong CurrentMemoryLimit()
+        {
+            throw new NotImplementedException();
+        }
+
         private void MemoryLimitReached(object sender, EventArgs e)
         {
             var handler = outOfMemoryHandler;
