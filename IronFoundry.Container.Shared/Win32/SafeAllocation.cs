@@ -6,7 +6,7 @@ namespace IronFoundry.Container.Win32
     // TODO - Make all of this work well with enums. Some of these won't work with enums 
     // because their layour is Auto, not sequential.  In practice the layout for enums doesn't matter
     // and we should be able to just copy the data
-    public class SafeAllocation : SafeBuffer
+    internal class SafeAllocation : SafeBuffer
     {
         public int Size
         {
@@ -48,7 +48,7 @@ namespace IronFoundry.Container.Win32
         }
     }
 
-    public class SafeAllocation<T> : SafeAllocation
+    internal class SafeAllocation<T> : SafeAllocation
         where T : struct
     {
         public SafeAllocation()

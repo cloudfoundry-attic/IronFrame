@@ -32,6 +32,7 @@ namespace IronFoundry.Container
             [Fact]
             public void ForwardsToHostClient()
             {
+                HostClient.WaitForProcessExit(null).ReturnsForAnyArgs(new WaitForProcessExitResult());
                 Process.WaitForExit(100);
 
                 HostClient.Received(1).WaitForProcessExit(
@@ -44,6 +45,7 @@ namespace IronFoundry.Container
             [Fact]
             public void DefaultTimeoutIsInfinite()
             {
+                HostClient.WaitForProcessExit(null).ReturnsForAnyArgs(new WaitForProcessExitResult());
                 Process.WaitForExit();
 
                 HostClient.Received(1).WaitForProcessExit(

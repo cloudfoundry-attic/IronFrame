@@ -1,21 +1,20 @@
-﻿namespace IronFoundry.Container.Utilities
-{
-    using System;
-    using System.ComponentModel;
-    using System.Diagnostics;
-    using System.Linq;
-    using System.Runtime.InteropServices;
-    using IronFoundry.Container.Win32;
-    using Microsoft.Win32.SafeHandles;
+﻿using System;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Linq;
+using System.Runtime.InteropServices;
+using IronFoundry.Container.Win32;
+using Microsoft.Win32.SafeHandles;
 
-    // BR: Move this to IronFoundry.Container.Shared
-    public class CpuStatistics
+namespace IronFoundry.Container.Utilities
+{
+    internal class CpuStatistics
     {
         public TimeSpan TotalKernelTime { get; set; }
         public TimeSpan TotalUserTime { get; set; }
     }
 
-    public class JobObject : IDisposable
+    internal class JobObject : IDisposable
     {
         SafeJobObjectHandle handle;
 

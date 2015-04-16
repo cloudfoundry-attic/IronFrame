@@ -15,13 +15,35 @@ namespace IronFoundry.Warden.Containers
         void EmitLogMessage(LogMessageType type, string message);
     }
 
+    public enum LogMessageType
+    {
+        STDIN = 0,
+        STDOUT = 1,
+        STDERR = 2,
+    }
+
+    public class InstanceLoggingInfo
+    {
+        public InstanceLoggingInfo ()
+        {
+            DrainUris = new List<string>();
+        }
+
+        public string ApplicationId { get; set; }
+        public string InstanceIndex { get; set; }
+        public string LoggregatorAddress { get; set; }
+        public string LoggregatorSecret { get; set; }
+        public List<string> DrainUris { get; private set; }
+
+    }
+
 
     public class ContainerLogEmitter : ILogEmitter
     {
-        private readonly Messages.InstanceLoggingInfo instanceLoggingInfo;
+        private readonly InstanceLoggingInfo instanceLoggingInfo;
         private readonly LoggregatorEmitter logEmitter;
 
-        public ContainerLogEmitter(Messages.InstanceLoggingInfo instanceLoggingInfo)
+        public ContainerLogEmitter(InstanceLoggingInfo instanceLoggingInfo)
         {
             this.instanceLoggingInfo = instanceLoggingInfo;
 
@@ -77,7 +99,7 @@ namespace IronFoundry.Warden.Containers
 
         public void EmitLogMessage(LogMessageType type, string data)
         {
-            if (data.IsNullOrEmpty())
+            if (String.IsNullOrEmpty(data))
             {
                 return;
             }

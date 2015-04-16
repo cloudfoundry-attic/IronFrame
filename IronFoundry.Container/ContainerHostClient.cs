@@ -9,7 +9,7 @@ using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container
 {
-    public interface IContainerHostClient : IDisposable
+    internal interface IContainerHostClient : IDisposable
     {
         CreateProcessResult CreateProcess(CreateProcessParams @params);
         bool Ping(TimeSpan timeout);
@@ -20,7 +20,7 @@ namespace IronFoundry.Container
         WaitForProcessExitResult WaitForProcessExit(WaitForProcessExitParams @params);
     }
 
-    public class ContainerHostClient : IContainerHostClient
+    internal class ContainerHostClient : IContainerHostClient
     {
         JobObject containerJobObject;
         IProcess hostProcess;

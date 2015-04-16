@@ -2,8 +2,7 @@
 
 namespace IronFoundry.Container.Utilities
 {
-    // BR: Move this to IronFoundry.Container.Shared
-    public class ProcessDataReceivedEventArgs : EventArgs
+    internal class ProcessDataReceivedEventArgs : EventArgs
     {
         public ProcessDataReceivedEventArgs(string data)
         {

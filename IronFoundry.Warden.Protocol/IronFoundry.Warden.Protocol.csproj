@@ -37,7 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\shared\CommonAssemblyInfo.cs">
-      <Link>CommonAssemblyInfo.cs</Link>
+      <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Constants.cs" />
     <Compile Include="IContainerRequest.cs" />
@@ -89,6 +89,7 @@
     <Compile Include="Messages.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResponseWrapper.cs" />
+    <Compile Include="WardenProtocolException.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="protobuf-net">

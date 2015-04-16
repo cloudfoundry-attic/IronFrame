@@ -1,9 +1,9 @@
-﻿namespace IronFoundry.Container.Win32
-{
-    using System;
-    using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
-    public partial class NativeMethods
+namespace IronFoundry.Container.Win32
+{
+    internal partial class NativeMethods
     {
         [StructLayout(LayoutKind.Sequential)]
         public class SecurityAttributes

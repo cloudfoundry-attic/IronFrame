@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 using NSubstitute;
 using Xunit;
 
-namespace IronFoundry.Container.Internal
+namespace IronFoundry.Container
 {
     public class LocalFilePropertyServiceTests
     {

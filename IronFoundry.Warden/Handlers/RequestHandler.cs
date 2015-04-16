@@ -27,13 +27,13 @@
 
         protected ResponseData GetResponseData(bool isErrorCase, string fmt, params object[] args)
         {
-            if (fmt.IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(fmt))
             {
                 throw new ArgumentNullException("fmt");
             }
 
             string errorMessage = String.Empty;
-            if (args.IsNullOrEmpty())
+            if (args == null || args.Length == 0)
             {
                 errorMessage = fmt;
             }

@@ -1,11 +1,9 @@
 ﻿using System;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security;
 using IronFoundry.Container.Utilities;
-using IronFoundry.Warden.Containers;
 using NSubstitute;
 using Xunit;
 

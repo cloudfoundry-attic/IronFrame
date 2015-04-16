@@ -3,7 +3,7 @@ using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Container.Messaging
 {
-    public class JsonRpcRequest
+    internal class JsonRpcRequest
     {
         public JsonRpcRequest(string method)
         {
@@ -16,7 +16,7 @@ namespace IronFoundry.Container.Messaging
         public JToken id { get; set; }
     }
 
-    public class JsonRpcRequest<T> : JsonRpcRequest
+    internal class JsonRpcRequest<T> : JsonRpcRequest
     {
         public JsonRpcRequest(string method)
             : base(method)

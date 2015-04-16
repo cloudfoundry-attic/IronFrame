@@ -3,8 +3,7 @@ using System.Threading;
 
 namespace IronFoundry.Container.Utilities
 {
-    // BR: Move this to IronFoundry.Container.Shared
-    public class JobObjectLimits : IDisposable
+    internal class JobObjectLimits : IDisposable
     {
         static readonly TimeSpan DefaultPollPeriod = TimeSpan.FromSeconds(1);
 

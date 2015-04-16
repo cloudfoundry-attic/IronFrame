@@ -1,11 +1,10 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using IronFoundry.Container.Messages;
-using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container.Host.Handlers
 {
-    public class StopAllProcessesHandler
+    internal class StopAllProcessesHandler
     {
         readonly IProcessTracker processTracker;
 

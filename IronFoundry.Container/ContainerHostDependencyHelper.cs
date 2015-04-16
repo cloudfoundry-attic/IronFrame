@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
 namespace IronFoundry.Container
 {
-    public class ContainerHostDependencyHelper
+    internal class ContainerHostDependencyHelper
     {
         const string ContainerHostAssemblyName = "IronFoundry.Container.Host";
 

@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace IronFoundry.Container.Messaging
 {
-    public class SecureStringJsonConverter : JsonConverter
+    internal class SecureStringJsonConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType)
         {

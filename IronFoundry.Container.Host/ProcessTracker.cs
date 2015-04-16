@@ -8,7 +8,7 @@ using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container.Host
 {
-    public interface IProcessTracker
+    internal interface IProcessTracker
     {
         IReadOnlyList<IProcess> GetAllChildProcesses();
         IProcess GetProcessByKey(Guid key);
@@ -16,7 +16,7 @@ namespace IronFoundry.Container.Host
         void TrackProcess(Guid key, IProcess process);
     }
 
-    public class ProcessTracker : IProcessTracker
+    internal class ProcessTracker : IProcessTracker
     {
         readonly IProcess hostProcess;
         readonly JobObject jobObject;

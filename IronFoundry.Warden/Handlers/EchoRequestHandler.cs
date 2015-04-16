@@ -4,6 +4,7 @@
     using IronFoundry.Warden.Protocol;
     using NLog;
 
+    // MO: Added to ContainerClient
     public class EchoRequestHandler : RequestHandler
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();

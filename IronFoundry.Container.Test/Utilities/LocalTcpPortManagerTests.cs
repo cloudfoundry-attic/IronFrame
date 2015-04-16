@@ -1,13 +1,14 @@
 ﻿using System;
+using IronFoundry.Container.Utilities;
 using NSubstitute;
 using Xunit;
 
-namespace IronFoundry.Container.Utilities
+namespace IronFoundry.Container
 {
     public class LocalTcpPortManagerTests
     {
-        protected INetShRunner NetShRunner;
-        protected IFirewallManager FirewallManager;
+        internal INetShRunner NetShRunner;
+        internal IFirewallManager FirewallManager;
 
         public LocalTcpPortManagerTests()
         {
@@ -57,7 +58,7 @@ namespace IronFoundry.Container.Utilities
 
                 var exception = Record.Exception(() =>  tcpPortManager.ReserveLocalPort(8888, "userName"));
 
-                Assert.IsType<WardenException>(exception);
+                Assert.IsType<Exception>(exception);
             }
 
             [Fact]
@@ -69,7 +70,7 @@ namespace IronFoundry.Container.Utilities
 
                 var exception = Record.Exception(() => tcpPortManager.ReserveLocalPort(8888, "userName"));
 
-                Assert.IsType<WardenException>(exception);
+                Assert.IsType<Exception>(exception);
             }
         }
 
@@ -103,7 +104,7 @@ namespace IronFoundry.Container.Utilities
 
                 var exception = Record.Exception(() => tcpPortManager.ReleaseLocalPort(8888, "userName"));
 
-                Assert.IsType<WardenException>(exception);
+                Assert.IsType<Exception>(exception);
             }
 
             [Fact]
@@ -126,7 +127,7 @@ namespace IronFoundry.Container.Utilities
 
                 var exception = Record.Exception(() => tcpPortManager.ReserveLocalPort(8888, "userName"));
 
-                Assert.IsType<WardenException>(exception);
+                Assert.IsType<Exception>(exception);
             }
         }
     }

@@ -2,11 +2,10 @@
 using System.IO;
 using System.Security.Principal;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using IronFoundry.Container.Utilities;
 using Xunit;
-using System.Threading.Tasks;
 
 namespace IronFoundry.Container
 {
@@ -134,7 +133,8 @@ namespace IronFoundry.Container
                 spec.OutputCallback = (data) => 
                 {
                     output.Append(data);
-                    outputSignal.Set();
+                    if (!String.IsNullOrWhiteSpace(data))
+                        outputSignal.Set();
                 };
 
                 var error = new StringBuilder();
@@ -142,7 +142,8 @@ namespace IronFoundry.Container
                 spec.ErrorCallback = (data) =>
                 {
                     error.Append(data);
-                    errorSignal.Set();
+                    if (!String.IsNullOrWhiteSpace(data))
+                        errorSignal.Set();
                 };
 
                 using (var p = Runner.Run(spec))
@@ -185,7 +186,8 @@ namespace IronFoundry.Container
             [FactAdminRequired]
             public async Task WhenCredentialsGiven_LoadsUserEnvironment()
             {
-                LocalPrincipalManager manager = new LocalPrincipalManager(new DesktopPermissionManager());
+                var desktopPermissionManager = new DesktopPermissionManager();
+                LocalPrincipalManager manager = new LocalPrincipalManager(desktopPermissionManager);
                 
                 string userName = "Test_UserEnvironment";
                 if (manager.FindUser(userName) != null)
@@ -193,6 +195,7 @@ namespace IronFoundry.Container
                     manager.DeleteUser(userName);
                 }
                 var user = manager.CreateUser(userName);
+                desktopPermissionManager.AddDesktopPermission(userName);
 
                 try
                 {
@@ -213,6 +216,7 @@ namespace IronFoundry.Container
                 }
                 finally
                 {
+                    desktopPermissionManager.RemoveDesktopPermission(userName);
                     manager.DeleteUser(userName);
                 }
             }

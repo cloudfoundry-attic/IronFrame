@@ -18,7 +18,7 @@
 
         public ContainerHandle(string handle)
         {
-            if (handle.IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(handle))
             {
                 throw new ArgumentNullException("handle");
             }

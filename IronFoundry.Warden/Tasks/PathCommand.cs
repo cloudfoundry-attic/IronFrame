@@ -1,27 +1,21 @@
-﻿namespace IronFoundry.Warden.Tasks
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace IronFoundry.Warden.Tasks
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
-    using IronFoundry.Warden.Containers;
-
-    public abstract class PathCommand : TaskCommand
+    public abstract class PathCommand : RemoteCommand
     {
-        public PathCommand(IContainer container, string[] arguments)
-            : base(container, arguments)
-        {
-            if (base.arguments.IsNullOrEmpty())
-            {
-                throw new ArgumentNullException("Command requires at least one argument.");
-            }
-        }
+        protected readonly NLog.Logger log = NLog.LogManager.GetCurrentClassLogger();
 
-        public override TaskCommandResult Execute()
+        override protected TaskCommandResult Invoke()
         {
             TaskCommandResult finalResult = null;
             var output = new StringBuilder();
 
-            foreach (string path in arguments)
+            foreach (string path in this.CommandArgs.Arguments)
             {
                 try
                 {
@@ -29,6 +23,7 @@
                 }
                 catch (Exception ex)
                 {
+                    log.Error("ProcessPath Exception: {0}", ex.ToString());
                     finalResult = new TaskCommandResult(1, null, ex.Message);
                     break;
                 }

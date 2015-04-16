@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Linq;
-using System.DirectoryServices;
-using System.Runtime.InteropServices;
-using System.Collections.Generic;
-using Xunit;
 using System.Collections;
+using System.DirectoryServices;
+using IronFoundry.Container.Utilities;
 using NSubstitute;
+using Xunit;
 
-namespace IronFoundry.Container.Utilities
+namespace IronFoundry.Container
 {
     /// <summary>
     /// Test the LocalPrincipal by using the actual local WinNT users and groups entries.
@@ -78,12 +76,6 @@ namespace IronFoundry.Container.Utilities
 
             manager.DeleteUser(testUserName);
             manager.DeleteUser(testUserName);
-        }
-
-        [FactAdminRequired]
-        void CanFindWellKnownUser()
-        {
-            Assert.Equal("Administrator", manager.FindUser("Administrator"));
         }
 
         [FactAdminRequired]

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
-using IronFoundry.Container.Messaging;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
-namespace IronFoundry.Warden.ContainerHost
+namespace IronFoundry.Container.Messaging
 {
     public class MessageDispatcherTest
     {

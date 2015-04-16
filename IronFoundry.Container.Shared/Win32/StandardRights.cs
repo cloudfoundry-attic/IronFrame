@@ -2,10 +2,9 @@
 
 namespace IronFoundry.Container.Win32
 {
-
     // From WinNT.h
     [Flags]
-    public enum StandardRights
+    internal enum StandardRights
     {
         Delete = 0x00010000,
         ReadPermissions = 0x00020000,

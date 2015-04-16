@@ -2,13 +2,13 @@
 
 namespace IronFoundry.Container.Messages
 {
-    public enum ProcessDataType
+    internal enum ProcessDataType
     {
         STDOUT = 1,
         STDERR = 2,
     }
 
-    public class ProcessDataEvent
+    internal class ProcessDataEvent
     {
         public ProcessDataEvent()
         {

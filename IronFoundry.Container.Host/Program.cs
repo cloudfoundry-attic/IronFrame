@@ -33,7 +33,7 @@ namespace IronFoundry.Container.Host
             var input = Console.In;
             var output = Console.Out;
 
-            using (var transport = new MessageTransport(input, output))
+            using (var transport = MessageTransport.Create(input, output))
             {
                 processTracker = new ProcessTracker(transport, hostJobObject, hostProcess, new ProcessHelper());
 

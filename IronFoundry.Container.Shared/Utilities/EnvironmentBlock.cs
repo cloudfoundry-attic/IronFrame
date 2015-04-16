@@ -1,17 +1,13 @@
-﻿
-
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
-using IronFoundry.Container.Win32;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace IronFoundry.Container.Utilities
 {
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.Runtime.InteropServices;
-    using System.Text;
-
-    public class EnvironmentBlock
+    internal class EnvironmentBlock
     {
         private readonly Dictionary<string,string> _environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 

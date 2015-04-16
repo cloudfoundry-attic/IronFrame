@@ -1,11 +1,11 @@
-﻿namespace IronFoundry.Container.Win32
-{
-    using System;
-    using System.Runtime.InteropServices;
-    using System.Security;
+﻿using System;
+using System.Runtime.InteropServices;
+using System.Security;
 
+namespace IronFoundry.Container.Win32
+{
     [SuppressUnmanagedCodeSecurity]
-    public partial class NativeMethods
+    internal partial class NativeMethods
     {
         [DllImport("kernel32.dll", EntryPoint = "RtlFillMemory")]
         public static extern void FillMemory(

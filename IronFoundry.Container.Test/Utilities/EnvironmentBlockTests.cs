@@ -1,11 +1,10 @@
-﻿using System.Security.Principal;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Security.Principal;
+using Xunit;
 
 namespace IronFoundry.Container.Utilities
 {
-    using System.Collections;
-    using System.Collections.Generic;
-    using Xunit;
-
     public class EnvironmentBlockTests
     {
         [Fact]

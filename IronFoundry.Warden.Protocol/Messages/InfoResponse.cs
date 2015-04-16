@@ -7,19 +7,19 @@
     {
         public InfoResponse(string hostIp, string containerIp, string containerPath, string containerState)
         {
-            if (hostIp.IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(hostIp))
             {
                 throw new ArgumentNullException("hostIp");
             }
-            if (containerIp.IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(containerIp))
             {
                 throw new ArgumentNullException("containerIp");
             }
-            if (containerPath.IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(containerPath))
             {
                 throw new ArgumentNullException("containerPath");
             }
-            if (containerState.IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(containerState))
             {
                 throw new ArgumentNullException("containerState");
             }

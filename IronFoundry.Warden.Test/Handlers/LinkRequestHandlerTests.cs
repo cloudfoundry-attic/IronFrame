@@ -2,7 +2,6 @@
 using IronFoundry.Container;
 using IronFoundry.Container.Messaging;
 using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Handlers;
 using IronFoundry.Warden.Jobs;
 using IronFoundry.Warden.Protocol;
@@ -105,7 +104,7 @@ namespace IronFoundry.Warden.Test.Handlers
         [Fact]
         public async void ReturnsStoppedInfoRequestWhenContainerThrowsMessagingException()
         {
-            containerClient.GetInfoAsync().ThrowsTask(new MessagingException());
+            containerClient.GetInfoAsync().ThrowsTask(new Exception());
             
             var response = (LinkResponse)await handler.HandleAsync();
 

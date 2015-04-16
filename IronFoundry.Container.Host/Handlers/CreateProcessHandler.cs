@@ -1,9 +1,10 @@
 ﻿using System.Threading.Tasks;
 using IronFoundry.Container.Messages;
+using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container.Host.Handlers
 {
-    public class CreateProcessHandler
+    internal class CreateProcessHandler
     {
         readonly IProcessRunner processRunner;
         readonly IProcessTracker processTracker;

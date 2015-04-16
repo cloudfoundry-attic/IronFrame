@@ -38,13 +38,13 @@
             }
             this.request = request;
 
-            if (this.request.Script.IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(this.request.Script))
             {
                 throw new ArgumentNullException("request.Script can't be empty.");
             }
 
             commands = JsonConvert.DeserializeObject<TaskCommandDTO[]>(request.Script);
-            if (commands.IsNullOrEmpty())
+            if (commands == null || commands.Length == 0)
             {
                 throw new ArgumentException("Expected to run at least one command.");
             }
@@ -107,11 +107,12 @@
 
                 try
                 {
-                    var commandResult = await container.RunCommandAsync(new RemoteCommand(request.Privileged, cmd.Command, cmd.Args, cmd.Environment, cmd.WorkingDirectory));
+                    var commandResult = await container.RunCommandAsync(new RemoteCommandArgs(request.Privileged, cmd.Command, cmd.Args, cmd.Environment, cmd.WorkingDirectory));
                     results.Add(commandResult);
                 }
                 catch (Exception ex)
                 {
+                    log.Error("Exception running command ({0}): {1}", cmd.Command, ex.ToString());
                     results.Add(new CommandResult() { ExitCode = 1, StdOut = null, StdErr = ex.Message });
                     break;
                 }
@@ -128,8 +129,12 @@
             int lastExitCode = 0;
             foreach (var result in results)
             {
-                stdout.SmartAppendLine(result.StdOut);
-                stderr.SmartAppendLine(result.StdErr);
+                if (!String.IsNullOrWhiteSpace(result.StdOut))
+                    stdout.AppendLine(result.StdOut);
+
+                if (!String.IsNullOrWhiteSpace(result.StdErr))
+                    stderr.AppendLine(result.StdErr);
+
                 if (result.ExitCode != 0)
                 {
                     lastExitCode = result.ExitCode;

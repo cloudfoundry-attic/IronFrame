@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IronFoundry.Container.Win32
 {
@@ -14,7 +10,7 @@ namespace IronFoundry.Container.Win32
     ///     https://msdn.microsoft.com/en-us/library/windows/desktop/aa374892(v=vs.85).aspx
     /// </remarks>
     [Flags]
-    public enum ACCESS_MASK : uint
+    internal enum ACCESS_MASK : uint
     {
         NONE = 0x0,
 

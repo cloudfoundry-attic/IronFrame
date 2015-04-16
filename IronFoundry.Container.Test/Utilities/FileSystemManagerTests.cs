@@ -1,17 +1,13 @@
-﻿using NSubstitute;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using NSubstitute;
 using Xunit;
 
 namespace IronFoundry.Container.Utilities
 {
     public class FileSystemManagerTests
     {
-        public class FileSystemManagerTestContext
+        internal class FileSystemManagerTestContext
         {
             protected PlatformFileSystem fileSystem;
             protected FileSystemManager manager;
@@ -23,7 +19,7 @@ namespace IronFoundry.Container.Utilities
             }
         }
 
-        public class Copy : FileSystemManagerTestContext
+        class Copy : FileSystemManagerTestContext
         {
             [Fact]
             public void CopiesOneFileToAnother()
@@ -65,7 +61,7 @@ namespace IronFoundry.Container.Utilities
             }
         }
 
-        public class CopyFile : FileSystemManagerTestContext
+        class CopyFile : FileSystemManagerTestContext
         {
             [Fact]
             public void CopiesFile()

@@ -1,9 +1,9 @@
-﻿namespace IronFoundry.Container.Win32
-{
-    using System;
-    using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
-    public partial class NativeMethods
+namespace IronFoundry.Container.Win32
+{
+    internal partial class NativeMethods
     {
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern Boolean LogonUser(

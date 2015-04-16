@@ -4,7 +4,7 @@ using IronFoundry.Container.Utilities;
 
 namespace IronFoundry.Container
 {
-    public class ConstrainedProcessRunner : IProcessRunner, IDisposable
+    internal class ConstrainedProcessRunner : IProcessRunner, IDisposable
     {
         public const int DefaultStopTimeout = 10000;
 

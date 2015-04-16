@@ -5,6 +5,7 @@
     using NLog;
     using Protocol;
 
+    // MO: Added to ContainerClient
     public class InfoRequestHandler : ContainerRequestHandler
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();

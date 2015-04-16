@@ -1,59 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using IronFoundry.Container.Internal;
 using IronFoundry.Container.Utilities;
-using IronFoundry.Warden.Containers;
 
 namespace IronFoundry.Container
 {
-    public class ProcessSpec
-    {
-        public string ExecutablePath { get; set; }
-        public string[] Arguments { get; set; }
-        public Dictionary<string, string> Environment { get; set; }
-        public string WorkingDirectory { get; set; }
-        public bool Privileged { get; set; }
-        public bool DisablePathMapping { get; set; }
-    }
-
-    public interface IProcessIO
-    {
-        TextWriter StandardOutput { get; }
-        TextWriter StandardError { get; }
-        TextReader StandardInput { get; }
-    }
-
-    public interface IContainer : IDisposable
-    {
-        string Id { get; }
-        string Handle { get; }
-        //ContainerState State { get; }
-        IContainerDirectory Directory { get; }
-
-        //void BindMounts(IEnumerable<BindMount> mounts);
-        //void CreateTarFile(string sourcePath, string tarFilePath, bool compress);
-        //void CopyFileIn(string sourceFilePath, string destinationFilePath);
-        //void CopyFileOut(string sourceFilePath, string destinationFilePath);
-        //void ExtractTarFile(string tarFilePath, string destinationPath, bool decompress);
-
-        ContainerInfo GetInfo();
-
-        void Stop(bool kill);
-
-        int ReservePort(int requestedPort);
-        IContainerProcess Run(ProcessSpec spec, IProcessIO io);
-
-        void LimitMemory(ulong limitInBytes);
-        ulong CurrentMemoryLimit();
-
-        void SetProperty(string name, string value);
-        string GetProperty(string name);
-        void RemoveProperty(string name);
-    }
-
-    public class Container : IContainer
+    internal class Container : IContainer
     {
         const string DefaultWorkingDirectory = "/";
 
@@ -76,7 +28,7 @@ namespace IronFoundry.Container
             string id,
             string handle,
             IContainerUser user,
-            IContainerDirectory directory, 
+            IContainerDirectory directory,
             IContainerPropertyService propertyService,
             ILocalTcpPortManager tcpPortManager,
             JobObject jobObject,
@@ -97,7 +49,7 @@ namespace IronFoundry.Container
             this.constrainedProcessRunner = constrainedProcessRunner;
             this.processHelper = processHelper;
 
-            this.defaultEnvironment = defaultEnvironment ?? new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);
+            this.defaultEnvironment = defaultEnvironment ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             this.currentState = ContainerState.Active;
         }
@@ -141,12 +93,12 @@ namespace IronFoundry.Container
             var specEnvironment = spec.Environment ?? new Dictionary<string, string>();
             var processEnvironment = this.defaultEnvironment.Merge(specEnvironment);
 
-            Action<string> stdOut = io == null || io.StandardOutput == null 
-                ? (Action<string>)null 
+            Action<string> stdOut = io == null || io.StandardOutput == null
+                ? (Action<string>)null
                 : data => io.StandardOutput.Write(data);
 
-            Action<string> stdErr = io == null || io.StandardError == null 
-                ? (Action<string>)null 
+            Action<string> stdErr = io == null || io.StandardError == null
+                ? (Action<string>)null
                 : data => io.StandardError.Write(data);
 
             var runSpec = new ProcessRunSpec
@@ -193,7 +145,7 @@ namespace IronFoundry.Container
 
             if (directory != null)
                 directory.Destroy();
-            
+
             this.currentState = ContainerState.Destroyed;
         }
 
@@ -295,6 +247,11 @@ namespace IronFoundry.Container
         public string GetProperty(string name)
         {
             return propertyService.GetProperty(this, name);
+        }
+
+        public Dictionary<string, string> GetProperties()
+        {
+            return propertyService.GetProperties(this);
         }
 
         public void RemoveProperty(string name)

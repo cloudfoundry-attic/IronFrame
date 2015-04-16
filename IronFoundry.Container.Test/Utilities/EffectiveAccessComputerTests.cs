@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Security.AccessControl;
 using System.Security.Principal;
-using System.Text;
-using System.Threading.Tasks;
 using IronFoundry.Container.Win32;
 using Xunit;
 
@@ -30,7 +26,7 @@ namespace IronFoundry.Container.Utilities
             public void WhenUserHasAllStandardRights()
             {
                 var rights = new IdentityRights { Identity = CurrentIdentity, Rights = FileSystemRights.FullControl };
-                var descriptor = CreateSecurityDescriptor(rights.AsSingleItemEnumerable());
+                var descriptor = CreateSecurityDescriptor(new[] { rights });
                 var access = EffectiveAccess.ComputeAccess(descriptor, CurrentIdentity);
 
                 Assert.True(access.HasFlag(ACCESS_MASK.STANDARD_RIGHTS_ALL));
@@ -40,7 +36,7 @@ namespace IronFoundry.Container.Utilities
             public void WhenGroupHasAllStandardRights()
             {
                 var rights = new IdentityRights { Identity = Group, Rights = FileSystemRights.FullControl };
-                var descriptor = CreateSecurityDescriptor(rights.AsSingleItemEnumerable());
+                var descriptor = CreateSecurityDescriptor(new[] { rights });
                 var access = EffectiveAccess.ComputeAccess(descriptor, CurrentIdentity);
 
                 Assert.True(access.HasFlag(ACCESS_MASK.STANDARD_RIGHTS_ALL));
@@ -50,7 +46,7 @@ namespace IronFoundry.Container.Utilities
             public void WhenGroupIsDeniedWrite()
             {
                 IdentityRights rights = new IdentityRights {Identity = Group, Rights = FileSystemRights.FullControl};
-                var descriptor = CreateSecurityDescriptor(null, denyRights: rights.AsSingleItemEnumerable());
+                var descriptor = CreateSecurityDescriptor(null, denyRights: new[] { rights });
                 var access = EffectiveAccess.ComputeAccess(descriptor, CurrentIdentity);
 
                 Assert.False(access.HasFlag(ACCESS_MASK.STANDARD_RIGHTS_ALL));
@@ -63,13 +59,19 @@ namespace IronFoundry.Container.Utilities
                 security.SetOwner(CurrentIdentity);
                 security.SetGroup(Group);
 
-                foreach (var right in allowRights.EmptyIfNull())
+                if (allowRights == null)
+                    allowRights = Enumerable.Empty<IdentityRights>();
+
+                if (denyRights == null)
+                    denyRights = Enumerable.Empty<IdentityRights>();
+
+                foreach (var right in allowRights)
                 {
                     security.AddAccessRule(new FileSystemAccessRule(right.Identity, right.Rights,
                         AccessControlType.Allow));
                 }
 
-                foreach (var right in denyRights.EmptyIfNull())
+                foreach (var right in denyRights)
                 {
                     security.AddAccessRule(new FileSystemAccessRule(right.Identity, right.Rights, AccessControlType.Deny));
                 }

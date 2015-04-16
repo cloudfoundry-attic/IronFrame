@@ -2,7 +2,7 @@
 
 namespace IronFoundry.Container.Host.Handlers
 {
-    public class PingHandler
+    internal class PingHandler
     {
         public Task ExecuteAsync()
         {

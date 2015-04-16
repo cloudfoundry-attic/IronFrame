@@ -9,12 +9,12 @@ using NLog;
 
 namespace IronFoundry.Container
 {
-    public interface IContainerHostService
+    internal interface IContainerHostService
     {
         IContainerHostClient StartContainerHost(string containerId, IContainerDirectory directory, JobObject jobObject, NetworkCredential credentials);
     }
 
-    public class ContainerHostService : IContainerHostService
+    internal class ContainerHostService : IContainerHostService
     {
         static readonly TimeSpan HostProcessStartTimeout = TimeSpan.FromSeconds(5);
 
@@ -23,7 +23,7 @@ namespace IronFoundry.Container
         readonly Logger log = LogManager.GetCurrentClassLogger();
         readonly IProcessRunner processRunner;
 
-        public ContainerHostService(FileSystemManager fileSystem, IProcessRunner processRunner, ContainerHostDependencyHelper dependencyHelper)
+        internal ContainerHostService(FileSystemManager fileSystem, IProcessRunner processRunner, ContainerHostDependencyHelper dependencyHelper)
         {
             this.fileSystem = fileSystem;
             this.processRunner = processRunner;
@@ -89,8 +89,8 @@ namespace IronFoundry.Container
             // it's added to the job object.
             jobObject.AssignProcessToJob(hostProcess.Handle);
 
-            var messageTransport = new MessageTransport(hostProcess.StandardOutput, hostProcess.StandardInput);
-            var messagingClient = new MessagingClient(async message =>
+            var messageTransport = MessageTransport.Create(hostProcess.StandardOutput, hostProcess.StandardInput);
+            var messagingClient = MessagingClient.Create(async message =>
             {
                 await messageTransport.PublishRequestAsync(message);
             });

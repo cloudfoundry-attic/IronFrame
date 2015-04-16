@@ -4,9 +4,8 @@ using System.IO;
 
 namespace IronFoundry.Container.Utilities
 {
-    // BR: Move this to IronFoundry.Container.Shared
     // BR: Get rid of RequestExit(). Add Stop(timeout).
-    public interface IProcess : IDisposable
+    internal interface IProcess : IDisposable
     {
         int ExitCode { get; }
         IntPtr Handle { get; }

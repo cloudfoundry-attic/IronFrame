@@ -4,13 +4,13 @@ using Newtonsoft.Json.Linq;
 
 namespace IronFoundry.Container.Messages
 {
-    public class WaitForProcessExitParams
+    internal class WaitForProcessExitParams
     {
         public Guid key;
         public int timeout;
     }
 
-    public class WaitForProcessExitRequest : JsonRpcRequest<WaitForProcessExitParams>
+    internal class WaitForProcessExitRequest : JsonRpcRequest<WaitForProcessExitParams>
     {
         public static string MethodName = "Container.WaitForProcessExit";
 
@@ -21,13 +21,13 @@ namespace IronFoundry.Container.Messages
         }
     }
 
-    public class WaitForProcessExitResult
+    internal class WaitForProcessExitResult
     {
         public bool exited;
         public int exitCode;
     }
 
-    public class WaitForProcessExitResponse : JsonRpcResponse<WaitForProcessExitResult>
+    internal class WaitForProcessExitResponse : JsonRpcResponse<WaitForProcessExitResult>
     {
         public WaitForProcessExitResponse(JToken id, WaitForProcessExitResult result)
             : base(id, result)
