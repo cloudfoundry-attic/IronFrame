@@ -25,17 +25,6 @@
         <BuildCommit Condition=" '$(BuildCommit)' == '' and '$(BuildIsPrivate)' == 'False' ">$(BUILD_VCS_NUMBER)</BuildCommit>
         <BuildCommit Condition=" '$(BuildCommit)' == '' and '$(BuildIsPrivate)' == 'True' ">$(BuildBranch)</BuildCommit>
         
-        <NuGetIsPreRelease>$(BuildIsPrivate)</NuGetIsPreRelease>
-        
-        <NuGetPreReleaseName Condition=" '$(NuGetIsPreRelease)' == 'True' ">$(BuildBranch)</NuGetPreReleaseName>
-        <!-- NOTE: The NuGet PreRelease value is limited to 20 characters. -->
-        <NuGetPreReleaseName Condition=" $(NuGetPreReleaseName.Length) &gt; 20 ">$(NuGetPreReleaseName.Substring(0, 20))</NuGetPreReleaseName>
-        
-        <NuGetVersion Condition=" '$(NuGetIsPreRelease)' != 'True' ">$(BuildVersion)</NuGetVersion>
-        <NuGetVersion Condition=" '$(NuGetIsPreRelease)' == 'True' ">$(BuildVersion)-$(NuGetPreReleaseName)</NuGetVersion>
-        <CurrentDate>$([System.DateTime]::Now.ToString(yyyyMMddHHmmss))</CurrentDate>
-        <NuGetVersion Condition=" '$(NuGetIsPreRelease)' == 'True' ">$([System.DateTime]::Now.ToString(0.yyyyMMdd.HHmmss))-$(NuGetPreReleaseName)</NuGetVersion>
-
         <BuildInParallel Condition=" '$(BuildInParallel)' == '' And $(MSBuildNodeCount) &gt; 1 ">true</BuildInParallel>
         <BuildInParallel Condition=" '$(BuildInParallel)' == '' ">false</BuildInParallel>
     </PropertyGroup>
@@ -50,28 +39,12 @@
             <OutputDir Condition=" '$(OutputDir)' == '' ">$(BUILD_ROOT)</OutputDir>
             <OutputDir Condition=" '$(OutputDir)' == '' and '$(SolutionDir)' != '' ">$(SolutionDir)\output\$(BuildVersion)\</OutputDir>
             <BinOutputDir>$(OutputDir)binaries\</BinOutputDir>
-            <NugetOutputDir>$(OutputDir)nuget\</NugetOutputDir>
         </PropertyGroup>
 
         <Message Text="BuildIsPrivate: $(BuildIsPrivate)" />
         <Message Text="BuildBranch: $(BuildBranch)" />
         <Message Text="BuildVersion: $(BuildVersion)" />
         <Message Text="BuildCommit: $(BuildCommit)" />
-        <Message Text="NuGetVersion: $(NuGetVersion)" />
-    </Target>
-
-    <Target Name="FindNuGet">
-        <ItemGroup>
-            <FindNuGetExe
-                Condition=" '$(NuGetExe)' == '' "
-                Include="$(MSBuildThisFileDirectory)\**\nuget.exe;" />
-        </ItemGroup>
-        <PropertyGroup>
-            <!-- The %(FindNuGetExe.Identity) syntax will use the last item in the set. -->
-            <NuGetExe Condition=" '$(NuGetExe)' == '' ">%(FindNuGetExe.Identity)</NuGetExe>
-        </PropertyGroup>
-        <Error Text="NuGet.exe cannot be found." Condition=" !Exists('$(NuGetExe)') " />
-        <Message Text="Found NuGet.exe at '$(NuGetExe)'." Condition=" Exists('$(NuGetExe)') " />
     </Target>
     
     <Target Name="SetVersion">
@@ -166,16 +139,8 @@
 
         <Copy SourceFiles="@(PackagedOutput)" DestinationFolder="$(BinOutputDir)" />
     </Target>
-    
-    <Target Name="PackageNuget" DependsOnTargets="Build;FindNuGet">
-        <RemoveDir Condition="Exists('$(NugetOutputDir)')" Directories="$(NugetOutputDir)" />
 
-        <MakeDir Directories="$(NugetOutputDir)" />
-        
-        <Exec Command='"$(NuGetExe)" pack "%(NugetPackage.Identity)" -Prop "Configuration=$(Configuration)" -OutputDirectory "$(NugetOutputDir.TrimEnd(&quot;\&quot;))" -Version "$(NuGetVersion)"' />
-    </Target>
-
-    <Target Name="Package" DependsOnTargets="PackageBinaries;PackageNuget">
+    <Target Name="Package" DependsOnTargets="PackageBinaries">
     </Target>
     
     <!-- External Targets (i.e. called from the command-line or build server -->

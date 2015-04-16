@@ -3,17 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Container.Shared", "IronFoundry.Container.Shared\IronFoundry.Container.Shared.csproj", "{CB7BA555-21FD-4C57-A629-A925B6A83A31}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFrame.Shared", "IronFrame.Shared\IronFrame.Shared.csproj", "{CB7BA555-21FD-4C57-A629-A925B6A83A31}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Container.TestHelper", "IronFoundry.Container.TestHelper\IronFoundry.Container.TestHelper.csproj", "{AB96DA85-8C4E-490B-B552-3FE9F0E0E9BF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFrame.TestHelper", "IronFrame.TestHelper\IronFrame.TestHelper.csproj", "{AB96DA85-8C4E-490B-B552-3FE9F0E0E9BF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Container", "IronFoundry.Container\IronFoundry.Container.csproj", "{5DE07F79-B758-4A04-B908-626E7577313E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFrame", "IronFrame\IronFrame.csproj", "{5DE07F79-B758-4A04-B908-626E7577313E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Container.Test", "IronFoundry.Container.Test\IronFoundry.Container.Test.csproj", "{0C0513EF-3C40-44F7-AE1D-A0709B65B082}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFrame.Test", "IronFrame.Test\IronFrame.Test.csproj", "{0C0513EF-3C40-44F7-AE1D-A0709B65B082}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Container.Host", "IronFoundry.Container.Host\IronFoundry.Container.Host.csproj", "{6E4DD8FC-91E8-4C70-946D-4C37DF84C8CF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFrame.Host", "IronFrame.Host\IronFrame.Host.csproj", "{6E4DD8FC-91E8-4C70-946D-4C37DF84C8CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFoundry.Container.Acceptance.Test", "IronFoundry.Container.Acceptance.Test\IronFoundry.Container.Acceptance.Test.csproj", "{95081EA9-CA53-4B69-8213-1AF5F30C2EA1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFrame.Acceptance.Test", "IronFrame.Acceptance.Test\IronFrame.Acceptance.Test.csproj", "{95081EA9-CA53-4B69-8213-1AF5F30C2EA1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

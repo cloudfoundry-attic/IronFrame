@@ -13,10 +13,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <NugetPackage Include="$(SolutionDir)\IronFoundry.Container\IronFoundry.Container.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
         <VersionFile Include="$(SolutionDir)\shared\CommonAssemblyInfo.cs" />
     </ItemGroup>
 
