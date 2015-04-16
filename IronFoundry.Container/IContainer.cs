@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace IronFoundry.Container
@@ -16,6 +17,7 @@ namespace IronFoundry.Container
         ulong CurrentMemoryLimit();
         void SetProperty(string name, string value);
         string GetProperty(string name);
+        Dictionary<string, string> GetProperties();
         void RemoveProperty(string name);
         void Destroy();
 

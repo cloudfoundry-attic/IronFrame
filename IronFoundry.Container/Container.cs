@@ -249,6 +249,11 @@ namespace IronFoundry.Container
             return propertyService.GetProperty(this, name);
         }
 
+        public Dictionary<string, string> GetProperties()
+        {
+            return propertyService.GetProperties(this);
+        }
+
         public void RemoveProperty(string name)
         {
             propertyService.RemoveProperty(this, name);

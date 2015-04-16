@@ -85,6 +85,34 @@ namespace IronFoundry.Container
             }
         }
 
+        public class GetProperties : ContainerTests
+        {
+            Dictionary<string, string> Properties { get; set; }
+
+            public GetProperties()
+            {
+                Properties = new Dictionary<string,string>();
+
+                ContainerPropertiesService.GetProperties(Container).Returns(Properties);
+            }
+
+            [Fact]
+            public void ReturnsProperties()
+            {
+                Properties["Name"] = "Value";
+
+                var properties = Container.GetProperties();
+
+                Assert.Collection(properties,
+                    x => {
+                        Assert.Equal("Name", x.Key);
+                        Assert.Equal("Value", x.Value);
+                    }
+                );
+                ContainerPropertiesService.Received(1).GetProperties(Container);
+            }
+        }
+
         public class ReservePort : ContainerTests
         {
             [Fact]
