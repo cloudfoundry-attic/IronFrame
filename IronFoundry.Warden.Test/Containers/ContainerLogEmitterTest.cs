@@ -1,6 +1,5 @@
 ﻿using System.Web.UI.WebControls;
 using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Containers.Messages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -104,7 +103,7 @@ namespace IronFoundry.Warden.Test
             };
             var emitter = new ContainerLogEmitter(logData);
 
-            emitter.EmitLogMessage(LogMessage.MessageType.OUT, null);
+            emitter.EmitLogMessage(LogMessageType.STDOUT, null);
         }
     }
 }

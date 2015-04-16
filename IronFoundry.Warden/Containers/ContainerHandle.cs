@@ -5,6 +5,8 @@
     using System.Linq;
     using System.Text;
 
+    // BR: Move to IronFoundry.Container.Shared
+
     /// <summary>
     /// warden/lib/warden/container/base.rb
     /// </summary>
@@ -16,7 +18,7 @@
 
         public ContainerHandle(string handle)
         {
-            if (handle.IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(handle))
             {
                 throw new ArgumentNullException("handle");
             }

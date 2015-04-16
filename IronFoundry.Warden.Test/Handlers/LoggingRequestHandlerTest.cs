@@ -1,6 +1,5 @@
 ﻿using System.Security.Policy;
 using IronFoundry.Warden.Containers;
-using IronFoundry.Warden.Containers.Messages;
 using IronFoundry.Warden.Handlers;
 using IronFoundry.Warden.Protocol;
 using NSubstitute;

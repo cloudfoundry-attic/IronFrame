@@ -3,36 +3,31 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using IronFoundry.Container;
 using IronFoundry.Warden.Utilities;
 using NLog;
-using IronFoundry.Warden.Containers.Messages;
-using IronFoundry.Warden.Configuration;
 
 namespace IronFoundry.Warden.Containers
 {
     public class ContainerManager : IContainerManager
     {
-        private readonly ConcurrentDictionary<ContainerHandle, IContainerClient> containers =
+        private readonly ConcurrentDictionary<ContainerHandle, IContainerClient> containerClients =
             new ConcurrentDictionary<ContainerHandle, IContainerClient>();
 
         private readonly Logger log = LogManager.GetCurrentClassLogger();
-        private readonly IContainerJanitor janitor;
-        private readonly IWardenConfig wardenConfig;
 
-        public ContainerManager(IContainerJanitor janitor, IWardenConfig wardenConfig)
+        public ContainerManager()
         {
-            this.janitor = janitor;
-            this.wardenConfig = wardenConfig;
         }
 
         public IEnumerable<ContainerHandle> Handles
         {
-            get { return containers.Keys; }
+            get { return containerClients.Keys; }
         }
 
         public void AddContainer(IContainerClient container)
         {
-            if (!containers.TryAdd(container.Handle, container))
+            if (!containerClients.TryAdd(container.Handle, container))
             {
                 throw new WardenException("Could not add container '{0}' to collection!", container);
             }
@@ -42,7 +37,7 @@ namespace IronFoundry.Warden.Containers
         {
             var cHandle = new ContainerHandle(handle);
             IContainerClient retrieved;
-            if (!containers.TryGetValue(cHandle, out retrieved))
+            if (!containerClients.TryGetValue(cHandle, out retrieved))
             {
                 // TODO: throw exception with message that matches ruby warden
                 log.Warn("Expected to find container with handle '{0}'", handle);
@@ -50,36 +45,40 @@ namespace IronFoundry.Warden.Containers
             return retrieved;
         }
 
-        public void RestoreContainers(string containerRoot)
+        public void RestoreContainers(string containerRoot, string wardenUsersGroup)
         {
             if (Directory.Exists(containerRoot))
             {
-                Task.Run(async () =>
-                               {
-                                   // Recover containers primarily for deletion
-                                   foreach (var dirPath in Directory.GetDirectories(containerRoot))
-                                   {
-                                       var handle = Path.GetFileName(dirPath);
-                                       try
-                                       {
-                                           var container = ContainerProxy.Restore(handle);
-                                           containers.TryAdd(container.Handle, container);
-                                       }
-                                       catch (Exception ex)
-                                       {
-                                           log.ErrorException(ex);
-                                       }
-                                   }
+                var fileSystem = new FileSystemManager();
+                var containerService = ContainerService.RestoreFromContainerBasePath(containerRoot, wardenUsersGroup);
 
-                                   try
-                                   {
-                                       await RemoveAllContainersAsync();
-                                   }
-                                   catch (Exception ex)
-                                   {
-                                       log.ErrorException(ex);
-                                   }
-                               });
+                var containers = containerService.GetContainers();
+
+                // Recover containers primarily for deletion
+                foreach (var container in containers)
+                {
+                    try
+                    {
+                        var containerClient = new ContainerClient(containerService, container, fileSystem);
+                        containerClients.TryAdd(containerClient.Handle, containerClient);
+                    }
+                    catch (Exception ex)
+                    {
+                        log.ErrorException(ex);
+                    }
+                }
+
+                Task.Run(async () => 
+                {
+                    try
+                    {
+                        await RemoveAllContainersAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        log.ErrorException(ex);
+                    }
+                });
             }
         }
 
@@ -95,15 +94,11 @@ namespace IronFoundry.Warden.Containers
                 throw new ArgumentNullException("handle");
             }
 
-            int? containerPort = null;
-
             IContainerClient removed;
-            if (containers.TryRemove(handle, out removed))
+            if (containerClients.TryRemove(handle, out removed))
             {
-                containerPort = removed.AssignedPort;
+                await removed.Destroy();
             }
-
-            await janitor.DestroyContainerAsync(handle, wardenConfig.ContainerBasePath, wardenConfig.TcpPort.ToString(), wardenConfig.DeleteContainerDirectories, containerPort);
         }
 
         public void Dispose()
@@ -113,7 +108,7 @@ namespace IronFoundry.Warden.Containers
 
         private async Task RemoveAllContainersAsync()
         {
-            foreach (IContainerClient client in containers.Values)
+            foreach (IContainerClient client in containerClients.Values)
             {
                 log.Info("Destroying stale container '{0}'", client.Handle);
                 await DestroyContainerAsync(client);

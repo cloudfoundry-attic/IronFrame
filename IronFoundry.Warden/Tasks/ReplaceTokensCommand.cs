@@ -1,36 +1,25 @@
-﻿namespace IronFoundry.Warden.Tasks
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using IronFoundry.Container;
+using IronFoundry.Warden.Utilities;
+using NLog;
+
+namespace IronFoundry.Warden.Tasks
 {
-    using System;
-    using System.IO;
-    using System.Linq;
-    using System.Text;
-    using Configuration;
-    using Containers;
-    using Utilities;
-
-    /// <summary>
-    /// Opens existing file and replaces the @ROOT@ tokens with paths in the container.
-    /// </summary>
-    public class ReplaceTokensCommand : PathCommand
+    class ReplaceTokensCommand : PathCommand
     {
-        private static readonly WardenConfig config = new WardenConfig();
-
-        private readonly Func<string, string> tokenReplacer;
-
-        public ReplaceTokensCommand(IContainer container, string[] arguments)
-            : base(container, arguments)
-        {
-            tokenReplacer = (line) => line.Replace("@ROOT@", container.ContainerDirectoryPath).ToWinPathString();
-        }
-
-        protected override void ProcessPath(string path, StringBuilder output)
+        override protected void ProcessPath(string path, StringBuilder output)
         {
             if (File.Exists(path))
             {
-                using (var tempFile = new TempFile(container.ContainerDirectoryPath))
+                using (var tempFile = new TempFile(this.Container.Directory.UserPath))
                 {
-                    var lines = File.ReadLines(path, Encoding.ASCII);
-                    File.WriteAllLines(tempFile.FullName, lines.Select(tokenReplacer), Encoding.ASCII);
+                    var lines = File.ReadLines(path, Encoding.ASCII).Select(this.Container.ReplaceRootTokensWithUserPath).ToArray();
+                    File.WriteAllLines(tempFile.FullName, lines, Encoding.ASCII);
                     File.Copy(tempFile.FullName, path, true);
                 }
                 output.AppendFormat("replaced tokens in file '{0}'", path).AppendLine();

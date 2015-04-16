@@ -12,16 +12,38 @@ namespace IronFoundry.Warden.Containers
 {
     public interface ILogEmitter
     {
-        void EmitLogMessage(LogMessage.MessageType type, string message);
+        void EmitLogMessage(LogMessageType type, string message);
+    }
+
+    public enum LogMessageType
+    {
+        STDIN = 0,
+        STDOUT = 1,
+        STDERR = 2,
+    }
+
+    public class InstanceLoggingInfo
+    {
+        public InstanceLoggingInfo ()
+        {
+            DrainUris = new List<string>();
+        }
+
+        public string ApplicationId { get; set; }
+        public string InstanceIndex { get; set; }
+        public string LoggregatorAddress { get; set; }
+        public string LoggregatorSecret { get; set; }
+        public List<string> DrainUris { get; private set; }
+
     }
 
 
     public class ContainerLogEmitter : ILogEmitter
     {
-        private readonly Messages.InstanceLoggingInfo instanceLoggingInfo;
+        private readonly InstanceLoggingInfo instanceLoggingInfo;
         private readonly LoggregatorEmitter logEmitter;
 
-        public ContainerLogEmitter(Messages.InstanceLoggingInfo instanceLoggingInfo)
+        public ContainerLogEmitter(InstanceLoggingInfo instanceLoggingInfo)
         {
             this.instanceLoggingInfo = instanceLoggingInfo;
 
@@ -75,16 +97,16 @@ namespace IronFoundry.Warden.Containers
         }
 
 
-        public void EmitLogMessage(LogMessage.MessageType type, string data)
+        public void EmitLogMessage(LogMessageType type, string data)
         {
-            if (data.IsNullOrEmpty())
+            if (String.IsNullOrEmpty(data))
             {
                 return;
             }
 
             var message = new logmessage.LogMessage()
             {
-                message_type = type,
+                message_type = ToMessageType(type),
                 message = Encoding.ASCII.GetBytes(data),
                 app_id = instanceLoggingInfo.ApplicationId,
                 source_id = instanceLoggingInfo.InstanceIndex,
@@ -97,6 +119,17 @@ namespace IronFoundry.Warden.Containers
             message.timestamp = (DateTimeOffset.UtcNow.Ticks - dt.Ticks) * 100;
 
             logEmitter.EmitLogMessage(message);
+        }
+
+        logmessage.LogMessage.MessageType ToMessageType(LogMessageType type)
+        {
+            switch (type)
+            {
+                case LogMessageType.STDOUT: return LogMessage.MessageType.OUT;
+                case LogMessageType.STDERR: return LogMessage.MessageType.ERR;
+                default:
+                    throw new ArgumentOutOfRangeException("type");
+            }
         }
     }
 }

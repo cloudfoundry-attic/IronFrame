@@ -13,12 +13,12 @@
         {
             this.exitStatus = exitStatus;
 
-            if (!stdout.IsNullOrEmpty())
+            if (!String.IsNullOrEmpty(stdout))
             {
                 this.dataSource = JobDataSource.stdout;
                 this.data = stdout;
             }
-            else if (!stderr.IsNullOrEmpty())
+            else if (!String.IsNullOrEmpty(stderr))
             {
                 this.dataSource = JobDataSource.stderr;
                 this.data = stderr;

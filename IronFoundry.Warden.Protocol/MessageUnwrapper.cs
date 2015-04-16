@@ -2,6 +2,7 @@
 {
     using System;
     using System.IO;
+    using IronFoundry.Container;
     using ProtoBuf;
 
     public class MessageUnwrapper
@@ -86,7 +87,7 @@
                     request = Deserialize<LoggingRequest>(message.Payload);
                     break;
                 default:
-                    throw new WardenException("Can't unwrap message type '{0}'", message.MessageType);
+                    throw new WardenProtocolException("Can't unwrap message type '{0}'", message.MessageType);
             }
 
             return request;

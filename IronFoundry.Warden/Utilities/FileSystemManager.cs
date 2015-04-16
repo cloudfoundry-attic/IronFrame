@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Security.AccessControl;
-using ICSharpCode.SharpZipLib.GZip;
-using ICSharpCode.SharpZipLib.Tar;
+using System.Security.Principal;
 
 namespace IronFoundry.Warden.Utilities
 {
@@ -31,21 +29,14 @@ namespace IronFoundry.Warden.Utilities
             Directory.CreateDirectory(path, security);
         }
 
-        public virtual void CreateTarArchive(string sourceDirectoryPath, Stream tarStream)
+        public virtual void DeleteDirectory(string path)
         {
-            DirectoryInfo directoryInfo = new DirectoryInfo(sourceDirectoryPath);
+            Directory.Delete(path, true);
+        }
 
-            var tarFileRecords = GetTarFileRecords(directoryInfo, "").ToList();
-
-            using (var tarWriter = new TarOutputStream(tarStream))
-            {
-                foreach (var tarFileRecord in tarFileRecords)
-                {
-                    WriteFileToTar(tarWriter, tarFileRecord);
-                }
-
-                tarWriter.Finish();
-            }
+        public virtual IEnumerable<string> EnumerateDirectories(string path)
+        {
+            return Directory.EnumerateDirectories(path);
         }
 
         public virtual bool Exists(string path)
@@ -56,41 +47,6 @@ namespace IronFoundry.Warden.Utilities
         public virtual bool DirectoryExists(string directoryPath)
         {
             return Directory.Exists(directoryPath);
-        }
-
-        public virtual void ExtractTarArchive(Stream tarStream, string destinationDirectoryPath)
-        {
-            using (var tarReader = new TarInputStream(tarStream))
-            {
-                for (var tarEntry = tarReader.GetNextEntry(); tarEntry != null; tarEntry = tarReader.GetNextEntry())
-                {
-                    if (tarEntry.IsDirectory)
-                        continue;
-
-                    string relativeFilePath = GetFilePathFromTarRecordName(tarEntry.Name);
-                    string filePath = Path.GetFullPath(Path.Combine(destinationDirectoryPath, relativeFilePath));
-
-                    if (!IsPathRelative(destinationDirectoryPath, filePath))
-                    {
-                        throw new InvalidOperationException(
-                            String.Format(
-                                "The normalized path '{0}' is not relative to the destination path '{1}'.",
-                                filePath,
-                                destinationDirectoryPath));
-                    }
-
-                    string directoryPath = Path.GetDirectoryName(filePath);
-                    Directory.CreateDirectory(directoryPath);
-
-                    using (var fs = OpenWrite(filePath))
-                    {
-                        tarReader.CopyEntryContents(fs);
-                    }
-
-                    var modifiedTime = DateTime.SpecifyKind(tarEntry.ModTime, DateTimeKind.Utc);
-                    File.SetLastWriteTimeUtc(filePath, modifiedTime);
-                }
-            }
         }
 
         public virtual FileAttributes GetAttributes(string file)
@@ -113,27 +69,6 @@ namespace IronFoundry.Warden.Utilities
             return path;
         }
 
-        IEnumerable<TarFileRecord> GetTarFileRecords(DirectoryInfo directoryInfo, string basePath)
-        {
-            foreach (var fileInfo in directoryInfo.GetFiles())
-            {
-                var relativeFilePath = Path.Combine(basePath, fileInfo.Name);
-                
-                yield return new TarFileRecord
-                {
-                    Name = GetTarRecordNameFromFilePath(relativeFilePath),
-                    Size = fileInfo.Length,
-                    FilePath = fileInfo.FullName,
-                };
-            }
-
-            foreach (var childDirectoryInfo in directoryInfo.GetDirectories())
-            {
-                foreach (var childRecord in GetTarFileRecords(childDirectoryInfo, Path.Combine(basePath, childDirectoryInfo.Name)))
-                    yield return childRecord;
-            }
-        }
-
         string GetTarRecordNameFromFilePath(string path)
         {
             return path.Replace(Path.DirectorySeparatorChar, '/').TrimEnd('/');
@@ -147,6 +82,11 @@ namespace IronFoundry.Warden.Utilities
             return path.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase);
         }
 
+        public virtual Stream Open(string path, FileMode fileMode, FileAccess fileAccess, FileShare fileShare)
+        {
+            return new FileStream(path, fileMode, fileAccess, fileShare);
+        }
+
         public virtual Stream OpenRead(string path)
         {
             return File.OpenRead(path);
@@ -155,88 +95,6 @@ namespace IronFoundry.Warden.Utilities
         public virtual Stream OpenWrite(string path)
         {
             return File.OpenWrite(path);
-        }
-
-        void WriteFileToTar(TarOutputStream tarWriter, TarFileRecord tarFileRecord)
-        {
-            var tarEntry = TarEntry.CreateTarEntry(tarFileRecord.Name);
-            tarEntry.Size = tarFileRecord.Size;
-            tarEntry.ModTime = File.GetLastWriteTimeUtc(tarFileRecord.FilePath);
-
-            tarWriter.PutNextEntry(tarEntry);
-            using (var fs = OpenRead(tarFileRecord.FilePath))
-            {
-                fs.CopyTo(tarWriter);
-                tarWriter.CloseEntry();
-            }
-        }
-
-        class TarFileRecord
-        {
-            public string Name { get; set; }
-            public long Size { get; set; }
-            public string FilePath { get; set; }
-        }
-
-
-        /// <summary>
-        /// Returns true if the user has read access to the directory
-        /// </summary>
-        public bool HasDirectoryReadAccess(string directory, NetworkCredential credential)
-        {
-            // TODO - Change this to use the Windows API to determine the effective rights:
-            // Either:
-            // http://msdn.microsoft.com/en-us/library/windows/desktop/aa446637%28v=vs.85%29.aspx
-            // OR
-            // https://code.msdn.microsoft.com/windowsapps/Effective-access-rights-dd5b13a8#content
-
-            bool hasReadAccess = false;
-
-            using (Impersonator.GetContext(credential, true))
-            {
-                // Test for READ access
-                var dirInfo = new DirectoryInfo(directory);
-                Action readAcl = () => dirInfo.GetAccessControl(AccessControlSections.Access);
-                if (!readAcl.ThrowsException<UnauthorizedAccessException>())
-                {
-                    hasReadAccess = true;
-                }
-            }
-
-            return hasReadAccess;
-        }
-
-        /// <summary>
-        /// Returns true if the specified user can write to the directory
-        /// </summary>
-        public bool HasDirectoryWriteAccess(string directory, NetworkCredential credential)
-        {
-            // TODO - Change this to use the Windows API to determine the effective rights:
-            // Either:
-            // http://msdn.microsoft.com/en-us/library/windows/desktop/aa446637%28v=vs.85%29.aspx
-            // OR
-            // https://code.msdn.microsoft.com/windowsapps/Effective-access-rights-dd5b13a8#content
-
-            bool hasWriteAccess = false;
-
-            using (Impersonator.GetContext(credential, true))
-            {
-                string testFileName = "IF_WARDEN_WRITE_TEST." + Path.GetRandomFileName();
-                string testFilePath = Path.Combine(directory, testFileName);
-                try
-                {
-                    FileInfo file = new FileInfo(testFilePath);
-                    file.Create().Close();
-                    file.Delete();
-
-                    hasWriteAccess = true;
-                }
-                catch (UnauthorizedAccessException)
-                {
-                }
-            }
-
-            return hasWriteAccess;
         }
 
         public DirectorySecurity GetDirectoryAccessSecurity(string path)
@@ -258,7 +116,7 @@ namespace IronFoundry.Warden.Utilities
         private readonly PlatformFileSystem fileSystem;
 
         public FileSystemManager() : this(new PlatformFileSystem())
-        { 
+        {
         }
 
         public FileSystemManager(PlatformFileSystem fileSystem)
@@ -309,87 +167,27 @@ namespace IronFoundry.Warden.Utilities
             }
         }
 
-        public virtual void CreateTarFile(string sourcePath, string tarFilePath, bool compress)
+        public virtual void DeleteDirectory(string path)
         {
-            if (fileSystem.Exists(tarFilePath) &&
-                fileSystem.GetAttributes(tarFilePath).HasFlag(FileAttributes.Directory))
-            {
-                throw new InvalidOperationException("The tar file path must not refer to a directory.");
-            }
-
-            using (var fileStream = fileSystem.OpenWrite(tarFilePath))
-            {
-                using (var tarStream = GetTarOutputStream(fileStream, compress))
-                {
-                    var tarDirectoryPath = Path.GetDirectoryName(tarFilePath);
-                    fileSystem.CreateDirectory(tarDirectoryPath);
-                    fileSystem.CreateTarArchive(sourcePath, tarStream);
-                }
-            }
+            fileSystem.DeleteDirectory(path);
         }
 
-        public virtual void ExtractTarFile(string tarFilePath, string destinationPath, bool decompress)
+        public virtual bool FileExists(string path)
         {
-            if (fileSystem.Exists(destinationPath) &&
-                !fileSystem.GetAttributes(destinationPath).HasFlag(FileAttributes.Directory))
-            {
-                throw new InvalidOperationException("The destination path must not refer to a file.");
-            }
-
-            using (var fileStream = fileSystem.OpenRead(tarFilePath))
-            {
-                using (var tarStream = GetTarInputStream(fileStream, decompress))
-                {
-                    fileSystem.CreateDirectory(destinationPath);
-                    fileSystem.ExtractTarArchive(tarStream, destinationPath);
-                }
-            }
-        }
-
-        Stream GetTarInputStream(Stream stream, bool decompress)
-        {
-            if (decompress)
-                return new GZipInputStream(stream);
-            else
-                return stream;
-        }
-
-        Stream GetTarOutputStream(Stream stream, bool compress)
-        {
-            if (compress)
-                return new GZipOutputStream(stream);
-            else
-                return stream;
+            return fileSystem.Exists(path);
         }
 
         /// <summary>
         /// Returns true if the path refers to an existing directory.
         /// </summary>
-        internal bool DirectoryExists(string path)
+        public virtual bool DirectoryExists(string path)
         {
             return fileSystem.DirectoryExists(path);
         }
 
-        /// <summary>
-        /// Get the access that the specified user has to the specified directory.
-        /// </summary>
-        internal FileAccess GetEffectiveDirectoryAccess(string directory, NetworkCredential credential)
+        public virtual IEnumerable<string> EnumerateDirectories(string path)
         {
-            // TODO Modify this so it doesn't require the network credentials, only the username.
-
-            FileAccess access = new FileAccess();
-
-            if (fileSystem.HasDirectoryReadAccess(directory, credential))
-            {
-                access |= FileAccess.Read;
-            }
-
-            if (fileSystem.HasDirectoryWriteAccess(directory, credential))
-            {
-                access |= FileAccess.Write;
-            }
-
-            return access;
+            return fileSystem.EnumerateDirectories(path);
         }
 
         private IEnumerable<FileSystemAccessRule> GetAccessControlRules(FileAccess access, string username)
@@ -425,7 +223,7 @@ namespace IronFoundry.Warden.Utilities
         /// <summary>
         /// Create a directory with the specified user access
         /// </summary>
-        public void CreateDirectory(string path, IEnumerable<UserAccess> userAccess)
+        public virtual void CreateDirectory(string path, IEnumerable<UserAccess> userAccess)
         {
             IEnumerable<FileSystemAccessRule> rules = userAccess.SelectMany(ua => GetAccessControlRules(ua.Access, ua.UserName));
 
@@ -438,7 +236,7 @@ namespace IronFoundry.Warden.Utilities
             fileSystem.CreateDirectory(path, security);
         }
 
-        public void AddDirectoryAccess(string path, FileAccess access, string user)
+        public virtual void AddDirectoryAccess(string path, FileAccess access, string user)
         {
             DirectorySecurity security = fileSystem.GetDirectoryAccessSecurity(path);
 
@@ -448,6 +246,11 @@ namespace IronFoundry.Warden.Utilities
             }
 
             fileSystem.SetDirectoryAccessSecurity(path, security);
+        }
+
+        public virtual Stream OpenFile(string path, FileMode fileMode, FileAccess fileAccess, FileShare fileShare)
+        {
+            return fileSystem.Open(path, fileMode, fileAccess, fileShare);
         }
     }
 

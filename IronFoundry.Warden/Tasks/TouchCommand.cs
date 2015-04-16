@@ -1,24 +1,20 @@
-﻿namespace IronFoundry.Warden.Tasks
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using IronFoundry.Warden.Utilities;
+
+namespace IronFoundry.Warden.Tasks
 {
-    using System;
-    using System.IO;
-    using System.Text;
-    using IronFoundry.Warden.Configuration;
-    using IronFoundry.Warden.Containers;
-    using Warden.Utilities;
-
-    public class TouchCommand : PathCommand
+    class TouchCommand : PathCommand
     {
-        private static readonly WardenConfig config = new WardenConfig();
-
-        public TouchCommand(IContainer container, string[] arguments)
-            : base(container, arguments)
+        override protected void ProcessPath(string path, StringBuilder output)
         {
-        }
+            string pathInContainer = this.Container.ConvertToUserPathWithin(path);
 
-        protected override void ProcessPath(string path, StringBuilder output)
-        {
-            string pathInContainer = container.ConvertToPathWithin(path);
+            log.Trace("Touch: {0}", pathInContainer);
             var fi = new FileInfo(pathInContainer);
             if (fi.Exists)
             {

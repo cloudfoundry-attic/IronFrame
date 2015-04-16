@@ -1,44 +1,40 @@
-﻿using IronFoundry.Warden.Utilities;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace IronFoundry.Warden.Tasks
 {
-    using System;
-    using System.Linq;
-    using System.Collections.Generic;
-    using Containers;
-    using Protocol;
-
-    public class ExeCommand : ProcessCommand
+    class ExeCommand : ProcessCommand
     {
-        private readonly string executable;
-        private readonly string args;
-        private readonly string workingDir;
+        private string executable;
+        private string [] args;
+        private string workingDir;
 
-        public ExeCommand(IContainer container, IRemoteCommandArgs rcArgs, ResourceLimits rlimits)
-            : base(container, rcArgs.Arguments, rcArgs.Privileged, rcArgs.Environment, rlimits)
+        protected override TaskCommandResult DoExecute()
         {
-            if (arguments.IsNullOrEmpty())
+            var arguments = this.CommandArgs.Arguments;
+
+            if (arguments == null || arguments.Length == 0)
             {
                 throw new ArgumentNullException("arguments");
             }
             else
             {
                 this.executable = arguments[0];
-                if (this.executable.IsNullOrWhiteSpace())
+                if (String.IsNullOrWhiteSpace(this.executable))
                 {
                     throw new ArgumentNullException("First argument must be executable name.");
                 }
                 if (arguments.Length > 1)
                 {
-                    this.args = String.Join(" ", arguments.Skip(1));
+                    this.args = arguments.Skip(1).ToArray();
                 }
 
-                workingDir = rcArgs.WorkingDirectory;
+                this.workingDir = this.CommandArgs.WorkingDirectory;
             }
-        }
 
-        protected override TaskCommandResult DoExecute()
-        {
             return base.RunProcess(workingDir, executable, args);
         }
     }

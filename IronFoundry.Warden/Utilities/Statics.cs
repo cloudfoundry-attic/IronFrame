@@ -13,7 +13,7 @@
         private static readonly Logger log = LogManager.GetCurrentClassLogger();
         private static readonly WardenConfig wardenConfig = new WardenConfig();
         private static readonly CancellationTokenSource cts = new CancellationTokenSource();
-        private static readonly IContainerManager containerManager = new ContainerManager(new ContainerHostLauncher(), wardenConfig);
+        private static readonly IContainerManager containerManager = new ContainerManager();
         private static readonly IJobManager jobManager = new JobManager();
 
         public static WardenConfig WardenConfig
@@ -42,7 +42,7 @@
             {
                 string containerPath = wardenConfig.ContainerBasePath;
                 Directory.CreateDirectory(containerPath);
-                ContainerManager.RestoreContainers(containerPath);
+                ContainerManager.RestoreContainers(containerPath, wardenConfig.WardenUsersGroup);
                 // TODO: Restore snapshots (SnapshotManager)
             }
             catch (Exception ex)

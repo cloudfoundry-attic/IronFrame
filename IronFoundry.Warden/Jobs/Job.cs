@@ -39,6 +39,7 @@
             }
             catch (Exception ex)
             {
+                log.Error("Exception running job: {0}", ex.ToString());
                 result = new JobExceptionResult(ex);
             }
             finally

@@ -1,27 +1,30 @@
-﻿namespace IronFoundry.Warden.Tasks
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ICSharpCode.SharpZipLib.Zip;
+using IronFoundry.Warden.Properties;
+using IronFoundry.Warden.Utilities;
+
+namespace IronFoundry.Warden.Tasks
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using Containers;
-    using ICSharpCode.SharpZipLib.Zip;
-    using Properties;
-    using Warden.Utilities;
-
-    public class UnzipCommand : TaskCommand
+    class UnzipCommand : RemoteCommand
     {
-        private readonly FileInfo zipFile;
-        private readonly DirectoryInfo destDir;
+        private FileInfo zipFile;
+        private DirectoryInfo destDir;
 
-        public UnzipCommand(IContainer container, string[] arguments)
-            : base(container, arguments)
+        private void Initialize()
         {
-            if (arguments.IsNullOrEmpty() || arguments.Length != 2)
+            var arguments = this.CommandArgs.Arguments;
+
+            if (arguments == null || arguments.Length != 2)
             {
                 throw new ArgumentException("unzip: must have exactly two arguments.");
             }
 
-            if (arguments[0].IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(arguments[0]))
             {
                 throw new ArgumentNullException(Resources.UnzipCommand_MissingZipFileErrorMessage);
             }
@@ -32,15 +35,17 @@
                 throw new ArgumentException(Resources.UnzipCommand_MissingZipFileErrorMessage);
             }
 
-            if (arguments[1].IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(arguments[1]))
             {
                 throw new ArgumentNullException(Resources.UnzipCommand_MissingDestDirErrorMessage);
             }
-            this.destDir = new DirectoryInfo(container.ConvertToPathWithin(arguments[1]));
+            this.destDir = new DirectoryInfo(this.Container.ConvertToUserPathWithin(arguments[1]));
         }
 
-        public override TaskCommandResult Execute()
+        protected override TaskCommandResult Invoke()
         {
+            Initialize();
+
             if (destDir.Exists)
             {
                 destDir.Delete(true);
@@ -53,7 +58,10 @@
             var fastZip = new FastZip();
             fastZip.ExtractZip(zipFile.FullName, destDir.FullName, null);
 
-            return new TaskCommandResult(0, String.Format("Extracted '{0}' to '{1}'", zipFile.FullName, destDir.FullName), null);
+            return new TaskCommandResult(
+                0,
+                String.Format("Extracted '{0}' to '{1}'", zipFile.FullName, destDir.FullName),
+                null);
         }
     }
 }

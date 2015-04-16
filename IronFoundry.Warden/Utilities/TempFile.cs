@@ -17,7 +17,7 @@
         /// </remarks>
         public TempFile(string path, bool deleteIfExists)
         {
-            if (path.IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(path))
             {
                 throw new ArgumentNullException("path");
             }
@@ -33,7 +33,7 @@
 
         public TempFile(string basePath, string extension = ".tmp")
         {
-            if (basePath.IsNullOrWhiteSpace())
+            if (String.IsNullOrWhiteSpace(basePath))
             {
                 throw new ArgumentNullException("basePath");
             }
@@ -80,7 +80,7 @@
             do
             {
                 // If the subdirectories don't exist, create them.
-                if (!basePath.IsNullOrWhiteSpace() && !Directory.Exists(basePath))
+                if (!String.IsNullOrWhiteSpace(basePath) && !Directory.Exists(basePath))
                 {
                     Directory.CreateDirectory(basePath);
                 }

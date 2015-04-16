@@ -2,6 +2,7 @@
 {
     using System;
     using System.Threading.Tasks;
+    using IronFoundry.Container;
     using NLog;
     using Protocol;
     using Utilities;
