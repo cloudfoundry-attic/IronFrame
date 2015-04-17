@@ -210,7 +210,14 @@ namespace IronFrame
             }
         }
 
-        internal static ContainerService RestoreFromContainerBasePath(string containerBasePath, string userGroupName)
+        /// <summary>
+        /// NOTE: This method is for use by the Warden. Please do not use otherwise.
+        /// More work is required to make this a generally usable method.
+        /// </summary>
+        /// <param name="containerBasePath"></param>
+        /// <param name="userGroupName"></param>
+        /// <returns></returns>
+        public static ContainerService Warden_RestoreFromContainerBasePath(string containerBasePath, string userGroupName)
         {
             var containerService = new ContainerService(containerBasePath, userGroupName);
 
