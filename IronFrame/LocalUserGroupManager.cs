@@ -18,8 +18,11 @@ namespace IronFrame
 
                 try
                 {
-                    DirectoryEntry group = children.Find(groupName);
-                    if (group != null) return;
+                    using (DirectoryEntry group = children.Find(groupName))
+                    {
+                        if (group != null)
+                            return;
+                    }
                 }
                 catch (COMException)
                 {
@@ -37,8 +40,10 @@ namespace IronFrame
             {
                 DirectoryEntries children = localDirectory.Children;
 
-                DirectoryEntry group = children.Find(groupName);
-                children.Remove(group);
+                using (DirectoryEntry group = children.Find(groupName))
+                {
+                    children.Remove(group);
+                }
             }
         }
     }
