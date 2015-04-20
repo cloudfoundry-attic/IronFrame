@@ -56,17 +56,27 @@ namespace IronFoundry.Warden.TestHelper
 
             var options = new OptionSet()
             {
-                { "duration=", v => duration = Int32.Parse(v) },
+                {"duration=", v => duration = Int32.Parse(v)},
             };
 
             options.Parse(args);
 
             Stopwatch stopwatch = Stopwatch.StartNew();
-            while (duration > stopwatch.ElapsedMilliseconds)
+            var threads = new List<Thread>();
+            for (var i = 0; i < 10; i++)
             {
-                var sieve = new PrimeSieve(10000);
-                sieve.ToList();
+                var thread = new Thread(() =>
+                {
+                    while (duration > stopwatch.ElapsedMilliseconds)
+                    {
+                        var sieve = new PrimeSieve(500);
+                        sieve.ComputePrimes();
+                    }
+                });
+                threads.Add(thread);
             }
+            foreach (var thread in threads) thread.Start();
+            foreach (var thread in threads) thread.Join();
 
             return SUCCEEDED;
         }

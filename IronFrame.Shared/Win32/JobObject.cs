@@ -81,6 +81,7 @@ namespace IronFrame.Win32
             GroupInformation = 11,
             NotificationLimitInformation = 12,
             LimitViolationInformation = 13,
+            CpuRateControlInformation = 15,
         }
 
         public enum JobObjectRateControlTolerance : uint
@@ -99,11 +100,27 @@ namespace IronFrame.Win32
             Long = 3,
         }
 
+        [Flags]
+        public enum JobObjectCpuRateControl : uint
+        {
+            Enable = 1U,
+            WeightBased = 2U,
+            HardCap = 4U,
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         public struct JobObjectAssociateCompletionPort
         {
             public IntPtr CompletionKey;
             public IntPtr CompletionPortHandle;
+        }
+
+        [StructLayout(LayoutKind.Explicit)]
+        public struct JobObjectCpuRateControlInformation
+        {
+            [MarshalAs(UnmanagedType.U4)] [FieldOffset(0)] public UInt32 ControlFlags;
+            [MarshalAs(UnmanagedType.U4)] [FieldOffset(4)] public UInt32 CpuRate;
+            [MarshalAs(UnmanagedType.U4)] [FieldOffset(4)] public UInt32 Weight;
         }
 
         [StructLayout(LayoutKind.Sequential)]

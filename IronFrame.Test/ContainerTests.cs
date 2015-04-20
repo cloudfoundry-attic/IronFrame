@@ -539,6 +539,34 @@ namespace IronFrame
             }
         }
 
+        public class LimitCpu : ContainerTests
+        {
+            [Fact]
+            public void SetsJobCpuLimit()
+            {
+                Container.LimitCpu(5);
+
+                JobObject.Received(1).SetJobCpuLimit(5);
+            }
+
+            [Fact]
+            public void WhenContainerNotActive_Throws()
+            {
+                Container.Stop(false);
+                Action action = () => Container.LimitCpu(3000);
+
+                Assert.Throws<InvalidOperationException>(action);
+            }
+
+            [Fact]
+            public void ReturnsCpuLimit()
+            {
+                int weight = 7;
+                JobObject.GetJobCpuLimit().Returns(weight);
+                Assert.Equal(weight, Container.CurrentCpuLimit());
+            }
+        }
+
         public class RemoveProperty : ContainerTests
         {
             [Fact]

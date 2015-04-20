@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
@@ -156,13 +157,13 @@ namespace IronFrame.Utilities
             Assert.Throws<ObjectDisposedException>(() => jobObject.TerminateProcesses());
         }
 
-        public class JobLimits : IDisposable
+        public class JobMemoryLimits : IDisposable
         {
             const ulong DefaultMemoryLimit = 1024 * 1024 * 25; // 25MB
 
             JobObject jobObject;
 
-            public JobLimits()
+            public JobMemoryLimits()
             {
                 jobObject = new JobObject();
             }
@@ -220,6 +221,62 @@ namespace IronFrame.Utilities
                 IFTestHelper.ExecuteInJob(jobObject, "allocate-memory", "--bytes", allocateBytes);
 
                 Assert.Equal(0UL, jobObject.GetPeakJobMemoryUsed());
+            }
+        }
+
+        public class JobCpuLimits : IDisposable
+        {
+            JobObject jobObject;
+            JobObject jobObject2;
+
+
+            public JobCpuLimits()
+            {
+                jobObject = new JobObject();
+                jobObject2 = new JobObject();
+            }
+
+            public void Dispose()
+            {
+                jobObject.Dispose();
+                jobObject2.Dispose();
+            }
+
+            [Fact]
+            public void CanLimitCpu()
+            {
+                jobObject.SetJobCpuLimit(1);
+                jobObject2.SetJobCpuLimit(9);
+
+                var thread1 = new Thread(() =>
+                {
+                    IFTestHelper.ExecuteInJob(jobObject, "consume-cpu", "--duration", "2000").WaitForExit();
+                });
+                var thread2 = new Thread(() =>
+                {
+                    IFTestHelper.ExecuteInJob(jobObject2, "consume-cpu", "--duration", "2000").WaitForExit();
+                });
+
+                thread1.Start();
+                thread2.Start();
+                thread1.Join();
+                thread2.Join();
+
+                var ratio = (float)jobObject.GetCpuStatistics().TotalUserTime.Ticks / jobObject2.GetCpuStatistics().TotalUserTime.Ticks;
+                Assert.InRange(ratio, 0.05, 0.3);
+            }
+
+            [Fact]
+            public void CanGetCpuLimit()
+            {
+                jobObject.SetJobCpuLimit(3);
+                Assert.Equal(3, jobObject.GetJobCpuLimit());
+            }
+
+            public void ThrowsOnInvalidCpuWeights()
+            {
+                Assert.Throws<ArgumentOutOfRangeException>(() => jobObject.SetJobCpuLimit(0));
+                Assert.Throws<ArgumentOutOfRangeException>(() => jobObject.SetJobCpuLimit(10));
             }
         }
 

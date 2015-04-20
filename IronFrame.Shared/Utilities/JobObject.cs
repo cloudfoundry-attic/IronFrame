@@ -45,7 +45,7 @@ namespace IronFrame.Utilities
                 throw new Exception("Unable to create job object.");
             }
         }
-        
+
         public SafeJobObjectHandle Handle
         {
             get { return handle; }
@@ -336,9 +336,78 @@ namespace IronFrame.Utilities
         {
             var error = Marshal.GetLastWin32Error();
             return new Win32Exception(
-                error, 
-                String.Format(message, args) + 
-                    String.Format(" (Win32 Error Code {0})", error));
+                error,
+                String.Format(message, args) +
+                String.Format(" (Win32 Error Code {0})", error));
+        }
+
+
+        public void SetJobCpuLimit(int weight)
+        {
+            if (weight < 1 || weight > 9)
+            {
+                throw new ArgumentOutOfRangeException("weight", weight, "CPU Limit must be between 1 and 9");
+            }
+            int length = Marshal.SizeOf(typeof(NativeMethods.JobObjectCpuRateControlInformation));
+            IntPtr cpuRatePtr = IntPtr.Zero;
+
+            try
+            {
+                var cpuRate = new NativeMethods.JobObjectCpuRateControlInformation
+                {
+                    ControlFlags = (UInt32)(NativeMethods.JobObjectCpuRateControl.Enable | NativeMethods.JobObjectCpuRateControl.WeightBased),
+                    Weight = (UInt32)weight,
+                };
+
+                cpuRatePtr = Marshal.AllocHGlobal(length);
+
+                Marshal.StructureToPtr(cpuRate, cpuRatePtr, false);
+
+                if (
+                    !NativeMethods.SetInformationJobObject(handle,
+                        NativeMethods.JobObjectInfoClass.CpuRateControlInformation, cpuRatePtr, length))
+                {
+                    throw new Win32Exception(Marshal.GetLastWin32Error());
+                }
+            }
+            finally
+            {
+                if (cpuRatePtr != IntPtr.Zero)
+                    Marshal.FreeHGlobal(cpuRatePtr);
+            }
+        }
+
+        public virtual int GetJobCpuLimit()
+        {
+            int infoSize = Marshal.SizeOf(typeof(NativeMethods.JobObjectCpuRateControlInformation));
+            IntPtr infoPtr = IntPtr.Zero;
+            try
+            {
+                infoPtr = Marshal.AllocHGlobal(infoSize);
+
+                if (!NativeMethods.QueryInformationJobObject(
+                    handle,
+                    NativeMethods.JobObjectInfoClass.CpuRateControlInformation,
+                    infoPtr,
+                    infoSize,
+                    IntPtr.Zero))
+                {
+                    var error = Marshal.GetLastWin32Error();
+                    if (error != NativeMethods.Constants.ERROR_MORE_DATA)
+                        throw new Win32Exception(error);
+                }
+
+                var cpuRate =
+                    (NativeMethods.JobObjectCpuRateControlInformation)
+                        Marshal.PtrToStructure(infoPtr, typeof(NativeMethods.JobObjectCpuRateControlInformation));
+
+                return (int)cpuRate.Weight;
+            }
+            finally
+            {
+                if (infoPtr != IntPtr.Zero)
+                    Marshal.FreeHGlobal(infoPtr);
+            }
         }
     }
 }

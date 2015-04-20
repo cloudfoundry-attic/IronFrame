@@ -258,5 +258,16 @@ namespace IronFrame
         {
             propertyService.RemoveProperty(this, name);
         }
+
+        public void LimitCpu(int i)
+        {
+            ThrowIfNotActive();
+            jobObject.SetJobCpuLimit(i);
+        }
+
+        public int CurrentCpuLimit()
+        {
+            return jobObject.GetJobCpuLimit();
+        }
     }
 }
