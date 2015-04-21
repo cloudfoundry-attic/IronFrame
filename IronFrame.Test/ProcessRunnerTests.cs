@@ -252,9 +252,19 @@ namespace IronFrame
 
                 Assert.NotNull(p.Environment);
                 Assert.True(p.Environment.Count > 0);
-                Assert.Equal(WindowsIdentity.GetCurrent().GetUserName(), p.Environment["USERNAME"]);
+                Assert.Equal(GetCurrentUserName(), p.Environment["USERNAME"]);
             }
 
+            static string GetCurrentUserName()
+            {
+                // SYSTEM is a pseudo-user, the process is really running under the machine account 
+                // and the username is MACHINENAME$
+                var username = WindowsIdentity.GetCurrent().GetUserName();
+                if (username.Equals("SYSTEM", StringComparison.OrdinalIgnoreCase))
+                    return Environment.MachineName + "$";
+
+                return username;
+            }
         }
     }
 }

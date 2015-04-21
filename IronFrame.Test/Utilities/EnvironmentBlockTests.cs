@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Security.Principal;
 using Xunit;
@@ -42,7 +43,7 @@ namespace IronFrame.Utilities
         }
 
         [Fact]
-        public void GeneratesEnvironmentForUseToken()
+        public void GeneratesEnvironmentForUserToken()
         {
             var identity = WindowsIdentity.GetCurrent();
             var userToken = identity.Token;
@@ -50,7 +51,18 @@ namespace IronFrame.Utilities
             var env = EnvironmentBlock.CreateForUser(userToken);
             var dict = env.ToDictionary();
 
-            Assert.Equal(identity.GetUserName(), dict["USERNAME"]);
+            Assert.Equal(GetUserName(identity), dict["USERNAME"]);
+        }
+
+        static string GetUserName(WindowsIdentity identity)
+        {
+            // SYSTEM is a pseudo-user, the process is really running under the machine account 
+            // and the username is MACHINENAME$
+            var username = identity.GetUserName();
+            if (username.Equals("SYSTEM", StringComparison.OrdinalIgnoreCase))
+                return Environment.MachineName + "$";
+
+            return username;
         }
     }
 }
