@@ -113,35 +113,43 @@ namespace IronFrame
                 ushort tries = 0;
                 UserPrincipal user = null;
 
-                do
+                try
                 {
-                    try
+                    do
                     {
-                        rvPassword = Membership.GeneratePassword(8, 2).ToLowerInvariant() + Membership.GeneratePassword(8, 2).ToUpperInvariant();
-                        user = new UserPrincipal(context, userName, rvPassword, true);
-                        user.DisplayName = "Warden User " + userName;
-                        user.Save();
-                        userSaved = true;
-                    }
-                    catch (PasswordException ex)
+                        try
+                        {
+                            rvPassword = Membership.GeneratePassword(8, 2).ToLowerInvariant() + Membership.GeneratePassword(8, 2).ToUpperInvariant();
+                            user = new UserPrincipal(context, userName, rvPassword, true);
+                            user.DisplayName = "Warden User " + userName;
+                            user.Save();
+                            userSaved = true;
+                        }
+                        catch (PasswordException ex)
+                        {
+                            log.DebugException(ex);
+                        }
+
+                        ++tries;
+                    } while (userSaved == false && tries < 5);
+
+                    if (userSaved)
                     {
-                        log.DebugException(ex);
+                        rvUserName = user.SamAccountName;
+                        //AddUserToGroup(context, IIS_IUSRS_NAME, user);
+
+                        foreach(string userGroupName in this.wardenUserGroups)
+                        {
+                            AddUserToGroup(context, userGroupName, user);
+                        }
+
+                        rv = new LocalPrincipalData(rvUserName, rvPassword);
                     }
-
-                    ++tries;
-                } while (userSaved == false && tries < 5);
-
-                if (userSaved)
+                }
+                finally
                 {
-                    rvUserName = user.SamAccountName;
-                    //AddUserToGroup(context, IIS_IUSRS_NAME, user);
-
-                    foreach(string userGroupName in this.wardenUserGroups)
-                    {
-                        AddUserToGroup(context, userGroupName, user);
-                    }
-
-                    rv = new LocalPrincipalData(rvUserName, rvPassword);
+                    if (user != null)
+                        user.Dispose();
                 }
             }
 
@@ -150,24 +158,24 @@ namespace IronFrame
 
         private void AddUserToGroup(PrincipalContext context, string groupName, UserPrincipal user)
         {
-            var groupQuery = new GroupPrincipal(context, groupName);
-            var searcher = new PrincipalSearcher(groupQuery);
-            var group = InvokeSearcherWithRetries(searcher);
-
-
-            if (group == null)
+            using (var groupQuery = new GroupPrincipal(context, groupName))
+            using (var searcher = new PrincipalSearcher(groupQuery))
+            using (var group = InvokeSearcherWithRetries(searcher))
             {
-                throw new ArgumentException(string.Format("The specified group '{0}' does not exist.", groupName), "groupName");
+                if (group == null)
+                {
+                    throw new ArgumentException(string.Format("The specified group '{0}' does not exist.", groupName), "groupName");
+                }
+
+                // The iisUserGroups.Members.Add attempts to resolve all the SID's of the entries while
+                // it's enumerating for an item.  This approach works around this issue by dynamically
+                // invoking 'Add' with the DN of the user.
+                var groupAsDirectoryEntry = group.GetUnderlyingObject() as DirectoryEntry;
+                var userAsDirectoryEntry = user.GetUnderlyingObject() as DirectoryEntry;
+                groupAsDirectoryEntry.Invoke("Add", new object[] { userAsDirectoryEntry.Path });
+
+                group.Save();
             }
-
-            // The iisUserGroups.Members.Add attempts to resolve all the SID's of the entries while
-            // it's enumerating for an item.  This approach works around this issue by dynamically
-            // invoking 'Add' with the DN of the user.
-            var groupAsDirectoryEntry = group.GetUnderlyingObject() as DirectoryEntry;
-            var userAsDirectoryEntry = user.GetUnderlyingObject() as DirectoryEntry;
-            groupAsDirectoryEntry.Invoke("Add", new object[] { userAsDirectoryEntry.Path });
-
-            group.Save();
         }
 
         private Principal InvokeSearcherWithRetries(PrincipalSearcher searcher)
