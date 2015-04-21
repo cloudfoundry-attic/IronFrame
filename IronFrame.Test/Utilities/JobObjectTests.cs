@@ -263,7 +263,7 @@ namespace IronFrame.Utilities
                 thread2.Join();
 
                 var ratio = (float)jobObject.GetCpuStatistics().TotalUserTime.Ticks / jobObject2.GetCpuStatistics().TotalUserTime.Ticks;
-                Assert.InRange(ratio, 0.05, 0.3);
+                Assert.InRange(ratio, 0.05, 0.5);
             }
 
             [Fact]

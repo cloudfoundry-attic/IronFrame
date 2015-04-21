@@ -348,65 +348,26 @@ namespace IronFrame.Utilities
             {
                 throw new ArgumentOutOfRangeException("weight", weight, "CPU Limit must be between 1 and 9");
             }
-            int length = Marshal.SizeOf(typeof(NativeMethods.JobObjectCpuRateControlInformation));
-            IntPtr cpuRatePtr = IntPtr.Zero;
-
-            try
+            var cpuRate = new NativeMethods.JobObjectCpuRateControlInformation
             {
-                var cpuRate = new NativeMethods.JobObjectCpuRateControlInformation
-                {
-                    ControlFlags = (UInt32)(NativeMethods.JobObjectCpuRateControl.Enable | NativeMethods.JobObjectCpuRateControl.WeightBased),
-                    Weight = (UInt32)weight,
-                };
-
-                cpuRatePtr = Marshal.AllocHGlobal(length);
-
-                Marshal.StructureToPtr(cpuRate, cpuRatePtr, false);
-
-                if (
-                    !NativeMethods.SetInformationJobObject(handle,
-                        NativeMethods.JobObjectInfoClass.CpuRateControlInformation, cpuRatePtr, length))
-                {
-                    throw new Win32Exception(Marshal.GetLastWin32Error());
-                }
-            }
-            finally
+                ControlFlags = (UInt32)(NativeMethods.JobObjectCpuRateControl.Enable | NativeMethods.JobObjectCpuRateControl.WeightBased),
+                Weight = (UInt32)weight,
+            };
+            using (var allocation = SafeAllocation.Create<NativeMethods.JobObjectCpuRateControlInformation>(cpuRate))
             {
-                if (cpuRatePtr != IntPtr.Zero)
-                    Marshal.FreeHGlobal(cpuRatePtr);
+                if (!NativeMethods.SetInformationJobObject(handle, NativeMethods.JobObjectInfoClass.CpuRateControlInformation, allocation.DangerousGetHandle(), allocation.Size))
+                    throw Win32LastError("Unable to query Cpu rate information");
             }
         }
 
         public virtual int GetJobCpuLimit()
         {
-            int infoSize = Marshal.SizeOf(typeof(NativeMethods.JobObjectCpuRateControlInformation));
-            IntPtr infoPtr = IntPtr.Zero;
-            try
+            using (var allocation = SafeAllocation.Create<NativeMethods.JobObjectCpuRateControlInformation>())
             {
-                infoPtr = Marshal.AllocHGlobal(infoSize);
+                if (!NativeMethods.QueryInformationJobObject(handle, NativeMethods.JobObjectInfoClass.CpuRateControlInformation, allocation.DangerousGetHandle(), allocation.Size, IntPtr.Zero))
+                    throw Win32LastError("Unable to query Cpu rate information");
 
-                if (!NativeMethods.QueryInformationJobObject(
-                    handle,
-                    NativeMethods.JobObjectInfoClass.CpuRateControlInformation,
-                    infoPtr,
-                    infoSize,
-                    IntPtr.Zero))
-                {
-                    var error = Marshal.GetLastWin32Error();
-                    if (error != NativeMethods.Constants.ERROR_MORE_DATA)
-                        throw new Win32Exception(error);
-                }
-
-                var cpuRate =
-                    (NativeMethods.JobObjectCpuRateControlInformation)
-                        Marshal.PtrToStructure(infoPtr, typeof(NativeMethods.JobObjectCpuRateControlInformation));
-
-                return (int)cpuRate.Weight;
-            }
-            finally
-            {
-                if (infoPtr != IntPtr.Zero)
-                    Marshal.FreeHGlobal(infoPtr);
+                return (int)allocation.ToStructure().Weight;
             }
         }
     }
