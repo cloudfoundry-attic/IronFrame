@@ -15,6 +15,8 @@ namespace IronFrame
         IContainerProcess Run(ProcessSpec spec, IProcessIO io);
         void LimitMemory(ulong limitInBytes);
         ulong CurrentMemoryLimit();
+        void LimitCpu(int weight);
+        int CurrentCpuLimit();
         void SetProperty(string name, string value);
         string GetProperty(string name);
         Dictionary<string, string> GetProperties();
