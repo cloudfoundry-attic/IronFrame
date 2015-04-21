@@ -273,6 +273,7 @@ namespace IronFrame.Utilities
                 Assert.Equal(3, jobObject.GetJobCpuLimit());
             }
 
+            [Fact]
             public void ThrowsOnInvalidCpuWeights()
             {
                 Assert.Throws<ArgumentOutOfRangeException>(() => jobObject.SetJobCpuLimit(0));
