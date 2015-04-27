@@ -6,7 +6,7 @@
 
     <Import Project="$(MSBuildThisFileDirectory)\MSBuildTasks\tools\MSBuild.Community.Tasks.targets" />
     
-    <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)\xunit.runners\tools\xunit.runner.msbuild.dll"
+    <UsingTask AssemblyFile="$(SolutionDir)\packages\xunit.runner.msbuild.2.0.0\build\portable-net45+win+wpa81+wp80+monotouch+monoandroid+Xamarin.iOS\xunit.runner.msbuild.dll"
         TaskName="Xunit.Runner.MSBuild.xunit" />
      
     <!-- Define Default Properties -->
