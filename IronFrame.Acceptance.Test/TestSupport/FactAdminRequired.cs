@@ -10,8 +10,8 @@ using Xunit.Sdk;
 /// are not currently running as admin.  Honors existing Skip messages if 
 /// they are present.
 /// </summary>
+[XunitTestCaseDiscoverer("Xunit.Sdk.FactDiscoverer", "xunit.execution.{Platform}")]
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-[XunitTestCaseDiscoverer("Xunit.Sdk.FactDiscoverer", "xunit.execution")]
 public class FactAdminRequired : FactAttribute
 {
     public override string Skip
