@@ -8,6 +8,7 @@ namespace IronFrame.Utilities
     {
         IProcess Run(ProcessRunSpec runSpec);
         void StopAll(bool kill);
+        IProcess FindProcessById(int id);
     }
 
     internal class ProcessRunSpec

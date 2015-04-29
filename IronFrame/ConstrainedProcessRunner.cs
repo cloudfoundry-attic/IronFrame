@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using IronFrame.Messages;
 using IronFrame.Utilities;
 
@@ -76,6 +79,21 @@ namespace IronFrame
                 var timeout = kill ? 0 : DefaultStopTimeout;
                 hostClient.StopAllProcesses(timeout);
             }
+        }
+
+        public IProcess FindProcessById(int id)
+        {
+            var @params = new FindProcessByIdParams
+            {
+                id = id,
+            };
+            var result = hostClient.FindProcessById(@params);
+            if (result == null)
+            {
+                return null;
+            }
+            var env = result.environment.ToDictionary(pair => pair.Key, pair => pair.Value);
+            return new ConstrainedProcess(hostClient, result.processKey, result.id, env);
         }
     }
 }

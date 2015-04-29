@@ -325,6 +325,27 @@ namespace IronFrame
                     var actual = ConstrainedProcessRunner.Captured(x => x.Run(null)).Arg<ProcessRunSpec>();
                     Assert.Equal("cmd.exe", actual.ExecutablePath);
                 }
+
+                [Fact]
+                public void CanFindProcessByPid()
+                {
+                    var pid = 9123;
+                    var process = Substitute.For<IProcess>();
+                    process.Id.Returns(pid);
+                    ConstrainedProcessRunner.FindProcessById(pid).Returns(process);
+
+                    var actualProcess = Container.FindProcessById(pid);
+                    Assert.Equal(actualProcess.Id, pid);
+                }
+
+                [Fact]
+                public void ReturnsNullWhenProcessNotFound()
+                {
+                    ConstrainedProcessRunner.FindProcessById(-1).Returns(null as IProcess);
+
+                    var actualProcess = Container.FindProcessById(-1);
+                    Assert.Null(actualProcess);
+                }
             }
 
             [Fact]

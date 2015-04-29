@@ -18,6 +18,7 @@ namespace IronFrame
         void StopAllProcesses(int timeout);
         void SubscribeToProcessData(Guid processKey, Action<ProcessDataEvent> callback);
         WaitForProcessExitResult WaitForProcessExit(WaitForProcessExitParams @params);
+        FindProcessByIdResult FindProcessById(FindProcessByIdParams @params);
     }
 
     internal class ContainerHostClient : IContainerHostClient
@@ -167,6 +168,13 @@ namespace IronFrame
         public WaitForProcessExitResult WaitForProcessExit(WaitForProcessExitParams @params)
         {
             var response = SendMessage<WaitForProcessExitRequest, WaitForProcessExitResponse>(new WaitForProcessExitRequest(@params));
+            return response.result;
+        }
+
+        public FindProcessByIdResult FindProcessById(FindProcessByIdParams @params)
+        {
+            var response =
+                SendMessage<FindProcessByIdRequest, FindProcessByIdResponse>(new FindProcessByIdRequest(@params));
             return response.result;
         }
     }

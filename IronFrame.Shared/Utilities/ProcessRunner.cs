@@ -97,6 +97,11 @@ namespace IronFrame.Utilities
         {
         }
 
+        public IProcess FindProcessById(int id)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Returns default environment for the process.
         /// If credentials are specified then the default environment is the default for that user.

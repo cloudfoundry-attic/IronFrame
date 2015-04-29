@@ -56,6 +56,7 @@
     <Compile Include="..\shared\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Messages\FindProcessByIdMessage.cs" />
     <Compile Include="Messaging\AsyncLock.cs" />
     <Compile Include="Guard.cs" />
     <Compile Include="Utilities\IProcessRunner.cs" />

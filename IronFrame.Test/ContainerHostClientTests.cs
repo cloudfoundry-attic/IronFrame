@@ -184,6 +184,36 @@ namespace IronFrame
             }
         }
 
+        public class FindProcessById : ContainerHostClientTests
+        {
+            private FindProcessByIdResult ExpectedResult { get; set; }
+            private FindProcessByIdResponse ExpectedResponse { get; set; }
+
+            public FindProcessById()
+            {
+                ExpectedResult = new FindProcessByIdResult();
+                ExpectedResponse = new FindProcessByIdResponse(JToken.FromObject(1), ExpectedResult);
+
+                MessagingClient.SendMessageAsync<FindProcessByIdRequest, FindProcessByIdResponse>(null)
+                    .ReturnsForAnyArgs(GetCompletedTask(ExpectedResponse));
+            }
+
+            [Fact]
+            public void SendsRequestWithParams()
+            {
+                var @params = new FindProcessByIdParams
+                {
+                    id = new Random().Next(10000),
+                };
+
+                Client.FindProcessById(@params);
+
+                MessagingClient.Received(1).SendMessageAsync<FindProcessByIdRequest, FindProcessByIdResponse>(
+                    Arg.Is<FindProcessByIdRequest>(request => request.@params == @params)
+                );
+            }
+        }
+
         public class WaitForProcessExit : ContainerHostClientTests
         {
             WaitForProcessExitResult ExpectedResult { get; set; }

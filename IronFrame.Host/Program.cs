@@ -39,6 +39,7 @@ namespace IronFrame.Host
 
                 var createProcessHandler = new CreateProcessHandler(new ProcessRunner(), processTracker);
                 var pingHandler = new PingHandler();
+                var findProcessByIdHandler = new FindProcessByIdHandler(processTracker);
                 var stopProcessHandler = new StopProcessHandler(processTracker);
                 var stopAllProcessesHandler = new StopAllProcessesHandler(processTracker);
                 var waitForProcessExitHandler = new WaitForProcessExitHandler(processTracker);
@@ -57,6 +58,13 @@ namespace IronFrame.Host
                     {
                         await pingHandler.ExecuteAsync();
                         return new PingResponse(request.id);
+                    });
+                dispatcher.RegisterMethod<FindProcessByIdRequest>(
+                    FindProcessByIdRequest.MethodName,
+                    async (request) =>
+                    {
+                        var result = await findProcessByIdHandler.ExecuteAsync(request.@params);
+                        return new FindProcessByIdResponse(request.id, result);
                     });
                 dispatcher.RegisterMethod<StopProcessRequest>(
                     StopProcessRequest.MethodName,

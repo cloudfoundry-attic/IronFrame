@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using Xunit;
 
@@ -143,39 +145,72 @@ namespace IronFrame.Acceptance
                 Assert.Contains("PROC_ENV=VAL1", output);
             }
 
-            //[FactAdminRequired]
-            //public void StartAndStopLongRunningProcess()
-            //{
-            //    var containerService = new ContainerCreationService(ContainerBasePath, UserGroupName);
-            //    Container1 = CreateContainer(containerService, Container1Handle);
-            //    var pSpec = new ProcessSpec
-            //    {
-            //        ExecutablePath = "cmd.exe",
-            //        DisablePathMapping = true,
-            //        Arguments = new string[] { @"/C ""FOR /L %% IN () DO ping 127.0.0.1 -n 2""" },
-            //    };
-            //
-            //    // START THE LONG RUNNING PROCESS
-            //    var io = new StringProcessIO();
-            //    var process = Container1.Run(pSpec, io);
+            [FactAdminRequired]
+            public void StartAndStopLongRunningProcess()
+            {
+                Container1 = CreateContainer(Container1Handle);
+                var pSpec = new ProcessSpec
+                {
+                    ExecutablePath = "cmd.exe",
+                    DisablePathMapping = true,
+                    Arguments = new string[] { @"/C ""FOR /L %% IN () DO ping 127.0.0.1 -n 2""" },
+                };
 
-            //    int exitCode;
-            //    bool exited = process.TryWaitForExit(500, out exitCode);
+                // START THE LONG RUNNING PROCESS
+                var io = new StringProcessIO();
+                var process = Container1.Run(pSpec, io);
 
-            //    // VERIFY IT HASNT EXITED YET
-            //    Assert.False(exited);
+                int exitCode;
+                bool exited = process.TryWaitForExit(500, out exitCode);
 
-            //    var actualProcess = Process.GetProcessById(process.Id);
+                // VERIFY IT HASNT EXITED YET
+                Assert.False(exited);
 
-            //    // KILL THE PROCESS AND WAIT FOR EXIT
-            //    process.Kill();
-            //    exited = process.TryWaitForExit(2000, out exitCode);
+                var actualProcess = Process.GetProcessById(process.Id);
+                Assert.False(actualProcess.HasExited);
 
-            //    // VERIFY THE PROCESS WAS KILLED
-            //    Assert.True(exited);
-            //    Assert.True(actualProcess.HasExited);
-            //    Assert.True(io.Output.ToString().Length > 0);
-            //}
+                // KILL THE PROCESS AND WAIT FOR EXIT
+                process.Kill();
+                exited = process.TryWaitForExit(2000, out exitCode);
+
+                // VERIFY THE PROCESS WAS KILLED
+                Assert.True(exited);
+                Assert.True(actualProcess.HasExited);
+                Assert.True(io.Output.ToString().Length > 0);
+            }
+
+            [FactAdminRequired]
+            public void FindAndKillProcess()
+            {
+                Container1 = CreateContainer(Container1Handle);
+                var pSpec = new ProcessSpec
+                {
+                    ExecutablePath = "cmd.exe",
+                    DisablePathMapping = true,
+                    Arguments = new string[] { @"/C ""FOR /L %% IN () DO ping 127.0.0.1 -n 2""" },
+                };
+
+                // START THE LONG RUNNING PROCESS
+                var io = new StringProcessIO();
+                var process = Container1.Run(pSpec, io);
+                var foundProcessByPid = Container1.FindProcessById(process.Id);
+
+                // KILL THE PROCESS AND WAIT FOR EXIT
+                foundProcessByPid.Kill();
+                int exitCode;
+                var exited = process.TryWaitForExit(2000, out exitCode);
+
+                // VERIFY THE PROCESS WAS KILLED
+                Assert.True(exited);
+            }
+
+            [FactAdminRequired]
+            public void FindMissingProcess()
+            {
+                Container1 = CreateContainer(Container1Handle);
+                var foundProcessByPid = Container1.FindProcessById(-1);
+                Assert.Null(foundProcessByPid);
+            }
         }
 
         public class Properties : ContainerAcceptanceTests

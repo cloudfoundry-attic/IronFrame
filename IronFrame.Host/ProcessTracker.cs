@@ -14,6 +14,7 @@ namespace IronFrame.Host
         IProcess GetProcessByKey(Guid key);
         void HandleProcessData(Guid key, ProcessDataType dataType, string data);
         void TrackProcess(Guid key, IProcess process);
+        Guid GetProcessById(int id, out IProcess process);
     }
 
     internal class ProcessTracker : IProcessTracker
@@ -61,6 +62,13 @@ namespace IronFrame.Host
         {
             if (!processes.TryAdd(key, process))
                 throw new InvalidOperationException(String.Format("A process with key '{0}' is already being tracked.", key));
+        }
+
+        public Guid GetProcessById(int id, out IProcess process)
+        {
+            var entry = processes.FirstOrDefault(kv => kv.Value.Id == id);
+            process = entry.Value;
+            return entry.Key;
         }
     }
 }

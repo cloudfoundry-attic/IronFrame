@@ -149,6 +149,16 @@ namespace IronFrame
             this.currentState = ContainerState.Destroyed;
         }
 
+        public IContainerProcess FindProcessById(int id)
+        {
+            var process = constrainedProcessRunner.FindProcessById(id);
+            if (process == null)
+            {
+                return null;
+            }
+            return new ContainerProcess(process);
+        }
+
         public ContainerInfo GetInfo()
         {
             ThrowIfDestroyed();

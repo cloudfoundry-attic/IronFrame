@@ -29,6 +29,7 @@ namespace IronFrame
         //void CopyFileIn(string sourceFilePath, string destinationFilePath);
         //void CopyFileOut(string sourceFilePath, string destinationFilePath);
         //void ExtractTarFile(string tarFilePath, string destinationPath, bool decompress);
+        IContainerProcess FindProcessById(int id);
     }
 
     public interface IProcessIO

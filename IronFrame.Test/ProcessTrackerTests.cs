@@ -106,6 +106,41 @@ namespace IronFrame
             }
         }
 
+        public class GetProcessById : ProcessTrackerTests
+        {
+            Guid KnownProcessKey { get; set; }
+            int KnownProcessId { get; set; }
+            IProcess KnownProcess { get; set; }
+
+            public GetProcessById()
+            {
+                KnownProcessKey = new Guid();
+                KnownProcessId = new Random().Next(1000);
+                KnownProcess = Substitute.For<IProcess>();
+                KnownProcess.Id.Returns(KnownProcessId);
+                ProcessTracker.TrackProcess(KnownProcessKey, KnownProcess);
+            }
+
+            [Fact]
+            public void WhenProcessIsTracked_ReturnsProcess()
+            {
+                IProcess process;
+                var processKey = ProcessTracker.GetProcessById(KnownProcessId, out process);
+
+                Assert.Equal(KnownProcessKey, processKey);
+                Assert.Same(KnownProcess, process);
+            }
+
+            [Fact]
+            public void WhenProcessIsNotTracked_ReturnsNull()
+            {
+                IProcess process;
+                ProcessTracker.GetProcessById(KnownProcessId + 1, out process);
+
+                Assert.Null(process);
+            }
+        }
+
         public class HandleProcessData : ProcessTrackerTests
         {
             static ProcessDataEvent MatchProcessDataEvent(ProcessDataEvent expected)
