@@ -193,5 +193,32 @@ namespace IronFrame
                     ex.Message);
             }
         }
+
+        public class RemoveProcess : ProcessTrackerTests
+        {
+            [Fact]
+            public void RemovesProcessFromList()
+            {
+                var processKey = Guid.NewGuid();
+                var process = Substitute.For<IProcess>();
+
+                ProcessTracker.TrackProcess(processKey, process);
+                Assert.NotNull(ProcessTracker.GetProcessByKey(processKey));
+
+                var result = ProcessTracker.RemoveProcess(processKey);
+                Assert.True(result);
+                Assert.Null(ProcessTracker.GetProcessByKey(processKey));
+            }
+
+            [Fact]
+            public void IfProcessNotInList_StillWorks()
+            {
+                var processKey = Guid.NewGuid();
+                var process = Substitute.For<IProcess>();
+
+                var result = ProcessTracker.RemoveProcess(processKey);
+                Assert.False(result);
+            }
+        }
     }
 }

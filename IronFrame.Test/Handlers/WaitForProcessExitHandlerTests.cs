@@ -69,6 +69,16 @@ namespace IronFrame.Handlers
         }
 
         [Fact]
+        public async void WhenProcessDoesNotExitWithinTimeoutPeriod_DoesNotRemoveFromTracker()
+        {
+            ExpectedProcess.WaitForExit(ExpectedParams.timeout).Returns(false);
+
+            await Handler.ExecuteAsync(ExpectedParams);
+
+            ProcessTracker.DidNotReceive().RemoveProcess(Arg.Any<Guid>());
+        }
+
+        [Fact]
         public async void WhenProcessExits_ReturnsExitCode()
         {
             ExpectedProcess.WaitForExit(ExpectedParams.timeout).Returns(true);
@@ -78,6 +88,16 @@ namespace IronFrame.Handlers
 
             Assert.True(result.exited);
             Assert.Equal(100, result.exitCode);
+        }
+
+        [Fact]
+        public async void WhenProcessExits_RemovesProcessFromTracker()
+        {
+            ExpectedProcess.WaitForExit(ExpectedParams.timeout).Returns(true);
+            ExpectedProcess.ExitCode.Returns(100);
+
+            await Handler.ExecuteAsync(ExpectedParams);
+            ProcessTracker.Received().RemoveProcess(ExpectedParams.key);
         }
     }
 }

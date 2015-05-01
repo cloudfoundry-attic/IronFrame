@@ -15,6 +15,7 @@ namespace IronFrame.Host
         void HandleProcessData(Guid key, ProcessDataType dataType, string data);
         void TrackProcess(Guid key, IProcess process);
         Guid GetProcessById(int id, out IProcess process);
+        bool RemoveProcess(Guid processKey);
     }
 
     internal class ProcessTracker : IProcessTracker
@@ -69,6 +70,12 @@ namespace IronFrame.Host
             var entry = processes.FirstOrDefault(kv => kv.Value.Id == id);
             process = entry.Value;
             return entry.Key;
+        }
+
+        public bool RemoveProcess(Guid processKey)
+        {
+            IProcess value;
+            return processes.TryRemove(processKey, out value);
         }
     }
 }

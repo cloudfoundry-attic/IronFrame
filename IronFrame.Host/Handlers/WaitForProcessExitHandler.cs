@@ -26,6 +26,10 @@ namespace IronFrame.Host.Handlers
                 exited = success,
                 exitCode = success ? process.ExitCode : 0,
             };
+
+            if (result.exited)
+                processTracker.RemoveProcess(p.key);
+
             return Task.FromResult(result);
         }
     }
