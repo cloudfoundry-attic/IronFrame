@@ -22,6 +22,7 @@ namespace IronFrame
         Dictionary<string, string> GetProperties();
         void RemoveProperty(string name);
         void Destroy();
+        void BlockAllOutBoundConnections();
 
         //ContainerState State { get; }
         //void BindMounts(IEnumerable<BindMount> mounts);

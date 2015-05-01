@@ -136,6 +136,7 @@ namespace IronFrame
             {
                 tcpPortManager.ReleaseLocalPort(port, user.UserName);
             }
+            tcpPortManager.RemoveFirewallRules(user.UserName);
 
             // BR - Unmap the mounted directories (Removes user ACLs)
             // BR - Delete the container directory
@@ -278,6 +279,11 @@ namespace IronFrame
         public int CurrentCpuLimit()
         {
             return jobObject.GetJobCpuLimit();
+        }
+
+        public void BlockAllOutBoundConnections()
+        {
+            tcpPortManager.BlockAllOutboundConnections(user.UserName);
         }
     }
 }

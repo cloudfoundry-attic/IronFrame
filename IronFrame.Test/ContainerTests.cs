@@ -418,6 +418,14 @@ namespace IronFrame
 
                 ProcessRunner.Received(1).Dispose();
             }
+
+            [Fact]
+            public void DeletesFirewallRules()
+            {
+                Container.Destroy();
+
+                TcpPortManager.Received(1).RemoveFirewallRules(User.UserName);
+            }
         }
 
         public class GetInfo : ContainerTests
@@ -641,8 +649,15 @@ namespace IronFrame
             }
         }
 
-        public class Dispose : ContainerTests
+        public class BlockAllOutboundConnections : ContainerTests
         {
+            [Fact]
+            public void DelegatesToLocalTcpPortManager()
+            {
+                Container.BlockAllOutBoundConnections();
+                TcpPortManager.Received(1).BlockAllOutboundConnections(User.UserName);
+            }
+            
         }
     }
 }

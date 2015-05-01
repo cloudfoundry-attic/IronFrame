@@ -33,6 +33,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Interop.NetFwTypeLib">
+      <HintPath>..\IronFrame.Shared\obj\Debug\Interop.NetFwTypeLib.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -101,10 +105,11 @@
     <Compile Include="TestSupport\NSubstituteExtensions.cs" />
     <Compile Include="TestSupport\TempFile.cs" />
     <Compile Include="Utilities\FileSystemSecurityDescriptorReaderTests.cs" />
+    <Compile Include="Utilities\FirewallManagerTests.cs" />
     <Compile Include="Utilities\JobObjectLimitsTests.cs" />
     <Compile Include="Utilities\JobObjectTests.cs" />
     <Compile Include="Utilities\LocalPrincipalManagerTests.cs" />
-    <Compile Include="Utilities\LocalTcpPortManagerTests.cs" />
+    <Compile Include="LocalTcpPortManagerTests.cs" />
     <Compile Include="Utilities\ProcessHelperTest.cs" />
     <Compile Include="ProcessRunnerTests.cs" />
     <Compile Include="ProcessTrackerTests.cs" />

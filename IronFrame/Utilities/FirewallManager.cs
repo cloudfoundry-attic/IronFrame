@@ -1,4 +1,9 @@
 ﻿using System;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Security.Principal;
+using Microsoft.VisualBasic.ApplicationServices;
 using NetFwTypeLib;
 
 namespace IronFrame.Utilities
@@ -7,6 +12,8 @@ namespace IronFrame.Utilities
     {
         void OpenPort(int port, string name);
         void ClosePort(string name);
+        void BlockAllOutboundConnections(string username);
+        void RemoveAllFirewallRules(string userName);
     }
 
     /// <summary>
@@ -41,6 +48,61 @@ namespace IronFrame.Utilities
 
             var firewallPolicy = getComObject<INetFwPolicy2>(NetFwPolicy2ProgID);
             firewallPolicy.Rules.Add(firewallRule);
+        }
+
+        internal static string GetFormattedLocalUserSid(string windowsUsername)
+        {
+            var ntaccount = new NTAccount("", windowsUsername);
+            var sid = ntaccount.Translate(typeof(SecurityIdentifier)).Value;
+            return String.Format(CultureInfo.InvariantCulture, "D:(A;;CC;;;{0})", sid);
+        }
+
+        public void BlockAllOutboundConnections(string windowsUserName)
+        {
+
+            var firewallPolicy = (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID(NetFwPolicy2ProgID));
+
+            // This type is only avaible in Windows Server 2012
+            var rule = ((INetFwRule3)Activator.CreateInstance(Type.GetTypeFromProgID(NetFwRuleProgID)));
+
+            rule.Name = windowsUserName;
+            rule.Action = NET_FW_ACTION_.NET_FW_ACTION_BLOCK;
+            rule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
+            rule.Enabled = true;
+
+            string userSid = GetFormattedLocalUserSid(windowsUserName);
+            rule.LocalUserAuthorizedList = userSid;
+            firewallPolicy.Rules.Add(rule);
+        }
+
+        /// <summary>
+        /// Remove all firewall rules that match the given name
+        /// 
+        /// The implementation is a bit hacky. There is no way determine 
+        /// how many rules match a given name without iterating through 
+        /// the entire collection of rules. This method seems cheaper 
+        /// but uses exceptions to signal that no more rules match the given
+        /// name.
+        /// </summary>
+        /// <param name="userName"></param>
+        public void RemoveAllFirewallRules(string userName)
+        {
+            var firewallPolicy = (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID(NetFwPolicy2ProgID));
+            var rules = firewallPolicy.Rules;
+            try
+            {
+                // keep deleting until an exception is thrown
+                while (true)
+                {
+                    // rules.Item will throw an exception if the rule isn't found 
+                    rules.Item(userName);
+                    rules.Remove(userName);
+                }
+            }
+            catch (FileNotFoundException)
+            {
+                // ignore the exception
+            }
         }
 
         public void ClosePort(string name)
