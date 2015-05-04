@@ -131,14 +131,15 @@ namespace IronFrame
             }
         }
 
-        public class BlockOutgoingConnections : LocalTcpPortManagerTests
+        public class CreateFirewallRule : LocalTcpPortManagerTests
         {
             [Fact]
             public void DelegatesToFirewallManager()
             {
                 var tcpPortManager = new LocalTcpPortManager(FirewallManager, NetShRunner);
-                tcpPortManager.BlockAllOutboundConnections("fred");
-                FirewallManager.Received(1).BlockAllOutboundConnections("fred");
+                var firewallRuleSpec = Substitute.For<FirewallRuleSpec>();
+                tcpPortManager.CreateFirewallRule("fred", firewallRuleSpec);
+                FirewallManager.Received(1).CreateFirewallRule("fred", firewallRuleSpec);
             }
         }
 

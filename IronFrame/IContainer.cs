@@ -22,7 +22,6 @@ namespace IronFrame
         Dictionary<string, string> GetProperties();
         void RemoveProperty(string name);
         void Destroy();
-        void BlockAllOutBoundConnections();
 
         //ContainerState State { get; }
         //void BindMounts(IEnumerable<BindMount> mounts);
@@ -31,6 +30,7 @@ namespace IronFrame
         //void CopyFileOut(string sourceFilePath, string destinationFilePath);
         //void ExtractTarFile(string tarFilePath, string destinationPath, bool decompress);
         IContainerProcess FindProcessById(int id);
+        void CreateFirewallRule(FirewallRuleSpec firewallRuleSpec);
     }
 
     public interface IProcessIO

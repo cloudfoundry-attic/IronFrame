@@ -12,8 +12,8 @@ namespace IronFrame.Utilities
     {
         void OpenPort(int port, string name);
         void ClosePort(string name);
-        void BlockAllOutboundConnections(string username);
         void RemoveAllFirewallRules(string userName);
+        void CreateFirewallRule(string userName, FirewallRuleSpec firewallRuleSpec);
     }
 
     /// <summary>
@@ -57,24 +57,6 @@ namespace IronFrame.Utilities
             return String.Format(CultureInfo.InvariantCulture, "D:(A;;CC;;;{0})", sid);
         }
 
-        public void BlockAllOutboundConnections(string windowsUserName)
-        {
-
-            var firewallPolicy = (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID(NetFwPolicy2ProgID));
-
-            // This type is only avaible in Windows Server 2012
-            var rule = ((INetFwRule3)Activator.CreateInstance(Type.GetTypeFromProgID(NetFwRuleProgID)));
-
-            rule.Name = windowsUserName;
-            rule.Action = NET_FW_ACTION_.NET_FW_ACTION_BLOCK;
-            rule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
-            rule.Enabled = true;
-
-            string userSid = GetFormattedLocalUserSid(windowsUserName);
-            rule.LocalUserAuthorizedList = userSid;
-            firewallPolicy.Rules.Add(rule);
-        }
-
         /// <summary>
         /// Remove all firewall rules that match the given name
         /// 
@@ -103,6 +85,24 @@ namespace IronFrame.Utilities
             {
                 // ignore the exception
             }
+        }
+
+        public void CreateFirewallRule(string windowsUserName, FirewallRuleSpec firewallRuleSpec)
+        {
+            var firewallPolicy = (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID(NetFwPolicy2ProgID));
+
+            // This type is only avaible in Windows Server 2012
+            var rule = ((INetFwRule3)Activator.CreateInstance(Type.GetTypeFromProgID(NetFwRuleProgID)));
+
+            rule.Name = windowsUserName;
+            rule.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
+            rule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
+            rule.RemoteAddresses = firewallRuleSpec.Networks[0].Start + "-" + firewallRuleSpec.Networks[0].End;
+            rule.Enabled = true;
+
+            string userSid = GetFormattedLocalUserSid(windowsUserName);
+            rule.LocalUserAuthorizedList = userSid;
+            firewallPolicy.Rules.Add(rule);
         }
 
         public void ClosePort(string name)

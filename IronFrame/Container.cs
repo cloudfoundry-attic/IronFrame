@@ -160,6 +160,11 @@ namespace IronFrame
             return new ContainerProcess(process);
         }
 
+        public void CreateFirewallRule(FirewallRuleSpec firewallRuleSpec)
+        {
+            tcpPortManager.CreateFirewallRule(user.UserName, firewallRuleSpec);
+        }
+
         public ContainerInfo GetInfo()
         {
             ThrowIfDestroyed();
@@ -279,11 +284,6 @@ namespace IronFrame
         public int CurrentCpuLimit()
         {
             return jobObject.GetJobCpuLimit();
-        }
-
-        public void BlockAllOutBoundConnections()
-        {
-            tcpPortManager.BlockAllOutboundConnections(user.UserName);
         }
     }
 }
