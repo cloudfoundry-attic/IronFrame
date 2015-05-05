@@ -76,7 +76,8 @@ namespace IronFrame.Utilities
                 // keep deleting until an exception is thrown
                 while (true)
                 {
-                    // rules.Item will throw an exception if the rule isn't found 
+                    // We need to call rules.Item() since rules.Remove() doesn't and silently return but 
+                    // rules.Item() will throw an exception.
                     rules.Item(userName);
                     rules.Remove(userName);
                 }
