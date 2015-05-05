@@ -137,7 +137,7 @@ namespace IronFrame
             public void DelegatesToFirewallManager()
             {
                 var tcpPortManager = new LocalTcpPortManager(FirewallManager, NetShRunner);
-                var firewallRuleSpec = Substitute.For<FirewallRuleSpec>();
+                var firewallRuleSpec = new FirewallRuleSpec();
                 tcpPortManager.CreateFirewallRule("fred", firewallRuleSpec);
                 FirewallManager.Received(1).CreateFirewallRule("fred", firewallRuleSpec);
             }

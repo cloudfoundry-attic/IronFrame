@@ -54,8 +54,8 @@ namespace IronFrame
 
     public class PortRange
     {
-        public UInt16 Start { get; set; }
-        public UInt16 End { get; set; }
+        public int Start { get; set; }
+        public int End { get; set; }
     }
 
 }

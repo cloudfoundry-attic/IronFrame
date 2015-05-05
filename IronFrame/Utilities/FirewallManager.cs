@@ -69,7 +69,7 @@ namespace IronFrame.Utilities
         /// <param name="userName"></param>
         public void RemoveAllFirewallRules(string userName)
         {
-            var firewallPolicy = (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID(NetFwPolicy2ProgID));
+            var firewallPolicy = getComObject<INetFwPolicy2>(NetFwPolicy2ProgID);
             var rules = firewallPolicy.Rules;
             try
             {
@@ -93,21 +93,21 @@ namespace IronFrame.Utilities
             var protocol = firewallRuleSpec.Protocol;
             if (protocol == Protocol.All)
             {
-                _CreateFirewallRule(windowsUserName, Protocol.Udp, firewallRuleSpec);
-                _CreateFirewallRule(windowsUserName, Protocol.Tcp, firewallRuleSpec);
+                CreateFirewallRuleForProtocol(windowsUserName, Protocol.Udp, firewallRuleSpec);
+                CreateFirewallRuleForProtocol(windowsUserName, Protocol.Tcp, firewallRuleSpec);
             }
             else
             {
-                _CreateFirewallRule(windowsUserName, protocol, firewallRuleSpec);    
+                CreateFirewallRuleForProtocol(windowsUserName, protocol, firewallRuleSpec);    
             }
         }
 
-        private void _CreateFirewallRule(string windowsUserName, Protocol proto, FirewallRuleSpec firewallRuleSpec)
+        private void CreateFirewallRuleForProtocol(string windowsUserName, Protocol proto, FirewallRuleSpec firewallRuleSpec)
         {
-            var firewallPolicy = (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID(NetFwPolicy2ProgID));
+            var firewallPolicy = getComObject<INetFwPolicy2>(NetFwPolicy2ProgID);
 
             // This type is only avaible in Windows Server 2012
-            var rule = ((INetFwRule3)Activator.CreateInstance(Type.GetTypeFromProgID(NetFwRuleProgID)));
+            var rule = getComObject<INetFwRule3>(NetFwRuleProgID);
 
             rule.Name = windowsUserName;
             switch (proto)
@@ -119,7 +119,7 @@ namespace IronFrame.Utilities
                     rule.Protocol = (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_UDP;
                     break;
                 default:
-                    throw new Exception("Protocol " + firewallRuleSpec.Protocol + " is unknown");
+                    throw new Exception("Protocol " + proto + " is unknown");
             }
             rule.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
             rule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
