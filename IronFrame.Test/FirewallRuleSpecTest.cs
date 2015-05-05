@@ -41,21 +41,21 @@ namespace IronFrame
         }
 
         [Fact]
-        public void ReturnStartIfAddressesIsEmpty()
+        public void ReturnStarIfAddressesIsEmpty()
         {
             var firewallRuleSpec = new FirewallRuleSpec();
             Assert.Equal("*", firewallRuleSpec.RemoteAddresses);
         }
 
         [Fact]
-        public void ReturnStartIfPortIsEmpty()
+        public void ReturnStarIfPortIsEmpty()
         {
             var firewallRuleSpec = new FirewallRuleSpec();
             Assert.Equal("*", firewallRuleSpec.RemotePorts);
         }
 
         [Fact]
-        public void InitializeProtocolToTcp()
+        public void InitializeProtocolToAll()
         {
             var firewallRuleSpec = new FirewallRuleSpec();
             Assert.Equal(Protocol.All, firewallRuleSpec.Protocol);
