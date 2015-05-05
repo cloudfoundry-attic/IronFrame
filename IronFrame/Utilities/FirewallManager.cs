@@ -89,15 +89,41 @@ namespace IronFrame.Utilities
 
         public void CreateFirewallRule(string windowsUserName, FirewallRuleSpec firewallRuleSpec)
         {
+            var protocol = firewallRuleSpec.Protocol;
+            if (protocol == Protocol.All)
+            {
+                _CreateFirewallRule(windowsUserName, Protocol.Udp, firewallRuleSpec);
+                _CreateFirewallRule(windowsUserName, Protocol.Tcp, firewallRuleSpec);
+            }
+            else
+            {
+                _CreateFirewallRule(windowsUserName, protocol, firewallRuleSpec);    
+            }
+        }
+
+        private void _CreateFirewallRule(string windowsUserName, Protocol proto, FirewallRuleSpec firewallRuleSpec)
+        {
             var firewallPolicy = (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID(NetFwPolicy2ProgID));
 
             // This type is only avaible in Windows Server 2012
             var rule = ((INetFwRule3)Activator.CreateInstance(Type.GetTypeFromProgID(NetFwRuleProgID)));
 
             rule.Name = windowsUserName;
+            switch (proto)
+            {
+                case Protocol.Tcp:
+                    rule.Protocol = (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP;
+                    break;
+                case Protocol.Udp:
+                    rule.Protocol = (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_UDP;
+                    break;
+                default:
+                    throw new Exception("Protocol " + firewallRuleSpec.Protocol + " is unknown");
+            }
             rule.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
             rule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
-            rule.RemoteAddresses = firewallRuleSpec.Networks[0].Start + "-" + firewallRuleSpec.Networks[0].End;
+            rule.RemotePorts = firewallRuleSpec.RemotePorts;
+            rule.RemoteAddresses = firewallRuleSpec.RemoteAddresses;
             rule.Enabled = true;
 
             string userSid = GetFormattedLocalUserSid(windowsUserName);

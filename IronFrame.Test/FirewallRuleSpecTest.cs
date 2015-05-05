@@ -9,6 +9,7 @@ namespace IronFrame
 {
     public class FirewallRuleSpecTest
     {
+
         [Fact]
         public void TestRemoteAddresses()
         {
@@ -22,6 +23,42 @@ namespace IronFrame
                 }
             };
             Assert.Equal("10.1.1.1-10.1.1.10,10.3.1.1-10.3.1.10", firewallRuleSpec.RemoteAddresses);
+        }
+
+        [Fact]
+        public void TestRemotePorts()
+        {
+            var firewallRuleSpec = new FirewallRuleSpec()
+            {
+                Ports = new List<PortRange>
+                {
+                    new PortRange() {Start = 8080, End = 8090},
+                    new PortRange() {Start = 9090, End = 9099},
+
+                }
+            };
+            Assert.Equal("8080-8090,9090-9099", firewallRuleSpec.RemotePorts);
+        }
+
+        [Fact]
+        public void ReturnStartIfAddressesIsEmpty()
+        {
+            var firewallRuleSpec = new FirewallRuleSpec();
+            Assert.Equal("*", firewallRuleSpec.RemoteAddresses);
+        }
+
+        [Fact]
+        public void ReturnStartIfPortIsEmpty()
+        {
+            var firewallRuleSpec = new FirewallRuleSpec();
+            Assert.Equal("*", firewallRuleSpec.RemotePorts);
+        }
+
+        [Fact]
+        public void InitializeProtocolToTcp()
+        {
+            var firewallRuleSpec = new FirewallRuleSpec();
+            Assert.Equal(Protocol.All, firewallRuleSpec.Protocol);
         }
     }
 }

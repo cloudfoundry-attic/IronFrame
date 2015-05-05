@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using NetFwTypeLib;
 using Xunit;
@@ -15,41 +16,209 @@ namespace IronFrame.Utilities
         readonly FirewallManager manager = new FirewallManager();
         readonly INetFwPolicy2 firewallPolicy =
                (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwPolicy2"));
-        readonly FirewallRuleSpec firewallRuleSpec = new FirewallRuleSpec
-        {
-            Networks = new List<IPRange>
-            {
-                new IPRange { Start = "10.1.1.1", End = "10.1.10.10" }
-            }
-        };
 
-        [FactAdminRequired]
-        public void CreateFirewallRule()
+        public void CheckCommonRuleProperties(INetFwRule3 rule)
         {
-            try
+            Assert.NotNull(rule);
+            Assert.Equal(NET_FW_ACTION_.NET_FW_ACTION_ALLOW, rule.Action);
+            Assert.Equal(NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT, rule.Direction);
+            Assert.Equal(true, rule.Enabled);
+            Assert.Equal(FirewallManager.GetFormattedLocalUserSid(Username), rule.LocalUserAuthorizedList);
+        }
+
+        [Collection("Firewall Test Collection")]
+        public class TcpTest : FirewallManagerTests
+        {
+            [FactAdminRequired]
+            public void CreateFirewallRuleWithEmptySpec()
             {
-                manager.CreateFirewallRule(Username, firewallRuleSpec);
-                var rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
-                Assert.NotNull(rule);
-                Assert.Equal(rule.Action, NET_FW_ACTION_.NET_FW_ACTION_ALLOW);
-                Assert.Equal(rule.Direction, NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT);
-                Assert.Equal(rule.Enabled, true);
-                Assert.Equal(rule.LocalUserAuthorizedList, FirewallManager.GetFormattedLocalUserSid(Username));
-                Assert.Equal(rule.RemoteAddresses, firewallRuleSpec.RemoteAddresses);
+                try
+                {
+                    manager.CreateFirewallRule(Username, new FirewallRuleSpec
+                    {
+                        Protocol =  Protocol.Tcp,
+                    });
+                    var rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
+                    CheckCommonRuleProperties(rule);
+                    Assert.Equal(rule.Protocol, (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP);
+                    Assert.Equal("*", rule.RemoteAddresses);
+                    Assert.Equal("*", rule.RemotePorts);
+                }
+                finally
+                {
+                    manager.RemoveAllFirewallRules(Username);
+                }
             }
-            finally
+
+            [FactAdminRequired]
+            public void CreateFirewallRuleWithNetworks()
             {
-                firewallPolicy.Rules.Remove(Username);
+                try
+                {
+                    var firewallRuleSpec = new FirewallRuleSpec
+                    {
+                        Protocol = Protocol.Tcp,
+                        Networks = new List<IPRange>
+                        {
+                            new IPRange {Start = "10.1.1.1", End = "10.1.10.10"}
+                        }
+                    };
+                    manager.CreateFirewallRule(Username, firewallRuleSpec);
+                    var rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
+                    CheckCommonRuleProperties(rule);
+                    Assert.Equal(rule.Protocol, (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP);
+                    Assert.Equal(firewallRuleSpec.RemoteAddresses, rule.RemoteAddresses);
+                    Assert.Equal("*", rule.RemotePorts);
+                }
+                finally
+                {
+                    manager.RemoveAllFirewallRules(Username);
+                }
+            }
+
+            [FactAdminRequired]
+            public void CreateFirewallRuleWithPorts()
+            {
+                var firewallSpec = new FirewallRuleSpec
+                {
+                    Protocol = Protocol.Tcp,
+                    Ports = new List<PortRange>
+                    {
+                        new PortRange {Start = 8080, End = 8090},
+                    }
+                };
+                try
+                {
+                    manager.CreateFirewallRule(Username, firewallSpec);
+                    var rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
+                    CheckCommonRuleProperties(rule);
+                    Assert.Equal(rule.Protocol, (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP);
+                    Assert.Equal("*", rule.RemoteAddresses);
+                    Assert.Equal(firewallSpec.RemotePorts, rule.RemotePorts);
+                }
+                finally
+                {
+                    manager.RemoveAllFirewallRules(Username);
+                }
+            }
+
+            [FactAdminRequired]
+            public void CreateFirewallRuleWithNetworksAndPorts()
+            {
+                try
+                {
+                    var firewallSpec = new FirewallRuleSpec
+                    {
+                        Protocol = Protocol.Tcp,
+                        Ports = new List<PortRange>
+                        {
+                            new PortRange {Start = 8080, End = 8090},
+                        },
+                        Networks = new List<IPRange>
+                        {
+                            new IPRange() {Start = "10.1.1.1", End = "10.1.1.100"},
+                        }
+
+                    };
+                    manager.CreateFirewallRule(Username, firewallSpec);
+                    var rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
+                    CheckCommonRuleProperties(rule);
+                    Assert.Equal(rule.Protocol, (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP);
+                    Assert.Equal(firewallSpec.RemoteAddresses, rule.RemoteAddresses);
+                    Assert.Equal(firewallSpec.RemotePorts, rule.RemotePorts);
+                }
+                finally
+                {
+                    manager.RemoveAllFirewallRules(Username);
+                }
             }
         }
 
-
-        [FactAdminRequired]
-        public void RemoveFirewallRules()
+        [Collection("Firewall Test Collection")]
+        public class AllProtocolsTest : FirewallManagerTests
         {
-            manager.CreateFirewallRule(Username, firewallRuleSpec);
-            manager.RemoveAllFirewallRules(Username);
-            Assert.Throws<FileNotFoundException>(() => firewallPolicy.Rules.Item(Username));
+            [FactAdminRequired]
+            public void TestAllProtocolsFirewallRule()
+            {
+                try
+                {
+                    var firewallSpec = new FirewallRuleSpec
+                    {
+                        Protocol = Protocol.All,
+                        Ports = new List<PortRange>
+                        {
+                            new PortRange {Start = 8080, End = 8090},
+                        },
+                    };
+                    manager.CreateFirewallRule(Username, firewallSpec);
+
+                    // On windows we have to create two rules one for tcp and another for udp
+                    var rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
+                    CheckCommonRuleProperties(rule);
+                    Assert.Equal(rule.Protocol, (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP);
+                    Assert.Equal(firewallSpec.RemoteAddresses, rule.RemoteAddresses);
+                    Assert.Equal(firewallSpec.RemotePorts, rule.RemotePorts);
+                    firewallPolicy.Rules.Remove(Username);
+
+                    rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
+                    CheckCommonRuleProperties(rule);
+                    Assert.Equal(rule.Protocol, (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_UDP);
+                    Assert.Equal(firewallSpec.RemoteAddresses, rule.RemoteAddresses);
+                    Assert.Equal(firewallSpec.RemotePorts, rule.RemotePorts);
+
+                }
+                finally
+                {
+                    manager.RemoveAllFirewallRules(Username);
+                }
+            }
+        };
+
+        [Collection("Firewall Test Collection")]
+        public class UdpTest : FirewallManagerTests
+        {
+            [FactAdminRequired]
+            public void TestUdpProtocol()
+            {
+                try
+                {
+                    var firewallSpec = new FirewallRuleSpec
+                    {
+                        Protocol = Protocol.Udp,
+                        Ports = new List<PortRange>
+                        {
+                            new PortRange {Start = 8080, End = 8090},
+                        },
+                        Networks = new List<IPRange>
+                        {
+                            new IPRange() {Start = "10.1.1.1", End = "10.1.1.100"},
+                        }
+
+                    };
+                    manager.CreateFirewallRule(Username, firewallSpec);
+                    var rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
+                    CheckCommonRuleProperties(rule);
+                    Assert.Equal(rule.Protocol, (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_UDP);
+                    Assert.Equal(firewallSpec.RemoteAddresses, rule.RemoteAddresses);
+                    Assert.Equal(firewallSpec.RemotePorts, rule.RemotePorts);
+                }
+                finally
+                {
+                    manager.RemoveAllFirewallRules(Username);
+                }
+            }
+        };
+
+        [Collection("Firewall Test Collection")]
+        public class RemoveFirewallRulesTest : FirewallManagerTests
+        {
+            [FactAdminRequired]
+            public void RemoveFirewallRules()
+            {
+                manager.CreateFirewallRule(Username, new FirewallRuleSpec());
+                manager.RemoveAllFirewallRules(Username);
+                Assert.Throws<FileNotFoundException>(() => firewallPolicy.Rules.Item(Username));
+            }
         }
     }
 }
