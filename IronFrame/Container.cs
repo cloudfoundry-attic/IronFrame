@@ -160,9 +160,9 @@ namespace IronFrame
             return new ContainerProcess(process);
         }
 
-        public void CreateFirewallRule(FirewallRuleSpec firewallRuleSpec)
+        public void CreateOutboundFirewallRule(FirewallRuleSpec firewallRuleSpec)
         {
-            tcpPortManager.CreateFirewallRule(user.UserName, firewallRuleSpec);
+            tcpPortManager.CreateOutboundFirewallRule(user.UserName, firewallRuleSpec);
         }
 
         public ContainerInfo GetInfo()

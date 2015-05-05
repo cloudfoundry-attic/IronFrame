@@ -13,7 +13,7 @@ namespace IronFrame.Utilities
         void OpenPort(int port, string name);
         void ClosePort(string name);
         void RemoveAllFirewallRules(string userName);
-        void CreateFirewallRule(string userName, FirewallRuleSpec firewallRuleSpec);
+        void CreateOutboundFirewallRule(string userName, FirewallRuleSpec firewallRuleSpec);
     }
 
     /// <summary>
@@ -89,7 +89,7 @@ namespace IronFrame.Utilities
             }
         }
 
-        public void CreateFirewallRule(string windowsUserName, FirewallRuleSpec firewallRuleSpec)
+        public void CreateOutboundFirewallRule(string windowsUserName, FirewallRuleSpec firewallRuleSpec)
         {
             var protocol = firewallRuleSpec.Protocol;
             if (protocol == Protocol.All)

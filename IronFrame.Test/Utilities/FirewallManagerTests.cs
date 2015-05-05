@@ -34,7 +34,7 @@ namespace IronFrame.Utilities
             {
                 try
                 {
-                    manager.CreateFirewallRule(Username, new FirewallRuleSpec
+                    manager.CreateOutboundFirewallRule(Username, new FirewallRuleSpec
                     {
                         Protocol =  Protocol.Tcp,
                     });
@@ -63,7 +63,7 @@ namespace IronFrame.Utilities
                             new IPRange {Start = "10.1.1.1", End = "10.1.10.10"}
                         }
                     };
-                    manager.CreateFirewallRule(Username, firewallRuleSpec);
+                    manager.CreateOutboundFirewallRule(Username, firewallRuleSpec);
                     var rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
                     CheckCommonRuleProperties(rule);
                     Assert.Equal(rule.Protocol, (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP);
@@ -89,7 +89,7 @@ namespace IronFrame.Utilities
                 };
                 try
                 {
-                    manager.CreateFirewallRule(Username, firewallSpec);
+                    manager.CreateOutboundFirewallRule(Username, firewallSpec);
                     var rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
                     CheckCommonRuleProperties(rule);
                     Assert.Equal(rule.Protocol, (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP);
@@ -120,7 +120,7 @@ namespace IronFrame.Utilities
                         }
 
                     };
-                    manager.CreateFirewallRule(Username, firewallSpec);
+                    manager.CreateOutboundFirewallRule(Username, firewallSpec);
                     var rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
                     CheckCommonRuleProperties(rule);
                     Assert.Equal(rule.Protocol, (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP);
@@ -150,7 +150,7 @@ namespace IronFrame.Utilities
                             new PortRange {Start = 8080, End = 8090},
                         },
                     };
-                    manager.CreateFirewallRule(Username, firewallSpec);
+                    manager.CreateOutboundFirewallRule(Username, firewallSpec);
 
                     // On windows we have to create two rules one for tcp and another for udp
                     var rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
@@ -195,7 +195,7 @@ namespace IronFrame.Utilities
                         }
 
                     };
-                    manager.CreateFirewallRule(Username, firewallSpec);
+                    manager.CreateOutboundFirewallRule(Username, firewallSpec);
                     var rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
                     CheckCommonRuleProperties(rule);
                     Assert.Equal(rule.Protocol, (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_UDP);
@@ -215,7 +215,7 @@ namespace IronFrame.Utilities
             [FactAdminRequired]
             public void RemoveFirewallRules()
             {
-                manager.CreateFirewallRule(Username, new FirewallRuleSpec());
+                manager.CreateOutboundFirewallRule(Username, new FirewallRuleSpec());
                 manager.RemoveAllFirewallRules(Username);
                 Assert.Throws<FileNotFoundException>(() => firewallPolicy.Rules.Item(Username));
             }

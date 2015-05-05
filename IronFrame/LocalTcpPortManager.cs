@@ -10,7 +10,7 @@ namespace IronFrame
         void ReleaseLocalPort(int? port, string userName);
 
         void RemoveFirewallRules(string userName);
-        void CreateFirewallRule(string userName, FirewallRuleSpec firewallRuleSpec);
+        void CreateOutboundFirewallRule(string userName, FirewallRuleSpec firewallRuleSpec);
     }
 
     internal class LocalTcpPortManager : ILocalTcpPortManager
@@ -101,9 +101,9 @@ namespace IronFrame
             firewallManager.RemoveAllFirewallRules(userName);
         }
 
-        public void CreateFirewallRule(string userName, FirewallRuleSpec firewallRuleSpec)
+        public void CreateOutboundFirewallRule(string userName, FirewallRuleSpec firewallRuleSpec)
         {
-            firewallManager.CreateFirewallRule(userName, firewallRuleSpec);
+            firewallManager.CreateOutboundFirewallRule(userName, firewallRuleSpec);
         }
     }
 }
