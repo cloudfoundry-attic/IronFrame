@@ -75,8 +75,8 @@ namespace IronFrame.Utilities
                 manager.CreateOutboundFirewallRule(Username, firewallRuleSpec);
                 var rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
                 CheckCommonRuleProperties(rule);
-                Assert.Equal(rule.Protocol, (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP);
-                Assert.Equal(firewallRuleSpec.RemoteAddresses, rule.RemoteAddresses);
+                Assert.Equal((int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP, rule.Protocol);
+                Assert.Equal("10.1.1.1-10.1.10.10", rule.RemoteAddresses);
                 Assert.Equal("*", rule.RemotePorts);
             }
 
@@ -94,9 +94,9 @@ namespace IronFrame.Utilities
                 manager.CreateOutboundFirewallRule(Username, firewallSpec);
                 var rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
                 CheckCommonRuleProperties(rule);
-                Assert.Equal(rule.Protocol, (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP);
+                Assert.Equal((int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP, rule.Protocol);
                 Assert.Equal("*", rule.RemoteAddresses);
-                Assert.Equal(firewallSpec.RemotePorts, rule.RemotePorts);
+                Assert.Equal("8080-8090", rule.RemotePorts);
             }
 
             [FactAdminRequired]
@@ -118,9 +118,9 @@ namespace IronFrame.Utilities
                 manager.CreateOutboundFirewallRule(Username, firewallSpec);
                 var rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
                 CheckCommonRuleProperties(rule);
-                Assert.Equal(rule.Protocol, (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP);
-                Assert.Equal(firewallSpec.RemoteAddresses, rule.RemoteAddresses);
-                Assert.Equal(firewallSpec.RemotePorts, rule.RemotePorts);
+                Assert.Equal((int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP, rule.Protocol);
+                Assert.Equal("10.1.1.1-10.1.1.100", rule.RemoteAddresses);
+                Assert.Equal("8080-8090", rule.RemotePorts);
             }
         }
 
@@ -142,16 +142,16 @@ namespace IronFrame.Utilities
                 // On windows we have to create two rules one for tcp and another for udp
                 var rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
                 CheckCommonRuleProperties(rule);
-                Assert.Equal(rule.Protocol, (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP);
-                Assert.Equal(firewallSpec.RemoteAddresses, rule.RemoteAddresses);
-                Assert.Equal(firewallSpec.RemotePorts, rule.RemotePorts);
+                Assert.Equal((int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP, rule.Protocol);
+                Assert.Equal("*", rule.RemoteAddresses);
+                Assert.Equal("8080-8090", rule.RemotePorts);
                 firewallPolicy.Rules.Remove(Username);
 
                 rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
                 CheckCommonRuleProperties(rule);
-                Assert.Equal(rule.Protocol, (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_UDP);
-                Assert.Equal(firewallSpec.RemoteAddresses, rule.RemoteAddresses);
-                Assert.Equal(firewallSpec.RemotePorts, rule.RemotePorts);
+                Assert.Equal((int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_UDP, rule.Protocol);
+                Assert.Equal("*", rule.RemoteAddresses);
+                Assert.Equal("8080-8090", rule.RemotePorts);
             }
         };
 
@@ -176,9 +176,9 @@ namespace IronFrame.Utilities
                 manager.CreateOutboundFirewallRule(Username, firewallSpec);
                 var rule = (INetFwRule3)firewallPolicy.Rules.Item(Username);
                 CheckCommonRuleProperties(rule);
-                Assert.Equal(rule.Protocol, (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_UDP);
-                Assert.Equal(firewallSpec.RemoteAddresses, rule.RemoteAddresses);
-                Assert.Equal(firewallSpec.RemotePorts, rule.RemotePorts);
+                Assert.Equal((int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_UDP, rule.Protocol);
+                Assert.Equal("10.1.1.1-10.1.1.100", rule.RemoteAddresses);
+                Assert.Equal("8080-8090", rule.RemotePorts);
             }
         };
 
