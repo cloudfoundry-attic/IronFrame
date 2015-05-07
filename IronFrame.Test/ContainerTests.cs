@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
 using IronFrame.Utilities;
 using NSubstitute;
 using Xunit;
+using System.Collections.Generic;
 
 namespace IronFrame
 {
@@ -110,6 +111,24 @@ namespace IronFrame
                     }
                 );
                 ContainerPropertiesService.Received(1).GetProperties(Container);
+            }
+
+            [Fact]
+            public void ThrowsInvalidOperationWhenIOExceptionThrownAndDestroyed()
+            {
+                Container.Destroy();
+                ContainerPropertiesService.GetProperties(Container).Returns(x => { throw new IOException(); });
+
+                Assert.Throws<InvalidOperationException>(() => Container.GetProperties());
+            }
+
+            [Fact]
+            public void PassesThroughExceptionIfNotDestroyed()
+            {
+                ContainerPropertiesService.GetProperties(Container).Returns(x => { throw new IOException(); });
+
+                Assert.Throws<IOException>(() => Container.GetProperties());
+
             }
         }
 
@@ -401,6 +420,15 @@ namespace IronFrame
                 ConstrainedProcessRunner.Received(1).Dispose();
             }
 
+            [Fact]
+            public void DisposesJobObject_ThisEnsuresWeCanDeleteTheDirectory()
+            {
+                Container.Destroy();
+
+                JobObject.Received(1).TerminateProcessesAndWait();
+                JobObject.Received(1).Dispose();
+            }
+
 
             [Fact]
             public void DeletesContainerDirectory()
@@ -408,6 +436,15 @@ namespace IronFrame
                 Container.Destroy();
 
                 this.Directory.Received(1).Destroy();
+            }
+
+            [Fact]
+            public void TransitionsToDeletedEvenIfDirectoryDeletionFails()
+            {
+                Directory.When(x => x.Destroy()).Do(x => { throw new Exception(); });
+                try { Container.Destroy(); } catch { }
+
+                Assert.Throws<InvalidOperationException>(() => Container.GetInfo());
             }
 
             [Fact]
