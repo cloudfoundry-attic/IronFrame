@@ -309,6 +309,14 @@ namespace IronFrame
                         Service.DestroyContainer(container.Handle);
                     }
                 }
+
+                [Fact]
+                public void ContainerIsRemovedFromContainerList()
+                {
+                    Assert.NotNull(Service.GetContainerByHandle(Container.Handle));
+                    Service.DestroyContainer(Container.Handle);
+                    Assert.Null(Service.GetContainerByHandle(Container.Handle));
+                }
             }
         }
         

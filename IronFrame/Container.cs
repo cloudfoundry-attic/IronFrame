@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using IronFrame.Utilities;
 
@@ -132,21 +133,23 @@ namespace IronFrame
         {
             Stop(true);
 
+            this.currentState = ContainerState.Destroyed;
+
             foreach (var port in reservedPorts)
             {
                 tcpPortManager.ReleaseLocalPort(port, user.UserName);
             }
 
             // BR - Unmap the mounted directories (Removes user ACLs)
-            // BR - Delete the container directory
+
+            jobObject.TerminateProcessesAndWait();
+            jobObject.Dispose();
 
             if (user != null)
                 user.Delete();
 
             if (directory != null)
                 directory.Destroy();
-
-            this.currentState = ContainerState.Destroyed;
         }
 
         public IContainerProcess FindProcessById(int id)
@@ -261,7 +264,15 @@ namespace IronFrame
 
         public Dictionary<string, string> GetProperties()
         {
-            return propertyService.GetProperties(this);
+            try
+            {
+                return propertyService.GetProperties(this);
+            }
+            catch(IOException)
+            {
+                ThrowIfDestroyed();
+                throw;
+            }
         }
 
         public void RemoveProperty(string name)

@@ -117,9 +117,9 @@ namespace IronFrame
                     processHelper, 
                     containerSpec.Environment);
 
-                containers.Add(container);
-
                 containerPropertiesService.SetProperties(container, containerSpec.Properties);
+
+                containers.Add(container);
             }
             catch (Exception e)
             {
@@ -142,8 +142,8 @@ namespace IronFrame
             var container = FindContainer(handle);
             if (container != null)
             {
-                container.Destroy();
                 containers.Remove(container);
+                container.Destroy();
             }
         }
 
