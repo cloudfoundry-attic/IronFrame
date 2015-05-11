@@ -1,4 +1,9 @@
 ﻿using System;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Security.Principal;
+using Microsoft.VisualBasic.ApplicationServices;
 using NetFwTypeLib;
 
 namespace IronFrame.Utilities
@@ -7,6 +12,8 @@ namespace IronFrame.Utilities
     {
         void OpenPort(int port, string name);
         void ClosePort(string name);
+        void RemoveAllFirewallRules(string userName);
+        void CreateOutboundFirewallRule(string userName, FirewallRuleSpec firewallRuleSpec);
     }
 
     /// <summary>
@@ -41,6 +48,89 @@ namespace IronFrame.Utilities
 
             var firewallPolicy = getComObject<INetFwPolicy2>(NetFwPolicy2ProgID);
             firewallPolicy.Rules.Add(firewallRule);
+        }
+
+        internal static string GetFormattedLocalUserSid(string windowsUsername)
+        {
+            var ntaccount = new NTAccount("", windowsUsername);
+            var sid = ntaccount.Translate(typeof(SecurityIdentifier)).Value;
+            return String.Format(CultureInfo.InvariantCulture, "D:(A;;CC;;;{0})", sid);
+        }
+
+        /// <summary>
+        /// Remove all firewall rules that match the given name
+        /// 
+        /// The implementation is a bit hacky. There is no way determine 
+        /// how many rules match a given name without iterating through 
+        /// the entire collection of rules. This method seems cheaper 
+        /// but uses exceptions to signal that no more rules match the given
+        /// name.
+        /// </summary>
+        /// <param name="userName"></param>
+        public void RemoveAllFirewallRules(string userName)
+        {
+            var firewallPolicy = getComObject<INetFwPolicy2>(NetFwPolicy2ProgID);
+            var rules = firewallPolicy.Rules;
+            try
+            {
+                // keep deleting until an exception is thrown
+                while (true)
+                {
+                    // We need to call rules.Item() since
+                    // rules.Remove() silently returns but rules.Item()
+                    // will throw an exception.
+                    rules.Item(userName);
+                    rules.Remove(userName);
+                }
+            }
+            catch (FileNotFoundException)
+            {
+                // ignore the exception
+            }
+        }
+
+        public void CreateOutboundFirewallRule(string windowsUserName, FirewallRuleSpec firewallRuleSpec)
+        {
+            var protocol = firewallRuleSpec.Protocol;
+            if (protocol == Protocol.All)
+            {
+                CreateFirewallRuleForProtocol(windowsUserName, Protocol.Udp, firewallRuleSpec);
+                CreateFirewallRuleForProtocol(windowsUserName, Protocol.Tcp, firewallRuleSpec);
+            }
+            else
+            {
+                CreateFirewallRuleForProtocol(windowsUserName, protocol, firewallRuleSpec);    
+            }
+        }
+
+        private void CreateFirewallRuleForProtocol(string windowsUserName, Protocol proto, FirewallRuleSpec firewallRuleSpec)
+        {
+            var firewallPolicy = getComObject<INetFwPolicy2>(NetFwPolicy2ProgID);
+
+            // This type is only avaible in Windows Server 2012
+            var rule = getComObject<INetFwRule3>(NetFwRuleProgID);
+
+            rule.Name = windowsUserName;
+            switch (proto)
+            {
+                case Protocol.Tcp:
+                    rule.Protocol = (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP;
+                    break;
+                case Protocol.Udp:
+                    rule.Protocol = (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_UDP;
+                    break;
+                default:
+                    throw new Exception("Protocol " + proto + " is unknown");
+            }
+            rule.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
+            rule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
+            rule.RemotePorts = firewallRuleSpec.RemotePorts;
+            rule.RemoteAddresses = firewallRuleSpec.RemoteAddresses;
+            rule.Enabled = true;
+
+            string userSid = GetFormattedLocalUserSid(windowsUserName);
+            rule.LocalUserAuthorizedList = userSid;
+            firewallPolicy.Rules.Add(rule);
         }
 
         public void ClosePort(string name)

@@ -139,6 +139,7 @@ namespace IronFrame
             {
                 tcpPortManager.ReleaseLocalPort(port, user.UserName);
             }
+            tcpPortManager.RemoveFirewallRules(user.UserName);
 
             // BR - Unmap the mounted directories (Removes user ACLs)
 
@@ -160,6 +161,11 @@ namespace IronFrame
                 return null;
             }
             return new ContainerProcess(process);
+        }
+
+        public void CreateOutboundFirewallRule(FirewallRuleSpec firewallRuleSpec)
+        {
+            tcpPortManager.CreateOutboundFirewallRule(user.UserName, firewallRuleSpec);
         }
 
         public ContainerInfo GetInfo()

@@ -130,5 +130,28 @@ namespace IronFrame
                 Assert.IsType<Exception>(exception);
             }
         }
+
+        public class CreateOutboundFirewallRule : LocalTcpPortManagerTests
+        {
+            [Fact]
+            public void DelegatesToFirewallManager()
+            {
+                var tcpPortManager = new LocalTcpPortManager(FirewallManager, NetShRunner);
+                var firewallRuleSpec = new FirewallRuleSpec();
+                tcpPortManager.CreateOutboundFirewallRule("fred", firewallRuleSpec);
+                FirewallManager.Received(1).CreateOutboundFirewallRule("fred", firewallRuleSpec);
+            }
+        }
+
+        public class RemoveFirewallRules : LocalTcpPortManagerTests
+        {
+            [Fact]
+            public void DelegatesToFirewallManager()
+            {
+                var tcpPortManager = new LocalTcpPortManager(FirewallManager, NetShRunner);
+                tcpPortManager.RemoveFirewallRules("fred");
+                FirewallManager.Received(1).RemoveAllFirewallRules("fred");
+            }
+        }
     }
 }

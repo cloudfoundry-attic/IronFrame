@@ -70,6 +70,7 @@
     <Compile Include="ContainerHostClient.cs" />
     <Compile Include="ContainerHostDependencyHelper.cs" />
     <Compile Include="ContainerHostService.cs" />
+    <Compile Include="FirewallRuleSpec.cs" />
     <Compile Include="Utilities\Clock.cs" />
     <Compile Include="ContainerProcess.cs" />
     <Compile Include="ContainerUser.cs" />

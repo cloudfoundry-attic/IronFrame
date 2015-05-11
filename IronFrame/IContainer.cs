@@ -30,6 +30,7 @@ namespace IronFrame
         //void CopyFileOut(string sourceFilePath, string destinationFilePath);
         //void ExtractTarFile(string tarFilePath, string destinationPath, bool decompress);
         IContainerProcess FindProcessById(int id);
+        void CreateOutboundFirewallRule(FirewallRuleSpec firewallRuleSpec);
     }
 
     public interface IProcessIO

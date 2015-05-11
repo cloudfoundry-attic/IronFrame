@@ -8,6 +8,9 @@ namespace IronFrame
     {
         int ReserveLocalPort(int port, string userName);
         void ReleaseLocalPort(int? port, string userName);
+
+        void RemoveFirewallRules(string userName);
+        void CreateOutboundFirewallRule(string userName, FirewallRuleSpec firewallRuleSpec);
     }
 
     internal class LocalTcpPortManager : ILocalTcpPortManager
@@ -91,6 +94,16 @@ namespace IronFrame
                 throw new Exception(String.Format("Error removing firewall rule for port '{0}', user '{1}'", port, userName), ex);
             }
 
+        }
+
+        public void RemoveFirewallRules(string userName)
+        {
+            firewallManager.RemoveAllFirewallRules(userName);
+        }
+
+        public void CreateOutboundFirewallRule(string userName, FirewallRuleSpec firewallRuleSpec)
+        {
+            firewallManager.CreateOutboundFirewallRule(userName, firewallRuleSpec);
         }
     }
 }
