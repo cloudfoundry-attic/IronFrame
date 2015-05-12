@@ -681,6 +681,18 @@ namespace IronFrame
 
                 Assert.Throws<InvalidOperationException>(action);
             }
+
+
+            [Fact]
+            public void ReturnsDiskLimit()
+            {
+                ulong limitInBytes = 2048;
+                var quota = Substitute.For<DIDiskQuotaUser>();
+                quota.QuotaLimit = limitInBytes;
+                this.DiskQuotaControl.FindUser(User.UserName).Returns(quota);
+
+                Assert.Equal(limitInBytes, Container.CurrentDiskLimit());
+            }
         }
 
         public class RemoveProperty : ContainerTests

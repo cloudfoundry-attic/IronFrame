@@ -173,6 +173,11 @@ namespace IronFrame
             tcpPortManager.CreateOutboundFirewallRule(user.UserName, firewallRuleSpec);
         }
 
+        public ulong CurrentDiskLimit()
+        {
+            return (ulong)diskQuotaControl.FindUser(user.UserName).QuotaLimit;
+        }
+
         public ContainerInfo GetInfo()
         {
             ThrowIfDestroyed();

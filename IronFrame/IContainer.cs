@@ -35,6 +35,7 @@ namespace IronFrame
         //void ExtractTarFile(string tarFilePath, string destinationPath, bool decompress);
         IContainerProcess FindProcessById(int id);
         void CreateOutboundFirewallRule(FirewallRuleSpec firewallRuleSpec);
+        ulong CurrentDiskLimit();
     }
 
     public interface IProcessIO
