@@ -20,7 +20,7 @@ namespace IronFrame
         int CurrentCpuLimit();
         void SetActiveProcessLimit(uint processLimit);
         void SetPriorityClass(ProcessPriorityClass priority);
-
+        void LimitDisk(ulong limitInBytes);
         void SetProperty(string name, string value);
         string GetProperty(string name);
         Dictionary<string, string> GetProperties();

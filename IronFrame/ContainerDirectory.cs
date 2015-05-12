@@ -37,6 +37,11 @@ namespace IronFrame
             get { return containerUserPath; }
         }
 
+        public string Volume
+        {
+            get { return Path.GetPathRoot(containerPath); }
+        }
+
         public static IContainerDirectory Create(FileSystemManager fileSystem, string containerBasePath, string containerHandle, IContainerUser containerUser)
         {
             // TODO: Sanitize the container handle for use in the filesystem

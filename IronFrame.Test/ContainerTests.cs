@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using DiskQuotaTypeLibrary;
 using IronFrame.Utilities;
 using NSubstitute;
 using Xunit;
@@ -20,6 +21,7 @@ namespace IronFrame
         IContainerPropertyService ContainerPropertiesService { get; set; }
         ILocalTcpPortManager TcpPortManager { get; set; }
         IContainerUser User { get; set; }
+        DiskQuotaControl DiskQuotaControl { get; set; }
 
         public ContainerTests()
         {            
@@ -45,6 +47,8 @@ namespace IronFrame
             User = Substitute.For<IContainerUser>();
             User.UserName.Returns("container-username");
 
+            DiskQuotaControl = Substitute.For<DiskQuotaControl>();
+
             Container = new Container(
                 "id", 
                 "handle", 
@@ -53,6 +57,7 @@ namespace IronFrame
                 ContainerPropertiesService, 
                 TcpPortManager, 
                 JobObject, 
+                DiskQuotaControl,
                 ProcessRunner, 
                 ConstrainedProcessRunner, 
                 ProcessHelper, 
@@ -652,6 +657,29 @@ namespace IronFrame
                 int weight = 7;
                 JobObject.GetJobCpuLimit().Returns(weight);
                 Assert.Equal(weight, Container.CurrentCpuLimit());
+            }
+        }
+
+        public class LimitDisk : ContainerTests
+        {
+            [Fact]
+            public void SetsUserDiskLimit()
+            {
+                var quota = Substitute.For<DIDiskQuotaUser>();
+                this.DiskQuotaControl.AddUser(User.UserName).Returns(quota);
+
+                Container.LimitDisk(5);
+
+                Assert.Equal(5, quota.QuotaLimit);
+            }
+
+            [Fact]
+            public void WhenContainerNotActive_Throws()
+            {
+                Container.Stop(false);
+                Action action = () => Container.LimitDisk(5);
+
+                Assert.Throws<InvalidOperationException>(action);
             }
         }
 

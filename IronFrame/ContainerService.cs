@@ -1,8 +1,9 @@
-﻿using System;
+﻿using DiskQuotaTypeLibrary;
+using IronFrame.Utilities;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using IronFrame.Utilities;
 
 namespace IronFrame
 {
@@ -104,6 +105,9 @@ namespace IronFrame
 
                 var processHelper = new ProcessHelper();
 
+                var diskQuotaControl = new DiskQuotaControl();
+                diskQuotaControl.Initialize(directory.Volume, true);
+
                 container = new Container(
                     id, 
                     handle, 
@@ -112,6 +116,7 @@ namespace IronFrame
                     containerPropertiesService, 
                     tcpPortManager, 
                     jobObject, 
+                    diskQuotaControl,
                     processRunner, 
                     constrainedProcessRunner, 
                     processHelper, 
@@ -183,6 +188,8 @@ namespace IronFrame
 
             var environment = new Dictionary<string, string>();
             var processHelper = new ProcessHelper();
+            var diskQuotaControl = new DiskQuotaControl();
+            diskQuotaControl.Initialize(directory.Volume, true);
 
             var container = new Container(
                 id,
@@ -192,6 +199,7 @@ namespace IronFrame
                 containerPropertiesService,
                 tcpPortManager,
                 jobObject,
+                diskQuotaControl,
                 processRunner,
                 processRunner,
                 processHelper,

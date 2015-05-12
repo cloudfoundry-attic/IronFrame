@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using DiskQuotaTypeLibrary;
 using IronFrame.Utilities;
 
 namespace IronFrame
@@ -17,6 +18,7 @@ namespace IronFrame
         readonly IContainerDirectory directory;
         readonly ILocalTcpPortManager tcpPortManager;
         readonly JobObject jobObject;
+        readonly DiskQuotaControl diskQuotaControl;
         readonly ProcessHelper processHelper;
         readonly IContainerPropertyService propertyService;
         readonly Dictionary<string, string> defaultEnvironment;
@@ -34,6 +36,7 @@ namespace IronFrame
             IContainerPropertyService propertyService,
             ILocalTcpPortManager tcpPortManager,
             JobObject jobObject,
+            DiskQuotaControl diskQuotaControl,
             IProcessRunner processRunner,
             IProcessRunner constrainedProcessRunner,
             ProcessHelper processHelper,
@@ -47,6 +50,7 @@ namespace IronFrame
             this.propertyService = propertyService;
             this.tcpPortManager = tcpPortManager;
             this.jobObject = jobObject;
+            this.diskQuotaControl = diskQuotaControl;
             this.processRunner = processRunner;
             this.constrainedProcessRunner = constrainedProcessRunner;
             this.processHelper = processHelper;
@@ -257,6 +261,14 @@ namespace IronFrame
             {
                 throw new InvalidOperationException("The container has been destroyed.");
             }
+        }
+
+        public void LimitDisk(ulong limitInBytes)
+        {
+            ThrowIfNotActive();
+
+            var dskuser = diskQuotaControl.AddUser(user.UserName);
+            dskuser.QuotaLimit = (int)limitInBytes;
         }
 
         public void SetProperty(string name, string value)

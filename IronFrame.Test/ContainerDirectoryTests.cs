@@ -143,6 +143,15 @@ namespace IronFrame
             }
         }
 
+        public class Volume : ContainerDirectoryTests
+        {
+            [Fact]
+            public void FindsRootVolume()
+            {
+                Assert.Equal(@"C:\", Directory.Volume);
+            }
+        }
+
         public class MapBinPath : ContainerDirectoryTests
         {
             [InlineData("/", @"C:\Containers\handle\bin\")]

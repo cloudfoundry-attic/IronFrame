@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using Xunit;
@@ -42,6 +41,45 @@ namespace IronFrame.Acceptance
             ContainerService.DestroyContainer(Container2Handle);
 
             UserGroupManager.DeleteLocalGroup(UserGroupName);
+        }
+
+        public class DiskLimit : ContainerAcceptanceTests
+        {
+            [FactAdminRequired]
+            public void Enforced()
+            {
+                Container1 = CreateContainer(Container1Handle);
+                Container1.LimitDisk(10 * 1024);
+
+                var pSpec = new ProcessSpec
+                {
+                    ExecutablePath = "cmd",
+                    DisablePathMapping = true,
+                    Privileged = false,
+                    WorkingDirectory = Container1.Directory.UserPath,
+                };
+                var io1 = new StringProcessIO();
+
+                var passed = 0;
+                var failed = 0;
+                for (int i = 0; i < 20; i++)
+                {
+                    pSpec.Arguments = new[] {"/C", "echo Hi Bob > bob" + i + ".txt"};
+                    var proc = Container1.Run(pSpec, io1);
+                    var exitCode = proc.WaitForExit();
+
+                    if (exitCode == 0)
+                    {
+                        passed++;
+                    }
+                    else
+                    {
+                        failed++;
+                    }
+                }
+                Assert.Equal(13, passed);
+                Assert.Equal(7, failed);
+            }
         }
 
         public class Security : ContainerAcceptanceTests
