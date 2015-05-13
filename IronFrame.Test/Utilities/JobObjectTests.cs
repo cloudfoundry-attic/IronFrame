@@ -157,6 +157,28 @@ namespace IronFrame.Utilities
             Assert.Throws<ObjectDisposedException>(() => jobObject.TerminateProcesses());
         }
 
+        [Fact]
+        public void SetActiveProcessLimit_StopsForkBomb()
+        {
+            using (var jobObject = new JobObject())
+            {
+                var t = new Thread(() =>
+                {
+                    jobObject.SetActiveProcessLimit(7);
+
+                    var process = IFTestHelper.ExecuteInJob(jobObject, "fork-bomb");
+
+                    Assert.True(IFTestHelper.Failed(process));
+                });
+                t.Start();
+                if (!t.Join(TimeSpan.FromSeconds(10)))
+                {
+                    t.Abort();
+                    Assert.True(false, "ForkBomb was not terminated");
+                }
+            }
+        }
+
         public class JobMemoryLimits : IDisposable
         {
             const ulong DefaultMemoryLimit = 1024 * 1024 * 25; // 25MB
@@ -263,7 +285,7 @@ namespace IronFrame.Utilities
                 thread2.Join();
 
                 var ratio = (float)jobObject.GetCpuStatistics().TotalUserTime.Ticks / jobObject2.GetCpuStatistics().TotalUserTime.Ticks;
-                Assert.InRange(ratio, 0.01, 0.2);
+                Assert.InRange(ratio, 0.01, 0.3);
             }
 
             [Fact]

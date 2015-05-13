@@ -313,6 +313,16 @@ namespace IronFrame.Utilities
             SetJobLimits(extendedLimit);
         }
 
+        public void SetActiveProcessLimit(uint activeProcessLimit)
+        {
+            var extendedLimit = GetJobLimits();
+
+            extendedLimit.BasicLimitInformation.LimitFlags |= NativeMethods.JobObjectLimit.ActiveProcess;
+            extendedLimit.BasicLimitInformation.ActiveProcessLimit = activeProcessLimit;
+
+            SetJobLimits(extendedLimit);
+        }
+
         public virtual void TerminateProcesses()
         {
             if (handle == null) { throw new ObjectDisposedException("JobObject"); }

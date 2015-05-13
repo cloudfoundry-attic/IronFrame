@@ -58,6 +58,17 @@ namespace IronFrame
                 ContainerEnvironment);
         }
 
+        public class SetActiveProcessLimit : ContainerTests
+        {
+            [Fact]
+            public void ProxiesToJobObject()
+            {
+                uint processLimit = 8765;
+                this.Container.SetActiveProcessLimit(processLimit);
+                JobObject.Received(1).SetActiveProcessLimit(processLimit);
+            }
+        }
+
         public class GetProperty : ContainerTests
         {
             public GetProperty()

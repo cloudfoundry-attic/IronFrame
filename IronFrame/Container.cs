@@ -296,5 +296,10 @@ namespace IronFrame
         {
             return jobObject.GetJobCpuLimit();
         }
+
+        public void SetActiveProcessLimit(uint processLimit)
+        {
+            jobObject.SetActiveProcessLimit(processLimit);
+        }
     }
 }
