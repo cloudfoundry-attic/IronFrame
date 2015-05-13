@@ -342,18 +342,18 @@ namespace IronFrame.Utilities
         }
 
 
-        public void SetJobCpuLimit(int weight)
+        public void SetJobCpuLimit(int cpuRate)
         {
-            if (weight < 1 || weight > 9)
+            if (cpuRate < 1 || cpuRate > 10000) // 100% is 100 * 100 == 10000
             {
-                throw new ArgumentOutOfRangeException("weight", weight, "CPU Limit must be between 1 and 9");
+                throw new ArgumentOutOfRangeException("cpuRate", cpuRate, "CPU Limit must be between 1 and 9");
             }
-            var cpuRate = new NativeMethods.JobObjectCpuRateControlInformation
+            var cpuRateInfo = new NativeMethods.JobObjectCpuRateControlInformation
             {
-                ControlFlags = (UInt32)(NativeMethods.JobObjectCpuRateControl.Enable | NativeMethods.JobObjectCpuRateControl.WeightBased),
-                Weight = (UInt32)weight,
+                ControlFlags = (UInt32)(NativeMethods.JobObjectCpuRateControl.Enable | NativeMethods.JobObjectCpuRateControl.HardCap),
+                CpuRate = (UInt32)cpuRate,
             };
-            using (var allocation = SafeAllocation.Create<NativeMethods.JobObjectCpuRateControlInformation>(cpuRate))
+            using (var allocation = SafeAllocation.Create<NativeMethods.JobObjectCpuRateControlInformation>(cpuRateInfo))
             {
                 if (!NativeMethods.SetInformationJobObject(handle, NativeMethods.JobObjectInfoClass.CpuRateControlInformation, allocation.DangerousGetHandle(), allocation.Size))
                     throw Win32LastError("Unable to query Cpu rate information");
@@ -367,7 +367,7 @@ namespace IronFrame.Utilities
                 if (!NativeMethods.QueryInformationJobObject(handle, NativeMethods.JobObjectInfoClass.CpuRateControlInformation, allocation.DangerousGetHandle(), allocation.Size, IntPtr.Zero))
                     throw Win32LastError("Unable to query Cpu rate information");
 
-                return (int)allocation.ToStructure().Weight;
+                return (int)allocation.ToStructure().CpuRate;
             }
         }
     }

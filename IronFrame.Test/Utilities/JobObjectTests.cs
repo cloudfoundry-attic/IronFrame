@@ -245,8 +245,8 @@ namespace IronFrame.Utilities
             [Fact]
             public void CanLimitCpu()
             {
-                jobObject.SetJobCpuLimit(1);
-                jobObject2.SetJobCpuLimit(9);
+                jobObject.SetJobCpuLimit(1 * 100);
+                jobObject2.SetJobCpuLimit(10 * 100);
 
                 var thread1 = new Thread(() =>
                 {
@@ -263,7 +263,7 @@ namespace IronFrame.Utilities
                 thread2.Join();
 
                 var ratio = (float)jobObject.GetCpuStatistics().TotalUserTime.Ticks / jobObject2.GetCpuStatistics().TotalUserTime.Ticks;
-                Assert.InRange(ratio, 0.05, 0.5);
+                Assert.InRange(ratio, 0.01, 0.2);
             }
 
             [Fact]
@@ -277,7 +277,7 @@ namespace IronFrame.Utilities
             public void ThrowsOnInvalidCpuWeights()
             {
                 Assert.Throws<ArgumentOutOfRangeException>(() => jobObject.SetJobCpuLimit(0));
-                Assert.Throws<ArgumentOutOfRangeException>(() => jobObject.SetJobCpuLimit(10));
+                Assert.Throws<ArgumentOutOfRangeException>(() => jobObject.SetJobCpuLimit(100 * 100 + 1));
             }
         }
 
