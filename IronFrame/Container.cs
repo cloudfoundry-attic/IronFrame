@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using DiskQuotaTypeLibrary;
 using IronFrame.Utilities;
+using SimpleImpersonation;
 
 namespace IronFrame
 {
@@ -178,6 +179,11 @@ namespace IronFrame
             return (ulong)diskQuotaControl.FindUser(user.UserName).QuotaLimit;
         }
 
+        public ulong CurrentDiskUsage()
+        {
+            return (ulong)diskQuotaControl.FindUser(user.UserName).QuotaUsed;
+        }
+
         public ContainerInfo GetInfo()
         {
             ThrowIfDestroyed();
@@ -323,6 +329,14 @@ namespace IronFrame
         public void SetPriorityClass(ProcessPriorityClass priority)
         {
             jobObject.SetPriorityClass(priority);
+        }
+
+        public void ImpersonateContainerUser(Action f)
+        {
+            using (Impersonation.LogonUser("", user.UserName, user.GetCredential().Password, LogonType.Interactive))
+            {
+                f();
+            }
         }
     }
 }

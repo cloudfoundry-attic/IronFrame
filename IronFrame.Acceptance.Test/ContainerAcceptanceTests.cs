@@ -312,6 +312,35 @@ namespace IronFrame.Acceptance
             }
         }
 
+        public class ImpersonateContainerUser : ContainerAcceptanceTests
+        {
+            ContainerSpec ContainerSpec { get; set; }
+
+            public ImpersonateContainerUser()
+            {
+                ContainerSpec = new ContainerSpec
+                {
+                    Handle = Container1Handle,
+                };
+            }
+
+            [FactAdminRequired]
+            public void RunsActionsInContextOfUser()
+            {
+                Container1 = CreateContainer(ContainerSpec);
+                var path = Container1.Directory.MapUserPath("hi");
+
+                Container1.ImpersonateContainerUser(() => File.WriteAllText(path, "foobar"));
+
+                string user =
+                    File.GetAccessControl(path)
+                   .GetOwner(typeof(System.Security.Principal.NTAccount))
+                   .ToString();
+
+                Assert.EndsWith("c_" + Container1.Id, user);
+            }
+        }
+
         public IContainer CreateContainer(string handle)
         {
             var bindMounts = new[]

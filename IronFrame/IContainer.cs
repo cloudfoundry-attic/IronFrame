@@ -27,6 +27,8 @@ namespace IronFrame
         void RemoveProperty(string name);
         void Destroy();
 
+        void ImpersonateContainerUser(Action f);
+
         //ContainerState State { get; }
         //void BindMounts(IEnumerable<BindMount> mounts);
         //void CreateTarFile(string sourcePath, string tarFilePath, bool compress);
@@ -36,6 +38,7 @@ namespace IronFrame
         IContainerProcess FindProcessById(int id);
         void CreateOutboundFirewallRule(FirewallRuleSpec firewallRuleSpec);
         ulong CurrentDiskLimit();
+        ulong CurrentDiskUsage();
     }
 
     public interface IProcessIO
