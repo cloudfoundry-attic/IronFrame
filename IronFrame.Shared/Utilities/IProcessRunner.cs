@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 
 namespace IronFrame.Utilities
@@ -32,5 +33,6 @@ namespace IronFrame.Utilities
 
         public Action<string> OutputCallback { get; set; }
         public Action<string> ErrorCallback { get; set; }
+        public ProcessPriorityClass PriorityClass { get; set; }
     }
 }

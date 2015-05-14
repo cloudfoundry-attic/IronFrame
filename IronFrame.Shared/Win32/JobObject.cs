@@ -145,7 +145,7 @@ namespace IronFrame.Win32
             public UIntPtr MinimumWorkingSetSize;
             public UIntPtr MaximumWorkingSetSize;
             public UInt32 ActiveProcessLimit;
-            public Int64 Affinity;
+            public UIntPtr Affinity;
             public UInt32 PriorityClass;
             public UInt32 SchedulingClass;
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using IronFrame.Utilities;
@@ -295,6 +296,16 @@ namespace IronFrame
         public int CurrentCpuLimit()
         {
             return jobObject.GetJobCpuLimit();
+        }
+
+        public void SetActiveProcessLimit(uint processLimit)
+        {
+            jobObject.SetActiveProcessLimit(processLimit);
+        }
+
+        public void SetPriorityClass(ProcessPriorityClass priority)
+        {
+            jobObject.SetPriorityClass(priority);
         }
     }
 }

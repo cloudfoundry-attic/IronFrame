@@ -100,6 +100,28 @@ namespace IronFoundry.Warden.TestHelper
             return SUCCEEDED;
         }
 
+        static int ForkBomb()
+        {
+            try
+            {
+                var process = new Process();
+                process.StartInfo.FileName = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+                process.StartInfo.Arguments = "fork-bomb";
+                process.StartInfo.UseShellExecute = false;
+
+                if (!process.Start())
+                    return FAILED;
+
+                process.WaitForExit();
+            }
+            catch
+            {
+                return FAILED;
+            }
+
+            return SUCCEEDED;
+        }
+
         static void Main(string[] args)
         {
             if (args.Length == 0)
@@ -151,6 +173,10 @@ namespace IronFoundry.Warden.TestHelper
 
                     case "nop":
                         exitCode = SUCCEEDED;
+                        break;
+
+                    case "fork-bomb":
+                        exitCode = ForkBomb();
                         break;
 
                     default:

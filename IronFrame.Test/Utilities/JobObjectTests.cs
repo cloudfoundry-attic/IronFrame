@@ -157,6 +157,26 @@ namespace IronFrame.Utilities
             Assert.Throws<ObjectDisposedException>(() => jobObject.TerminateProcesses());
         }
 
+        [Fact]
+        public void SetActiveProcessLimit_StopsForkBomb()
+        {
+            using (var jobObject = new JobObject())
+            {
+                var t = new Thread(() =>
+                {
+                    jobObject.SetActiveProcessLimit(2);
+
+                    IFTestHelper.ExecuteInJob(jobObject, "fork-bomb");
+                });
+                t.Start();
+                if (!t.Join(TimeSpan.FromSeconds(1)))
+                {
+                    t.Abort();
+                    Assert.True(false, "ForkBomb was not terminated");
+                }
+            }
+        }
+
         public class JobMemoryLimits : IDisposable
         {
             const ulong DefaultMemoryLimit = 1024 * 1024 * 25; // 25MB
@@ -245,8 +265,8 @@ namespace IronFrame.Utilities
             [Fact]
             public void CanLimitCpu()
             {
-                jobObject.SetJobCpuLimit(1);
-                jobObject2.SetJobCpuLimit(9);
+                jobObject.SetJobCpuLimit(1 * 100);
+                jobObject2.SetJobCpuLimit(10 * 100);
 
                 var thread1 = new Thread(() =>
                 {
@@ -263,7 +283,31 @@ namespace IronFrame.Utilities
                 thread2.Join();
 
                 var ratio = (float)jobObject.GetCpuStatistics().TotalUserTime.Ticks / jobObject2.GetCpuStatistics().TotalUserTime.Ticks;
-                Assert.InRange(ratio, 0.05, 0.5);
+                Assert.InRange(ratio, 0.01, 0.3);
+            }
+
+            [Fact]
+            public void CanSetPriority()
+            {
+                jobObject.SetPriorityClass(ProcessPriorityClass.Idle);
+                jobObject2.SetPriorityClass(ProcessPriorityClass.Normal);
+
+                var thread1 = new Thread(() =>
+                {
+                    IFTestHelper.ExecuteInJob(jobObject, "consume-cpu", "--duration", "2000").WaitForExit();
+                });
+                var thread2 = new Thread(() =>
+                {
+                    IFTestHelper.ExecuteInJob(jobObject2, "consume-cpu", "--duration", "2000").WaitForExit();
+                });
+
+                thread1.Start();
+                thread2.Start();
+                thread1.Join();
+                thread2.Join();
+
+                var ratio = (float)jobObject.GetCpuStatistics().TotalUserTime.Ticks / jobObject2.GetCpuStatistics().TotalUserTime.Ticks;
+                Assert.InRange(ratio, 0.01, 0.3);
             }
 
             [Fact]
@@ -277,7 +321,7 @@ namespace IronFrame.Utilities
             public void ThrowsOnInvalidCpuWeights()
             {
                 Assert.Throws<ArgumentOutOfRangeException>(() => jobObject.SetJobCpuLimit(0));
-                Assert.Throws<ArgumentOutOfRangeException>(() => jobObject.SetJobCpuLimit(10));
+                Assert.Throws<ArgumentOutOfRangeException>(() => jobObject.SetJobCpuLimit(100 * 100 + 1));
             }
         }
 

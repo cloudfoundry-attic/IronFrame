@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using IronFrame.Utilities;
 using NSubstitute;
@@ -56,6 +57,28 @@ namespace IronFrame
                 ConstrainedProcessRunner, 
                 ProcessHelper, 
                 ContainerEnvironment);
+        }
+
+        public class SetActiveProcessLimit : ContainerTests
+        {
+            [Fact]
+            public void ProxiesToJobObject()
+            {
+                uint processLimit = 8765;
+                this.Container.SetActiveProcessLimit(processLimit);
+                JobObject.Received(1).SetActiveProcessLimit(processLimit);
+            }
+        }
+
+        public class SetProcessPriority : ContainerTests
+        {
+            [Fact]
+            public void ProxiesToJobObject()
+            {
+                var priority = ProcessPriorityClass.RealTime;
+                this.Container.SetPriorityClass(priority);
+                JobObject.Received(1).SetPriorityClass(priority);
+            }
         }
 
         public class GetProperty : ContainerTests
