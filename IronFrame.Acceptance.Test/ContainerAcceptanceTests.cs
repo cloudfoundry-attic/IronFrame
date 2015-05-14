@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using Xunit;
@@ -42,6 +41,45 @@ namespace IronFrame.Acceptance
             ContainerService.DestroyContainer(Container2Handle);
 
             UserGroupManager.DeleteLocalGroup(UserGroupName);
+        }
+
+        public class DiskLimit : ContainerAcceptanceTests
+        {
+            [FactAdminRequired]
+            public void Enforced()
+            {
+                Container1 = CreateContainer(Container1Handle);
+                Container1.LimitDisk(10 * 1024);
+
+                var pSpec = new ProcessSpec
+                {
+                    ExecutablePath = "cmd",
+                    DisablePathMapping = true,
+                    Privileged = false,
+                    WorkingDirectory = Container1.Directory.UserPath,
+                };
+                var io1 = new StringProcessIO();
+
+                var passed = 0;
+                var failed = 0;
+                for (int i = 0; i < 20; i++)
+                {
+                    pSpec.Arguments = new[] {"/C", "echo Hi Bob > bob" + i + ".txt"};
+                    var proc = Container1.Run(pSpec, io1);
+                    var exitCode = proc.WaitForExit();
+
+                    if (exitCode == 0)
+                    {
+                        passed++;
+                    }
+                    else
+                    {
+                        failed++;
+                    }
+                }
+                Assert.Equal(13, passed);
+                Assert.Equal(7, failed);
+            }
         }
 
         public class Security : ContainerAcceptanceTests
@@ -271,6 +309,35 @@ namespace IronFrame.Acceptance
 
                 Assert.Equal("The quick brown fox...", info.Properties["Foo"]);
                 Assert.Equal("...jumped over the lazy dog.", info.Properties["Bar"]);
+            }
+        }
+
+        public class ImpersonateContainerUser : ContainerAcceptanceTests
+        {
+            ContainerSpec ContainerSpec { get; set; }
+
+            public ImpersonateContainerUser()
+            {
+                ContainerSpec = new ContainerSpec
+                {
+                    Handle = Container1Handle,
+                };
+            }
+
+            [FactAdminRequired]
+            public void RunsActionsInContextOfUser()
+            {
+                Container1 = CreateContainer(ContainerSpec);
+                var path = Container1.Directory.MapUserPath("hi");
+
+                Container1.ImpersonateContainerUser(() => File.WriteAllText(path, "foobar"));
+
+                string user =
+                    File.GetAccessControl(path)
+                   .GetOwner(typeof(System.Security.Principal.NTAccount))
+                   .ToString();
+
+                Assert.EndsWith("c_" + Container1.Id, user);
             }
         }
 
