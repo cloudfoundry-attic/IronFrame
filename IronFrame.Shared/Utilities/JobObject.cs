@@ -313,7 +313,7 @@ namespace IronFrame.Utilities
             SetJobLimits(extendedLimit);
         }
 
-        public void SetActiveProcessLimit(uint activeProcessLimit)
+        public virtual void SetActiveProcessLimit(uint activeProcessLimit)
         {
             var extendedLimit = GetJobLimits();
 
@@ -352,11 +352,11 @@ namespace IronFrame.Utilities
         }
 
 
-        public void SetJobCpuLimit(int cpuRate)
+        public virtual void SetJobCpuLimit(int cpuRate)
         {
             if (cpuRate < 1 || cpuRate > 10000) // 100% is 100 * 100 == 10000
             {
-                throw new ArgumentOutOfRangeException("cpuRate", cpuRate, "CPU Limit must be between 1 and 9");
+                throw new ArgumentOutOfRangeException("cpuRate", cpuRate, "CPU Limit must be between 1 and 10,000");
             }
             var cpuRateInfo = new NativeMethods.JobObjectCpuRateControlInformation
             {
