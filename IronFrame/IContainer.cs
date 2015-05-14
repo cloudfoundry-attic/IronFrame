@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace IronFrame
@@ -18,6 +19,8 @@ namespace IronFrame
         void LimitCpu(int weight);
         int CurrentCpuLimit();
         void SetActiveProcessLimit(uint processLimit);
+        void SetPriorityClass(ProcessPriorityClass priority);
+
         void SetProperty(string name, string value);
         string GetProperty(string name);
         Dictionary<string, string> GetProperties();

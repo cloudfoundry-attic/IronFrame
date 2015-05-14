@@ -289,6 +289,30 @@ namespace IronFrame.Utilities
             }
 
             [Fact]
+            public void CanSetPriority()
+            {
+                jobObject.SetPriorityClass(ProcessPriorityClass.Idle);
+                jobObject2.SetPriorityClass(ProcessPriorityClass.Normal);
+
+                var thread1 = new Thread(() =>
+                {
+                    IFTestHelper.ExecuteInJob(jobObject, "consume-cpu", "--duration", "2000").WaitForExit();
+                });
+                var thread2 = new Thread(() =>
+                {
+                    IFTestHelper.ExecuteInJob(jobObject2, "consume-cpu", "--duration", "2000").WaitForExit();
+                });
+
+                thread1.Start();
+                thread2.Start();
+                thread1.Join();
+                thread2.Join();
+
+                var ratio = (float)jobObject.GetCpuStatistics().TotalUserTime.Ticks / jobObject2.GetCpuStatistics().TotalUserTime.Ticks;
+                Assert.InRange(ratio, 0.01, 0.7);
+            }
+
+            [Fact]
             public void CanGetCpuLimit()
             {
                 jobObject.SetJobCpuLimit(3);

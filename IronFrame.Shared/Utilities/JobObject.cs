@@ -380,5 +380,15 @@ namespace IronFrame.Utilities
                 return (int)allocation.ToStructure().CpuRate;
             }
         }
+
+        public virtual void SetPriorityClass(ProcessPriorityClass c)
+        {
+            var extendedLimit = GetJobLimits();
+
+            extendedLimit.BasicLimitInformation.LimitFlags |= NativeMethods.JobObjectLimit.PriorityClass;
+            extendedLimit.BasicLimitInformation.PriorityClass = (uint)c;
+
+            SetJobLimits(extendedLimit);
+        }
     }
 }
