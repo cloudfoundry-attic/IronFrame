@@ -164,14 +164,12 @@ namespace IronFrame.Utilities
             {
                 var t = new Thread(() =>
                 {
-                    jobObject.SetActiveProcessLimit(7);
+                    jobObject.SetActiveProcessLimit(2);
 
-                    var process = IFTestHelper.ExecuteInJob(jobObject, "fork-bomb");
-
-                    Assert.True(IFTestHelper.Failed(process));
+                    IFTestHelper.ExecuteInJob(jobObject, "fork-bomb");
                 });
                 t.Start();
-                if (!t.Join(TimeSpan.FromSeconds(10)))
+                if (!t.Join(TimeSpan.FromSeconds(1)))
                 {
                     t.Abort();
                     Assert.True(false, "ForkBomb was not terminated");
@@ -309,7 +307,7 @@ namespace IronFrame.Utilities
                 thread2.Join();
 
                 var ratio = (float)jobObject.GetCpuStatistics().TotalUserTime.Ticks / jobObject2.GetCpuStatistics().TotalUserTime.Ticks;
-                Assert.InRange(ratio, 0.01, 0.7);
+                Assert.InRange(ratio, 0.01, 0.3);
             }
 
             [Fact]
