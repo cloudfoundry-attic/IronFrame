@@ -122,6 +122,29 @@ namespace IronFoundry.Warden.TestHelper
             return SUCCEEDED;
         }
 
+        static int WriteClipboard(List<string> commandArgs)
+        {
+            try
+            {
+                if (commandArgs.Count > 0)
+                {
+                    System.Windows.Forms.Clipboard.SetText(String.Join(" ", commandArgs));
+                }
+                else
+                {
+                    System.Windows.Forms.Clipboard.Clear();
+                }
+                Console.WriteLine("Wrote to clipboard!");
+                return SUCCEEDED;
+            }
+            catch (ExternalException)
+            {
+                Console.WriteLine("Could not write to clipboard");
+                return FAILED;
+            }
+        }
+
+        [STAThread]
         static void Main(string[] args)
         {
             if (args.Length == 0)
@@ -177,6 +200,15 @@ namespace IronFoundry.Warden.TestHelper
 
                     case "fork-bomb":
                         exitCode = ForkBomb();
+                        break;
+
+                    case "write-clipboard":
+                        exitCode = WriteClipboard(commandArgs);
+                        break;
+
+                    case "read-clipboard":
+                        Console.WriteLine(System.Windows.Forms.Clipboard.GetText());
+                        exitCode = SUCCEEDED;
                         break;
 
                     default:

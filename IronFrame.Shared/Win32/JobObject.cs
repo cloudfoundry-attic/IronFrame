@@ -53,6 +53,13 @@ namespace IronFrame.Win32
             RateControl = 0x00040000,
         }
 
+        [Flags]
+        public enum UIRestrictions : uint
+        {
+            ReadClipboard = 0x00000002,
+            WriteClipboard = 0x00000004,
+        }
+
         public enum JobObjectNotification : uint
         {
             EndOfJobTime = 1,
@@ -148,6 +155,12 @@ namespace IronFrame.Win32
             public UIntPtr Affinity;
             public UInt32 PriorityClass;
             public UInt32 SchedulingClass;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct JobObjectUIRestrictions
+        {
+            public UIRestrictions UIRestrictionsClass;
         }
 
         [StructLayout(LayoutKind.Sequential)]

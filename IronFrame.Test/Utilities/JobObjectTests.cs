@@ -459,5 +459,45 @@ namespace IronFrame.Utilities
                 Assert.True(IFTestHelper.Succeeded(process));
             }
         }
+
+        public class ClipboardTests : IDisposable
+        {
+            JobObject jobObject;
+
+            public ClipboardTests()
+            {
+                jobObject = new JobObject();
+            }
+
+            public void Dispose()
+            {
+                jobObject.Dispose();
+                IFTestHelper.Execute("write-clipboard").WaitForExit();
+            }
+
+            [Fact]
+            public void ClipboardIsDisabledForWrites()
+            {
+                var proc = IFTestHelper.ExecuteInJob(jobObject, "write-clipboard", "Text from JobObject1");
+                proc.WaitForExit();
+                var output = proc.StandardOutput.ReadToEnd().Trim();
+                Assert.Contains("Could not write to clipboard", output);
+            }
+
+            [Fact]
+            public void ClipboardIsDisabledForReads()
+            {
+                var clipboardText = "Text From Test";
+                IFTestHelper.Execute("write-clipboard", clipboardText).WaitForExit();
+
+                var proc = IFTestHelper.Execute("read-clipboard");
+                proc.WaitForExit();
+                Assert.Equal(clipboardText, proc.StandardOutput.ReadToEnd().Trim());
+
+                proc = IFTestHelper.ExecuteInJob(jobObject, "read-clipboard");
+                proc.WaitForExit();
+                Assert.DoesNotContain(clipboardText, proc.StandardOutput.ReadToEnd().Trim());
+            }
+        }
     }
 }
