@@ -38,6 +38,7 @@ namespace IronFrame.Utilities
             {
                 handle = new SafeJobObjectHandle(NativeMethods.CreateJobObject(IntPtr.Zero, name));
                 SetJobLimits(NativeMethods.JobObjectLimit.KillOnJobClose);
+                SetUIRestrictions(NativeMethods.UIRestrictions.WriteClipboard | NativeMethods.UIRestrictions.ReadClipboard);
             }
 
             if (handle.IsInvalid)
@@ -225,7 +226,7 @@ namespace IronFrame.Utilities
 
             } while (true);
         }
-        
+
         NativeMethods.JobObjectLimitViolationInformation GetLimitViolationInformation()
         {
             using (var allocation = SafeAllocation.Create<NativeMethods.JobObjectLimitViolationInformation>())
@@ -300,6 +301,21 @@ namespace IronFrame.Utilities
             {
                 if (extendedInfoPtr != IntPtr.Zero)
                     Marshal.FreeHGlobal(extendedInfoPtr);
+            }
+        }
+
+        private void SetUIRestrictions(NativeMethods.UIRestrictions restrictionsFlag)
+        {
+            var restrictions = new NativeMethods.JobObjectUIRestrictions
+            {
+                UIRestrictionsClass = restrictionsFlag
+            };
+            using (var allocation = SafeAllocation.Create(restrictions))
+            {
+                if (!NativeMethods.SetInformationJobObject(handle, NativeMethods.JobObjectInfoClass.BasicUIRestrictions, allocation.DangerousGetHandle(), allocation.Size))
+                {
+                    throw new Exception(string.Format("Unable to set information.  Error: {0}", Marshal.GetLastWin32Error()));
+                }
             }
         }
 
