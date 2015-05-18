@@ -1,7 +1,9 @@
-﻿using System;
+﻿using DiskQuotaTypeLibrary;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Xunit;
 
 namespace IronFrame.Acceptance
@@ -79,6 +81,19 @@ namespace IronFrame.Acceptance
                 }
                 Assert.Equal(13, passed);
                 Assert.Equal(7, failed);
+            }
+
+            [Fact]
+            public void DeletingContainer_DeletesDiskQuota()
+            {
+                Container1 = CreateContainer(Container1Handle);
+                Container1.LimitDisk(5000);
+
+                Assert.Equal(5000UL, Container1.CurrentDiskLimit());
+
+                ContainerService.DestroyContainer(Container1Handle);
+
+                Assert.Equal(0UL, Container1.CurrentDiskLimit());
             }
         }
 

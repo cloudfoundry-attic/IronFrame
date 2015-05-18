@@ -490,6 +490,17 @@ namespace IronFrame
                 Container.Destroy();
                 TcpPortManager.Received(1).RemoveFirewallRules(User.UserName);
             }
+
+            [Fact]
+            public void DeletesDiskQuota()
+            {
+                var dskuser = Substitute.For<DIDiskQuotaUser>();
+                DiskQuotaControl.FindUser(User.UserName).Returns(dskuser);
+
+                Container.Destroy();
+
+                DiskQuotaControl.Received(1).DeleteUser(dskuser);
+            }
         }
 
         public class GetInfo : ContainerTests
@@ -689,7 +700,7 @@ namespace IronFrame
                 ulong limitInBytes = 2048;
                 var quota = Substitute.For<DIDiskQuotaUser>();
                 quota.QuotaLimit = limitInBytes;
-                this.DiskQuotaControl.FindUser(User.UserName).Returns(quota);
+                this.DiskQuotaControl.FindUser(User.SID).Returns(quota);
 
                 Assert.Equal(limitInBytes, Container.CurrentDiskLimit());
             }
