@@ -83,6 +83,15 @@ namespace IronFrame.Acceptance
                 Assert.Equal(7, failed);
             }
 
+            [FactAdminRequired]
+            public void CanSetLargeQuota()
+            {
+                const ulong limit = 7UL*1024*1024*1024;
+                Container1 = CreateContainer(Container1Handle);
+                Container1.LimitDisk(limit);
+                Assert.Equal(limit, Container1.CurrentDiskLimit());
+            }
+
             [Fact]
             public void DeletingContainer_DeletesDiskQuota()
             {

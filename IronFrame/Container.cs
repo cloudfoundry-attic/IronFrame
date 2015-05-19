@@ -295,7 +295,7 @@ namespace IronFrame
         {
             ThrowIfNotActive();
             var dskuser = diskQuotaControl.AddUser(user.UserName);
-            dskuser.QuotaLimit = (int)limitInBytes;
+            dskuser.QuotaLimit = (double)limitInBytes;
         }
 
         public void SetProperty(string name, string value)
