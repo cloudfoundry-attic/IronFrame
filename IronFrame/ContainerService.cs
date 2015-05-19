@@ -123,7 +123,6 @@ namespace IronFrame
                     containerSpec.Environment);
 
                 containerPropertiesService.SetProperties(container, containerSpec.Properties);
-
                 containers.Add(container);
             }
             catch (Exception e)
@@ -141,7 +140,7 @@ namespace IronFrame
 
             return container;
         }
-        
+
         public void DestroyContainer(string handle)
         {
             var container = FindContainer(handle);

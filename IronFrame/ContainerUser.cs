@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Security.Principal;
 
 namespace IronFrame
 {
@@ -6,6 +7,7 @@ namespace IronFrame
     internal interface IContainerUser
     {
         string UserName { get; }
+        string SID { get; }
         NetworkCredential GetCredential();
         void Delete();
     }
@@ -14,6 +16,7 @@ namespace IronFrame
     {
         readonly IUserManager userManager; // TODO: Refactor this out of this class
         readonly NetworkCredential credentials;
+        private string _sid = null;
 
         public ContainerUser(IUserManager userManager, NetworkCredential credentials)
         {
@@ -24,6 +27,20 @@ namespace IronFrame
         public string UserName
         {
             get { return credentials.UserName; }
+        }
+
+        public string SID
+        {
+            get
+            {
+                if (_sid == null)
+                {
+                    var account = new NTAccount(UserName);
+                    var securityIdentifier = (SecurityIdentifier) account.Translate(typeof(SecurityIdentifier));
+                    _sid = securityIdentifier.ToString();
+                }
+                return _sid;
+            }
         }
 
         public NetworkCredential GetCredential()

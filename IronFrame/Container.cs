@@ -1,11 +1,12 @@
-﻿using System;
+﻿using DiskQuotaTypeLibrary;
+using IronFrame.Utilities;
+using SimpleImpersonation;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using DiskQuotaTypeLibrary;
-using IronFrame.Utilities;
-using SimpleImpersonation;
+using System.Runtime.InteropServices;
 
 namespace IronFrame
 {
@@ -152,11 +153,27 @@ namespace IronFrame
             jobObject.TerminateProcessesAndWait();
             jobObject.Dispose();
 
-            if (user != null)
-                user.Delete();
-
             if (directory != null)
                 directory.Destroy();
+
+            deleteUserDiskQuota();
+
+            if (user != null)
+                user.Delete();
+        }
+
+        private void deleteUserDiskQuota()
+        {
+            try
+            {
+                var dskuser = diskQuotaControl.FindUser(user.UserName);
+                diskQuotaControl.DeleteUser(dskuser);
+            }
+            catch (COMException)
+            {
+                // we can't determine if a disk quota exists for a given user
+                // so we just have to try to delete it and catch the exception
+            }
         }
 
         public IContainerProcess FindProcessById(int id)
@@ -176,12 +193,12 @@ namespace IronFrame
 
         public ulong CurrentDiskLimit()
         {
-            return (ulong)diskQuotaControl.FindUser(user.UserName).QuotaLimit;
+            return (ulong)diskQuotaControl.FindUser(user.SID).QuotaLimit;
         }
 
         public ulong CurrentDiskUsage()
         {
-            return (ulong)diskQuotaControl.FindUser(user.UserName).QuotaUsed;
+            return (ulong)diskQuotaControl.FindUser(user.SID).QuotaUsed;
         }
 
         public ContainerInfo GetInfo()
@@ -277,7 +294,6 @@ namespace IronFrame
         public void LimitDisk(ulong limitInBytes)
         {
             ThrowIfNotActive();
-
             var dskuser = diskQuotaControl.AddUser(user.UserName);
             dskuser.QuotaLimit = (int)limitInBytes;
         }
