@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using DiskQuotaTypeLibrary;
 using IronFrame.Utilities;
 using NSubstitute;
 using Xunit;
@@ -22,6 +23,8 @@ namespace IronFrame
         IUserManager UserManager { get; set; }
         ILocalTcpPortManager TcpPortManager { get; set; }
         ContainerService Service { get; set; }
+        IDiskQuotaManager diskQuotaManager { get; set; }
+        DiskQuotaControl diskQuotaControl { get; set; }
         public string Id { get; set; }
 
         public ContainerServiceTests()
@@ -50,7 +53,11 @@ namespace IronFrame
 
             UserManager.CreateUser(null).ReturnsForAnyArgs(new NetworkCredential("username", "password"));
 
-            Service = new ContainerService(HandleHelper, UserManager, FileSystem, ContainerPropertiesService, TcpPortManager, ProcessRunner, ContainerHostService, ContainerBasePath);
+            diskQuotaManager = Substitute.For<IDiskQuotaManager>();
+            diskQuotaControl = Substitute.For<DiskQuotaControl>();
+            diskQuotaManager.CreateDiskQuotaControl(null).ReturnsForAnyArgs(diskQuotaControl);
+
+            Service = new ContainerService(HandleHelper, UserManager, FileSystem, ContainerPropertiesService, TcpPortManager, ProcessRunner, ContainerHostService, diskQuotaManager, ContainerBasePath);
         }
 
         public class CreateContainer : ContainerServiceTests
@@ -108,6 +115,7 @@ namespace IronFrame
                 Assert.Equal("derived-id", container.Id);
             }
 
+
             [Fact]
             public void CreatesContainerSpecificUser()
             {
@@ -135,6 +143,22 @@ namespace IronFrame
                 var expectedPath = Path.Combine(ContainerBasePath, "DEADBEEF");
                 FileSystem.Received(1).CreateDirectory(expectedPath, Arg.Any<IEnumerable<UserAccess>>());
             }
+
+            [Fact]
+            public void GenerateDiskQuotaControlUsingTheContainerDirectory()
+            {
+                IContainerDirectory dir = null;
+                diskQuotaManager.CreateDiskQuotaControl(Arg.Do((IContainerDirectory x) => dir = x));
+                var spec = new ContainerSpec
+                {
+                    Handle = "handle",
+                };
+
+                var container = Service.CreateContainer(spec);
+                Assert.NotNull(dir);
+                Assert.Contains(ContainerBasePath, dir.RootPath);
+            }
+
 
             [Fact]
             public void CreatesContainerSpecificHost()

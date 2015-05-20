@@ -36,6 +36,7 @@ namespace IronFrame
         readonly IProcessRunner processRunner;
         readonly IContainerPropertyService containerPropertiesService;
         readonly IContainerHostService containerHostService;
+        readonly IDiskQuotaManager diskQuotaManager;
         readonly List<IContainer> containers = new List<IContainer>();
 
         internal ContainerService(
@@ -46,6 +47,7 @@ namespace IronFrame
             ILocalTcpPortManager tcpPortManager,
             IProcessRunner processRunner,
             IContainerHostService containerHostService,
+            IDiskQuotaManager diskQuotaManager,
             string containerBasePath
             )
         {
@@ -57,6 +59,7 @@ namespace IronFrame
             this.processRunner = processRunner;
             this.containerHostService = containerHostService;
             this.containerBasePath = containerBasePath;
+            this.diskQuotaManager = diskQuotaManager;
         }
 
         public ContainerService(string containerBasePath, string userGroupName)
@@ -68,6 +71,7 @@ namespace IronFrame
                 new LocalTcpPortManager(),
                 new ProcessRunner(),
                 new ContainerHostService(),
+                new DiskQuotaManager(),
                 containerBasePath
             )
         {
@@ -84,7 +88,7 @@ namespace IronFrame
             {
                 var handle = containerSpec.Handle;
                 if (String.IsNullOrEmpty(handle))
-                  handle = handleHelper.GenerateHandle();
+                    handle = handleHelper.GenerateHandle();
 
                 var id = handleHelper.GenerateId(handle);
 
@@ -105,21 +109,20 @@ namespace IronFrame
 
                 var processHelper = new ProcessHelper();
 
-                var diskQuotaControl = new DiskQuotaControl();
-                diskQuotaControl.Initialize(directory.Volume, true);
+                var diskQuotaControl = diskQuotaManager.CreateDiskQuotaControl(directory);
 
                 container = new Container(
-                    id, 
-                    handle, 
-                    user, 
-                    directory, 
-                    containerPropertiesService, 
-                    tcpPortManager, 
-                    jobObject, 
+                    id,
+                    handle,
+                    user,
+                    directory,
+                    containerPropertiesService,
+                    tcpPortManager,
+                    jobObject,
                     diskQuotaControl,
-                    processRunner, 
-                    constrainedProcessRunner, 
-                    processHelper, 
+                    processRunner,
+                    constrainedProcessRunner,
+                    processHelper,
                     containerSpec.Environment);
 
                 containerPropertiesService.SetProperties(container, containerSpec.Properties);
@@ -134,7 +137,7 @@ namespace IronFrame
                 }
                 catch (AggregateException undoException)
                 {
-                    throw new AggregateException(new [] { e, undoException });
+                    throw new AggregateException(new[] { e, undoException });
                 }
             }
 

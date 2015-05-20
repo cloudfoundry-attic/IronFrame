@@ -83,6 +83,7 @@
     <Compile Include="Utilities\DesktopPermissionManager.cs" />
     <Compile Include="Utilities\EffectiveAccessComputer.cs" />
     <Compile Include="Utilities\FileSystemEffectiveAccessComputer.cs" />
+    <Compile Include="Utilities\DiskQuotaManager.cs" />
     <Compile Include="Utilities\FileSystemManager.cs" />
     <Compile Include="Utilities\FileSystemSecurityDescriptorReader.cs" />
     <Compile Include="Utilities\FirewallManager.cs" />
