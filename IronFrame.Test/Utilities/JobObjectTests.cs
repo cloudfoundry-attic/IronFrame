@@ -169,7 +169,7 @@ namespace IronFrame.Utilities
                     IFTestHelper.ExecuteInJob(jobObject, "fork-bomb");
                 });
                 t.Start();
-                if (!t.Join(TimeSpan.FromSeconds(1)))
+                if (!t.Join(TimeSpan.FromSeconds(2)))
                 {
                     t.Abort();
                     Assert.True(false, "ForkBomb was not terminated");
@@ -290,7 +290,7 @@ namespace IronFrame.Utilities
             public void CanSetPriority()
             {
                 jobObject.SetPriorityClass(ProcessPriorityClass.Idle);
-                jobObject2.SetPriorityClass(ProcessPriorityClass.Normal);
+                jobObject2.SetPriorityClass(ProcessPriorityClass.AboveNormal);
 
                 var thread1 = new Thread(() =>
                 {
@@ -307,7 +307,7 @@ namespace IronFrame.Utilities
                 thread2.Join();
 
                 var ratio = (float)jobObject.GetCpuStatistics().TotalUserTime.Ticks / jobObject2.GetCpuStatistics().TotalUserTime.Ticks;
-                Assert.InRange(ratio, 0.01, 0.3);
+                Assert.InRange(ratio, 0.01, 0.5);
             }
 
             [Fact]

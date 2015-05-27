@@ -35,9 +35,9 @@ namespace IronFrame
                 return new TempFile(Path.GetTempPath());
             }
 
-            static void WaitForGoodExit(IProcess process)
+            static void WaitForGoodExit(IProcess process, int timeout = Int32.MaxValue)
             {
-                process.WaitForExit();
+                Assert.True(process.WaitForExit(timeout), "Test failed because the process failed to exit within " + timeout + "ms");
                 if (process.ExitCode != 0)
                     throw new Exception("Test failed because the process failed with exit code: " + process.ExitCode);
             }
@@ -150,7 +150,7 @@ namespace IronFrame
                 {
                     try
                     {
-                        WaitHandle.WaitAll(new[] { outputSignal, errorSignal }, 2000);
+                        Assert.True(WaitHandle.WaitAll(new[] { outputSignal, errorSignal }, 2000));
                         Assert.Contains("This is STDOUT", output.ToString());
                         Assert.Contains("This is STDERR", error.ToString());
                     }
@@ -188,7 +188,7 @@ namespace IronFrame
             {
                 var desktopPermissionManager = new DesktopPermissionManager();
                 LocalPrincipalManager manager = new LocalPrincipalManager(desktopPermissionManager);
-                
+
                 string userName = "Test_UserEnvironment";
                 if (manager.FindUser(userName) != null)
                 {
@@ -199,14 +199,14 @@ namespace IronFrame
 
                 try
                 {
-                    var si = CreateRunSpec("cmd.exe", new[] {"/C", "set"});
+                    var si = CreateRunSpec("cmd.exe", new[] {"/C", "set", "USERNAME"});
                     si.Credentials = user;
                     si.BufferedInputOutput = true;
                     si.WorkingDirectory = Environment.SystemDirectory;
 
                     using (var p = Runner.Run(si))
                     {
-                        WaitForGoodExit(p);
+                        WaitForGoodExit(p, 1000);
 
                         var output = await p.StandardOutput.ReadToEndAsync();
 

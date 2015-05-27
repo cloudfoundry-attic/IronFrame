@@ -181,7 +181,7 @@ namespace IronFrame.Acceptance
                 {
                     ExecutablePath = "cmd.exe",
                     DisablePathMapping = true,
-                    Arguments = new string[] { "/C set" },
+                    Arguments = new string[] { "/C \"set CONTAINER_HANDLE && set PROC_ENV\"" },
                     Environment = new Dictionary<string, string> 
                     { 
                         { "PROC_ENV", "VAL1" } 
