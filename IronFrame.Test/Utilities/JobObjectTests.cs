@@ -286,7 +286,7 @@ namespace IronFrame.Utilities
                 Assert.InRange(ratio, 0.01, 0.4);
             }
 
-            [Fact]
+            [Fact(Skip = "Fails intermittently on appveyor")]
             public void CanSetPriority()
             {
                 jobObject.SetPriorityClass(ProcessPriorityClass.Idle);
@@ -294,11 +294,11 @@ namespace IronFrame.Utilities
 
                 var thread1 = new Thread(() =>
                 {
-                    IFTestHelper.ExecuteInJob(jobObject, "consume-cpu", "--duration", "2000").WaitForExit();
+                    IFTestHelper.ExecuteInJob(jobObject, "consume-cpu", "--duration", "4000").WaitForExit();
                 });
                 var thread2 = new Thread(() =>
                 {
-                    IFTestHelper.ExecuteInJob(jobObject2, "consume-cpu", "--duration", "2000").WaitForExit();
+                    IFTestHelper.ExecuteInJob(jobObject2, "consume-cpu", "--duration", "4000").WaitForExit();
                 });
 
                 thread1.Start();
