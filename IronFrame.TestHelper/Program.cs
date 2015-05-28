@@ -102,24 +102,27 @@ namespace IronFoundry.Warden.TestHelper
 
         static int ForkBomb()
         {
+           Console.WriteLine("FORK");
             try
             {
                 var process = new Process();
                 process.StartInfo.FileName = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
                 process.StartInfo.Arguments = "fork-bomb";
                 process.StartInfo.UseShellExecute = false;
-
                 if (!process.Start())
+                {
+                    Console.WriteLine("Failed to start new fork-bomb process.");
                     return FAILED;
+                }
 
                 process.WaitForExit();
+                return process.ExitCode;
             }
             catch
             {
+                Console.WriteLine("Caught Failed to start new fork-bomb process.");
                 return FAILED;
             }
-
-            return SUCCEEDED;
         }
 
         static int WriteClipboard(List<string> commandArgs)

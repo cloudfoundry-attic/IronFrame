@@ -162,18 +162,20 @@ namespace IronFrame.Utilities
         {
             using (var jobObject = new JobObject())
             {
-                var t = new Thread(() =>
-                {
-                    jobObject.SetActiveProcessLimit(2);
+                jobObject.SetActiveProcessLimit(2);
 
-                    IFTestHelper.ExecuteInJob(jobObject, "fork-bomb");
-                });
-                t.Start();
-                if (!t.Join(TimeSpan.FromSeconds(2)))
+                var process = IFTestHelper.ExecuteWithWait("fork-bomb");
+                jobObject.AssignProcessToJob(process);
+                IFTestHelper.Continue(process);
+                process.WaitForExit(1000);
+                var hasExited = process.HasExited;
+                if(!hasExited) process.Kill();
+                if (!hasExited)
                 {
-                    t.Abort();
-                    Assert.True(false, "ForkBomb was not terminated");
+                    Console.WriteLine(process.StandardOutput.ReadToEnd());
+                    Console.Error.WriteLine(process.StandardError.ReadToEnd());
                 }
+                Assert.True(hasExited, "Active process limit was not enforced");
             }
         }
 
