@@ -217,13 +217,11 @@ namespace IronFrame.Acceptance
             public void StartAndStopLauncher()
             {
                 Container1 = CreateContainer(Container1Handle);
-                Microsoft.VisualBasic.FileIO.FileSystem.CopyDirectory(@"c:\dwm\src\github.com\cloudfoundry-incubator\windows_app_lifecycle\Launcher\bin", Container1.Directory.MapUserPath(""));
                 var pSpec = new ProcessSpec
                 {
-                    ExecutablePath = "Launcher.exe",
+                    ExecutablePath = @"cmd.exe",
                     DisablePathMapping = true,
-                    Arguments = new string[] { ". ping.exe" },
-                    Environment = new Dictionary<string, string> { { "ARGJSON", "[\".\", \"\", \"{\\\"start_command\\\":\\\"ping\\\", \\\"start_command_args\\\":[\\\"127.0.0.1\\\",\\\"-n\\\",\\\"1000\\\"]}\"]" } }
+                    Arguments = new string[] { "/C ping.exe 127.0.0.1 -n 1000" },
                 };
 
                 // START THE LONG RUNNING PROCESS

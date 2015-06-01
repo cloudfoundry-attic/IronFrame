@@ -31,7 +31,7 @@ namespace IronFrame.Host.Handlers
                     process.RequestExit();
                     if (!process.WaitForExit(timeout))
                         process.Kill();
-                    
+
                     TerminateProcessTree(process.Handle, (uint) process.Id, -26);
                 }
             );
