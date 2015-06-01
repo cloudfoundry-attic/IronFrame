@@ -1,9 +1,15 @@
-﻿using DiskQuotaTypeLibrary;
+﻿using System.Data;
+using System.Management.Instrumentation;
+using System.Runtime.InteropServices;
+using DiskQuotaTypeLibrary;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Microsoft.VisualBasic;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Xunit;
 
 namespace IronFrame.Acceptance
@@ -208,14 +214,73 @@ namespace IronFrame.Acceptance
             }
 
             [FactAdminRequired]
+            public void StartAndStopLauncher()
+            {
+                Container1 = CreateContainer(Container1Handle);
+                Microsoft.VisualBasic.FileIO.FileSystem.CopyDirectory(@"c:\dwm\src\github.com\cloudfoundry-incubator\windows_app_lifecycle\Launcher\bin", Container1.Directory.MapUserPath(""));
+                var pSpec = new ProcessSpec
+                {
+                    ExecutablePath = "Launcher.exe",
+                    DisablePathMapping = true,
+                    Arguments = new string[] { ". ping.exe" },
+                    Environment = new Dictionary<string, string> { { "ARGJSON", "[\".\", \"\", \"{\\\"start_command\\\":\\\"ping\\\", \\\"start_command_args\\\":[\\\"127.0.0.1\\\",\\\"-n\\\",\\\"1000\\\"]}\"]" } }
+                };
+
+                // START THE LONG RUNNING PROCESS
+                var io = new StringProcessIO();
+                var process = Container1.Run(pSpec, io);
+
+                int exitCode;
+                bool exited = process.TryWaitForExit(500, out exitCode);
+
+                // VERIFY IT HASNT EXITED YET
+                Assert.False(exited);
+
+                var actualProcess = Process.GetProcessById(process.Id);
+
+                var childProcess = Process.GetProcesses().FirstOrDefault(x =>
+                {
+                    // Get some basic information about the process
+                    PROCESS_BASIC_INFORMATION pbi = new PROCESS_BASIC_INFORMATION();
+                    try
+                    {
+                        uint bytesWritten;
+                        NtQueryInformationProcess(x.Handle,
+                            0, ref pbi, (uint) Marshal.SizeOf(pbi),
+                            out bytesWritten); // == 0 is OK
+
+                        // Is it a child process of the process we're trying to terminate?
+                        return (int) pbi.InheritedFromUniqueProcessId == process.Id;
+                    }
+                    catch (Exception)
+                    {
+                        return false;
+                    }
+                });
+
+                Assert.False(actualProcess.HasExited);
+                Assert.False(childProcess.HasExited);
+
+                // KILL THE PROCESS AND WAIT FOR EXIT
+                process.Kill();
+                exited = process.TryWaitForExit(2000, out exitCode);
+
+                // VERIFY THE PROCESS WAS KILLED
+                Assert.True(exited);
+                Assert.True(actualProcess.HasExited);
+                Assert.True(childProcess.HasExited);
+                Assert.True(io.Output.ToString().Length > 0);
+            }
+
+            [FactAdminRequired]
             public void StartAndStopLongRunningProcess()
             {
                 Container1 = CreateContainer(Container1Handle);
                 var pSpec = new ProcessSpec
                 {
-                    ExecutablePath = "cmd.exe",
+                    ExecutablePath = "ping.exe",
                     DisablePathMapping = true,
-                    Arguments = new string[] { @"/C ""FOR /L %% IN () DO ping 127.0.0.1 -n 2""" },
+                    Arguments = new string[] { "127.0.0.1 -n -1" },
                 };
 
                 // START THE LONG RUNNING PROCESS
@@ -442,6 +507,25 @@ namespace IronFrame.Acceptance
 
             return handle;
         }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct PROCESS_BASIC_INFORMATION
+        {
+            public IntPtr ExitStatus;
+            public IntPtr PebBaseAddress;
+            public IntPtr AffinityMask;
+            public IntPtr BasePriority;
+            public IntPtr UniqueProcessId;
+            public IntPtr InheritedFromUniqueProcessId;
+        }
+        [DllImport("ntdll.dll")]
+        static extern int NtQueryInformationProcess(
+           IntPtr hProcess,
+           int processInformationClass /* 0 */,
+           ref PROCESS_BASIC_INFORMATION processBasicInformation,
+           uint processInformationLength,
+           out uint returnLength
+        );
     }
 
     internal class StringProcessIO : IProcessIO
