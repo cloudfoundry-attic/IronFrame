@@ -4,9 +4,11 @@ using SimpleImpersonation;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace IronFrame
 {
@@ -25,6 +27,7 @@ namespace IronFrame
         readonly IContainerPropertyService propertyService;
         readonly Dictionary<string, string> defaultEnvironment;
         readonly List<int> reservedPorts = new List<int>();
+        readonly ContainerHostDependencyHelper dependencyHelper;
 
         IProcessRunner processRunner;
         IProcessRunner constrainedProcessRunner;
@@ -42,7 +45,8 @@ namespace IronFrame
             IProcessRunner processRunner,
             IProcessRunner constrainedProcessRunner,
             ProcessHelper processHelper,
-            Dictionary<string, string> defaultEnvironment
+            Dictionary<string, string> defaultEnvironment,
+            ContainerHostDependencyHelper dependencyHelper
             )
         {
             this.id = id;
@@ -56,7 +60,7 @@ namespace IronFrame
             this.processRunner = processRunner;
             this.constrainedProcessRunner = constrainedProcessRunner;
             this.processHelper = processHelper;
-
+            this.dependencyHelper = dependencyHelper;
             this.defaultEnvironment = defaultEnvironment ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             this.currentState = ContainerState.Active;
@@ -139,6 +143,7 @@ namespace IronFrame
         public void Destroy()
         {
             Stop(true);
+            StopGuardAndWait(new TimeSpan(0, 0, 0, 10));
 
             this.currentState = ContainerState.Destroyed;
 
@@ -314,7 +319,7 @@ namespace IronFrame
             {
                 return propertyService.GetProperties(this);
             }
-            catch(IOException)
+            catch (IOException)
             {
                 ThrowIfDestroyed();
                 throw;
@@ -352,6 +357,62 @@ namespace IronFrame
             using (Impersonation.LogonUser("", user.UserName, user.GetCredential().Password, LogonType.Interactive))
             {
                 f();
+            }
+        }
+
+        public void StartGuard()
+        {
+            if (IsGuardRunning())
+                return;
+
+            processRunner.Run(new ProcessRunSpec
+            {
+                ExecutablePath = dependencyHelper.GuardExePath,
+                Arguments = new string[]
+                {
+                    user.UserName,
+                    CurrentMemoryLimit().ToString(CultureInfo.InvariantCulture),
+                    Id
+                },
+                WorkingDirectory = directory.MapUserPath("/")
+            });
+        }
+
+        public void StopGuard()
+        {
+            using (var dischargeEvent = GuardEventWaitHandle())
+            {
+                if (dischargeEvent != null)
+                {
+                    dischargeEvent.Set();
+                }
+            }
+        }
+
+        private EventWaitHandle GuardEventWaitHandle()
+        {
+            EventWaitHandle dischargeEvent = null;
+            EventWaitHandle.TryOpenExisting(string.Concat("Global\\", "discharge-", user.UserName), out dischargeEvent);
+            return dischargeEvent;
+        }
+
+        private bool IsGuardRunning()
+        {
+            using (var dischargeEvent = GuardEventWaitHandle())
+            {
+                return (dischargeEvent != null);
+            }
+        }
+
+        private void StopGuardAndWait(TimeSpan timeout)
+        {
+            var st = new Stopwatch();
+            st.Start();
+
+            while (IsGuardRunning() && st.Elapsed < timeout)
+            {
+                StopGuard();
+                Thread.Sleep(1);
             }
         }
     }

@@ -9,3 +9,4 @@ using System.Runtime.CompilerServices;
 // For unit testing:
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 [assembly: InternalsVisibleTo("IronFrame.Test")]
+[assembly: InternalsVisibleTo("IronFrame.Acceptance.Test")]

@@ -1,14 +1,10 @@
-﻿using System.Data;
-using System.Management.Instrumentation;
-using System.Runtime.InteropServices;
-using DiskQuotaTypeLibrary;
+﻿using IronFrame.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Microsoft.VisualBasic;
-using System.Diagnostics;
+using System.Management;
 using System.Runtime.InteropServices;
 using Xunit;
 
@@ -72,7 +68,7 @@ namespace IronFrame.Acceptance
                 var failed = 0;
                 for (int i = 0; i < 20; i++)
                 {
-                    pSpec.Arguments = new[] {"/C", "echo Hi Bob > bob" + i + ".txt"};
+                    pSpec.Arguments = new[] { "/C", "echo Hi Bob > bob" + i + ".txt" };
                     var proc = Container1.Run(pSpec, io1);
                     var exitCode = proc.WaitForExit();
 
@@ -92,7 +88,7 @@ namespace IronFrame.Acceptance
             [FactAdminRequired]
             public void CanSetLargeQuota()
             {
-                const ulong limit = 7UL*1024*1024*1024;
+                const ulong limit = 7UL * 1024 * 1024 * 1024;
                 Container1 = CreateContainer(Container1Handle);
                 Container1.LimitDisk(limit);
                 Assert.Equal(limit, Container1.CurrentDiskLimit());
@@ -188,9 +184,9 @@ namespace IronFrame.Acceptance
                     ExecutablePath = "cmd.exe",
                     DisablePathMapping = true,
                     Arguments = new string[] { "/C \"set CONTAINER_HANDLE && set PROC_ENV\"" },
-                    Environment = new Dictionary<string, string> 
-                    { 
-                        { "PROC_ENV", "VAL1" } 
+                    Environment = new Dictionary<string, string>
+                    {
+                        {"PROC_ENV", "VAL1"}
                     },
                 };
 
@@ -244,11 +240,11 @@ namespace IronFrame.Acceptance
                     {
                         uint bytesWritten;
                         NtQueryInformationProcess(x.Handle,
-                            0, ref pbi, (uint) Marshal.SizeOf(pbi),
+                            0, ref pbi, (uint)Marshal.SizeOf(pbi),
                             out bytesWritten); // == 0 is OK
 
                         // Is it a child process of the process we're trying to terminate?
-                        return (int) pbi.InheritedFromUniqueProcessId == process.Id;
+                        return (int)pbi.InheritedFromUniqueProcessId == process.Id;
                     }
                     catch (Exception)
                     {
@@ -335,6 +331,70 @@ namespace IronFrame.Acceptance
                 Container1 = CreateContainer(Container1Handle);
                 var foundProcessByPid = Container1.FindProcessById(-1);
                 Assert.Null(foundProcessByPid);
+            }
+        }
+
+        public class StartGuard : ContainerAcceptanceTests
+        {
+            public StartGuard()
+            {
+                Container1 = CreateContainer(Container1Handle);
+                var pSpec = new ProcessSpec
+                {
+                    ExecutablePath = @"cmd.exe",
+                    DisablePathMapping = true,
+                    Arguments = new string[] { "/C ping.exe 127.0.0.1 -n 1000" },
+                };
+                var io = new StringProcessIO();
+                Container1.Run(pSpec, io);
+            }
+
+            [FactAdminRequired]
+            public void PutsEscapedUserProcessesBackIntoJobObject()
+            {
+                Container1.StartGuard();
+
+                var username = ContainerUsername(Container1);
+
+                var userPids = UserPids(username);
+                var pidsInJob = new JobObject(Container1.Id).GetProcessIds().ToList();
+                pidsInJob.Sort();
+                Assert.Equal(userPids, pidsInJob);
+            }
+
+            private string ContainerUsername(IContainer container)
+            {
+                string username = null;
+                container.ImpersonateContainerUser(
+                    () => username = System.Security.Principal.WindowsIdentity.GetCurrent().Name.Split(new char[] {'\\'})[1]);
+                return username;
+            }
+
+            private List<int> UserPids(string username)
+            {
+                var userPids = new List<int>();
+                var query = "Select * from Win32_Process";
+                var searcher = new ManagementObjectSearcher(query);
+                var processList = searcher.Get();
+
+                foreach (ManagementObject obj in processList)
+                {
+                    try
+                    {
+                        string[] argList = new string[] { string.Empty, string.Empty };
+                        int returnVal = Convert.ToInt32(obj.InvokeMethod("GetOwner", argList));
+                        if (returnVal == 0 && argList[0] == username)
+                        {
+                            var pid = (UInt32)obj["ProcessId"];
+                            userPids.Add((int)pid);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+                userPids.Sort();
+                return userPids;
             }
         }
 

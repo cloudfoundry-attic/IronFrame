@@ -108,6 +108,7 @@ namespace IronFrame
                 undoStack.Push(() => constrainedProcessRunner.Dispose());
 
                 var processHelper = new ProcessHelper();
+                var dependencyHelper = new ContainerHostDependencyHelper();
 
                 var diskQuotaControl = diskQuotaManager.CreateDiskQuotaControl(directory);
 
@@ -123,7 +124,8 @@ namespace IronFrame
                     processRunner,
                     constrainedProcessRunner,
                     processHelper,
-                    containerSpec.Environment);
+                    containerSpec.Environment,
+                    dependencyHelper);
 
                 containerPropertiesService.SetProperties(container, containerSpec.Properties);
                 containers.Add(container);
@@ -192,6 +194,7 @@ namespace IronFrame
             var processHelper = new ProcessHelper();
             var diskQuotaControl = new DiskQuotaControl();
             diskQuotaControl.Initialize(directory.Volume, true);
+            var dependencyHelper = new ContainerHostDependencyHelper();
 
             var container = new Container(
                 id,
@@ -205,7 +208,8 @@ namespace IronFrame
                 processRunner,
                 processRunner,
                 processHelper,
-                environment);
+                environment,
+                dependencyHelper);
 
             return container;
         }

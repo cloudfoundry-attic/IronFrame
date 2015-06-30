@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using Xunit;
 
 namespace IronFrame
@@ -22,6 +23,8 @@ namespace IronFrame
         ILocalTcpPortManager TcpPortManager { get; set; }
         IContainerUser User { get; set; }
         DiskQuotaControl DiskQuotaControl { get; set; }
+        ContainerHostDependencyHelper DependencyHelper { get; set; }
+        private readonly string _containerUsername;
 
         public ContainerTests()
         {            
@@ -45,9 +48,12 @@ namespace IronFrame
             TcpPortManager = Substitute.For<ILocalTcpPortManager>();
 
             User = Substitute.For<IContainerUser>();
-            User.UserName.Returns("container-username");
+            _containerUsername = string.Concat("container-username-", Guid.NewGuid().ToString());
+            User.UserName.Returns(_containerUsername);
 
             DiskQuotaControl = Substitute.For<DiskQuotaControl>();
+
+            DependencyHelper = Substitute.For<ContainerHostDependencyHelper>();
 
             Container = new Container(
                 "id", 
@@ -61,7 +67,8 @@ namespace IronFrame
                 ProcessRunner, 
                 ConstrainedProcessRunner, 
                 ProcessHelper, 
-                ContainerEnvironment);
+                ContainerEnvironment,
+                DependencyHelper);
         }
 
         public class SetActiveProcessLimit : ContainerTests
@@ -167,13 +174,13 @@ namespace IronFrame
             {
                 Container.ReservePort(3000);
 
-                TcpPortManager.Received(1).ReserveLocalPort(3000, "container-username");
+                TcpPortManager.Received(1).ReserveLocalPort(3000, _containerUsername);
             }
 
             [Fact]
             public void ReturnsReservedPort()
             {
-                TcpPortManager.ReserveLocalPort(3000, "container-username").Returns(5000);
+                TcpPortManager.ReserveLocalPort(3000, _containerUsername).Returns(5000);
 
                 var port = Container.ReservePort(3000);
 
@@ -402,6 +409,63 @@ namespace IronFrame
                 Container.Stop(false);
                 Action action = () => Container.Run(Spec, io);
                 Assert.Throws<InvalidOperationException>(action);
+            }
+        }
+
+        public class StartGuard : ContainerTests
+        {
+            public StartGuard()
+            {
+                DependencyHelper.GuardExePath.Returns(@"C:\Containers\handle\bin\Guard.exe");
+                const string containerUserPath = @"C:\Containers\handle\user\";
+                Directory.MapUserPath("/").Returns(containerUserPath);
+            }
+
+            [Fact]
+            public void StartsExeWithCorrectOptions()
+            {
+                JobObject.GetJobMemoryLimit().Returns(6789UL);
+                Container.StartGuard();
+
+                var actual = ProcessRunner.Captured(x => x.Run(null)).Arg<ProcessRunSpec>();
+                Assert.Equal(@"C:\Containers\handle\bin\Guard.exe", actual.ExecutablePath);
+                Assert.Equal(3, actual.Arguments.Length);
+                Assert.Equal(_containerUsername, actual.Arguments[0]);
+                Assert.Equal("6789", actual.Arguments[1]);
+                Assert.Equal("id", actual.Arguments[2]);
+                Assert.Equal(@"C:\Containers\handle\user\", actual.WorkingDirectory);
+                Assert.Null(actual.Credentials);
+            }
+
+            [Fact]
+            public void DoesNotStartGuardIfAlreadyRunning()
+            {
+                using (new EventWaitHandle(false, EventResetMode.ManualReset, string.Concat("Global\\discharge-", _containerUsername)))
+                {
+                    JobObject.GetJobMemoryLimit().Returns(6789UL);
+                    Container.StartGuard();
+
+                    ProcessRunner.Received(0).Run(Arg.Any<ProcessRunSpec>());
+                }
+            }
+        }
+
+        public class StopGuard : ContainerTests
+        {
+            [Fact]
+            public void WhenSomeoneListening_SetsEventWaitObject()
+            {
+                var stopEvent = new EventWaitHandle(false, EventResetMode.ManualReset, string.Concat(@"Global\discharge-", _containerUsername));
+                Assert.False(stopEvent.WaitOne(0));
+
+                Container.StopGuard();
+                Assert.True(stopEvent.WaitOne(0));
+            }
+
+            [Fact]
+            public void WhenNooneListening_DoesNotFail()
+            {
+                Container.StopGuard();
             }
         }
 

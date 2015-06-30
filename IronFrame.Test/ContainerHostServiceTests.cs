@@ -43,9 +43,11 @@ namespace IronFrame
             DependencyHelper.ContainerHostExe.Returns("IronFrame.Host.exe");
             DependencyHelper.ContainerHostExePath.Returns(@"C:\Path\To\IronFrame.Host.exe");
             DependencyHelper.GetContainerHostDependencies().Returns(new [] { @"C:\Path\To\IronFrame.Shared.dll" });
+            DependencyHelper.GuardExe.Returns("Guard.exe");
+            DependencyHelper.GuardExePath.Returns(@"C:\Path\To\Guard.exe");
 
             FileSystem.FileExists(DependencyHelper.ContainerHostExeConfigPath).Returns(true);
-
+            
             Service = new ContainerHostService(FileSystem, ProcessRunner, DependencyHelper);
         }
 
@@ -60,6 +62,8 @@ namespace IronFrame
                 FileSystem.Received(1).CopyFile(@"C:\Path\To\IronFrame.Host.exe", @"C:\Containers\handle\bin\IronFrame.Host.exe");
                 FileSystem.Received(1).CopyFile(@"C:\Path\To\IronFrame.Host.exe.config", @"C:\Containers\handle\bin\IronFrame.Host.exe.config");
                 FileSystem.Received(1).CopyFile(@"C:\Path\To\IronFrame.Shared.dll", @"C:\Containers\handle\bin\IronFrame.Shared.dll");
+
+                FileSystem.Received(1).CopyFile(@"C:\Path\To\Guard.exe", @"C:\Containers\handle\bin\Guard.exe");
             }
             finally
             {

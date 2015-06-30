@@ -477,7 +477,7 @@ namespace IronFrame.Utilities
                 IFTestHelper.Execute("write-clipboard").WaitForExit();
             }
 
-            [Fact]
+            [Fact(Skip = "Awaiting 'Windows Station'")]
             public void ClipboardIsDisabledForWrites()
             {
                 var proc = IFTestHelper.ExecuteInJob(jobObject, "write-clipboard", "Text from JobObject1");
@@ -486,7 +486,7 @@ namespace IronFrame.Utilities
                 Assert.Contains("Could not write to clipboard", output);
             }
 
-            [Fact]
+            [Fact(Skip = "Awaiting 'Windows Station'")]
             public void ClipboardIsDisabledForReads()
             {
                 var clipboardText = "Text From Test";

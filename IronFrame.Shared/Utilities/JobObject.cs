@@ -38,7 +38,6 @@ namespace IronFrame.Utilities
             {
                 handle = new SafeJobObjectHandle(NativeMethods.CreateJobObject(IntPtr.Zero, name));
                 SetJobLimits(NativeMethods.JobObjectLimit.KillOnJobClose);
-                SetUIRestrictions(NativeMethods.UIRestrictions.WriteClipboard | NativeMethods.UIRestrictions.ReadClipboard);
             }
 
             if (handle.IsInvalid)
