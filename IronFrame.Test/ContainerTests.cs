@@ -27,7 +27,7 @@ namespace IronFrame
         private readonly string _containerUsername;
 
         public ContainerTests()
-        {            
+        {
             ConstrainedProcessRunner = Substitute.For<IProcessRunner>();
             ContainerEnvironment = new Dictionary<string, string>() { { "Handle", "handle" } };
 
@@ -56,19 +56,24 @@ namespace IronFrame
             DependencyHelper = Substitute.For<ContainerHostDependencyHelper>();
 
             Container = new Container(
-                "id", 
-                "handle", 
-                User, 
-                Directory, 
-                ContainerPropertiesService, 
-                TcpPortManager, 
-                JobObject, 
+                "id",
+                "handle",
+                User,
+                Directory,
+                ContainerPropertiesService,
+                TcpPortManager,
+                JobObject,
                 DiskQuotaControl,
-                ProcessRunner, 
-                ConstrainedProcessRunner, 
-                ProcessHelper, 
+                ProcessRunner,
+                ConstrainedProcessRunner,
+                ProcessHelper,
                 ContainerEnvironment,
                 DependencyHelper);
+        }
+
+        private EventWaitHandle CreateStopGuardEvent()
+        {
+            return new EventWaitHandle(false, EventResetMode.ManualReset, string.Concat(@"Global\discharge-", _containerUsername));
         }
 
         public class SetActiveProcessLimit : ContainerTests
@@ -127,7 +132,7 @@ namespace IronFrame
 
             public GetProperties()
             {
-                Properties = new Dictionary<string,string>();
+                Properties = new Dictionary<string, string>();
 
                 ContainerPropertiesService.GetProperties(Container).Returns(Properties);
             }
@@ -140,7 +145,8 @@ namespace IronFrame
                 var properties = Container.GetProperties();
 
                 Assert.Collection(properties,
-                    x => {
+                    x =>
+                    {
                         Assert.Equal("Name", x.Key);
                         Assert.Equal("Value", x.Value);
                     }
@@ -198,10 +204,10 @@ namespace IronFrame
 
         public class Run : ContainerTests
         {
-            ProcessSpec Spec  { get; set; }
+            ProcessSpec Spec { get; set; }
             ProcessRunSpec ExpectedRunSpec { get; set; }
 
-            public Run ()
+            public Run()
             {
                 Spec = new ProcessSpec
                 {
@@ -440,7 +446,7 @@ namespace IronFrame
             [Fact]
             public void DoesNotStartGuardIfAlreadyRunning()
             {
-                using (new EventWaitHandle(false, EventResetMode.ManualReset, string.Concat("Global\\discharge-", _containerUsername)))
+                using (CreateStopGuardEvent())
                 {
                     JobObject.GetJobMemoryLimit().Returns(6789UL);
                     Container.StartGuard();
@@ -455,11 +461,12 @@ namespace IronFrame
             [Fact]
             public void WhenSomeoneListening_SetsEventWaitObject()
             {
-                var stopEvent = new EventWaitHandle(false, EventResetMode.ManualReset, string.Concat(@"Global\discharge-", _containerUsername));
-                Assert.False(stopEvent.WaitOne(0));
-
-                Container.StopGuard();
-                Assert.True(stopEvent.WaitOne(0));
+                using (var stopEvent = CreateStopGuardEvent())
+                {
+                    Assert.False(stopEvent.WaitOne(0));
+                    Container.StopGuard();
+                    Assert.True(stopEvent.WaitOne(0));
+                }
             }
 
             [Fact]
@@ -534,7 +541,8 @@ namespace IronFrame
             public void TransitionsToDeletedEvenIfDirectoryDeletionFails()
             {
                 Directory.When(x => x.Destroy()).Do(x => { throw new Exception(); });
-                try { Container.Destroy(); } catch { }
+                try { Container.Destroy(); }
+                catch { }
 
                 Assert.Throws<InvalidOperationException>(() => Container.GetInfo());
             }
@@ -637,11 +645,11 @@ namespace IronFrame
                 var firstProcess = Substitute.For<IProcess>();
                 firstProcess.Id.Returns(1);
                 firstProcess.PrivateMemoryBytes.Returns(oneProcessPrivateMemory);
-                
+
                 var secondProcess = Substitute.For<IProcess>();
                 secondProcess.Id.Returns(2);
                 secondProcess.PrivateMemoryBytes.Returns(oneProcessPrivateMemory);
-                
+
                 JobObject.GetCpuStatistics().Returns(expectedCpuStats);
                 JobObject.GetProcessIds().Returns(new int[] { 1, 2 });
 
@@ -649,7 +657,7 @@ namespace IronFrame
 
                 var info = Container.GetInfo();
 
-                Assert.Equal(expectedTotalKernelTime + expectedTotalUserTime,info.CpuStat.TotalProcessorTime);
+                Assert.Equal(expectedTotalKernelTime + expectedTotalUserTime, info.CpuStat.TotalProcessorTime);
                 Assert.Equal((ulong)firstProcess.PrivateMemoryBytes + (ulong)secondProcess.PrivateMemoryBytes, info.MemoryStat.PrivateBytes);
             }
 
@@ -696,6 +704,17 @@ namespace IronFrame
                 Action action = () => Container.LimitMemory(3000);
 
                 Assert.Throws<InvalidOperationException>(action);
+            }
+
+            [Fact]
+            public void WhenGuardIsRunning_Throws()
+            {
+                using (CreateStopGuardEvent())
+                {
+                    Action action = () => Container.LimitMemory(3000);
+
+                    Assert.Throws<InvalidOperationException>(action);
+                }
             }
 
             [Fact]
@@ -785,7 +804,7 @@ namespace IronFrame
         {
             [Fact]
             public void SetsProperty()
-            {                
+            {
                 Container.SetProperty("Name", "Value");
 
                 ContainerPropertiesService.Received(1).SetProperty(Container, "Name", "Value");
