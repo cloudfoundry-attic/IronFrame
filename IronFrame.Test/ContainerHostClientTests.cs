@@ -146,6 +146,18 @@ namespace IronFrame
             }
         }
 
+        public class Exited : ContainerHostClientTests
+        {
+            [Fact]
+            public void DelegatesExitedEventFromHostProcess()
+            {
+                var wasCalled = false;
+                Client.Exited += (sender, args) => wasCalled = true;
+                HostProcess.Exited += Raise.EventWith(new object(), new EventArgs());
+                Assert.True(wasCalled);
+            }
+        }
+
         public class SubscribeToProcessData : ContainerHostClientTests
         {
             Guid KnownProcessKey { get; set; }

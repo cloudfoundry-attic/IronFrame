@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using IronFrame.Messages;
@@ -18,6 +19,7 @@ namespace IronFrame
         void StopAllProcesses(int timeout);
         void SubscribeToProcessData(Guid processKey, Action<ProcessDataEvent> callback);
         WaitForProcessExitResult WaitForProcessExit(WaitForProcessExitParams @params);
+        event EventHandler Exited;
         FindProcessByIdResult FindProcessById(FindProcessByIdParams @params);
     }
 
@@ -27,6 +29,7 @@ namespace IronFrame
         IProcess hostProcess;
         IMessageTransport messageTransport;
         IMessagingClient messagingClient;
+        public event EventHandler Exited;
 
         readonly ConcurrentDictionary<Guid, Action<ProcessDataEvent>> subscribers = new ConcurrentDictionary<Guid,Action<ProcessDataEvent>>();
 
@@ -39,6 +42,8 @@ namespace IronFrame
 
             this.hostProcess.Exited += (o, e) =>
             {
+                Exited.Invoke(this, e);
+
                 // TODO: If the host process dies (or is killed) we should shutdown the container.
 
                 //OnHostStopped(hostProcess != null && hostProcess.HasExited ? hostProcess.ExitCode : 0);

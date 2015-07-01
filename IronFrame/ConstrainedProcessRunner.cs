@@ -16,6 +16,10 @@ namespace IronFrame
         public ConstrainedProcessRunner(IContainerHostClient hostClient)
         {
             this.hostClient = hostClient;
+            hostClient.Exited += (o, e) =>
+            {
+                this.hostClient = null;
+            };
         }
 
         Action<ProcessDataEvent> BuildProcessDataCallback(Action<string> outputCallback, Action<string> errorCallback)
