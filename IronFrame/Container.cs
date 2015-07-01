@@ -373,7 +373,7 @@ namespace IronFrame
             if (IsGuardRunning())
                 return;
 
-            processRunner.Run(new ProcessRunSpec
+            var gprocess = processRunner.Run(new ProcessRunSpec
             {
                 ExecutablePath = dependencyHelper.GuardExePath,
                 Arguments = new string[]
@@ -384,6 +384,12 @@ namespace IronFrame
                 },
                 WorkingDirectory = directory.MapUserPath("/")
             });
+
+            var guardJobObjectName = String.Format("if:{0}:guard", id);
+            using (var guardsJob = new JobObject(guardJobObjectName, true, true))
+            {
+                guardsJob.AssignProcessToJob(gprocess.Handle);
+            }
         }
 
         public void StopGuard()

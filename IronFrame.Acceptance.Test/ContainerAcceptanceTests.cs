@@ -1,4 +1,6 @@
-﻿using IronFrame.Utilities;
+﻿using System.Security.Principal;
+using System.Threading;
+using IronFrame.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Management;
 using System.Runtime.InteropServices;
+using Microsoft.VisualBasic.ApplicationServices;
 using Xunit;
 
 namespace IronFrame.Acceptance
@@ -362,6 +365,47 @@ namespace IronFrame.Acceptance
                 Assert.Equal(userPids, pidsInJob);
             }
 
+            [FactAdminRequired]
+            public void WhenHardKillingHost_GuardIsTerminated()
+            {
+                Container1.StartGuard();
+                var username = ContainerUsername(Container1);
+
+                var guardJobObjectName = String.Format("if:{0}:guard", Container1.Id);
+
+                Process hostJobProcess = null;
+                Process guardJobProcess  = null;
+
+                var userPids = UserPids(username);
+                foreach (var pid in userPids)
+                {
+                    var proc = Process.GetProcessById(pid);
+                    if (proc.ProcessName.Contains("IronFrame.Host"))
+                    {
+                        hostJobProcess = proc;
+                        break;
+                    }
+                }
+                Assert.NotNull(hostJobProcess);
+
+                using (var guardJobObject = new JobObject(guardJobObjectName, true))
+                {
+                    var pids = guardJobObject.GetProcessIds();
+                    Assert.Equal(1, pids.Length);
+                    guardJobProcess = Process.GetProcessById(pids[0]);
+                }
+
+                Assert.False(guardJobProcess.HasExited);
+
+                hostJobProcess.Kill();
+                guardJobProcess.WaitForExit(1000);
+
+                Assert.True(hostJobProcess.HasExited);
+                Assert.True(guardJobProcess.HasExited);
+
+                Thread.Sleep(1);
+            }
+
             private string ContainerUsername(IContainer container)
             {
                 string username = null;
@@ -370,29 +414,47 @@ namespace IronFrame.Acceptance
                 return username;
             }
 
+            [DllImport ("advapi32.dll", SetLastError = true)]
+            static extern bool OpenProcessToken (IntPtr ProcessHandle, UInt32 DesiredAccess, out IntPtr TokenHandle);
+
+            
+            [DllImport ("kernel32.dll", SetLastError = true)]
+            [return: MarshalAs (UnmanagedType.Bool)]
+            static extern bool CloseHandle (IntPtr hObject); 
+            
+
             private List<int> UserPids(string username)
             {
+                const uint TOKEN_QUERY = 0x0008;
                 var userPids = new List<int>();
-                var query = "Select * from Win32_Process";
-                var searcher = new ManagementObjectSearcher(query);
-                var processList = searcher.Get();
 
-                foreach (ManagementObject obj in processList)
+                foreach (Process p in Process.GetProcesses())
                 {
+                    IntPtr ph = IntPtr.Zero;
                     try
                     {
-                        string[] argList = new string[] { string.Empty, string.Empty };
-                        int returnVal = Convert.ToInt32(obj.InvokeMethod("GetOwner", argList));
-                        if (returnVal == 0 && argList[0] == username)
+                        OpenProcessToken(p.Handle, TOKEN_QUERY, out ph);
+                        WindowsIdentity wi = new WindowsIdentity(ph);
+                        var processUsername = wi.Name.Split(new char[] {'\\'})[1];
+
+                        if (username == processUsername)
                         {
-                            var pid = (UInt32)obj["ProcessId"];
-                            userPids.Add((int)pid);
+                            userPids.Add(p.Id);
                         }
+
                     }
                     catch (Exception)
                     {
                     }
+                    finally
+                    {
+                        if (ph != IntPtr.Zero)
+                        {
+                            CloseHandle(ph);
+                        }
+                    }
                 }
+
                 userPids.Sort();
                 return userPids;
             }

@@ -14,6 +14,7 @@ namespace IronFrame.Host
         static ProcessTracker processTracker;
         static string containerId = null;
         static JobObject hostJobObject = null;
+        static JobObject guardJobObject = null;
         static IProcess hostProcess = null;
 
         static void Main(string[] args)
@@ -29,6 +30,9 @@ namespace IronFrame.Host
             hostJobObject = new JobObject(hostJobObjectName);
 
             hostProcess = ProcessHelper.WrapProcess(Process.GetCurrentProcess());
+
+            var guardJobObjectName = String.Format("if:{0}:guard", containerId);
+            guardJobObject = new JobObject(guardJobObjectName, false, true);
 
             var input = Console.In;
             var output = Console.Out;

@@ -91,10 +91,12 @@ Global
 		{95081EA9-CA53-4B69-8213-1AF5F30C2EA1}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{95081EA9-CA53-4B69-8213-1AF5F30C2EA1}.Release|Win32.ActiveCfg = Release|Any CPU
 		{61B46A01-4911-4E32-9065-C1ECD7650AFA}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{61B46A01-4911-4E32-9065-C1ECD7650AFA}.Debug|Any CPU.Build.0 = Debug|x64
 		{61B46A01-4911-4E32-9065-C1ECD7650AFA}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
 		{61B46A01-4911-4E32-9065-C1ECD7650AFA}.Debug|Mixed Platforms.Build.0 = Debug|x64
 		{61B46A01-4911-4E32-9065-C1ECD7650AFA}.Debug|Win32.ActiveCfg = Debug|x64
 		{61B46A01-4911-4E32-9065-C1ECD7650AFA}.Release|Any CPU.ActiveCfg = Release|x64
+		{61B46A01-4911-4E32-9065-C1ECD7650AFA}.Release|Any CPU.Build.0 = Release|x64
 		{61B46A01-4911-4E32-9065-C1ECD7650AFA}.Release|Mixed Platforms.ActiveCfg = Release|x64
 		{61B46A01-4911-4E32-9065-C1ECD7650AFA}.Release|Mixed Platforms.Build.0 = Release|x64
 		{61B46A01-4911-4E32-9065-C1ECD7650AFA}.Release|Win32.ActiveCfg = Release|x64

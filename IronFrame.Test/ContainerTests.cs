@@ -56,8 +56,8 @@ namespace IronFrame
             DependencyHelper = Substitute.For<ContainerHostDependencyHelper>();
 
             Container = new Container(
-                "id",
-                "handle",
+                string.Concat("id-", Guid.NewGuid()),
+                string.Concat("handle-", Guid.NewGuid()),
                 User,
                 Directory,
                 ContainerPropertiesService,
@@ -418,13 +418,23 @@ namespace IronFrame
             }
         }
 
-        public class StartGuard : ContainerTests
+        public class StartGuard : ContainerTests, IDisposable
         {
+            private JobObject guardJobObject;
+
             public StartGuard()
             {
                 DependencyHelper.GuardExePath.Returns(@"C:\Containers\handle\bin\Guard.exe");
                 const string containerUserPath = @"C:\Containers\handle\user\";
                 Directory.MapUserPath("/").Returns(containerUserPath);
+
+                var guardJobObjectName = String.Format("if:{0}:guard", Container.Id);
+                guardJobObject = new JobObject(guardJobObjectName, false, true);
+            }
+
+            public void Dispose()
+            {
+                guardJobObject.Dispose();
             }
 
             [Fact]
@@ -438,7 +448,7 @@ namespace IronFrame
                 Assert.Equal(3, actual.Arguments.Length);
                 Assert.Equal(_containerUsername, actual.Arguments[0]);
                 Assert.Equal("6789", actual.Arguments[1]);
-                Assert.Equal("id", actual.Arguments[2]);
+                Assert.Equal(Container.Id, actual.Arguments[2]);
                 Assert.Equal(@"C:\Containers\handle\user\", actual.WorkingDirectory);
                 Assert.Null(actual.Credentials);
             }
