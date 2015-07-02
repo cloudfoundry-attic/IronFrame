@@ -1,4 +1,5 @@
-﻿using DiskQuotaTypeLibrary;
+﻿using System.Threading.Tasks;
+using DiskQuotaTypeLibrary;
 using IronFrame.Utilities;
 using SimpleImpersonation;
 using System;
@@ -264,19 +265,23 @@ namespace IronFrame
         {
             ThrowIfDestroyed();
 
-            if (constrainedProcessRunner != null)
+            var task = new Task(() =>
             {
-                constrainedProcessRunner.StopAll(kill);
-                constrainedProcessRunner.Dispose();
-                constrainedProcessRunner = null;
-            }
+                if (constrainedProcessRunner != null)
+                    constrainedProcessRunner.StopAll(kill);
 
+                if (processRunner != null)
+                    processRunner.StopAll(kill);
+            });
+            task.Start();
+            if (!task.Wait(1000))
+                jobObject.TerminateProcessesAndWait();
+
+            if (constrainedProcessRunner != null)
+                constrainedProcessRunner.Dispose();
             if (processRunner != null)
-            {
-                processRunner.StopAll(kill);
                 processRunner.Dispose();
-                processRunner = null;
-            }
+            constrainedProcessRunner = processRunner = null;
 
             this.currentState = ContainerState.Stopped;
         }

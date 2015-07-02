@@ -365,8 +365,14 @@ namespace IronFrame.Acceptance
                 var username = ContainerUsername(Container1);
 
                 var userPids = UserPids(username);
-                var pidsInJob = new JobObject(Container1.Id).GetProcessIds().ToList();
+                var pidsInJob = new List<int>();
+                var sw = Stopwatch.StartNew();
+                while (userPids.Count != pidsInJob.Count && sw.ElapsedMilliseconds < 1000)
+                {
+                    pidsInJob = new JobObject(Container1.Id).GetProcessIds().ToList();
+                }
                 pidsInJob.Sort();
+
                 Assert.Equal(userPids, pidsInJob);
             }
 
@@ -422,11 +428,9 @@ namespace IronFrame.Acceptance
             [DllImport ("advapi32.dll", SetLastError = true)]
             static extern bool OpenProcessToken (IntPtr ProcessHandle, UInt32 DesiredAccess, out IntPtr TokenHandle);
 
-            
             [DllImport ("kernel32.dll", SetLastError = true)]
             [return: MarshalAs (UnmanagedType.Bool)]
             static extern bool CloseHandle (IntPtr hObject); 
-            
 
             private List<int> UserPids(string username)
             {
