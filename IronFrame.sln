@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
-MinimumVisualStudioVersion = 10.0.40219.1
+MinimumVisualStudioVersion = 12.0.31101.0
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFrame.Shared", "IronFrame.Shared\IronFrame.Shared.csproj", "{CB7BA555-21FD-4C57-A629-A925B6A83A31}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFrame.TestHelper", "IronFrame.TestHelper\IronFrame.TestHelper.csproj", "{AB96DA85-8C4E-490B-B552-3FE9F0E0E9BF}"
