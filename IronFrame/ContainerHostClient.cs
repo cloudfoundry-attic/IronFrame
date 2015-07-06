@@ -161,7 +161,11 @@ namespace IronFrame
                 timeout = timeout,
             };
 
-            SendMessage<StopAllProcessesRequest, StopAllProcessesResponse>(new StopAllProcessesRequest(@params));
+            StopAllProcessesResponse response;
+            if (!TrySendMessage<StopAllProcessesRequest, StopAllProcessesResponse>(new StopAllProcessesRequest(@params), new TimeSpan(0, 0, 0, 0, timeout), out response))
+            {
+                throw new TimeoutException("Sending Stop timedout");
+            }
         }
 
         public void SubscribeToProcessData(Guid processKey, Action<ProcessDataEvent> callback)

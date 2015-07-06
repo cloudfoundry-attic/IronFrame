@@ -1,3 +1,4 @@
+using System.DirectoryServices.ActiveDirectory;
 using DiskQuotaTypeLibrary;
 using IronFrame.Utilities;
 using NSubstitute;
@@ -840,6 +841,18 @@ namespace IronFrame
                 Action action = () => Container.Stop(false);
 
                 Assert.Throws<InvalidOperationException>(action);
+            }
+
+            [Fact]
+            public void WhenContainerStopAllThrows_CallsJobobjectTerminate()
+            {
+                ConstrainedProcessRunner
+                    .When(x => x.StopAll(true))
+                    .Do(x => { throw new TimeoutException("Test timeout exception"); });
+
+                Container.Stop(true);
+
+                JobObject.Received(1).TerminateProcessesAndWait();
             }
 
             [Fact]

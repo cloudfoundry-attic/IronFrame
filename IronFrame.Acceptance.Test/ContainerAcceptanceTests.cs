@@ -1,6 +1,11 @@
 ﻿using System.Security.Principal;
 using System.Threading;
 using IronFrame.Utilities;
+using System.Data;
+using System.Management.Instrumentation;
+using System.Runtime.InteropServices;
+using System.Security.Principal;
+using DiskQuotaTypeLibrary;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -360,8 +365,14 @@ namespace IronFrame.Acceptance
                 var username = ContainerUsername(Container1);
 
                 var userPids = UserPids(username);
-                var pidsInJob = new JobObject(Container1.Id).GetProcessIds().ToList();
+                var pidsInJob = new List<int>();
+                var sw = Stopwatch.StartNew();
+                while (userPids.Count != pidsInJob.Count && sw.ElapsedMilliseconds < 1000)
+                {
+                    pidsInJob = new JobObject(Container1.Id).GetProcessIds().ToList();
+                }
                 pidsInJob.Sort();
+
                 Assert.Equal(userPids, pidsInJob);
             }
 
@@ -417,11 +428,9 @@ namespace IronFrame.Acceptance
             [DllImport ("advapi32.dll", SetLastError = true)]
             static extern bool OpenProcessToken (IntPtr ProcessHandle, UInt32 DesiredAccess, out IntPtr TokenHandle);
 
-            
             [DllImport ("kernel32.dll", SetLastError = true)]
             [return: MarshalAs (UnmanagedType.Bool)]
             static extern bool CloseHandle (IntPtr hObject); 
-            
 
             private List<int> UserPids(string username)
             {
@@ -548,6 +557,57 @@ namespace IronFrame.Acceptance
 
                 Assert.EndsWith("c_" + Container1.Id, user);
             }
+        }
+
+        public class SuspendContainerHost : ContainerAcceptanceTests
+        {
+            [FactAdminRequired]
+            public void Stop_StillWorks_Eventually()
+            {
+                Container1 = CreateContainer(Container1Handle);
+                string userid = null;
+                Container1.ImpersonateContainerUser(() =>
+                {
+                    userid = WindowsIdentity.GetCurrent().User.ToString();
+                });
+                var pSpec = new ProcessSpec
+                {
+                    ExecutablePath = "cmd.exe",
+                    DisablePathMapping = true,
+                    Arguments = new string[] { @"/C ""FOR /L %% IN () DO ping 127.0.0.1 -n 2""" },
+                };
+
+                // START THE LONG RUNNING PROCESS
+                var io = new StringProcessIO();
+                var process = Container1.Run(pSpec, io);
+                var realProcess = Process.GetProcessById(process.Id);
+
+                Process containerHost = FindProcessByUserAndName(userid, "IronFrame.Host");
+                ProcessInfoHelper.SuspendProcess(containerHost.Id);
+
+                Container1.Stop(true);
+
+                Assert.True(realProcess.HasExited);
+            }
+        }
+
+        public Process FindProcessByUserAndName(string userSid, string procName)
+        {
+            Process[] processlist = Process.GetProcesses();
+
+            foreach (Process theprocess in processlist)
+            {
+                string ProcessUserSID = "";
+                ProcessInfoHelper.ExGetProcessInfoByPID(theprocess.Id, out ProcessUserSID);
+
+                if (theprocess.ProcessName == procName && ProcessUserSID == userSid)
+                {
+                    return theprocess;
+                }
+
+            }
+
+            return null;
         }
 
         public IContainer CreateContainer(string handle)

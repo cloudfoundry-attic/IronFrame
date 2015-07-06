@@ -266,7 +266,14 @@ namespace IronFrame
 
             if (constrainedProcessRunner != null)
             {
-                constrainedProcessRunner.StopAll(kill);
+                try
+                {
+                    constrainedProcessRunner.StopAll(kill);
+                }
+                catch (TimeoutException)
+                {
+                    jobObject.TerminateProcessesAndWait();
+                }
                 constrainedProcessRunner.Dispose();
                 constrainedProcessRunner = null;
             }
