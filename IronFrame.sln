@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 12.0.31101.0
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFrame.Shared", "IronFrame.Shared\IronFrame.Shared.csproj", "{CB7BA555-21FD-4C57-A629-A925B6A83A31}"
+	ProjectSection(ProjectDependencies) = postProject
+		{61B46A01-4911-4E32-9065-C1ECD7650AFA} = {61B46A01-4911-4E32-9065-C1ECD7650AFA}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFrame.TestHelper", "IronFrame.TestHelper\IronFrame.TestHelper.csproj", "{AB96DA85-8C4E-490B-B552-3FE9F0E0E9BF}"
 EndProject
@@ -15,6 +18,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFrame.Test", "IronFrame.Test\IronFrame.Test.csproj", "{0C0513EF-3C40-44F7-AE1D-A0709B65B082}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFrame.Host", "IronFrame.Host\IronFrame.Host.csproj", "{6E4DD8FC-91E8-4C70-946D-4C37DF84C8CF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{61B46A01-4911-4E32-9065-C1ECD7650AFA} = {61B46A01-4911-4E32-9065-C1ECD7650AFA}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronFrame.Acceptance.Test", "IronFrame.Acceptance.Test\IronFrame.Acceptance.Test.csproj", "{95081EA9-CA53-4B69-8213-1AF5F30C2EA1}"
 EndProject
