@@ -9,7 +9,6 @@
 
 using namespace std;
 
-HANDLE hParentJob;
 HANDLE hGuardJob;
 HANDLE hDischargeEvent;
 
@@ -19,9 +18,9 @@ JOBOBJECT_BASIC_PROCESS_ID_LIST* processesInJobBuffer;
 // The rate to check for memory
 long checkRateMs = 100;
 
-HANDLE GetParentJobObjectHandle(wstring name)
+HANDLE GetParentJobObjectHandle(wstring &name)
 {
-	HANDLE hJob = CreateJobObject(NULL, (wstring(L"Global\\") + name).c_str());
+	HANDLE hJob = OpenJobObject(JOB_OBJECT_ALL_ACCESS, false, name.c_str());
 
 	if (hJob == NULL)
 	{
@@ -30,22 +29,19 @@ HANDLE GetParentJobObjectHandle(wstring name)
 		exit(GetLastError());
 	}
 
-	if (GetLastError() == ERROR_ALREADY_EXISTS)
-	{
-		// Job already existed
-
-		wclog << L"Opened existing Job Object: " << name << endl;
-	}
-	else
-	{
-		// Job was created
-		wclog << L"Created new Job Object: " << name << endl;
-	}
-
 	return hJob;
 }
 
-HANDLE CreateGuardJobObject(wstring name)
+void AssertParentJobExists(wstring &containerId) {
+	HANDLE hParentJob = GetParentJobObjectHandle(containerId);
+	if (!CloseHandle(hParentJob)){
+		wclog << L"Error on CloseHandle(hParentJob)." << endl;
+
+		exit(GetLastError());
+	}
+}
+
+HANDLE CreateGuardJobObject(wstring &name)
 {
 	HANDLE hJob = CreateJobObject(NULL, (wstring(L"Global\\") + name).c_str());
 
@@ -113,7 +109,7 @@ void EnsureProcessIsInJob(HANDLE hJob, HANDLE hProcess){
 	}
 }
 
-void PutProcessBackInTheJob(HANDLE hParentJob, HANDLE hJob, PSID userSid)
+void PutProcessBackInTheJob(wstring &containerId, HANDLE hJob, PSID userSid)
 {
 	size_t bufferSize = sizeof(DWORD) * 1024 * 1024;
 	DWORD *processes = (DWORD*)malloc(bufferSize);
@@ -173,10 +169,28 @@ void PutProcessBackInTheJob(HANDLE hParentJob, HANDLE hJob, PSID userSid)
 			}
 
 			if (EqualSid(userSid, tokenUser[0].User.Sid)){
+				// we need to ensure here that hProcess is inside hJob
 
-				EnsureProcessIsInJob(hParentJob, hProcess);
-				EnsureProcessIsInJob(hJob, hProcess);
+				BOOL processInJob = false;
 
+				if (!IsProcessInJob(hProcess, hJob, &processInJob)){
+					wclog << L"Error on IsProcessInJob." << endl;
+
+					exit(GetLastError());
+				}
+
+				if (!processInJob){
+					HANDLE hParentJob = GetParentJobObjectHandle(containerId);
+					EnsureProcessIsInJob(hParentJob, hProcess);
+
+					if (!CloseHandle(hParentJob)){
+						wclog << L"Error on CloseHandle(hParentJob)." << endl;
+
+						exit(GetLastError());
+					}
+
+					EnsureProcessIsInJob(hJob, hProcess);
+				}
 			}
 		}
 	}
@@ -408,7 +422,6 @@ int wmain(int argc, wchar_t **argv)
 
 	wstring dischargeEventName = wstring(L"Global\\discharge-") + username;
 
-	hParentJob = GetParentJobObjectHandle(containerId);
 	hGuardJob = CreateGuardJobObject(username + L"-guard");
 
 	hDischargeEvent = CreateEvent(NULL, true, false, dischargeEventName.c_str());
@@ -436,7 +449,9 @@ int wmain(int argc, wchar_t **argv)
 			break;
 		}
 
-		PutProcessBackInTheJob(hParentJob, hGuardJob, userSid);
+		AssertParentJobExists(containerId);
+
+		PutProcessBackInTheJob(containerId, hGuardJob, userSid);
 
 		if (memoryQuota > 0)
 		{

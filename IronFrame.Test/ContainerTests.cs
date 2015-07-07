@@ -419,23 +419,14 @@ namespace IronFrame
             }
         }
 
-        public class StartGuard : ContainerTests, IDisposable
+        public class StartGuard : ContainerTests
         {
-            private JobObject guardJobObject;
 
             public StartGuard()
             {
                 DependencyHelper.GuardExePath.Returns(@"C:\Containers\handle\bin\Guard.exe");
                 const string containerUserPath = @"C:\Containers\handle\user\";
                 Directory.MapUserPath("/").Returns(containerUserPath);
-
-                var guardJobObjectName = String.Format("if:{0}:guard", Container.Id);
-                guardJobObject = new JobObject(guardJobObjectName, false, true);
-            }
-
-            public void Dispose()
-            {
-                guardJobObject.Dispose();
             }
 
             [Fact]

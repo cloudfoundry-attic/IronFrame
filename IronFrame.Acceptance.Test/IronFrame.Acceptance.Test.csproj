@@ -63,6 +63,7 @@
     </Compile>
     <Compile Include="ContainerAcceptanceTests.cs" />
     <Compile Include="ContainerServiceAcceptanceTests.cs" />
+    <Compile Include="GuardAcceptanceTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestSupport\FactAdminRequired.cs" />
     <Compile Include="TestSupport\ProcessInfoHelper.cs" />

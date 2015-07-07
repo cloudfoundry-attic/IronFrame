@@ -362,6 +362,9 @@ namespace IronFrame.Acceptance
             {
                 Container1.StartGuard();
 
+                // ping.exe is a Console app. Windows will start a conhost for ping.exe which
+                // is by default outside job objects. We want to assert that all processes
+                // including conhost is added back to the JobObject.
                 var username = ContainerUsername(Container1);
 
                 var userPids = UserPids(username);
@@ -376,45 +379,14 @@ namespace IronFrame.Acceptance
                 Assert.Equal(userPids, pidsInJob);
             }
 
-            [FactAdminRequired]
-            public void WhenHardKillingHost_GuardIsTerminated()
+            public void GuardDoesNotKeepTheContainerJobObjectOpen()
             {
                 Container1.StartGuard();
+
+
                 var username = ContainerUsername(Container1);
-
-                var guardJobObjectName = String.Format("if:{0}:guard", Container1.Id);
-
-                Process hostJobProcess = null;
-                Process guardJobProcess  = null;
-
                 var userPids = UserPids(username);
-                foreach (var pid in userPids)
-                {
-                    var proc = Process.GetProcessById(pid);
-                    if (proc.ProcessName.Contains("IronFrame.Host"))
-                    {
-                        hostJobProcess = proc;
-                        break;
-                    }
-                }
-                Assert.NotNull(hostJobProcess);
 
-                using (var guardJobObject = new JobObject(guardJobObjectName, true))
-                {
-                    var pids = guardJobObject.GetProcessIds();
-                    Assert.Equal(1, pids.Length);
-                    guardJobProcess = Process.GetProcessById(pids[0]);
-                }
-
-                Assert.False(guardJobProcess.HasExited);
-
-                hostJobProcess.Kill();
-                guardJobProcess.WaitForExit(1000);
-
-                Assert.True(hostJobProcess.HasExited);
-                Assert.True(guardJobProcess.HasExited);
-
-                Thread.Sleep(1);
             }
 
             private string ContainerUsername(IContainer container)

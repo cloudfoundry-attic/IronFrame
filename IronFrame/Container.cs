@@ -155,7 +155,6 @@ namespace IronFrame
             tcpPortManager.RemoveFirewallRules(user.UserName);
 
             // BR - Unmap the mounted directories (Removes user ACLs)
-
             jobObject.TerminateProcessesAndWait();
             jobObject.Dispose();
 
@@ -391,12 +390,6 @@ namespace IronFrame
                 },
                 WorkingDirectory = directory.MapUserPath("/")
             });
-
-            var guardJobObjectName = String.Format("if:{0}:guard", id);
-            using (var guardsJob = new JobObject(guardJobObjectName, true, true))
-            {
-                guardsJob.AssignProcessToJob(gprocess.Handle);
-            }
         }
 
         public void StopGuard()
