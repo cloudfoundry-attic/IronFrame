@@ -21,7 +21,7 @@ namespace IronFrame
         public BindMount[] BindMounts { get; set; }
         public Dictionary<string, string> Properties { get; set; }
         public Dictionary<string, string> Environment { get; set; }
-    }
+}
 
     public sealed class ContainerService : IContainerService
     {
@@ -222,6 +222,13 @@ namespace IronFrame
 
                 containers.Add(container);
             }
+        }
+
+        public static Dictionary<string, string> EnvsFromList(List<string> environmentVariables)
+        {
+            return environmentVariables
+                .Select(x => x.Split(new char[]{'='}, 2))
+                .ToDictionary(x => x[0], x => x[1]);
         }
 
         /// <summary>

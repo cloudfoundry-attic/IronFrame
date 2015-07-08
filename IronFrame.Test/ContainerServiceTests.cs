@@ -364,6 +364,35 @@ namespace IronFrame
                 }
             }
         }
-         
+
+        public class EnvsFromList : ContainerServiceTests
+        {
+            [Fact]
+            public void ShouldConvertEnvsFromEmptyList()
+            {
+                var list = new List<string>() {};
+
+                var translation = ContainerService.EnvsFromList(list);
+                Assert.Equal(translation.Count, 0);
+            }
+
+            [Fact]
+            public void ShouldConvertEnvsFromList()
+            {
+                var list = new List<string>()
+                {
+                    "a=b",
+                    "test=1234",
+                    "my=varwith=init"
+                };
+
+                var translation = ContainerService.EnvsFromList(list);
+                Assert.Equal(translation.Count, list.Count);
+                Assert.Equal(translation["a"], "b");
+                Assert.Equal(translation["test"], "1234");
+                Assert.Equal(translation["my"], "varwith=init");
+            }
+        }
+
     }
 }
