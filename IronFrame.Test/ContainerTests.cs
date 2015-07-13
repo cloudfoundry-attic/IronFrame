@@ -437,10 +437,9 @@ namespace IronFrame
 
                 var actual = ProcessRunner.Captured(x => x.Run(null)).Arg<ProcessRunSpec>();
                 Assert.Equal(@"C:\Containers\handle\bin\Guard.exe", actual.ExecutablePath);
-                Assert.Equal(3, actual.Arguments.Length);
+                Assert.Equal(2, actual.Arguments.Length);
                 Assert.Equal(_containerUsername, actual.Arguments[0]);
-                Assert.Equal("6789", actual.Arguments[1]);
-                Assert.Equal(Container.Id, actual.Arguments[2]);
+                Assert.Equal(Container.Id, actual.Arguments[1]);
                 Assert.Equal(@"C:\Containers\handle\user\", actual.WorkingDirectory);
                 Assert.Null(actual.Credentials);
             }

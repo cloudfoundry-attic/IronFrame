@@ -12,10 +12,13 @@ using namespace std;
 HANDLE hGuardJob;
 HANDLE hDischargeEvent;
 
-size_t processesIdListLength = 16384;
+const size_t processesIdListLength = 16384;
+DWORD processes[sizeof(DWORD) * processesIdListLength];
+
 JOBOBJECT_BASIC_PROCESS_ID_LIST* processesInJobBuffer;
 
-// The rate to check for memory
+
+// The rate to check for processes
 long checkRateMs = 100;
 
 HANDLE GetParentJobObjectHandle(wstring &name)
@@ -26,19 +29,27 @@ HANDLE GetParentJobObjectHandle(wstring &name)
 	{
 		wclog << L"Could not open Job Object: " << name << " . Terminating guard." << endl;
 
-		exit(GetLastError());
+		return NULL;
 	}
 
 	return hJob;
 }
 
-void AssertParentJobExists(wstring &containerId) {
+bool ParentJobExists(wstring &containerId) {
 	HANDLE hParentJob = GetParentJobObjectHandle(containerId);
+
+	if (hParentJob == NULL)
+	{
+		return false;
+	}
+
 	if (!CloseHandle(hParentJob)){
 		wclog << L"Error on CloseHandle(hParentJob)." << endl;
 
 		exit(GetLastError());
 	}
+
+	return true;
 }
 
 HANDLE CreateGuardJobObject(wstring &name)
@@ -81,13 +92,29 @@ HANDLE CreateGuardJobObject(wstring &name)
 	return hJob;
 }
 
+HANDLE CreateEphemeralJobObject()
+{
+	HANDLE hJob = CreateJobObject(NULL, NULL);
+	if (hJob == NULL){
+		return hJob; // MAYBE??????
+	}
+
+	// Activate JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE for Guard Job Object
+
+	JOBOBJECT_EXTENDED_LIMIT_INFORMATION  jobOptions;
+	ZeroMemory(&jobOptions, sizeof(jobOptions));
+	jobOptions.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+	SetInformationJobObject(hJob, JobObjectExtendedLimitInformation, &jobOptions, sizeof(jobOptions));
+
+	return hJob;
+}
+
 void EnsureProcessIsInJob(HANDLE hJob, HANDLE hProcess){
 	BOOL processInJob = false;
 
 	if (!IsProcessInJob(hProcess, hJob, &processInJob)){
 		wclog << L"Error on IsProcessInJob." << endl;
-
-		exit(GetLastError());
+		return;
 	}
 
 	if (!processInJob){
@@ -103,230 +130,97 @@ void EnsureProcessIsInJob(HANDLE hJob, HANDLE hProcess){
 				// kill the process first and then fail fast :?
 				wclog << L"Error on AssignProcessToJobObject." << endl;
 
-				exit(errorCode);
+				return;
 			}
 		}
 	}
 }
 
-void PutProcessBackInTheJob(wstring &containerId, HANDLE hJob, PSID userSid)
+int PutProcessBackInTheJob(wstring &containerId, HANDLE hJob, PSID userSid)
 {
-	size_t bufferSize = sizeof(DWORD) * 1024 * 1024;
-	DWORD *processes = (DWORD*)malloc(bufferSize);
-
-	if (processes == NULL) {
-		wclog << L"Error on malloc." << endl;
-		exit(-1);
-	}
-
-	DWORD cbNeeded;
-
-	// TODO: increase the buff size if needed
+	DWORD bufferSize = (DWORD)sizeof(processes);
+	DWORD cbBytesReturned;
 
 	// TODO: is CreateToolhelp32Snapshot better?
-	if (!EnumProcesses(processes, bufferSize, &cbNeeded)) {
+	if (!EnumProcesses(processes, bufferSize, &cbBytesReturned)) {
 		wclog << L"Error on EnumProcesses." << endl;
-
-		exit(GetLastError());
+		return -1;
 	}
 
-	if (cbNeeded == bufferSize){
-		wclog << L"Error on EnumProcesses. Buffer to small." << endl;
-
-		exit(-1);
+	if (cbBytesReturned == bufferSize){
+		wclog << L"Error on EnumProcesses. Buffer may be too small." << endl;
+		return -1;
 	}
 
-	size_t numProcesses = cbNeeded / sizeof(DWORD);
+	int numUserSidProcesses = 0;
+
+	size_t numProcesses = cbBytesReturned / sizeof(DWORD);
 
 	for (size_t i = 1; i < numProcesses; i++){
 
-		if (processes[i] != 0){
-			DWORD pid = processes[i];
+		DWORD pid = processes[i];
 
-			HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-			if (hProcess == NULL) {
-				// Is this safe? Could container process change it's permissions
+		HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+		if (hProcess == NULL) {
+			// Is this safe? Could container process change it's permissions
+			continue;
+		}
+
+
+		// get the process user name
+		HANDLE hProcessToken;
+		if (!OpenProcessToken(hProcess, TOKEN_QUERY, &hProcessToken)){
+			wclog << L"Error on OpenProcessToken." << endl;
+			continue;
+		}
+
+		char tokenUserBuffer[1024];
+		PTOKEN_USER tokenUser = (PTOKEN_USER)tokenUserBuffer;
+		DWORD dwSize;
+
+		if (!GetTokenInformation(hProcessToken, TokenUser, tokenUser, sizeof(tokenUserBuffer), &dwSize)){
+			wclog << L"Error on GetTokenInformation." << endl;
+			continue;
+		}
+
+		if (EqualSid(userSid, tokenUser[0].User.Sid)){
+			// we need to ensure here that hProcess is inside hJob
+			numUserSidProcesses++;
+
+			BOOL processInJob = false;
+
+			if (!IsProcessInJob(hProcess, hJob, &processInJob)){
+				wclog << L"Error on IsProcessInJob." << endl;
 				continue;
 			}
 
-
-			// get the process user name
-			HANDLE hProcessToken;
-			if (!OpenProcessToken(hProcess, TOKEN_QUERY, &hProcessToken)){
-				wclog << L"Error on OpenProcessToken." << endl;
-
-				exit(GetLastError());
-			}
-
-			char tokenUserBuffer[1024];
-			PTOKEN_USER tokenUser = (PTOKEN_USER)tokenUserBuffer;
-			DWORD dwSize;
-
-			if (!GetTokenInformation(hProcessToken, TokenUser, tokenUser, sizeof(tokenUserBuffer), &dwSize)){
-				wclog << L"Error on GetTokenInformation." << endl;
-
-				exit(GetLastError());
-			}
-
-			if (EqualSid(userSid, tokenUser[0].User.Sid)){
-				// we need to ensure here that hProcess is inside hJob
-
-				BOOL processInJob = false;
-
-				if (!IsProcessInJob(hProcess, hJob, &processInJob)){
-					wclog << L"Error on IsProcessInJob." << endl;
-
-					exit(GetLastError());
-				}
-
-				if (!processInJob){
-					HANDLE hParentJob = GetParentJobObjectHandle(containerId);
+			if (!processInJob){
+				HANDLE hParentJob = GetParentJobObjectHandle(containerId);
+				if (hParentJob != NULL){
 					EnsureProcessIsInJob(hParentJob, hProcess);
 
 					if (!CloseHandle(hParentJob)){
 						wclog << L"Error on CloseHandle(hParentJob)." << endl;
-
 						exit(GetLastError());
 					}
 
 					EnsureProcessIsInJob(hJob, hProcess);
 				}
+				else {
+					HANDLE ephemeralJob = CreateEphemeralJobObject();
+					AssignProcessToJobObject(ephemeralJob, hProcess);
+
+					TerminateProcess(hProcess, -1);
+
+					CloseHandle(ephemeralJob);
+				}
 			}
 		}
 	}
 
-	free(processes);
+	return numUserSidProcesses;
 }
 
-void GetProcessIds(HANDLE hJob, vector<unsigned long> &processList)
-{
-	//Get a list of all the processes in this job.
-	size_t listSize = sizeof(JOBOBJECT_BASIC_PROCESS_ID_LIST) + sizeof(ULONG_PTR)* processesIdListLength;
-
-	if (processesInJobBuffer == NULL)
-	{
-		processesInJobBuffer = (JOBOBJECT_BASIC_PROCESS_ID_LIST*)LocalAlloc(
-			LPTR,
-			listSize);
-	}
-
-	if (processesInJobBuffer != NULL)
-	{
-		BOOL ret = QueryInformationJobObject(
-			hJob,
-			JobObjectBasicProcessIdList,
-			processesInJobBuffer,
-			(DWORD)listSize,
-			NULL);
-
-		if (!ret)
-		{
-			wclog << L"Error querying for JobObjectBasicProcessIdList. Terminating guard. Error code: " << GetLastError() << endl;
-			exit(GetLastError());
-		}
-	}
-	else
-	{
-		wclog << L"Could not allocate buffer for processes. Terminating guard." << endl;
-		exit(GetLastError());
-	}
-
-	if (processesInJobBuffer->NumberOfAssignedProcesses > processesInJobBuffer->NumberOfProcessIdsInList) {
-		if (processesInJobBuffer->NumberOfAssignedProcesses >= processesIdListLength) {
-			wclog << L"Processes id list is to small. Doubling the list size." << endl;
-
-			processesIdListLength *= 2;
-			LocalFree(processesInJobBuffer);
-			processesInJobBuffer = NULL;
-
-			return GetProcessIds(hJob, processList);
-		}
-	}
-
-	processList.resize(processesInJobBuffer->NumberOfProcessIdsInList);
-
-	for (size_t i = 0; i < processesInJobBuffer->NumberOfProcessIdsInList; i++)
-	{
-		processList[i] = (unsigned long)processesInJobBuffer->ProcessIdList[i];
-	}
-
-
-}
-
-
-PROCESS_MEMORY_COUNTERS GetProcessIdMemoryInfo(unsigned long processId)
-{
-	PROCESS_MEMORY_COUNTERS counters = {};
-
-	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, false, processId);
-
-	if (hProcess == NULL)
-	{
-		wclog << L"Could not open Process Id: " << processId << endl;
-
-		return counters;
-	}
-
-	ZeroMemory(&counters, sizeof(counters));
-
-	GetProcessMemoryInfo(hProcess, &counters, sizeof(counters));
-
-	CloseHandle(hProcess);
-
-	return counters;
-}
-
-void GetProcessesMemoryInfo(vector<unsigned long> &processList, vector<PROCESS_MEMORY_COUNTERS> &counters)
-{
-
-	counters.resize(processList.size());
-	for (size_t i = 0; i < processList.size(); i++)
-	{
-		PROCESS_MEMORY_COUNTERS counter = GetProcessIdMemoryInfo(processList[i]);
-		counters[i] = counter;
-	}
-}
-
-long long GetTotalKernelMemory(vector<PROCESS_MEMORY_COUNTERS> &counters)
-{
-	long long sum = 0;
-
-	for (size_t i = 0; i < counters.size(); i++)
-	{
-		sum += counters[i].QuotaPagedPoolUsage + counters[i].QuotaNonPagedPoolUsage;
-	}
-	return sum;
-}
-
-long long GetTotalWorkingSet(vector<PROCESS_MEMORY_COUNTERS> &counters)
-{
-	long long  sum = 0;
-
-	for (size_t i = 0; i < counters.size(); i++)
-	{
-		sum += counters[i].WorkingSetSize;
-	}
-	return sum;
-}
-
-//LPWSTR *argv;
-//int argc;
-//
-//void GetCommandLineArgs()
-//{
-//	argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-//	if (NULL == argv)
-//	{
-//		wclog << L"CommandLineToArgvW failed\n";
-//		exit(1);
-//	}
-//
-//}
-//
-//int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
-//{
-//	GetCommandLineArgs();
-//
 
 bool Discharged()
 {
@@ -398,25 +292,15 @@ void SetDefaultDacl()
 
 int wmain(int argc, wchar_t **argv)
 {
-	if (argc != 3 && argc != 4)
+	if (argc != 3)
 	{
-		wcerr << L"Usage: CloudFoundry.WindowsPrison.Guard.exe <username> <memory_bytes_quota> [<parent_job_object_name>]" << endl;
+		wcerr << L"Usage: CloudFoundry.WindowsPrison.Guard.exe <username> <parent_job_object_name>" << endl;
 		exit(-1);
 	}
 
 	// Get arguments
 	wstring username(argv[1]);
-	wstring memoryQuotaString(argv[2]);
-	wstring containerId;
-
-	if (argc == 4){
-		containerId = wstring(argv[3]);
-	}
-	else {
-		containerId = wstring(argv[1]);
-	}
-
-	long memoryQuota = _wtol(memoryQuotaString.c_str());
+	wstring containerId(argv[2]);
 
 	SetDefaultDacl();
 
@@ -425,9 +309,6 @@ int wmain(int argc, wchar_t **argv)
 	hGuardJob = CreateGuardJobObject(username + L"-guard");
 
 	hDischargeEvent = CreateEvent(NULL, true, false, dischargeEventName.c_str());
-
-	vector<PROCESS_MEMORY_COUNTERS> counters;
-	vector<unsigned long> processList;
 
 	char userSidBuffer[1024];
 	PSID userSid = userSidBuffer;
@@ -440,52 +321,35 @@ int wmain(int argc, wchar_t **argv)
 		exit(GetLastError());
 	}
 
+	bool run = true;
+
 	for (;;)
 	{
 		if (Discharged())
 		{
 			wclog << L"Guard is discharged. Shutting down." << endl;
+			run = false;
+		}
 
+		if (!ParentJobExists(containerId)){
+			run = false;
+		}
+
+		int numUserSidProcesses = PutProcessBackInTheJob(containerId, hGuardJob, userSid);
+
+		if (!run && numUserSidProcesses == 0)
+		{
 			break;
 		}
 
-		AssertParentJobExists(containerId);
-
-		PutProcessBackInTheJob(containerId, hGuardJob, userSid);
-
-		if (memoryQuota > 0)
-		{
-
-			processList.clear();
-			counters.clear();
-
-			GetProcessIds(hGuardJob, processList);
-
-			GetProcessesMemoryInfo(processList, counters);
-
-			long long kernelMemoryUsage = GetTotalKernelMemory(counters);
-			long long workingSetUsage = GetTotalWorkingSet(counters);
-			long long totalMemUsage = kernelMemoryUsage + workingSetUsage;
-
-			if (totalMemUsage >= memoryQuota)
-			{
-				// all hell breaks loose
-				// TODO: consider killing the prison by setting the job memory limit to 0
-
-				// TerminateJobObject is not aggresive enough to stop a fork bomb :?
-				// Another alternative to exit is to CloseHandle the job object and then create it back again
-				// TerminateJobObject(hParentJob, -1);
-
-				wclog << L"Quota exceeded. Terminated Job: " << username << " at " << totalMemUsage << " bytes." << endl;
-
-				exit(-66);
-			}
+		if (!run) {
+			TerminateJobObject(hGuardJob, -1);
 		}
 
-		// If waiting for multiple events is required use:
-		// http://msdn.microsoft.com/en-us/library/windows/desktop/ms687003 or
-		// http://msdn.microsoft.com/en-us/library/windows/desktop/ms687008
-		Sleep(checkRateMs);
+		if (run)
+		{
+			Sleep(checkRateMs);
+		}
 	}
 
 	CloseHandle(hGuardJob);

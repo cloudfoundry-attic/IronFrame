@@ -379,13 +379,12 @@ namespace IronFrame
             if (IsGuardRunning())
                 return;
 
-            var gprocess = processRunner.Run(new ProcessRunSpec
+            processRunner.Run(new ProcessRunSpec
             {
                 ExecutablePath = dependencyHelper.GuardExePath,
                 Arguments = new string[]
                 {
                     user.UserName,
-                    CurrentMemoryLimit().ToString(CultureInfo.InvariantCulture),
                     Id
                 },
                 WorkingDirectory = directory.MapUserPath("/")

@@ -29,7 +29,7 @@ namespace IronFrame.Acceptance.Test
            this.guardProcess = Process.Start(new ProcessStartInfo()
            {
                FileName = guardExePath,
-               Arguments = String.Format("{0} {1} {2}", username, 1024 * 1024 * 1024, username),
+               Arguments = String.Format("{0} {1}", username, username),
            });
         }
 

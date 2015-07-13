@@ -63,17 +63,9 @@ namespace IronFrame
             }
         }
 
-        private void CopyGuardToContainer(IContainerDirectory directory)
-        {
-            fileSystem.CopyFile(
-                dependencyHelper.GuardExePath,
-                directory.MapBinPath(dependencyHelper.GuardExe));
-        }
-
         public IContainerHostClient StartContainerHost(string containerId, IContainerDirectory directory, JobObject jobObject, NetworkCredential credentials)
         {
             CopyHostToContainer(directory);
-            CopyGuardToContainer(directory);
 
             var hostRunSpec = new ProcessRunSpec
             {
