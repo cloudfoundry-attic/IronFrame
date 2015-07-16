@@ -156,19 +156,31 @@ int PutProcessBackInTheJob(wstring &containerId, HANDLE hJob, PSID userSid)
 
 	size_t numProcesses = cbBytesReturned / sizeof(DWORD);
 
+	HANDLE hProcess = NULL;
+	HANDLE hProcessToken = NULL;
+
 	for (size_t i = 1; i < numProcesses; i++){
 
 		DWORD pid = processes[i];
 
-		HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+		if (hProcess != NULL){
+			CloseHandle(hProcess);
+			hProcess = NULL;
+		}
+
+		hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 		if (hProcess == NULL) {
 			// Is this safe? Could container process change it's permissions
 			continue;
 		}
 
 
+		if (hProcessToken != NULL){
+			CloseHandle(hProcessToken);
+			hProcessToken = NULL;
+		}
+
 		// get the process user name
-		HANDLE hProcessToken;
 		if (!OpenProcessToken(hProcess, TOKEN_QUERY, &hProcessToken)){
 			wclog << L"Error on OpenProcessToken." << endl;
 			continue;
@@ -216,6 +228,13 @@ int PutProcessBackInTheJob(wstring &containerId, HANDLE hJob, PSID userSid)
 				}
 			}
 		}
+	}
+
+	if (hProcess != NULL){
+		CloseHandle(hProcess);
+	}
+	if (hProcessToken != NULL){
+		CloseHandle(hProcessToken);
 	}
 
 	return numUserSidProcesses;
