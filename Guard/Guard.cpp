@@ -136,7 +136,7 @@ void EnsureProcessIsInJob(HANDLE hJob, HANDLE hProcess){
 	}
 }
 
-int PutProcessBackInTheJob(wstring &containerId, HANDLE hJob, PSID userSid)
+int PutProcessBackInTheJob(int max_handles_per_proc, wstring &containerId, HANDLE hJob, PSID userSid)
 {
 	DWORD bufferSize = (DWORD)sizeof(processes);
 	DWORD cbBytesReturned;
@@ -174,7 +174,6 @@ int PutProcessBackInTheJob(wstring &containerId, HANDLE hJob, PSID userSid)
 			continue;
 		}
 
-
 		if (hProcessToken != NULL){
 			CloseHandle(hProcessToken);
 			hProcessToken = NULL;
@@ -199,8 +198,18 @@ int PutProcessBackInTheJob(wstring &containerId, HANDLE hJob, PSID userSid)
 			// we need to ensure here that hProcess is inside hJob
 			numUserSidProcesses++;
 
-			BOOL processInJob = false;
+			// Enforce MAX Handles
+			if (max_handles_per_proc > 0) {
+				DWORD dwHandleCount = 0;
+				if (GetProcessHandleCount(hProcess, &dwHandleCount)) {
+					if (dwHandleCount > max_handles_per_proc) {
+						TerminateProcess(hProcess, -6500);
+						continue;
+					}
+				}
+			}
 
+			BOOL processInJob = false;
 			if (!IsProcessInJob(hProcess, hJob, &processInJob)){
 				wclog << L"Error on IsProcessInJob." << endl;
 				continue;
@@ -311,15 +320,23 @@ void SetDefaultDacl()
 
 int wmain(int argc, wchar_t **argv)
 {
-	if (argc != 3)
+	if (!(argc == 3  || argc == 4))
 	{
-		wcerr << L"Usage: CloudFoundry.WindowsPrison.Guard.exe <username> <parent_job_object_name>" << endl;
+		wcerr << L"Usage: CloudFoundry.WindowsPrison.Guard.exe <username> <parent_job_object_name> [<max_handles_per_proc>]" << endl;
 		exit(-1);
 	}
 
 	// Get arguments
+
 	wstring username(argv[1]);
 	wstring containerId(argv[2]);
+
+	DWORD max_handles_per_proc = 0;
+	if (argc >= 4) {
+		wstring str(argv[3]);
+		max_handles_per_proc = std::stoi(str);
+	}
+
 
 	SetDefaultDacl();
 
@@ -354,7 +371,7 @@ int wmain(int argc, wchar_t **argv)
 			run = false;
 		}
 
-		int numUserSidProcesses = PutProcessBackInTheJob(containerId, hGuardJob, userSid);
+		int numUserSidProcesses = PutProcessBackInTheJob(max_handles_per_proc, containerId, hGuardJob, userSid);
 
 		if (!run && numUserSidProcesses == 0)
 		{
