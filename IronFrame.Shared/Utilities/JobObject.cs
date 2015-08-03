@@ -347,6 +347,12 @@ namespace IronFrame.Utilities
         public virtual void TerminateProcessesAndWait(int milliseconds = System.Threading.Timeout.Infinite)
         {
             TerminateProcesses();
+            var pids = GetProcessIds();
+            foreach (var pid in pids)
+            {
+                var process = Process.GetProcessById(pid);
+                process.WaitForExit(milliseconds);
+            }
             using (var waitHandle = new JobObjectWaitHandle(handle))
             {
                 waitHandle.WaitOne(milliseconds);
