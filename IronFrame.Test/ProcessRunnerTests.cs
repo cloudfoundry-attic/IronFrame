@@ -120,7 +120,8 @@ namespace IronFrame
             [Fact]
             public void CanGetExitCodeFromCompletedProcess()
             {
-                var si = CreateRunSpec("cmd.exe", new[] { "/S", "/C", @"""ping 127.0.0.1 -n 1 && exit""" });
+                var si = CreateRunSpec("cmd.exe", new[] { "/S", "/C", "ping 127.0.0.1 -n 1 && exit" });
+                si.BufferedInputOutput = true;
 
                 using (var p = Runner.Run(si))
                 {
@@ -218,7 +219,7 @@ namespace IronFrame
 
                 try
                 {
-                    var si = CreateRunSpec("cmd.exe", new[] {"/C", "set", "USERNAME"});
+                    var si = CreateRunSpec("cmd.exe", new[] {"/C", "set USERNAME"});
                     si.Credentials = user;
                     si.BufferedInputOutput = true;
                     si.WorkingDirectory = Environment.SystemDirectory;

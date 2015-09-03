@@ -282,7 +282,7 @@ namespace IronFrame.Acceptance
                 {
                     ExecutablePath = "ping.exe",
                     DisablePathMapping = true,
-                    Arguments = new string[] { "127.0.0.1 -n -1" },
+                    Arguments = new string[] { "127.0.0.1", "-n", "-1" },
                 };
 
                 // START THE LONG RUNNING PROCESS

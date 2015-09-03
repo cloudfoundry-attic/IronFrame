@@ -18,6 +18,12 @@ namespace IronFrame.Utilities
                 if (builder.Length > 0)
                     builder.Append(" ");
 
+                if (arg.StartsWith("/"))
+                {
+                    builder.Append(arg);
+                    continue;
+                }
+
                 builder.Append("\"")
                     .Append(arg.Replace("\\", "\\\\").Replace("\"", "\\\""))
                     .Append("\"");
