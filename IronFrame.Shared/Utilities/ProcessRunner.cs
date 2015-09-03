@@ -2,11 +2,30 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
+using System.Text;
 using IronFrame.Win32;
 using NLog;
 
 namespace IronFrame.Utilities
 {
+    public static class ArgumentEscaper
+    {
+        public static string Escape(string[] args)
+        {
+            var builder = new StringBuilder();
+            foreach (string arg in args)
+            {
+                if (builder.Length > 0)
+                    builder.Append(" ");
+
+                builder.Append("\"")
+                    .Append(arg.Replace("\\", "\\\\").Replace("\"", "\\\""))
+                    .Append("\"");
+            }
+            return builder.ToString();
+        }
+    }
+
     internal class ProcessRunner : IProcessRunner
     {
         private readonly Logger log = LogManager.GetCurrentClassLogger();
@@ -22,7 +41,7 @@ namespace IronFrame.Utilities
             var startInfo = new ProcessStartInfo
             {
                 FileName = runSpec.ExecutablePath,
-                Arguments = String.Join(" ", runSpec.Arguments ?? EmptyArguments),
+                Arguments = ArgumentEscaper.Escape(runSpec.Arguments ?? EmptyArguments),
                 WorkingDirectory = runSpec.WorkingDirectory,
                 UseShellExecute = false,
                 LoadUserProfile = false,

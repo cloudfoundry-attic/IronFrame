@@ -37,7 +37,7 @@ namespace IronFrame.Utilities
                 var spec = new ProcessRunSpec
                 {
                     ExecutablePath = "netsh.exe",
-                    Arguments = new[] {arguments},
+                    Arguments = arguments.Split(' '),
                     WorkingDirectory = workingDirectory
                 };
 

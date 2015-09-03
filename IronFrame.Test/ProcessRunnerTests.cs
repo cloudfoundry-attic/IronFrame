@@ -43,6 +43,25 @@ namespace IronFrame
             }
 
             [Fact]
+            public void SuppliedArgumentsAreEscaped()
+            {
+                using (var tempFile = CreateTempFile())
+                {
+                    File.WriteAllText(tempFile.FullName, "hello world");
+                    var si = CreateRunSpec("findstr", new [] {"hello world", tempFile.FullName});
+                    si.BufferedInputOutput = true;
+
+                    using (var p = Runner.Run(si))
+                    {
+                        WaitForGoodExit(p);
+
+                        var output = p.StandardError.ReadToEnd();
+                        Assert.DoesNotContain("Cannot open world", output);
+                    }
+                };
+            }
+
+            [Fact]
             public void SuppliedArgumentsInStartupInfoIsPassedToProcess()
             {
                 using (var tempFile = CreateTempFile())
