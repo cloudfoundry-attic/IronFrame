@@ -373,16 +373,16 @@ namespace IronFrame.Utilities
         }
 
 
-        public virtual void SetJobCpuLimit(int cpuRate)
+        public virtual void SetJobCpuLimit(int cpuWeight)
         {
-            if (cpuRate < 1 || cpuRate > 10000) // 100% is 100 * 100 == 10000
+            if (cpuWeight < 1 || cpuWeight > 9)
             {
-                throw new ArgumentOutOfRangeException("cpuRate", cpuRate, "CPU Limit must be between 1 and 10,000");
+                throw new ArgumentOutOfRangeException("cpuWeight", cpuWeight, "CPU Limit must be between 1 and 9");
             }
             var cpuRateInfo = new NativeMethods.JobObjectCpuRateControlInformation
             {
-                ControlFlags = (UInt32)(NativeMethods.JobObjectCpuRateControl.Enable | NativeMethods.JobObjectCpuRateControl.HardCap),
-                CpuRate = (UInt32)cpuRate,
+                ControlFlags = (UInt32)(NativeMethods.JobObjectCpuRateControl.Enable | NativeMethods.JobObjectCpuRateControl.WeightBased),
+                Weight = (uint) cpuWeight,
             };
             using (var allocation = SafeAllocation.Create<NativeMethods.JobObjectCpuRateControlInformation>(cpuRateInfo))
             {

@@ -267,8 +267,8 @@ namespace IronFrame.Utilities
             [Fact]
             public void CanLimitCpu()
             {
-                jobObject.SetJobCpuLimit(1 * 100);
-                jobObject2.SetJobCpuLimit(10 * 100);
+                jobObject.SetJobCpuLimit(1);
+                jobObject2.SetJobCpuLimit(9);
 
                 var thread1 = new Thread(() =>
                 {
@@ -323,7 +323,7 @@ namespace IronFrame.Utilities
             public void ThrowsOnInvalidCpuWeights()
             {
                 Assert.Throws<ArgumentOutOfRangeException>(() => jobObject.SetJobCpuLimit(0));
-                Assert.Throws<ArgumentOutOfRangeException>(() => jobObject.SetJobCpuLimit(100 * 100 + 1));
+                Assert.Throws<ArgumentOutOfRangeException>(() => jobObject.SetJobCpuLimit(10));
             }
         }
 
