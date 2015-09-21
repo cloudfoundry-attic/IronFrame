@@ -539,16 +539,6 @@ namespace IronFrame
             }
 
             [Fact]
-            public void TransitionsToDeletedEvenIfDirectoryDeletionFails()
-            {
-                Directory.When(x => x.Destroy()).Do(x => { throw new Exception(); });
-                try { Container.Destroy(); }
-                catch { }
-
-                Assert.Throws<InvalidOperationException>(() => Container.GetInfo());
-            }
-
-            [Fact]
             public void WhenContainerStopped_Runs()
             {
                 Container.Stop(false);
