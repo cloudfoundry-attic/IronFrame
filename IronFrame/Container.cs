@@ -146,7 +146,6 @@ namespace IronFrame
             Stop(true);
             StopGuardAndWait(new TimeSpan(0, 0, 0, 10));
 
-            this.currentState = ContainerState.Destroyed;
 
             foreach (var port in reservedPorts)
             {
@@ -155,7 +154,13 @@ namespace IronFrame
             tcpPortManager.RemoveFirewallRules(user.UserName);
 
             // BR - Unmap the mounted directories (Removes user ACLs)
-            jobObject.TerminateProcessesAndWait();
+            try
+            {
+                jobObject.TerminateProcessesAndWait();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
             jobObject.Dispose();
 
             if (directory != null)
@@ -165,6 +170,8 @@ namespace IronFrame
 
             if (user != null)
                 user.Delete();
+
+            this.currentState = ContainerState.Destroyed;
         }
 
         private void deleteUserDiskQuota()
