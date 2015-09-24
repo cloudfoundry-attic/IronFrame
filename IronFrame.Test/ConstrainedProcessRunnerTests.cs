@@ -114,7 +114,7 @@ namespace IronFrame
 
                 Client.Received(1).CreateProcess(
                     Arg.Is<CreateProcessParams>(actual =>
-                        actual.environment.ContainsKey("TEMP") &&
+                        actual.environment.ContainsKey("windir") &&
                         actual.environment.ContainsKey("PATH")
                     )
                 );
@@ -135,7 +135,7 @@ namespace IronFrame
 
                 Client.Received(1).CreateProcess(
                     Arg.Is<CreateProcessParams>(actual =>
-                        actual.environment.ContainsKey("TEMP") &&
+                        actual.environment.ContainsKey("windir") &&
                         actual.environment.ContainsKey("PATH") &&
                         actual.environment["env1"] == "val1"
                     )

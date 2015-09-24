@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -64,6 +65,29 @@ namespace IronFrame.Utilities
             return new Dictionary<string, string>(_environment, _environment.Comparer);
         }
 
+        private static string[] excludedList = {
+            "COMPUTERNAME",
+            "ALLUSERSPROFILE",
+            "FP_NO_HOST_CHECK",
+            "GOPATH",
+            "NUMBER_OF_PROCESSORS",
+            "OS",
+            "PATHEXT",
+            "PROCESSOR_ARCHITECTURE",
+            "PROCESSOR_IDENTIFIER",
+            "PROCESSOR_LEVEL",
+            "PROCESSOR_REVISION",
+            "PSModulePath",
+            "PUBLIC",
+            "SystemDrive",
+            "TEMP",
+            "TMP",
+            "USERDOMAIN",
+            "USERNAME",
+            "VS110COMNTOOLS",
+            "VS120COMNTOOLS",
+            "WIX"
+        };
 
         private static IDictionary<string, string> CreateEnvBlock(IntPtr userToken)
         {
@@ -85,15 +109,16 @@ namespace IronFrame.Utilities
                     int equalsIndex = str.IndexOf("=", StringComparison.Ordinal);
                     string key = str.Substring(0, equalsIndex);
                     string value = str.Substring(equalsIndex + 1);
-
-                    envBlock[key] = value;
+                    if (excludedList.All(x => x != key))
+                    {
+                        envBlock[key] = value;
+                    }
                 }
             }
             finally
             {
                 DestroyEnvironmentBlock(unmanagedEnv);
             }
-
             return envBlock;
         }
 

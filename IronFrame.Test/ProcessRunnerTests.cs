@@ -219,7 +219,7 @@ namespace IronFrame
 
                 try
                 {
-                    var si = CreateRunSpec("cmd.exe", new[] {"/C", "set USERNAME"});
+                    var si = CreateRunSpec("cmd.exe", new[] {"/C", "set windir"});
                     si.Credentials = user;
                     si.BufferedInputOutput = true;
                     si.WorkingDirectory = Environment.SystemDirectory;
@@ -230,8 +230,7 @@ namespace IronFrame
 
                         var output = await p.StandardOutput.ReadToEndAsync();
 
-                        string expectedUserName = string.Format("USERNAME={0}", user.UserName);
-                        Assert.Contains(expectedUserName, output);
+                        Assert.Contains(@"windir=C:\Windows", output);
                     }
                 }
                 finally
