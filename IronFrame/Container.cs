@@ -4,8 +4,6 @@ using SimpleImpersonation;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -28,6 +26,7 @@ namespace IronFrame
         readonly Dictionary<string, string> defaultEnvironment;
         readonly List<int> reservedPorts = new List<int>();
         readonly ContainerHostDependencyHelper dependencyHelper;
+        private readonly object _ioLock = new object();
 
         IProcessRunner processRunner;
         IProcessRunner constrainedProcessRunner;
@@ -83,57 +82,66 @@ namespace IronFrame
 
         public int ReservePort(int requestedPort)
         {
-            ThrowIfNotActive();
+            lock (_ioLock)
+            {
+                ThrowIfNotActive();
 
-            var reservedPort = tcpPortManager.ReserveLocalPort(requestedPort, user.UserName);
-            reservedPorts.Add(reservedPort);
-            return reservedPort;
+                var reservedPort = tcpPortManager.ReserveLocalPort(requestedPort, user.UserName);
+                reservedPorts.Add(reservedPort);
+                return reservedPort;
+            }
         }
 
         public IContainerProcess Run(ProcessSpec spec, IProcessIO io)
         {
-            ThrowIfNotActive();
-
-            var runner = spec.Privileged ?
-                processRunner :
-                constrainedProcessRunner;
-
-            var executablePath = !spec.DisablePathMapping ?
-                directory.MapUserPath(spec.ExecutablePath) :
-                spec.ExecutablePath;
-
-            var specEnvironment = spec.Environment ?? new Dictionary<string, string>();
-            var processEnvironment = this.defaultEnvironment.Merge(specEnvironment);
-
-            Action<string> stdOut = io == null || io.StandardOutput == null
-                ? (Action<string>)null
-                : data => io.StandardOutput.Write(data);
-
-            Action<string> stdErr = io == null || io.StandardError == null
-                ? (Action<string>)null
-                : data => io.StandardError.Write(data);
-
-            var runSpec = new ProcessRunSpec
+            lock (_ioLock)
             {
-                ExecutablePath = executablePath,
-                Arguments = spec.Arguments,
-                Environment = processEnvironment,
-                WorkingDirectory = directory.MapUserPath(spec.WorkingDirectory ?? DefaultWorkingDirectory),
-                OutputCallback = stdOut,
-                ErrorCallback = stdErr,
-            };
+                ThrowIfNotActive();
 
-            var process = runner.Run(runSpec);
+                var runner = spec.Privileged
+                    ? processRunner
+                    : constrainedProcessRunner;
 
-            return new ContainerProcess(process);
+                var executablePath = !spec.DisablePathMapping
+                    ? directory.MapUserPath(spec.ExecutablePath)
+                    : spec.ExecutablePath;
+
+                var specEnvironment = spec.Environment ?? new Dictionary<string, string>();
+                var processEnvironment = this.defaultEnvironment.Merge(specEnvironment);
+
+                Action<string> stdOut = io == null || io.StandardOutput == null
+                    ? (Action<string>) null
+                    : data => io.StandardOutput.Write(data);
+
+                Action<string> stdErr = io == null || io.StandardError == null
+                    ? (Action<string>) null
+                    : data => io.StandardError.Write(data);
+
+                var runSpec = new ProcessRunSpec
+                {
+                    ExecutablePath = executablePath,
+                    Arguments = spec.Arguments,
+                    Environment = processEnvironment,
+                    WorkingDirectory = directory.MapUserPath(spec.WorkingDirectory ?? DefaultWorkingDirectory),
+                    OutputCallback = stdOut,
+                    ErrorCallback = stdErr,
+                };
+
+                var process = runner.Run(runSpec);
+
+                return new ContainerProcess(process);
+            }
         }
 
         public void LimitMemory(ulong limitInBytes)
         {
-            ThrowIfNotActive();
-            ThrowIfGuardActive();
+            lock (_ioLock)
+            {
+                ThrowIfNotActive();
+                ThrowIfGuardActive();
 
-            this.jobObject.SetJobMemoryLimit(limitInBytes);
+                this.jobObject.SetJobMemoryLimit(limitInBytes);
+            }
         }
 
         public ulong CurrentMemoryLimit()
@@ -143,35 +151,38 @@ namespace IronFrame
 
         public void Destroy()
         {
-            Stop(true);
-            StopGuardAndWait(new TimeSpan(0, 0, 0, 10));
-
-
-            foreach (var port in reservedPorts)
+            lock (_ioLock)
             {
-                tcpPortManager.ReleaseLocalPort(port, user.UserName);
+                Stop(true);
+                StopGuardAndWait(new TimeSpan(0, 0, 0, 10));
+
+
+                foreach (var port in reservedPorts)
+                {
+                    tcpPortManager.ReleaseLocalPort(port, user.UserName);
+                }
+                tcpPortManager.RemoveFirewallRules(user.UserName);
+
+                // BR - Unmap the mounted directories (Removes user ACLs)
+                try
+                {
+                    jobObject.TerminateProcessesAndWait();
+                }
+                catch (ObjectDisposedException)
+                {
+                }
+                jobObject.Dispose();
+
+                if (directory != null)
+                    directory.Destroy();
+
+                deleteUserDiskQuota();
+
+                if (user != null)
+                    user.Delete();
+
+                this.currentState = ContainerState.Destroyed;
             }
-            tcpPortManager.RemoveFirewallRules(user.UserName);
-
-            // BR - Unmap the mounted directories (Removes user ACLs)
-            try
-            {
-                jobObject.TerminateProcessesAndWait();
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-            jobObject.Dispose();
-
-            if (directory != null)
-                directory.Destroy();
-
-            deleteUserDiskQuota();
-
-            if (user != null)
-                user.Delete();
-
-            this.currentState = ContainerState.Destroyed;
         }
 
         private void deleteUserDiskQuota()
@@ -200,37 +211,49 @@ namespace IronFrame
 
         public void CreateOutboundFirewallRule(FirewallRuleSpec firewallRuleSpec)
         {
-            tcpPortManager.CreateOutboundFirewallRule(user.UserName, firewallRuleSpec);
+            lock (_ioLock)
+            {
+                tcpPortManager.CreateOutboundFirewallRule(user.UserName, firewallRuleSpec);
+            }
         }
 
         public ulong CurrentDiskLimit()
         {
-            return (ulong)diskQuotaControl.FindUser(user.SID).QuotaLimit;
+            lock (_ioLock)
+            {
+                return (ulong) diskQuotaControl.FindUser(user.SID).QuotaLimit;
+            }
         }
 
         public ulong CurrentDiskUsage()
         {
-            return (ulong)diskQuotaControl.FindUser(user.SID).QuotaUsed;
+            lock (_ioLock)
+            {
+                return (ulong) diskQuotaControl.FindUser(user.SID).QuotaUsed;
+            }
         }
 
         public ContainerInfo GetInfo()
         {
-            ThrowIfDestroyed();
-
-            var ipAddress = IPUtilities.GetLocalIPAddress();
-            var ipAddressString = ipAddress != null ? ipAddress.ToString() : "";
-
-            return new ContainerInfo
+            lock (_ioLock)
             {
-                HostIPAddress = ipAddressString,
-                ContainerIPAddress = ipAddressString,
-                ContainerPath = directory.RootPath,
-                State = this.currentState,
-                CpuStat = GetCpuStat(),
-                MemoryStat = GetMemoryStat(),
-                Properties = propertyService.GetProperties(this),
-                ReservedPorts = new List<int>(reservedPorts),
-            };
+                ThrowIfDestroyed();
+
+                var ipAddress = IPUtilities.GetLocalIPAddress();
+                var ipAddressString = ipAddress != null ? ipAddress.ToString() : "";
+
+                return new ContainerInfo
+                {
+                    HostIPAddress = ipAddressString,
+                    ContainerIPAddress = ipAddressString,
+                    ContainerPath = directory.RootPath,
+                    State = this.currentState,
+                    CpuStat = GetCpuStat(),
+                    MemoryStat = GetMemoryStat(),
+                    Properties = propertyService.GetProperties(this),
+                    ReservedPorts = new List<int>(reservedPorts),
+                };
+            }
         }
 
         private ContainerCpuStat GetCpuStat()
@@ -244,21 +267,24 @@ namespace IronFrame
 
         private ContainerMemoryStat GetMemoryStat()
         {
-            var processIds = jobObject.GetProcessIds();
-
-            var processes = processHelper.GetProcesses(processIds).ToList();
-
-            ulong privateMemory = 0;
-
-            foreach (var process in processes)
+            lock (_ioLock)
             {
-                privateMemory += (ulong)process.PrivateMemoryBytes;
+                var processIds = jobObject.GetProcessIds();
+
+                var processes = processHelper.GetProcesses(processIds).ToList();
+
+                ulong privateMemory = 0;
+
+                foreach (var process in processes)
+                {
+                    privateMemory += (ulong) process.PrivateMemoryBytes;
+                }
+
+                return new ContainerMemoryStat
+                {
+                    PrivateBytes = privateMemory,
+                };
             }
-
-            return new ContainerMemoryStat
-            {
-                PrivateBytes = privateMemory,
-            };
         }
 
         public void Dispose()
@@ -268,30 +294,33 @@ namespace IronFrame
 
         public void Stop(bool kill)
         {
-            ThrowIfDestroyed();
-
-            if (constrainedProcessRunner != null)
+            lock (_ioLock)
             {
-                try
-                {
-                    constrainedProcessRunner.StopAll(kill);
-                }
-                catch (TimeoutException)
-                {
-                    jobObject.TerminateProcessesAndWait();
-                }
-                constrainedProcessRunner.Dispose();
-                constrainedProcessRunner = null;
-            }
+                ThrowIfDestroyed();
 
-            if (processRunner != null)
-            {
-                processRunner.StopAll(kill);
-                processRunner.Dispose();
-                processRunner = null;
-            }
+                if (constrainedProcessRunner != null)
+                {
+                    try
+                    {
+                        constrainedProcessRunner.StopAll(kill);
+                    }
+                    catch (TimeoutException)
+                    {
+                        jobObject.TerminateProcessesAndWait();
+                    }
+                    constrainedProcessRunner.Dispose();
+                    constrainedProcessRunner = null;
+                }
 
-            this.currentState = ContainerState.Stopped;
+                if (processRunner != null)
+                {
+                    processRunner.StopAll(kill);
+                    processRunner.Dispose();
+                    processRunner = null;
+                }
+
+                this.currentState = ContainerState.Stopped;
+            }
         }
 
         private void ThrowIfNotActive()
@@ -319,43 +348,57 @@ namespace IronFrame
 
         public void LimitDisk(ulong limitInBytes)
         {
-            ThrowIfNotActive();
-            var dskuser = diskQuotaControl.AddUser(user.UserName);
-            dskuser.QuotaLimit = (double)limitInBytes;
+            lock (_ioLock)
+            {
+                ThrowIfNotActive();
+                var dskuser = diskQuotaControl.AddUser(user.UserName);
+                dskuser.QuotaLimit = (double) limitInBytes;
+            }
         }
 
         public void SetProperty(string name, string value)
         {
-            propertyService.SetProperty(this, name, value);
+            lock (_ioLock)
+            {
+                ThrowIfDestroyed();
+                propertyService.SetProperty(this, name, value);
+            }
         }
 
         public string GetProperty(string name)
         {
-            return propertyService.GetProperty(this, name);
+            lock (_ioLock)
+            {
+                ThrowIfDestroyed();
+                return propertyService.GetProperty(this, name);
+            }
         }
 
         public Dictionary<string, string> GetProperties()
         {
-            try
-            {
-                return propertyService.GetProperties(this);
-            }
-            catch (IOException)
+            lock (_ioLock)
             {
                 ThrowIfDestroyed();
-                throw;
+                return propertyService.GetProperties(this);
             }
         }
 
         public void RemoveProperty(string name)
         {
-            propertyService.RemoveProperty(this, name);
+            lock (_ioLock)
+            {
+                ThrowIfDestroyed();
+                propertyService.RemoveProperty(this, name);
+            }
         }
 
         public void LimitCpu(int i)
         {
-            ThrowIfNotActive();
-            jobObject.SetJobCpuLimit(i);
+            lock (_ioLock)
+            {
+                ThrowIfNotActive();
+                jobObject.SetJobCpuLimit(i);
+            }
         }
 
         public int CurrentCpuLimit()
@@ -377,34 +420,43 @@ namespace IronFrame
         {
             using (Impersonation.LogonUser("", user.UserName, user.GetCredential().Password, LogonType.Interactive))
             {
-                f();
+                lock (_ioLock)
+                {
+                    f();
+                }
             }
         }
 
         public void StartGuard()
         {
-            if (IsGuardRunning())
-                return;
-
-            processRunner.Run(new ProcessRunSpec
+            lock (_ioLock)
             {
-                ExecutablePath = dependencyHelper.GuardExePath,
-                Arguments = new string[]
+                if (IsGuardRunning())
+                    return;
+
+                processRunner.Run(new ProcessRunSpec
                 {
-                    user.UserName,
-                    Id
-                },
-                WorkingDirectory = directory.MapUserPath("/")
-            });
+                    ExecutablePath = dependencyHelper.GuardExePath,
+                    Arguments = new string[]
+                    {
+                        user.UserName,
+                        Id
+                    },
+                    WorkingDirectory = directory.MapUserPath("/")
+                });
+            }
         }
 
         public void StopGuard()
         {
-            using (var dischargeEvent = GuardEventWaitHandle())
+            lock (_ioLock)
             {
-                if (dischargeEvent != null)
+                using (var dischargeEvent = GuardEventWaitHandle())
                 {
-                    dischargeEvent.Set();
+                    if (dischargeEvent != null)
+                    {
+                        dischargeEvent.Set();
+                    }
                 }
             }
         }

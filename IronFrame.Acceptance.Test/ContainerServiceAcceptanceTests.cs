@@ -58,8 +58,6 @@ namespace IronFrame.Acceptance
 
         public virtual void Dispose()
         {
-            Service.Dispose();
-
             if (UserCredential != null)
             {
                 // Delete the test user

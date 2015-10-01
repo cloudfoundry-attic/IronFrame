@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace IronFrame
 {
-    public interface IContainerService : IDisposable
+    public interface IContainerService
     {
         IContainer CreateContainer(ContainerSpec containerSpec);
         void DestroyContainer(string handle);
@@ -21,7 +21,7 @@ namespace IronFrame
         public BindMount[] BindMounts { get; set; }
         public Dictionary<string, string> Properties { get; set; }
         public Dictionary<string, string> Environment { get; set; }
-}
+    }
 
     public sealed class ContainerService : IContainerService
     {
@@ -128,7 +128,10 @@ namespace IronFrame
                     dependencyHelper);
 
                 containerPropertiesService.SetProperties(container, containerSpec.Properties);
-                containers.Add(container);
+                lock (containers)
+                {
+                    containers.Add(container);
+                }
             }
             catch (Exception e)
             {
@@ -152,17 +155,19 @@ namespace IronFrame
             if (container != null)
             {
                 container.Destroy();
-                containers.Remove(container);
+                lock (containers)
+                {
+                    containers.Remove(container);
+                }
             }
-        }
-
-        public void Dispose()
-        {
         }
 
         IContainer FindContainer(string handle)
         {
-            return containers.Find(x => x.Handle.Equals(handle, StringComparison.OrdinalIgnoreCase));
+            lock (containers)
+            {
+                return containers.Find(x => x.Handle.Equals(handle, StringComparison.OrdinalIgnoreCase));
+            }
         }
 
         public IContainer GetContainerByHandle(string handle)
@@ -172,12 +177,18 @@ namespace IronFrame
 
         public IReadOnlyList<IContainer> GetContainers()
         {
-            return containers.ToArray();
+            lock (containers)
+            {
+                return containers.ToArray();
+            }
         }
 
         public IReadOnlyList<string> GetContainerHandles()
         {
-            return containers.Select(x => x.Handle).ToList();
+            lock (containers)
+            {
+                return containers.Select(x => x.Handle).ToList();
+            }
         }
 
         IContainer RestoreContainerFromPath(string containerPath)
@@ -220,7 +231,10 @@ namespace IronFrame
             {
                 var container = RestoreContainerFromPath(containerPath);
 
-                containers.Add(container);
+                lock (containers)
+                {
+                    containers.Add(container);
+                }
             }
         }
 
