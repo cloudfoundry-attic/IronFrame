@@ -558,7 +558,7 @@ namespace IronFrame
             public void DeletesDiskQuota()
             {
                 var dskuser = Substitute.For<DIDiskQuotaUser>();
-                DiskQuotaControl.FindUser(User.UserName).Returns(dskuser);
+                DiskQuotaControl.FindUser(User.SID).Returns(dskuser);
 
                 Container.Destroy();
 
@@ -751,7 +751,7 @@ namespace IronFrame
             public void SetsUserDiskLimit()
             {
                 var quota = Substitute.For<DIDiskQuotaUser>();
-                this.DiskQuotaControl.AddUser(User.UserName).Returns(quota);
+                this.DiskQuotaControl.FindUser(User.SID).Returns(quota);
 
                 Container.LimitDisk(5);
 

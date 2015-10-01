@@ -35,9 +35,7 @@ namespace IronFrame
             {
                 if (_sid == null)
                 {
-                    var account = new NTAccount(UserName);
-                    var securityIdentifier = (SecurityIdentifier) account.Translate(typeof(SecurityIdentifier));
-                    _sid = securityIdentifier.ToString();
+                    _sid = userManager.GetSID(credentials.UserName);
                 }
                 return _sid;
             }

@@ -189,7 +189,7 @@ namespace IronFrame
         {
             try
             {
-                var dskuser = diskQuotaControl.FindUser(user.UserName);
+                var dskuser = diskQuotaControl.FindUser(user.SID);
                 diskQuotaControl.DeleteUser(dskuser);
             }
             catch (COMException)
@@ -351,7 +351,7 @@ namespace IronFrame
             lock (_ioLock)
             {
                 ThrowIfNotActive();
-                var dskuser = diskQuotaControl.AddUser(user.UserName);
+                var dskuser = diskQuotaControl.FindUser(user.SID);
                 dskuser.QuotaLimit = (double) limitInBytes;
             }
         }
