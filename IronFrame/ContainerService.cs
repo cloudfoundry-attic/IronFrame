@@ -192,8 +192,11 @@ namespace IronFrame
 
             var environment = new Dictionary<string, string>();
             var processHelper = new ProcessHelper();
+
             var diskQuotaControl = new DiskQuotaControl();
+            diskQuotaControl.UserNameResolution = UserNameResolutionConstants.dqResolveNone;
             diskQuotaControl.Initialize(directory.Volume, true);
+
             var dependencyHelper = new ContainerHostDependencyHelper();
 
             var container = new Container(

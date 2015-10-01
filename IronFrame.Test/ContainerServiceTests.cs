@@ -52,6 +52,7 @@ namespace IronFrame
                 .ReturnsForAnyArgs(ContainerHostClient);
 
             UserManager.CreateUser(null).ReturnsForAnyArgs(new NetworkCredential("username", "password"));
+            UserManager.GetSID(null).ReturnsForAnyArgs("S-1234");
 
             diskQuotaManager = Substitute.For<IDiskQuotaManager>();
             diskQuotaControl = Substitute.For<DiskQuotaControl>();
