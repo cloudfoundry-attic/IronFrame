@@ -154,11 +154,11 @@ namespace IronFrame
             var container = FindContainer(handle);
             if (container != null)
             {
-                container.Destroy();
                 lock (containers)
                 {
                     containers.Remove(container);
                 }
+                container.Destroy();
             }
         }
 
