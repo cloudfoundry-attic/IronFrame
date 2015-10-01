@@ -12,6 +12,7 @@ namespace IronFrame.Utilities
         public DiskQuotaControl CreateDiskQuotaControl(IContainerDirectory dir)
         {
             var diskQuotaControl = new DiskQuotaControl();
+            diskQuotaControl.UserNameResolution = UserNameResolutionConstants.dqResolveNone;
             diskQuotaControl.Initialize(dir.Volume, true);
             return diskQuotaControl;
         }

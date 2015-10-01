@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Web.Security;
 using IronFrame.Utilities;
 using NLog;
+using System.Security.Principal;
 
 namespace IronFrame
 {
@@ -14,6 +15,7 @@ namespace IronFrame
     {
         NetworkCredential CreateUser(string userName);
         void DeleteUser(string userName);
+        string GetSID(string userName);
     }
 
     // Public because it is used by the acceptance tests to create/delete users.
@@ -69,6 +71,13 @@ namespace IronFrame
             }
 
             return new NetworkCredential(data.UserName, data.Password);
+        }
+
+        public string GetSID(string userName)
+        {
+            var account = new NTAccount(userName);
+            var securityIdentifier = (SecurityIdentifier)account.Translate(typeof(SecurityIdentifier));
+            return securityIdentifier.ToString();
         }
 
         public string FindUser(string userName)
