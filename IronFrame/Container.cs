@@ -277,7 +277,14 @@ namespace IronFrame
 
                 foreach (var process in processes)
                 {
-                    privateMemory += (ulong) process.PrivateMemoryBytes;
+                    try
+                    {
+                        privateMemory += (ulong) process.PrivateMemoryBytes;
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // skip the error, the process has exited 
+                    }
                 }
 
                 return new ContainerMemoryStat

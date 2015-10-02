@@ -676,6 +676,22 @@ namespace IronFrame
 
                 Assert.Throws<InvalidOperationException>(action);
             }
+
+            [Fact]
+            public void WhenProcessHasExited()
+            {
+                var firstProcess = Substitute.For<IProcess>();
+                firstProcess.Id.Returns(1);
+                firstProcess.PrivateMemoryBytes.Throws(new InvalidOperationException());
+
+
+                JobObject.GetProcessIds().Returns(new int[] { 1 });
+
+                ProcessHelper.GetProcesses(null).ReturnsForAnyArgs(new[] { firstProcess });
+                var info = Container.GetInfo();
+
+                Assert.Equal(0ul, info.MemoryStat.PrivateBytes);
+            }
         }
 
         public class LimitMemory : ContainerTests
