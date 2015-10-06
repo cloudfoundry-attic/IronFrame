@@ -239,19 +239,25 @@ namespace IronFrame
             {
                 ThrowIfDestroyed();
 
-                var ipAddress = IPUtilities.GetLocalIPAddress();
-                var ipAddressString = ipAddress != null ? ipAddress.ToString() : "";
-
                 return new ContainerInfo
                 {
-                    HostIPAddress = ipAddressString,
-                    ContainerIPAddress = ipAddressString,
-                    ContainerPath = directory.RootPath,
                     State = this.currentState,
+                    ReservedPorts = new List<int>(reservedPorts),
+                    Properties = propertyService.GetProperties(this),
+                };
+            }
+        }
+
+        public ContainerMetrics GetMetrics()
+        {
+            lock (_ioLock)
+            {
+                ThrowIfDestroyed();
+
+                return new ContainerMetrics
+                {
                     CpuStat = GetCpuStat(),
                     MemoryStat = GetMemoryStat(),
-                    Properties = propertyService.GetProperties(this),
-                    ReservedPorts = new List<int>(reservedPorts),
                 };
             }
         }

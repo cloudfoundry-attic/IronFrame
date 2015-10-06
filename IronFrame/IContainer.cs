@@ -40,6 +40,7 @@ namespace IronFrame
         void CreateOutboundFirewallRule(FirewallRuleSpec firewallRuleSpec);
         ulong CurrentDiskLimit();
         ulong CurrentDiskUsage();
+        ContainerMetrics GetMetrics();
     }
 
     public interface IProcessIO
