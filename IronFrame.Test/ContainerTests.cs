@@ -614,10 +614,10 @@ namespace IronFrame
                 JobObject.GetProcessIds().Returns(new int[0]);
 
 
-                var info = Container.GetInfo();
+                var metrics = Container.GetMetrics();
 
-                Assert.Equal(TimeSpan.Zero, info.CpuStat.TotalProcessorTime);
-                Assert.Equal(0ul, info.MemoryStat.PrivateBytes);
+                Assert.Equal(TimeSpan.Zero, metrics.CpuStat.TotalProcessorTime);
+                Assert.Equal(0ul, metrics.MemoryStat.PrivateBytes);
             }
 
             [Fact]
@@ -646,10 +646,10 @@ namespace IronFrame
 
                 ProcessHelper.GetProcesses(null).ReturnsForAnyArgs(new[] { firstProcess, secondProcess });
 
-                var info = Container.GetInfo();
+                var metrics = Container.GetMetrics();
 
-                Assert.Equal(expectedTotalKernelTime + expectedTotalUserTime, info.CpuStat.TotalProcessorTime);
-                Assert.Equal((ulong)firstProcess.PrivateMemoryBytes + (ulong)secondProcess.PrivateMemoryBytes, info.MemoryStat.PrivateBytes);
+                Assert.Equal(expectedTotalKernelTime + expectedTotalUserTime, metrics.CpuStat.TotalProcessorTime);
+                Assert.Equal((ulong)firstProcess.PrivateMemoryBytes + (ulong)secondProcess.PrivateMemoryBytes, metrics.MemoryStat.PrivateBytes);
             }
 
             [Fact]
@@ -688,9 +688,9 @@ namespace IronFrame
                 JobObject.GetProcessIds().Returns(new int[] { 1 });
 
                 ProcessHelper.GetProcesses(null).ReturnsForAnyArgs(new[] { firstProcess });
-                var info = Container.GetInfo();
+                var metrics = Container.GetMetrics();
 
-                Assert.Equal(0ul, info.MemoryStat.PrivateBytes);
+                Assert.Equal(0ul, metrics.MemoryStat.PrivateBytes);
             }
         }
 

@@ -63,6 +63,7 @@
     <Compile Include="BindMount.cs" />
     <Compile Include="ContainerHandleHelper.cs" />
     <Compile Include="ContainerInfo.cs" />
+    <Compile Include="ContainerMetrics.cs" />
     <Compile Include="IContainerProcess.cs" />
     <Compile Include="IContainerDirectory.cs" />
     <Compile Include="ConstrainedProcess.cs" />
