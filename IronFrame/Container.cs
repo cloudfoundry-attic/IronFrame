@@ -206,23 +206,24 @@ namespace IronFrame
             return (ulong)diskQuotaControl.FindUser(user.SID).QuotaUsed;
         }
 
+        public ContainerMetrics GetMetrics()
+        {
+            ThrowIfDestroyed();
+
+            return new ContainerMetrics
+            {
+                // CpuStat = GetCpuStat(),
+                // MemoryStat = GetMemoryStat(),
+            };
+        }
+
         public ContainerInfo GetInfo()
         {
             ThrowIfDestroyed();
 
-            var ipAddress = IPUtilities.GetLocalIPAddress();
-            var ipAddressString = ipAddress != null ? ipAddress.ToString() : "";
-
             return new ContainerInfo
             {
-                HostIPAddress = ipAddressString,
-                ContainerIPAddress = ipAddressString,
-                ContainerPath = directory.RootPath,
-                State = this.currentState,
-                CpuStat = GetCpuStat(),
-                MemoryStat = GetMemoryStat(),
                 Properties = propertyService.GetProperties(this),
-                ReservedPorts = new List<int>(reservedPorts),
             };
         }
 
