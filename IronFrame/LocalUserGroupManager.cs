@@ -12,13 +12,13 @@ namespace IronFrame
     {
         public void CreateLocalGroup(string groupName)
         {
-            using (var localDirectory = new DirectoryEntry(String.Format("WinNT://{0}", Environment.MachineName)))
+            using (var localDirectory = new DirectoryEntry("WinNT://.,Computer"))
             {
                 DirectoryEntries children = localDirectory.Children;
 
                 try
                 {
-                    using (DirectoryEntry group = children.Find(groupName))
+                    using (DirectoryEntry group = children.Find(groupName, "group"))
                     {
                         if (group != null)
                             return;
@@ -36,11 +36,11 @@ namespace IronFrame
 
         public void DeleteLocalGroup(string groupName)
         {
-            using (var localDirectory = new DirectoryEntry(String.Format("WinNT://{0}", Environment.MachineName)))
+            using (var localDirectory = new DirectoryEntry("WinNT://.,Computer"))
             {
                 DirectoryEntries children = localDirectory.Children;
 
-                using (DirectoryEntry group = children.Find(groupName))
+                using (DirectoryEntry group = children.Find(groupName, "group"))
                 {
                     children.Remove(group);
                 }

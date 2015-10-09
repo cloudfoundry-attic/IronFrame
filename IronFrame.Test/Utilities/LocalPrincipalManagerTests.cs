@@ -135,7 +135,7 @@ namespace IronFrame
 
         private void AssertUserInGroup(string groupName, string userName)
         {
-            using (var localDirectory = new DirectoryEntry(String.Format("WinNT://{0}", Environment.MachineName)))
+            using (var localDirectory = new DirectoryEntry("WinNT://.,Computer"))
             {
                 DirectoryEntries children = localDirectory.Children;
                 DirectoryEntry group = children.Find(groupName);
