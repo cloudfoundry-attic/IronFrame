@@ -794,6 +794,16 @@ namespace IronFrame
 
                 Assert.Equal(limitInBytes, Container.CurrentDiskLimit());
             }
+
+            [Fact]
+            public void WhenDiskQuotaUsedFails_ReturnZero()
+            {
+                var quota = Substitute.For<DIDiskQuotaUser>();
+                this.DiskQuotaControl.FindUser(User.SID).Returns(quota);
+                quota.QuotaUsed.Throws(new System.Runtime.InteropServices.COMException());
+
+                Assert.Equal(0ul, Container.CurrentDiskUsage());
+            }
         }
 
         public class RemoveProperty : ContainerTests

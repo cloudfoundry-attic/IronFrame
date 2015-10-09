@@ -229,7 +229,13 @@ namespace IronFrame
         {
             lock (_ioLock)
             {
-                return (ulong) diskQuotaControl.FindUser(user.SID).QuotaUsed;
+                try
+                {
+                    return (ulong)diskQuotaControl.FindUser(user.SID).QuotaUsed;
+                }
+                catch (COMException) {
+                    return 0;
+                }
             }
         }
 
