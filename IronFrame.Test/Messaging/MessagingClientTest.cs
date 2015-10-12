@@ -148,22 +148,21 @@ namespace IronFrame.Messaging
         {
             MessagingClient client = null;
             var r = new CustomRequest();
+            var publishedResponse = new JObject(
+                new JProperty("jsonrpc", "2.0"),
+                new JProperty("id", r.id),
+                new JProperty("error",
+                    new JObject(
+                        new JProperty("code", 1),
+                        new JProperty("message", "Error Message"),
+                        new JProperty("data", "Error Data")
+                        )
+                    )
+                );
 
             client = new MessagingClient(m =>
             {
-                client.PublishResponse(
-                    new JObject(
-                        new JProperty("jsonrpc", "2.0"),
-                        new JProperty("id", r.id),
-                        new JProperty("error",
-                            new JObject(
-                                new JProperty("code", 1),
-                                new JProperty("message", "Error Message"),
-                                new JProperty("data", "Error Data")
-                                )
-                            )
-                        )
-                    );
+                client.PublishResponse(publishedResponse);
             });
 
             Exception recordedExeption = Record.Exception(() =>
@@ -172,7 +171,9 @@ namespace IronFrame.Messaging
                 var result = responseTask.Result;
             });
 
-            Assert.IsType<MessagingException>(((AggregateException)recordedExeption).InnerExceptions[0]);
+            var messageException = ((AggregateException)recordedExeption).InnerExceptions[0];
+            Assert.IsType<MessagingException>(messageException);
+            Assert.Equal(publishedResponse["error"]["message"].ToString() + " " + publishedResponse["error"]["data"].ToString(), messageException.Message);
         }
 
         [Fact]

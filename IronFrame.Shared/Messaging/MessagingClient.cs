@@ -189,7 +189,7 @@ namespace IronFrame.Messaging
                 if (IsErrorResponse(response))
                 {
                     var error = BuildErrorResponse(response);
-                    tcs.SetException(new MessagingException(error.error.Message) { ErrorResponse = error });
+                    tcs.SetException(new MessagingException(error.error.Message + " " + error.error.Data) { ErrorResponse = error });
                 }
                 else
                 {
