@@ -15,6 +15,7 @@ namespace IronFrame.Handlers
         StopProcessHandler Handler { get; set; }
         Guid Process1Key { get; set; }
         Guid Process2Key { get; set; }
+        Guid Process3Key { get; set; }
 
         public StopProcessHandlerTests()
         {
@@ -32,10 +33,12 @@ namespace IronFrame.Handlers
 
             Process1Key = Guid.NewGuid();
             Process2Key = Guid.NewGuid();
+            Process3Key = Guid.NewGuid();
 
             ProcessTracker = Substitute.For<IProcessTracker>();
             ProcessTracker.GetProcessByKey(Process1Key).Returns(process1);
             ProcessTracker.GetProcessByKey(Process2Key).Returns(process2);
+            ProcessTracker.GetProcessByKey(Process3Key).Returns(x => null);
 
             Handler = new StopProcessHandler(ProcessTracker);
         }
@@ -66,6 +69,19 @@ namespace IronFrame.Handlers
             await Handler.ExecuteAsync(new StopProcessParams { key = Process1Key, timeout = 1 });
 
             Processes[0].Received(1).Kill();
+        }
+
+        [Fact]
+        public async void WhenProcessDoesntExist()
+        {
+            try
+            {
+                await Handler.ExecuteAsync(new StopProcessParams { key = Process3Key, timeout = 1 });
+            }
+            catch (NullReferenceException e)
+            {
+                Assert.True(false, "NullReferenceException should not be thrown when process is null");
+            }
         }
     }
 }

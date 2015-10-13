@@ -25,6 +25,9 @@ namespace IronFrame.Host.Handlers
 
         public static Task StopProcessAsync(IProcess process, int timeout)
         {
+            if (process == null)
+                return Task.FromResult<object>(null);
+
             return Task.Run(
                 () =>
                 {

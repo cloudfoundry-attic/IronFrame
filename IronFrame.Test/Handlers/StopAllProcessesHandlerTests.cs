@@ -12,7 +12,7 @@ namespace IronFrame.Handlers
         IProcess[] Processes { get; set; }
         IProcessTracker ProcessTracker { get; set; }
         StopAllProcessesHandler Handler { get; set; }
-    
+
         public StopAllProcessesHandlerTests()
         {
             var process1 = Substitute.For<IProcess>();
@@ -20,7 +20,7 @@ namespace IronFrame.Handlers
 
             var process2 = Substitute.For<IProcess>();
             process2.Id.Returns(2);
-            
+
             Processes = new[]
             {
                 process1,
