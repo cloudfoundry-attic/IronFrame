@@ -9,6 +9,29 @@ namespace IronFrame.Utilities
 {
     internal class EnvironmentBlock
     {
+
+        public static readonly List<string> ForbiddenEnvironmentVariables = new List<string>
+        {
+            	"COMPUTERNAME",
+				"ALLUSERSPROFILE",
+				"FP_NO_HOST_CHECK",
+				"GOPATH",
+				"NUMBER_OF_PROCESSORS",
+				"OS",
+				"PATHEXT",
+				"PROCESSOR_ARCHITECTURE",
+				"PROCESSOR_IDENTIFIER",
+				"PROCESSOR_LEVEL",
+				"PROCESSOR_REVISION",
+				"PSModulePath",
+				"PUBLIC",
+				"SystemDrive",
+				"USERDOMAIN",
+				"VS110COMNTOOLS",
+				"VS120COMNTOOLS",
+				"WIX"
+        };
+
         private readonly Dictionary<string,string> _environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         public static EnvironmentBlock CreateSystemDefault()
@@ -34,6 +57,12 @@ namespace IronFrame.Utilities
         {
             var defaultEnvBlock = CreateEnvBlock(userToken);
             var environment = new EnvironmentBlock();
+
+            foreach (var key in ForbiddenEnvironmentVariables)
+            {
+                defaultEnvBlock.Remove(key);
+            }
+
             environment.Merge(defaultEnvBlock);
 
             return environment;

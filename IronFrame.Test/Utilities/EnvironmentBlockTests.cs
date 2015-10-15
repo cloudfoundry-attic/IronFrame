@@ -28,18 +28,22 @@ namespace IronFrame.Utilities
             Assert.Contains("TEMP", dict.Keys);
             Assert.Contains("TMP", dict.Keys);
             Assert.Contains("SystemRoot", dict.Keys);
-            Assert.Contains("COMPUTERNAME", dict.Keys);
+
+            foreach (var key in EnvironmentBlock.ForbiddenEnvironmentVariables)
+            {
+                Assert.DoesNotContain(key, dict.Keys);
+            }
         }
 
         [Fact]
         public void MergeOverwritesOld()
         {
             var env = EnvironmentBlock.CreateSystemDefault();
-            var newEnv = EnvironmentBlock.Create(new Hashtable {{"COMPUTERNAME", "FOOBAR"}});
+            var newEnv = EnvironmentBlock.Create(new Hashtable {{"TMP", "FOOBAR"}});
             var dict = env.Merge(newEnv).ToDictionary();
 
             Assert.Equal(env.ToDictionary().Count, dict.Count);
-            Assert.Equal("FOOBAR", dict["COMPUTERNAME"]);
+            Assert.Equal("FOOBAR", dict["TMP"]);
         }
 
         [Fact]
