@@ -28,16 +28,7 @@ namespace IronFrame.Host.Handlers
             if (process == null)
                 return Task.FromResult<object>(null);
 
-            return Task.Run(
-                () =>
-                {
-                    process.RequestExit();
-                    if (!process.WaitForExit(timeout))
-                        process.Kill();
-
-                    TerminateProcessTree(process.Handle, (uint) process.Id, -26);
-                }
-            );
+            return Task.Run(() => TerminateProcessTree(process.Handle, (uint) process.Id, -26));
         }
 
         ///<summary>

@@ -153,7 +153,7 @@ namespace IronFrame
         {
             lock (_ioLock)
             {
-                Stop(true);
+                Stop(false);
                 StopGuardAndWait(new TimeSpan(0, 0, 0, 10));
 
 
