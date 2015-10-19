@@ -34,12 +34,13 @@ namespace IronFrame.Utilities
 
         public static void SendSignal(int processId, bool kill)
         {
-            var ctrlEvent = kill ? 
-                NativeMethods.ConsoleControlEvent.ControlBreak : 
-                NativeMethods.ConsoleControlEvent.ControlC;
+            var ctrlEvent = kill
+                ? NativeMethods.ConsoleControlEvent.ControlBreak
+                : NativeMethods.ConsoleControlEvent.ControlC;
 
             if (!NativeMethods.GenerateConsoleCtrlEvent(ctrlEvent, processId))
-                throw new Win32Exception(Marshal.GetLastWin32Error(), "Error sending signal to process (id " + processId + ").");
+                throw new Win32Exception(Marshal.GetLastWin32Error(),
+                    "Error sending signal to process (id " + processId + ").");
         }
 
         public static IProcess WrapProcess(Process process)
@@ -47,9 +48,9 @@ namespace IronFrame.Utilities
             return new RealProcessWrapper(process);
         }
 
-        class RealProcessWrapper : IProcess
+        private class RealProcessWrapper : IProcess
         {
-            readonly Process process;
+            private readonly Process process;
 
             public RealProcessWrapper(Process process)
             {
@@ -82,7 +83,8 @@ namespace IronFrame.Utilities
             {
                 get
                 {
-                    var dictionary = process.StartInfo.EnvironmentVariables.ToDictionary(StringComparer.OrdinalIgnoreCase);
+                    var dictionary =
+                        process.StartInfo.EnvironmentVariables.ToDictionary(StringComparer.OrdinalIgnoreCase);
                     return new ReadOnlyDictionary<string, string>(dictionary);
                 }
             }
@@ -115,24 +117,67 @@ namespace IronFrame.Utilities
 
             public void Kill()
             {
-                // FROM: https://msdn.microsoft.com/en-us/library/windows/desktop/ms681382%28v=vs.85%29.aspx
-                const int accessDeniedErrorCode = 0x5;
+                TerminateProcessTree(Handle, (uint) Id, -26);
+            }
 
-                if (process.HasExited) return;
-                try
+            ///<summary>
+            /// Terminate a process tree
+            ///</summary>
+            ///<param name="hProcess">The handle of the process</param>
+            ///<param name="processID">The ID of the process</param>
+            ///<param name="exitCode">The exit code of the process</param>
+            public static void TerminateProcessTree(IntPtr hProcess, uint processID, int exitCode)
+            {
+                // Retrieve all processes on the system
+                Process[] processes = Process.GetProcesses();
+                foreach (Process p in processes)
                 {
-                    process.Kill();
-                }
-                catch (Win32Exception ex)
-                {
-                    // Access Denied can be thrown if we attempt to kill a process while it is exiting.
-                    // See notes at: https://msdn.microsoft.com/en-us/library/system.diagnostics.process.kill%28v=vs.110%29.aspx
-                    if (ex.ErrorCode != accessDeniedErrorCode)
+                    // Get some basic information about the process
+                    PROCESS_BASIC_INFORMATION pbi = new PROCESS_BASIC_INFORMATION();
+                    try
                     {
-                        throw;
+                        uint bytesWritten;
+                        NtQueryInformationProcess(p.Handle,
+                            0, ref pbi, (uint) Marshal.SizeOf(pbi),
+                            out bytesWritten); // == 0 is OK
+
+                        // Is it a child process of the process we're trying to terminate?
+                        if ((int) pbi.InheritedFromUniqueProcessId == processID)
+                            // The terminate the child process and its child processes
+                            TerminateProcessTree(p.Handle, (uint) pbi.UniqueProcessId, exitCode);
+                    }
+                    catch (Exception /* ex */)
+                    {
+                        // Ignore, most likely 'Access Denied'
                     }
                 }
+
+                // Finally, termine the process itself:
+                TerminateProcess((uint) hProcess, exitCode);
             }
+
+            [StructLayout(LayoutKind.Sequential)]
+            private struct PROCESS_BASIC_INFORMATION
+            {
+                public IntPtr ExitStatus;
+                public IntPtr PebBaseAddress;
+                public IntPtr AffinityMask;
+                public IntPtr BasePriority;
+                public IntPtr UniqueProcessId;
+                public IntPtr InheritedFromUniqueProcessId;
+            }
+
+            [DllImport("kernel32.dll")]
+            private static extern bool TerminateProcess(uint hProcess, int exitCode);
+
+            [DllImport("ntdll.dll")]
+            private static extern int NtQueryInformationProcess(
+                IntPtr hProcess,
+                int processInformationClass /* 0 */,
+                ref PROCESS_BASIC_INFORMATION processBasicInformation,
+                uint processInformationLength,
+                out uint returnLength
+                );
 
             public void RequestExit()
             {
@@ -171,6 +216,7 @@ namespace IronFrame.Utilities
             }
 
             public event EventHandler<ProcessDataReceivedEventArgs> OutputDataReceived;
+
             protected virtual void OnOutputDataReceived(object sender, ProcessDataReceivedEventArgs e)
             {
                 var handlers = OutputDataReceived;
@@ -181,6 +227,7 @@ namespace IronFrame.Utilities
             }
 
             public event EventHandler<ProcessDataReceivedEventArgs> ErrorDataReceived;
+
             protected virtual void OnErrorDataReceived(object sender, ProcessDataReceivedEventArgs e)
             {
                 var handlers = ErrorDataReceived;
@@ -191,6 +238,7 @@ namespace IronFrame.Utilities
             }
 
             public event EventHandler Exited;
+
             protected virtual void OnExited(object sender, EventArgs e)
             {
                 var handlers = Exited;

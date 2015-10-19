@@ -44,29 +44,9 @@ namespace IronFrame.Handlers
         }
 
         [Fact]
-        public async void RequestsProcessToExit()
+        public async void ItKillsTheProcess()
         {
-            await Handler.ExecuteAsync(new StopProcessParams() { key =  Process1Key, timeout = 1 });
-
-            Processes[0].Received(1).RequestExit();
-            Processes[1].Received(0).RequestExit();
-        }
-
-        [Fact]
-        public async void WaitsForProcessToExit()
-        {
-            await Handler.ExecuteAsync(new StopProcessParams { key = Process2Key, timeout = 1 });
-
-            Processes[0].Received(0).WaitForExit(1);
-            Processes[1].Received(1).WaitForExit(1);
-        }
-
-        [Fact]
-        public async void WhenProcessDoesNotExitWithinTimeout_KillsProcess()
-        {
-            Processes[0].WaitForExit(1).Returns(false);
-
-            await Handler.ExecuteAsync(new StopProcessParams { key = Process1Key, timeout = 1 });
+            await Handler.ExecuteAsync(new StopProcessParams { key = Process1Key });
 
             Processes[0].Received(1).Kill();
         }

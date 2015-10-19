@@ -18,7 +18,7 @@ namespace IronFrame.Host.Handlers
             var processes = processTracker.GetAllChildProcesses();
 
             var tasks = processes
-                .Select(process => StopProcessHandler.StopProcessAsync(process, p.timeout));
+                .Select(process => StopProcessHandler.StopProcessAsync(process));
 
             return Task.WhenAll(tasks);
         }
