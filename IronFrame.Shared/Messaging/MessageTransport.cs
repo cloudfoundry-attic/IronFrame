@@ -240,7 +240,7 @@ namespace IronFrame.Messaging
 
             readTask = Task.Run(() => ReadLineAsync(tokenSource.Token));
         }
-        
+
         public void Stop()
         {
             tokenSource.Cancel();
