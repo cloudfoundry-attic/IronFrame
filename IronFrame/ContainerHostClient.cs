@@ -138,7 +138,7 @@ namespace IronFrame
                 timeout = timeout
             };
 
-            SendMessage<StopProcessRequest, StopAllProcessesResponse>(new StopProcessRequest(@params));
+            messagingClient.SendMessageAsync<StopProcessRequest, StopAllProcessesResponse>(new StopProcessRequest(@params));
         }
 
         public void StopAllProcesses(int timeout)
