@@ -4,14 +4,14 @@ using System.IO;
 
 namespace IronFrame.Utilities
 {
-    // BR: Get rid of RequestExit(). Add Stop(timeout).
+    // BR: Add Stop(timeout).
     internal interface IProcess : IDisposable
     {
         int ExitCode { get; }
         IntPtr Handle { get; }
         int Id { get; }
         IReadOnlyDictionary<string, string> Environment { get; }
-        
+
         long PrivateMemoryBytes { get; }
 
         event EventHandler Exited;
@@ -25,7 +25,5 @@ namespace IronFrame.Utilities
         void Kill();
         void WaitForExit();
         bool WaitForExit(int milliseconds);
-
-        void RequestExit();
     }
 }

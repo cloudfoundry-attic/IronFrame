@@ -87,11 +87,6 @@ namespace IronFrame
             return result.exited;
         }
 
-        public void RequestExit()
-        {
-            throw new NotImplementedException();
-        }
-
         public void Dispose()
         {
             throw new NotImplementedException();

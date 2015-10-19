@@ -179,17 +179,6 @@ namespace IronFrame.Utilities
                 out uint returnLength
                 );
 
-            public void RequestExit()
-            {
-                // MO: We can't do this anymore.  RequestForExit as currently implemented uses
-                // GenerateConsoleCtrlEvent which will send the request to the whole console
-                // group.  At the moment that console group includes the ContainerHost.  We don't
-                // want to kill the ContainerHost.
-                //
-                //ProcessHelper.SendSignal(process.Id, false);
-                Kill();
-            }
-
             public void WaitForExit()
             {
                 process.WaitForExit();
