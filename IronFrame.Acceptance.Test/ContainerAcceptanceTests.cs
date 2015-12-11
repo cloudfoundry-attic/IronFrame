@@ -340,6 +340,24 @@ namespace IronFrame.Acceptance
                 var foundProcessByPid = Container1.FindProcessById(-1);
                 Assert.Null(foundProcessByPid);
             }
+
+            public void RunExecutablePathsWithDriveLetter()
+            {
+                Container1 = CreateContainer(Container1Handle);
+
+                var pSpec = new ProcessSpec
+                {
+                    ExecutablePath = @"C:\Windows\System32\cmd.exe",
+                    DisablePathMapping = false,
+                    Arguments = new string[] { "/c", "echo", "test-run" }
+                };
+
+                var io = new StringProcessIO();
+                Container1.Run(pSpec, io).WaitForExit();
+                var output = io.Output.ToString();
+
+                Assert.Contains("test-run", output);
+            }
         }
 
         public class StartGuard : ContainerAcceptanceTests

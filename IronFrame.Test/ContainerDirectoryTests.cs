@@ -241,6 +241,7 @@ namespace IronFrame
         public class MapUserPath : ContainerDirectoryTests
         {
             [InlineData("", @"C:\Containers\handle\user\")]
+            [InlineData(" ", @"C:\Containers\handle\user\")]
             [InlineData("\\", @"C:\Containers\handle\user\")]
             [InlineData("/", @"C:\Containers\handle\user\")]
             [InlineData("/path/to/app", @"C:\Containers\handle\user\path\to\app")]
@@ -281,6 +282,14 @@ namespace IronFrame
                 var ex = Record.Exception(() => Directory.MapUserPath(containerPath));
 
                 Assert.IsAssignableFrom<ArgumentException>(ex);
+            }
+
+            [Fact]
+            public void WhenPathHasDriveLetterSkipMapping()
+            {
+                var mappedPath = Directory.MapUserPath("C:\\Windows\\System32\\cmd.exe");
+
+                Assert.Equal("C:\\Windows\\System32\\cmd.exe", mappedPath);
             }
         }
     }

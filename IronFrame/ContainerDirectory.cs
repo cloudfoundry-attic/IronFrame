@@ -76,6 +76,16 @@ namespace IronFrame
 
         private string MapContainerPath(string pathPrefix, string path)
         {
+            if (path.Trim() != string.Empty)
+            {
+                var rootPath = Path.GetPathRoot(path);
+
+                if (rootPath.Length > 0 && char.IsLetter(rootPath[0]))
+                {
+                    return path;
+                }
+            }
+
             var basePath = CanonicalizePath(Path.Combine(containerPath, pathPrefix));
 
             path = path.TrimStart('/', '\\');
