@@ -13,18 +13,30 @@ namespace IronFrame
         const string UserRelativePath = "user";
         const string PrivateRelativePath = "private";
 
-        readonly FileSystemManager fileSystem;
+        readonly IFileSystemManager fileSystem;
         readonly string containerPath;
         readonly string containerBinPath;
         readonly string containerUserPath;
 
-        internal ContainerDirectory(FileSystemManager fileSystem, string containerPath)
+        internal ContainerDirectory(IFileSystemManager fileSystem, string containerPath)
         {
             this.fileSystem = fileSystem;
             this.containerPath = containerPath;
 
             this.containerBinPath = CanonicalizePath(Path.Combine(containerPath, BinRelativePath), ensureTrailingSlash: true);
             this.containerUserPath = CanonicalizePath(Path.Combine(containerPath, UserRelativePath), ensureTrailingSlash: true);
+        }
+
+        public void CreateSubdirectories(IContainerUser containerUser)
+        {
+            var containerPrivatePath = Path.Combine(containerPath, PrivateRelativePath);
+            var containerUserPath = Path.Combine(containerPath, UserRelativePath);
+            var containerBinPath = Path.Combine(containerPath, BinRelativePath);
+
+            fileSystem.CreateDirectory(containerPath, GetContainerUserAccess(containerUser.UserName, FileAccess.Read));
+            fileSystem.CreateDirectory(containerPrivatePath, GetContainerDefaultAccess());
+            fileSystem.CreateDirectory(containerBinPath, GetContainerUserAccess(containerUser.UserName, FileAccess.Read));
+            fileSystem.CreateDirectory(containerUserPath, GetContainerUserAccess(containerUser.UserName, FileAccess.ReadWrite));
         }
 
         public string RootPath
@@ -40,22 +52,6 @@ namespace IronFrame
         public string Volume
         {
             get { return Path.GetPathRoot(containerPath); }
-        }
-
-        public static IContainerDirectory Create(FileSystemManager fileSystem, string containerBasePath, string containerHandle, IContainerUser containerUser)
-        {
-            // TODO: Sanitize the container handle for use in the filesystem
-            var containerPath = Path.Combine(containerBasePath, containerHandle);
-            var containerPrivatePath = Path.Combine(containerPath, PrivateRelativePath);
-            var containerUserPath = Path.Combine(containerPath, UserRelativePath);
-            var containerBinPath = Path.Combine(containerPath, BinRelativePath);
-
-            fileSystem.CreateDirectory(containerPath, GetContainerUserAccess(containerUser.UserName, FileAccess.Read));
-            fileSystem.CreateDirectory(containerPrivatePath, GetContainerDefaultAccess());
-            fileSystem.CreateDirectory(containerBinPath, GetContainerUserAccess(containerUser.UserName, FileAccess.Read));
-            fileSystem.CreateDirectory(containerUserPath, GetContainerUserAccess(containerUser.UserName, FileAccess.ReadWrite));
-
-            return new ContainerDirectory(fileSystem, containerPath);
         }
 
         public void Destroy()
@@ -94,7 +90,7 @@ namespace IronFrame
             var mappedPath = CanonicalizePath(Path.Combine(basePath, path), ensureTrailingSlash: isRootPath);
 
             if (!mappedPath.StartsWith(basePath, StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException("The path is not a valid container path.", "path");
+                throw new ArgumentException("The path is not a valid container path.", path);
 
             return mappedPath;
         }
@@ -147,9 +143,19 @@ namespace IronFrame
             return account.Value;
         }
 
-        public static ContainerDirectory Restore(FileSystemManager fileSystem, string containerPath)
+        public static ContainerDirectory Restore(IFileSystemManager fileSystem, string containerPath)
         {
             return new ContainerDirectory(fileSystem, containerPath);
+        }
+
+        public void CreateBindMounts(BindMount[] bindMounts, IContainerUser containerUser)
+        {
+            foreach (var bindMount in bindMounts)
+            {
+                var mappedDestinationPath = MapUserPath(bindMount.DestinationPath);
+                fileSystem.CreateDirectory(mappedDestinationPath, GetContainerUserAccess(containerUser.UserName, FileAccess.ReadWrite));
+                fileSystem.Copy(bindMount.SourcePath, mappedDestinationPath);
+            }
         }
     }
 }

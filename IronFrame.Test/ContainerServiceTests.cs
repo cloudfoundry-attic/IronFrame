@@ -6,15 +6,17 @@ using System.Net;
 using DiskQuotaTypeLibrary;
 using IronFrame.Utilities;
 using NSubstitute;
+using NSubstitute.Core.Arguments;
 using Xunit;
 
 namespace IronFrame
 {
     public class ContainerServiceTests
     {
+        IContainerDirectory containerDirectory;
         string ContainerBasePath { get; set; }
         string ContainerUserGroup { get; set; }
-        FileSystemManager FileSystem { get; set; }
+        IFileSystemManager FileSystem { get; set; }
         ContainerHandleHelper HandleHelper { get; set; }
         IProcessRunner ProcessRunner { get; set; }
         IContainerHostService ContainerHostService { get; set; }
@@ -34,7 +36,7 @@ namespace IronFrame
 
             ContainerPropertiesService = Substitute.For<IContainerPropertyService>();
 
-            FileSystem = Substitute.For<FileSystemManager>();
+            FileSystem = Substitute.For<IFileSystemManager>();
 
             Id = "DEADBEEF";
 
@@ -58,7 +60,22 @@ namespace IronFrame
             diskQuotaControl = Substitute.For<DiskQuotaControl>();
             diskQuotaManager.CreateDiskQuotaControl(null).ReturnsForAnyArgs(diskQuotaControl);
 
-            Service = new ContainerService(HandleHelper, UserManager, FileSystem, ContainerPropertiesService, TcpPortManager, ProcessRunner, ContainerHostService, diskQuotaManager, ContainerBasePath);
+            var directoryFactory = Substitute.For<IContainerDirectoryFactory>();
+            containerDirectory = Substitute.For<IContainerDirectory>();
+            directoryFactory.Create(FileSystem, ContainerBasePath, Id).Returns(containerDirectory);
+
+            Service = new ContainerService(
+                HandleHelper,
+                UserManager,
+                FileSystem,
+                ContainerPropertiesService,
+                TcpPortManager,
+                ProcessRunner,
+                ContainerHostService,
+                diskQuotaManager,
+                directoryFactory,
+                ContainerBasePath
+            );
         }
 
         public class CreateContainer : ContainerServiceTests
@@ -141,23 +158,34 @@ namespace IronFrame
 
                 Service.CreateContainer(spec);
 
-                var expectedPath = Path.Combine(ContainerBasePath, "DEADBEEF");
-                FileSystem.Received(1).CreateDirectory(expectedPath, Arg.Any<IEnumerable<UserAccess>>());
+                containerDirectory.Received().CreateSubdirectories(Arg.Any<IContainerUser>());
+            }
+
+            [Fact]
+            public void CreatesBindMounts()
+            {
+                var bindMounts = new[]
+                {
+                    new BindMount()
+                };
+                var spec = new ContainerSpec
+                {
+                    BindMounts = bindMounts
+                };
+                Service.CreateContainer(spec);
+                containerDirectory.Received().CreateBindMounts(bindMounts, Arg.Any<IContainerUser>());
             }
 
             [Fact]
             public void GenerateDiskQuotaControlUsingTheContainerDirectory()
             {
-                IContainerDirectory dir = null;
-                diskQuotaManager.CreateDiskQuotaControl(Arg.Do((IContainerDirectory x) => dir = x));
                 var spec = new ContainerSpec
                 {
                     Handle = "handle",
                 };
 
-                var container = Service.CreateContainer(spec);
-                Assert.NotNull(dir);
-                Assert.Contains(ContainerBasePath, dir.RootPath);
+                Service.CreateContainer(spec);
+                diskQuotaManager.Received().CreateDiskQuotaControl(containerDirectory);
             }
 
 
@@ -217,12 +245,11 @@ namespace IronFrame
                 // Created and deleted the user
                 UserManager.Received(1).CreateUser(Arg.Any<string>());
                 UserManager.Received(1).DeleteUser(Arg.Any<string>());
-                
-                // Deleted the container directory
-                FileSystem.Received(1).DeleteDirectory(ContainerBasePath + "\\" + Id);
+
+                containerDirectory.Received().Destroy();
             }
         }
-        
+
         public class RestoreContainer : ContainerServiceTests
         {
             public RestoreContainer()

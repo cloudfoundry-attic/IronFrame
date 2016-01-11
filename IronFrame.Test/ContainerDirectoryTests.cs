@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Principal;
 using IronFrame.Utilities;
 using NSubstitute;
@@ -10,23 +11,23 @@ namespace IronFrame
 {
     public class ContainerDirectoryTests
     {
-        ContainerDirectory Directory { get; set; }
-        FileSystemManager FileSystem { get; set; }
+        private ContainerDirectoryFactory factory;
+        IContainerDirectory directory { get; set; }
+        IFileSystemManager fileSystem { get; set; }
 
         public ContainerDirectoryTests()
         {
-            FileSystem = Substitute.For<FileSystemManager>();
-            Directory = new ContainerDirectory(FileSystem, @"C:\Containers\handle");
+            fileSystem = Substitute.For<IFileSystemManager>();
+            factory = new ContainerDirectoryFactory();
+            directory = factory.Create(fileSystem, @"C:\Containers", "handle");
         }
 
-        public class Create : ContainerDirectoryTests
+        public class CreateSubdirectories : ContainerDirectoryTests
         {
             IContainerUser ContainerUser { get; set; }
 
-            public Create()
+            public CreateSubdirectories()
             {
-                FileSystem = Substitute.For<FileSystemManager>();
-
                 ContainerUser = Substitute.For<IContainerUser>();
                 ContainerUser.UserName.Returns("username");
             }
@@ -35,12 +36,12 @@ namespace IronFrame
             public void CreatesContainerDirectoryWithUserReadOnlyPermissions()
             {
                 IEnumerable<UserAccess> userAccess = null;
-                FileSystem.CreateDirectory(
+                fileSystem.CreateDirectory(
                     @"C:\Containers\handle",
                     Arg.Do<IEnumerable<UserAccess>>(x => userAccess = x)
                 );
 
-                var directory = ContainerDirectory.Create(FileSystem, @"C:\Containers", "handle", ContainerUser);
+                directory.CreateSubdirectories(ContainerUser);
 
                 Assert.NotNull(directory);
                 Assert.Collection(userAccess,
@@ -66,12 +67,12 @@ namespace IronFrame
             public void CreatesContainerBinDirectoryWithUserReadOnlyPermissions()
             {
                 IEnumerable<UserAccess> userAccess = null;
-                FileSystem.CreateDirectory(
+                fileSystem.CreateDirectory(
                     @"C:\Containers\handle\bin",
                     Arg.Do<IEnumerable<UserAccess>>(x => userAccess = x)
                 );
 
-                var directory = ContainerDirectory.Create(FileSystem, @"C:\Containers", "handle", ContainerUser);
+                directory.CreateSubdirectories(ContainerUser);
 
                 Assert.NotNull(directory);
                 Assert.Collection(userAccess,
@@ -97,12 +98,12 @@ namespace IronFrame
             public void CreatesContainerUserDirectoryWithUserReadWritePermissions()
             {
                 IEnumerable<UserAccess> userAccess = null;
-                FileSystem.CreateDirectory(
+                fileSystem.CreateDirectory(
                     @"C:\Containers\handle\user",
                     Arg.Do<IEnumerable<UserAccess>>(x => userAccess = x)
                 );
 
-                var directory = ContainerDirectory.Create(FileSystem, @"C:\Containers", "handle", ContainerUser);
+                directory.CreateSubdirectories(ContainerUser);
 
                 Assert.NotNull(directory);
                 Assert.Collection(userAccess,
@@ -137,9 +138,8 @@ namespace IronFrame
             [Fact]
             public void DeletesContainerDirectory()
             {
-                IContainerDirectory directory = ContainerDirectory.Create(FileSystem, @"c:\Containers", "handle", ContainerUser);
                 directory.Destroy();
-                FileSystem.Received(1).DeleteDirectory(@"c:\Containers\handle");
+                fileSystem.Received(1).DeleteDirectory(@"C:\Containers\handle");
             }
         }
 
@@ -148,7 +148,7 @@ namespace IronFrame
             [Fact]
             public void FindsRootVolume()
             {
-                Assert.Equal(@"C:\", Directory.Volume);
+                Assert.Equal(@"C:\", directory.Volume);
             }
         }
 
@@ -159,7 +159,7 @@ namespace IronFrame
             [Theory]
             public void MapsRootedPathRelativeToContainerBinPath(string containerPath, string expectedMappedPath)
             {
-                var mappedPath = Directory.MapBinPath(containerPath);
+                var mappedPath = directory.MapBinPath(containerPath);
 
                 Assert.Equal(expectedMappedPath, mappedPath);
             }
@@ -167,7 +167,7 @@ namespace IronFrame
             [Fact]
             public void ConvertsForwardSlashesToBackSlashes()
             {
-                var mappedPath = Directory.MapBinPath("/path/to/app");
+                var mappedPath = directory.MapBinPath("/path/to/app");
 
                 Assert.Equal(@"C:\Containers\handle\bin\path\to\app", mappedPath);
             }
@@ -175,7 +175,7 @@ namespace IronFrame
             [Fact]
             public void CanonicalizesPath()
             {
-                var mappedPath = Directory.MapBinPath("/path/to/../../app");
+                var mappedPath = directory.MapBinPath("/path/to/../../app");
 
                 Assert.Equal(@"C:\Containers\handle\bin\app", mappedPath);
             }
@@ -189,7 +189,7 @@ namespace IronFrame
             [Theory]
             public void WhenPathIsOutsideOfContainerBinPath_Throws(string containerPath)
             {
-                var ex = Record.Exception(() => Directory.MapBinPath(containerPath));
+                var ex = Record.Exception(() => directory.MapBinPath(containerPath));
 
                 Assert.IsAssignableFrom<ArgumentException>(ex);
             }
@@ -202,7 +202,7 @@ namespace IronFrame
             [Theory]
             public void MapsRootedPathRelativeToContainerRootPath(string containerPath, string expectedMappedPath)
             {
-                var mappedPath = Directory.MapPrivatePath(containerPath);
+                var mappedPath = directory.MapPrivatePath(containerPath);
 
                 Assert.Equal(expectedMappedPath, mappedPath);
             }
@@ -210,7 +210,7 @@ namespace IronFrame
             [Fact]
             public void ConvertsForwardSlashesToBackSlashes()
             {
-                var mappedPath = Directory.MapPrivatePath("/path/to/data");
+                var mappedPath = directory.MapPrivatePath("/path/to/data");
 
                 Assert.Equal(@"C:\Containers\handle\private\path\to\data", mappedPath);
             }
@@ -218,7 +218,7 @@ namespace IronFrame
             [Fact]
             public void CanonicalizesPath()
             {
-                var mappedPath = Directory.MapPrivatePath("/path/to/../../data");
+                var mappedPath = directory.MapPrivatePath("/path/to/../../data");
 
                 Assert.Equal(@"C:\Containers\handle\private\data", mappedPath);
             }
@@ -232,7 +232,7 @@ namespace IronFrame
             [Theory]
             public void WhenPathIsOutsideOfContainerBinPath_Throws(string containerPath)
             {
-                var ex = Record.Exception(() => Directory.MapPrivatePath(containerPath));
+                var ex = Record.Exception(() => directory.MapPrivatePath(containerPath));
 
                 Assert.IsAssignableFrom<ArgumentException>(ex);
             }
@@ -249,7 +249,7 @@ namespace IronFrame
             [Theory]
             public void MapsRootedPathRelativeToContainerUserPath(string containerPath, string expectedMappedPath)
             {
-                var mappedPath = Directory.MapUserPath(containerPath);
+                var mappedPath = directory.MapUserPath(containerPath);
 
                 Assert.Equal(expectedMappedPath, mappedPath);
             }
@@ -257,7 +257,7 @@ namespace IronFrame
             [Fact]
             public void ConvertsForwardSlashesToBackSlashes()
             {
-                var mappedPath = Directory.MapUserPath("/path/to/app");
+                var mappedPath = directory.MapUserPath("/path/to/app");
 
                 Assert.Equal(@"C:\Containers\handle\user\path\to\app", mappedPath);
             }
@@ -265,11 +265,11 @@ namespace IronFrame
             [Fact]
             public void CanonicalizesPath()
             {
-                var mappedPath = Directory.MapUserPath("/path/to/../../app");
+                var mappedPath = directory.MapUserPath("/path/to/../../app");
 
                 Assert.Equal(@"C:\Containers\handle\user\app", mappedPath);
             }
-            
+
             [InlineData("/app/../..")]
             [InlineData("/../../..")]
             [InlineData("../")]
@@ -279,7 +279,7 @@ namespace IronFrame
             [Theory]
             public void WhenPathIsOutsideOfContainerUserPath_Throws(string containerPath)
             {
-                var ex = Record.Exception(() => Directory.MapUserPath(containerPath));
+                var ex = Record.Exception(() => directory.MapUserPath(containerPath));
 
                 Assert.IsAssignableFrom<ArgumentException>(ex);
             }
@@ -287,9 +287,39 @@ namespace IronFrame
             [Fact]
             public void WhenPathHasDriveLetterSkipMapping()
             {
-                var mappedPath = Directory.MapUserPath("C:\\Windows\\System32\\cmd.exe");
+                var mappedPath = directory.MapUserPath("C:\\Windows\\System32\\cmd.exe");
 
                 Assert.Equal("C:\\Windows\\System32\\cmd.exe", mappedPath);
+            }
+        }
+
+        public class CreateBindMountTests : ContainerDirectoryTests
+        {
+            [Fact]
+            public void ItCreatesBindMounts()
+            {
+                var bindMounts = new []
+                {
+                    new BindMount()
+                    {
+                        SourcePath = "source",
+                        DestinationPath = "destination"
+                    },
+                    new BindMount()
+                    {
+                        SourcePath = "source2",
+                        DestinationPath = "destination2"
+                    }
+                };
+                var user = Substitute.For<IContainerUser>();
+                var userAccess = Substitute.For<UserAccess>();
+                userAccess.UserName = user.UserName;
+
+                directory.CreateBindMounts(bindMounts, user);
+                fileSystem.Received().CreateDirectory(directory.MapUserPath("destination"), Arg.Is<ICollection<UserAccess>>(x => x.Any(u => u.UserName == user.UserName)));
+                fileSystem.Received().CreateDirectory(directory.MapUserPath("destination2"), Arg.Is<ICollection<UserAccess>>(x => x.Any(u => u.UserName == user.UserName)));
+                fileSystem.Received().Copy("source", directory.MapUserPath("destination"));
+                fileSystem.Received().Copy("source2", directory.MapUserPath("destination2"));
             }
         }
     }

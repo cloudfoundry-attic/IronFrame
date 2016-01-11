@@ -21,6 +21,11 @@ namespace IronFrame
         public BindMount[] BindMounts { get; set; }
         public Dictionary<string, string> Properties { get; set; }
         public Dictionary<string, string> Environment { get; set; }
+
+        public ContainerSpec()
+        {
+            this.BindMounts = new BindMount[]{};
+        }
     }
 
     public sealed class ContainerService : IContainerService
@@ -29,7 +34,7 @@ namespace IronFrame
         const string PropertiesFileName = "properties.json";
 
         readonly string containerBasePath;
-        readonly FileSystemManager fileSystem;
+        readonly IFileSystemManager fileSystem;
         readonly ContainerHandleHelper handleHelper;
         readonly IUserManager userManager;
         readonly ILocalTcpPortManager tcpPortManager;
@@ -38,18 +43,9 @@ namespace IronFrame
         readonly IContainerHostService containerHostService;
         readonly IDiskQuotaManager diskQuotaManager;
         readonly List<IContainer> containers = new List<IContainer>();
+        private IContainerDirectoryFactory directoryFactory;
 
-        internal ContainerService(
-            ContainerHandleHelper handleHelper,
-            IUserManager userManager,
-            FileSystemManager fileSystem,
-            IContainerPropertyService containerPropertiesService,
-            ILocalTcpPortManager tcpPortManager,
-            IProcessRunner processRunner,
-            IContainerHostService containerHostService,
-            IDiskQuotaManager diskQuotaManager,
-            string containerBasePath
-            )
+        internal ContainerService(ContainerHandleHelper handleHelper, IUserManager userManager, IFileSystemManager fileSystem, IContainerPropertyService containerPropertiesService, ILocalTcpPortManager tcpPortManager, IProcessRunner processRunner, IContainerHostService containerHostService, IDiskQuotaManager diskQuotaManager, IContainerDirectoryFactory directoryFactory, string containerBasePath)
         {
             this.handleHelper = handleHelper;
             this.userManager = userManager;
@@ -60,6 +56,7 @@ namespace IronFrame
             this.containerHostService = containerHostService;
             this.containerBasePath = containerBasePath;
             this.diskQuotaManager = diskQuotaManager;
+            this.directoryFactory = directoryFactory;
         }
 
         public ContainerService(string containerBasePath, string userGroupName)
@@ -72,6 +69,7 @@ namespace IronFrame
                 new ProcessRunner(),
                 new ContainerHostService(),
                 new DiskQuotaManager(),
+                new ContainerDirectoryFactory(),
                 containerBasePath
             )
         {
@@ -95,8 +93,11 @@ namespace IronFrame
                 var user = ContainerUser.Create(userManager, id);
                 undoStack.Push(() => user.Delete());
 
-                var directory = ContainerDirectory.Create(fileSystem, containerBasePath, id, user);
-                undoStack.Push(() => fileSystem.DeleteDirectory(directory.RootPath));
+                var directory = directoryFactory.Create(fileSystem, containerBasePath, id);
+                directory.CreateSubdirectories(user);
+                undoStack.Push(directory.Destroy);
+
+                directory.CreateBindMounts(containerSpec.BindMounts, user);
 
                 var jobObject = new JobObject(id);
                 undoStack.Push(() => jobObject.Dispose());

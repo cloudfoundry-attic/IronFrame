@@ -4,7 +4,7 @@ using System.Security.Principal;
 namespace IronFrame
 {
     // BR: Investigate if we would need this in the host??  Can't delete a user in the host...
-    internal interface IContainerUser
+    public interface IContainerUser
     {
         string UserName { get; }
         string SID { get; }

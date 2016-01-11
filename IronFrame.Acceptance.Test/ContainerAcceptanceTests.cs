@@ -24,8 +24,6 @@ namespace IronFrame.Acceptance
         string Container2Handle { get; set; }
         string UserGroupName { get; set; }
         string ContainerBasePath { get; set; }
-        string ReadOnlyBindMountPath { get; set; }
-        string ReadWriteBindMountPath { get; set; }
 
         LocalUserGroupManager UserGroupManager { get; set; }
         IContainerService ContainerService { get; set; }
@@ -37,8 +35,6 @@ namespace IronFrame.Acceptance
             Container1Handle = GenerateRandomAlphaString();
             Container2Handle = GenerateRandomAlphaString();
             ContainerBasePath = CreateTempDirectory();
-            ReadOnlyBindMountPath = CreateTempDirectory();
-            ReadWriteBindMountPath = CreateTempDirectory();
 
             UserGroupName = "ContainerServiceTestsUserGroup_" + GenerateRandomAlphaString();
             UserGroupManager = new LocalUserGroupManager();
@@ -602,22 +598,6 @@ namespace IronFrame.Acceptance
 
         public IContainer CreateContainer(string handle)
         {
-            var bindMounts = new[]
-            {
-                new BindMount
-                {
-                    Access = FileAccess.Read,
-                    SourcePath = ReadOnlyBindMountPath,
-                    DestinationPath = ReadOnlyBindMountPath
-                },
-                new BindMount
-                {
-                    Access = FileAccess.ReadWrite,
-                    SourcePath = ReadWriteBindMountPath,
-                    DestinationPath = ReadWriteBindMountPath
-                }
-            };
-
             var environment = new Dictionary<string, string>
             {
                 {"CONTAINER_HANDLE", handle},
@@ -626,7 +606,6 @@ namespace IronFrame.Acceptance
 
             var spec = new ContainerSpec
             {
-                BindMounts = bindMounts,
                 Environment = environment,
                 Handle = handle
             };

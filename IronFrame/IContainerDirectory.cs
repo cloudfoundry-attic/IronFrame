@@ -9,5 +9,7 @@
         string MapPrivatePath(string containerPath);
         string MapUserPath(string containerPath);
         void Destroy();
+        void CreateBindMounts(BindMount[] bindMounts, IContainerUser containerUser);
+        void CreateSubdirectories(IContainerUser containerUser);
     }
 }

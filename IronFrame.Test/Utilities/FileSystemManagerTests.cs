@@ -99,6 +99,5 @@ namespace IronFrame.Utilities
                 Assert.IsType<InvalidOperationException>(ex);
             }
         }
-
     }
 }

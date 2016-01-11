@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Principal;
-using IronFrame.Win32;
 
 namespace IronFrame.Utilities
 {
@@ -119,8 +120,37 @@ namespace IronFrame.Utilities
         }
     }
 
-    internal class FileSystemManager
+    internal interface IFileSystemManager
     {
+        void CopyFile(string sourceFilePath, string destinationFilePath);
+        void Copy(string source, string destination);
+        void DeleteDirectory(string path);
+        bool FileExists(string path);
+
+        /// <summary>
+        /// Returns true if the path refers to an existing directory.
+        /// </summary>
+        bool DirectoryExists(string path);
+
+        IEnumerable<string> EnumerateDirectories(string path);
+
+        /// <summary>
+        /// Get the access that the specified user has to the specified directory.
+        /// </summary>
+        FileAccess GetEffectiveDirectoryAccess(string directory, IdentityReference identity);
+
+        /// <summary>
+        /// Create a directory with the specified user access
+        /// </summary>
+        void CreateDirectory(string path, IEnumerable<UserAccess> userAccess);
+
+        void AddDirectoryAccess(string path, FileAccess access, string user);
+        Stream OpenFile(string path, FileMode fileMode, FileAccess fileAccess, FileShare fileShare);
+    }
+
+    internal class FileSystemManager : IFileSystemManager
+    {
+
         private readonly PlatformFileSystem fileSystem;
 
         public FileSystemManager() : this(new PlatformFileSystem())
@@ -284,7 +314,7 @@ namespace IronFrame.Utilities
         }
     }
 
-    internal class UserAccess
+    internal class UserAccess 
     {
         public FileAccess Access { get; set; }
         public string UserName { get; set; }
