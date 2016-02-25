@@ -31,6 +31,7 @@ namespace IronFrame
         IProcessRunner processRunner;
         IProcessRunner constrainedProcessRunner;
         ContainerState currentState;
+        private bool guardExited = true;
 
         public Container(
             string id,
@@ -453,6 +454,7 @@ namespace IronFrame
                 if (IsGuardRunning())
                     return;
 
+                guardExited = false;
                 processRunner.Run(new ProcessRunSpec
                 {
                     ExecutablePath = dependencyHelper.GuardExePath,
@@ -461,9 +463,15 @@ namespace IronFrame
                         user.UserName,
                         Id
                     },
-                    WorkingDirectory = directory.MapUserPath("/")
+                    WorkingDirectory = directory.MapUserPath("/"),
+                    ExitHandler = GuardProcOnExited
                 });
             }
+        }
+
+        private void GuardProcOnExited(object sender, EventArgs eventArgs)
+        {
+            guardExited = true;
         }
 
         public void StopGuard()
@@ -500,7 +508,7 @@ namespace IronFrame
             var st = new Stopwatch();
             st.Start();
 
-            while (IsGuardRunning() && st.Elapsed < timeout)
+            while (!guardExited && st.Elapsed < timeout)
             {
                 StopGuard();
                 Thread.Sleep(1);

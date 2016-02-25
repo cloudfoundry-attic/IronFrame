@@ -78,8 +78,11 @@ namespace IronFrame.Utilities
                 StartInfo = startInfo,
             };
 
+            if (runSpec.ExitHandler != null)
+                p.Exited += runSpec.ExitHandler;
+
             p.EnableRaisingEvents = true;
-            
+
             var wrapped = ProcessHelper.WrapProcess(p);
 
             if (!runSpec.BufferedInputOutput)

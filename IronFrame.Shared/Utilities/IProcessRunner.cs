@@ -34,5 +34,6 @@ namespace IronFrame.Utilities
         public Action<string> OutputCallback { get; set; }
         public Action<string> ErrorCallback { get; set; }
         public ProcessPriorityClass PriorityClass { get; set; }
+        public EventHandler ExitHandler { get; set; }
     }
 }
