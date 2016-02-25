@@ -447,13 +447,10 @@ namespace IronFrame
             [Fact]
             public void DoesNotStartGuardIfAlreadyRunning()
             {
-                using (CreateStopGuardEvent())
-                {
-                    JobObject.GetJobMemoryLimit().Returns(6789UL);
-                    Container.StartGuard();
+                Container.StartGuard();
+                Container.StartGuard();
 
-                    ProcessRunner.Received(0).Run(Arg.Any<ProcessRunSpec>());
-                }
+                ProcessRunner.Received(1).Run(Arg.Any<ProcessRunSpec>());
             }
         }
 
@@ -716,12 +713,11 @@ namespace IronFrame
             [Fact]
             public void WhenGuardIsRunning_Throws()
             {
-                using (CreateStopGuardEvent())
-                {
-                    Action action = () => Container.LimitMemory(3000);
+                Container.StartGuard();
 
-                    Assert.Throws<InvalidOperationException>(action);
-                }
+                Action action = () => Container.LimitMemory(3000);
+
+                Assert.Throws<InvalidOperationException>(action);
             }
 
             [Fact]
