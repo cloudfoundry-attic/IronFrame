@@ -31,7 +31,8 @@ namespace IronFrame
         IProcessRunner processRunner;
         IProcessRunner constrainedProcessRunner;
         ContainerState currentState;
-        private bool guardExited = true;
+        private bool guardRunning;
+        private bool guardExited;
 
         public Container(
             string id,
@@ -360,7 +361,7 @@ namespace IronFrame
         }
         private void ThrowIfGuardActive()
         {
-            if (IsGuardRunning())
+            if (guardRunning)
             {
                 throw new InvalidOperationException("Memory Limits can only be changed before first process is run.");
             }
@@ -451,10 +452,10 @@ namespace IronFrame
         {
             lock (_ioLock)
             {
-                if (IsGuardRunning())
+                if (guardRunning)
                     return;
 
-                guardExited = false;
+                guardRunning = true;
                 processRunner.Run(new ProcessRunSpec
                 {
                     ExecutablePath = dependencyHelper.GuardExePath,
@@ -495,18 +496,13 @@ namespace IronFrame
             return dischargeEvent;
         }
 
-        private bool IsGuardRunning()
-        {
-            using (var dischargeEvent = GuardEventWaitHandle())
-            {
-                return (dischargeEvent != null);
-            }
-        }
-
         private void StopGuardAndWait(TimeSpan timeout)
         {
             var st = new Stopwatch();
             st.Start();
+
+            if (!guardRunning)
+                return;
 
             while (!guardExited && st.Elapsed < timeout)
             {
