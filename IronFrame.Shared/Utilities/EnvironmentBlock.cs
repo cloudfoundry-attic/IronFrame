@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IronFrame.Win32;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -98,7 +99,7 @@ namespace IronFrame.Utilities
         {
             IntPtr unmanagedEnv;
             IntPtr hToken = userToken;
-            if (!CreateEnvironmentBlock(out unmanagedEnv, hToken, false))
+            if (!NativeMethods.CreateEnvironmentBlock(out unmanagedEnv, hToken, false))
             {
                 int lastError = Marshal.GetLastWin32Error();
                 throw new Win32Exception(lastError, "Error calling CreateEnvironmentBlock: " + lastError);
@@ -120,7 +121,7 @@ namespace IronFrame.Utilities
             }
             finally
             {
-                DestroyEnvironmentBlock(unmanagedEnv);
+                NativeMethods.DestroyEnvironmentBlock(unmanagedEnv);
             }
 
             return envBlock;
@@ -153,17 +154,5 @@ namespace IronFrame.Utilities
 
             return strings;
         }
-
-        /// <summary>
-        /// http://msdn.microsoft.com/en-us/library/windows/desktop/bb762270(v=vs.85).aspx
-        /// </summary>
-        [DllImport("userenv.dll", SetLastError = true)]
-        private static extern bool CreateEnvironmentBlock(out IntPtr lpEnvironment, IntPtr hToken, bool bInherit);
-
-        /// <summary>
-        /// http://msdn.microsoft.com/en-us/library/windows/desktop/bb762274%28v=vs.85%29.aspx
-        /// </summary>
-        [DllImport("userenv.dll", SetLastError = true)]
-        private static extern bool DestroyEnvironmentBlock(IntPtr lpEnvironment);
     }
 }

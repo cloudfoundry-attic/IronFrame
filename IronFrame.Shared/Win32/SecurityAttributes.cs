@@ -14,7 +14,7 @@ namespace IronFrame.Win32
 
             public SecurityAttributes()
             {
-                this.Length = Marshal.SizeOf(this); 
+                this.Length = Marshal.SizeOf(this);
             }
         }
     }

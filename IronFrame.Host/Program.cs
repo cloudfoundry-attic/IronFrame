@@ -25,8 +25,7 @@ namespace IronFrame.Host
 
             containerId = args[0];
 
-            var hostJobObjectName = String.Format("{0}:host", containerId);
-            hostJobObject = new JobObject(hostJobObjectName);
+            hostJobObject = new JobObject(null);
 
             hostProcess = ProcessHelper.WrapProcess(Process.GetCurrentProcess());
 

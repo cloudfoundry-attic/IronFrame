@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Net;
+using Microsoft.Win32.SafeHandles;
 
 namespace IronFrame.Win32
 {
@@ -8,7 +9,7 @@ namespace IronFrame.Win32
     {
         public static SafeUserTokenHandle LogonAndGetUserPrimaryToken(NetworkCredential credential)
         {
-            IntPtr token = IntPtr.Zero;
+            SafeFileHandle token = null;
             IntPtr primaryToken = IntPtr.Zero;
 
             try
@@ -49,9 +50,9 @@ namespace IronFrame.Win32
             }
             finally
             {
-                if (token != IntPtr.Zero)
+                if (token != null)
                 {
-                    NativeMethods.CloseHandle(token);
+                    token.Close();
                 }
             }
         }

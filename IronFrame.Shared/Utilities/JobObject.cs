@@ -36,7 +36,12 @@ namespace IronFrame.Utilities
             }
             else
             {
-                handle = new SafeJobObjectHandle(NativeMethods.CreateJobObject(IntPtr.Zero, name));
+                var token = NativeMethods.CreateJobObject(IntPtr.Zero, name);
+                if (token == IntPtr.Zero)
+                {
+                    throw new Win32Exception(Marshal.GetLastWin32Error());
+                }
+                handle = new SafeJobObjectHandle(token);
                 SetJobLimits(NativeMethods.JobObjectLimit.KillOnJobClose);
             }
 

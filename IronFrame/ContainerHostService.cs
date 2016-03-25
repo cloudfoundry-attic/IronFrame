@@ -33,7 +33,7 @@ namespace IronFrame
         public ContainerHostService()
             : this(
                 new FileSystemManager(),
-                new ProcessRunner(),
+                new ImpersonationProcessRunner(),
                 new ContainerHostDependencyHelper()
             )
         {

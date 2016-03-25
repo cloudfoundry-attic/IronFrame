@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
 namespace IronFrame.Win32
 {
@@ -7,7 +8,7 @@ namespace IronFrame.Win32
     {
         [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern bool DuplicateTokenEx(
-            IntPtr hExistingToken,
+            SafeFileHandle hExistingToken,
             uint dwDesiredAccess,
             SecurityAttributes lpTokenAttributes,
             SecurityImpersonationLevel impersonationLevel,

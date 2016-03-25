@@ -207,7 +207,7 @@ namespace IronFrame
             public async Task WhenCredentialsGiven_LoadsUserEnvironment()
             {
                 var desktopPermissionManager = new DesktopPermissionManager();
-                LocalPrincipalManager manager = new LocalPrincipalManager(desktopPermissionManager);
+                LocalPrincipalManager manager = new LocalPrincipalManager(desktopPermissionManager, "IIS_IUSRS");
 
                 string userName = "Test_UserEnvironment";
                 if (manager.FindUser(userName) != null)

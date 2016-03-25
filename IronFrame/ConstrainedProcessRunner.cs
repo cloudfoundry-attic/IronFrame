@@ -53,7 +53,7 @@ namespace IronFrame
         public IProcess Run(ProcessRunSpec runSpec)
         {
             Guid processKey = Guid.NewGuid();
-            
+
             var defaultEnvironmentBlock = EnvironmentBlock.CreateSystemDefault();
             var environment = defaultEnvironmentBlock.Merge(runSpec.Environment).ToDictionary();
 

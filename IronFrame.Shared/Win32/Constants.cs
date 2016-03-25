@@ -6,7 +6,9 @@ namespace IronFrame.Win32
     {
         public class Constants
         {
-            public const Int32  GENERIC_ALL_ACCESS = 0x10000000;
+            public const Int32 GENERIC_ALL_ACCESS = 0x10000000;
+            public const Int32 MAXIMUM_ALLOWED = 0x02000000;
+
             public const UInt32 INFINITE = 0xFFFFFFFF;
             public const UInt32 WAIT_FAILED = 0xFFFFFFFF;
 
@@ -32,6 +34,9 @@ namespace IronFrame.Win32
             public const uint ERROR_ACCESS_DENIED = 5u;
             public const uint ERROR_INSUFFICIENT_BUFFER = 122u;
             public const uint ERROR_MORE_DATA = 0x000000EA;
+
+            public const int HANDLE_FLAG_INHERIT = 1;
+            public static uint STARTF_USESTDHANDLES = 0x00000100;
         }
     }
 }

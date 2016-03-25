@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
 namespace IronFrame.Win32
 {
@@ -12,6 +13,6 @@ namespace IronFrame.Win32
             String lpszPassword,
             LogonType dwLogonType,
             LogonProvider dwLogonProvider,
-            out IntPtr phToken);
+            out SafeFileHandle phToken);
     }
 }
