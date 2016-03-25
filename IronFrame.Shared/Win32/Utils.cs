@@ -17,7 +17,7 @@ namespace IronFrame.Win32
                 if (NativeMethods.RevertToSelf())
                 {
                     if (NativeMethods.LogonUser(credential.UserName, ".", credential.Password,
-                        NativeMethods.LogonType.LOGON32_LOGON_INTERACTIVE,
+                        NativeMethods.LogonType.LOGON32_LOGON_BATCH,
                         NativeMethods.LogonProvider.LOGON32_PROVIDER_DEFAULT,
                         out token))
                     {
