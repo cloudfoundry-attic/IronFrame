@@ -7,14 +7,12 @@ namespace IronFrame.Win32
     internal partial class NativeMethods
     {
         [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern Boolean CreateProcessAsUser
+        public static extern Boolean CreateProcessWithTokenW
         (
             SafeFileHandle hToken,
+            uint dwLogonFlags,
             String lpApplicationName,
             String lpCommandLine,
-            IntPtr lpProcessAttributes,
-            IntPtr lpThreadAttributes,
-            Boolean bInheritHandles,
             CreateProcessFlags dwCreationFlags,
             IntPtr lpEnvironment,
             String lpCurrentDirectory,

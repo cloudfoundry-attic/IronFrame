@@ -140,13 +140,11 @@ namespace IronFrame.Utilities
             startInfo.hStdError = hWriteErr;
             startInfo.hStdInput = hReadIn;
 
-            success = NativeMethods.CreateProcessAsUser(
+            success = NativeMethods.CreateProcessWithTokenW(
                 hToken,
+                0,
                 null,
                 CommandLine(),
-                IntPtr.Zero,
-                IntPtr.Zero,
-                true,
                 NativeMethods.CreateProcessFlags.CREATE_UNICODE_ENVIRONMENT,
                 unmanagedEnv,
                 null,
