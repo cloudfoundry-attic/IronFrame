@@ -48,12 +48,20 @@ namespace IronFrame.Utilities
         public ImpersonationProcess(ProcessRunSpec runSpec)
         {
             this.runSpec = runSpec;
+            this.Handle = IntPtr.Zero;
         }
 
         ~ImpersonationProcess()
         {
-            if (!NativeMethods.CloseHandle(Handle))
-                throw new Win32Exception(Marshal.GetLastWin32Error());
+            if (this.Handle != IntPtr.Zero)
+            {
+                if (!NativeMethods.CloseHandle(Handle))
+                {
+                    throw new Win32Exception(Marshal.GetLastWin32Error());
+                }
+
+                this.Handle = IntPtr.Zero;
+            }
         }
 
         public void Dispose()
@@ -156,6 +164,7 @@ namespace IronFrame.Utilities
                 throw new Win32Exception(Marshal.GetLastWin32Error());
 
             NativeMethods.DestroyEnvironmentBlock(unmanagedEnv);
+            NativeMethods.CloseHandle(processInfo.hThread);
 
             Handle = processInfo.hProcess;
 
