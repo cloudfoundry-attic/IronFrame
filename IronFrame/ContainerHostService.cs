@@ -76,18 +76,18 @@ namespace IronFrame
                 Credentials = credentials,
             };
 
-            var hostProcess = processRunner.Run(hostRunSpec);
-
-            WaitForProcessToStart(hostProcess, HostProcessStartTimeout);
-
             // Order here is important.
-            // - Start the process and verify that it's running
+            // - Start the process 
             // - Add the process to the job object
+            // - Verify that the process is healthy
             // - Start the RPC message pump
             //
             // We need to ensure that the host process cannot create any new processes before
             // it's added to the job object.
+
+            var hostProcess = processRunner.Run(hostRunSpec);
             jobObject.AssignProcessToJob(hostProcess.Handle);
+            WaitForProcessToStart(hostProcess, HostProcessStartTimeout);
 
             var messageTransport = MessageTransport.Create(hostProcess.StandardOutput, hostProcess.StandardInput);
             var messagingClient = MessagingClient.Create(async message =>
