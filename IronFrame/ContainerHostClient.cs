@@ -24,6 +24,8 @@ namespace IronFrame
 
     internal class ContainerHostClient : IContainerHostClient
     {
+        private const int DefaultCreateProcessTimeout = 15 * 1000;
+
         JobObject containerJobObject;
         IProcess hostProcess;
         IMessageTransport messageTransport;
@@ -54,7 +56,13 @@ namespace IronFrame
 
         public CreateProcessResult CreateProcess(CreateProcessParams @params)
         {
-            var response = SendMessage<CreateProcessRequest, CreateProcessResponse>(new CreateProcessRequest(@params));
+            CreateProcessResponse response;
+
+            if (!TrySendMessage<CreateProcessRequest, CreateProcessResponse>(new CreateProcessRequest(@params), new TimeSpan(0, 0, 0, 0, DefaultCreateProcessTimeout), out response))
+            {
+                throw new TimeoutException("CreateProcess timed out");
+            }
+
             return response.result;
         }
 

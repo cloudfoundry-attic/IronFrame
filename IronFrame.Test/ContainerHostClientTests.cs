@@ -86,6 +86,23 @@ namespace IronFrame
 
                 Assert.Same(ExpectedResult, result);
             }
+
+            [Fact]
+            public void WhenTimeoutOccurs_ThrowException()
+            {
+                var @params = new CreateProcessParams
+                {
+                    executablePath = "foo.exe",
+                };
+
+                MessagingClient.SendMessageAsync<CreateProcessRequest, CreateProcessResponse>(null)
+                    .ReturnsForAnyArgs(async (call) => {
+                        await Task.Delay(16 * 1000);
+                        return ExpectedResponse;
+                    });
+
+                Assert.Throws<TimeoutException>(() => { Client.CreateProcess(@params); });
+            }
         }
 
         public class Ping : ContainerHostClientTests
