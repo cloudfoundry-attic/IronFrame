@@ -87,10 +87,6 @@
             Condition=" Exists('%(VersionFile.FullPath)') and $(UniqueVersionLineCount) != $(VersionLineCount) " />
     </Target>
 
-    <Target Name="PackageRestore">
-        <MsBuild Projects="$(MSBuildThisFileDirectory)package-restore.targets" Targets="RestorePackages" />
-    </Target>
-    
     <Target Name="Clean" DependsOnTargets="SetInternalProperties">
         <MSBuild Projects="@(SolutionFile)" 
             Properties="Configuration=$(Configuration);Platform=$(Platform)"
@@ -106,7 +102,7 @@
         <Delete Files="@(OutputFileToClean)" />
     </Target>
     
-    <Target Name="Build" DependsOnTargets="PackageRestore;SetInternalProperties;SetVersion">
+    <Target Name="Build" DependsOnTargets="SetInternalProperties;SetVersion">
         <!-- Build the solution -->
         <MSBuild Condition=" '@(SolutionFile)' != '' " 
             Projects="@(SolutionFile)" 

@@ -17,6 +17,7 @@ if (%TARGET%)==() set TARGET=Default
 for /F "tokens=1* delims= " %%a in ("%*") do set BUILDARGS=%%b
 if "%BUILDARGS%"=="" set BUILDARGS=/verbosity:minimal
 
+%~dp0bin\nuget restore || exit /b 1
 %MSBUILD% /nologo /nr:false /p:VisualStudioVersion=12.0 /t:%TARGET% %BUILDARGS% %~dp0build/build.proj
 
 if errorlevel 1 goto Error_BuildFailed
