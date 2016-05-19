@@ -1,20 +1,14 @@
-﻿using System.Security.Principal;
-using System.Threading;
-using IronFrame.Utilities;
-using System.Data;
-using System.Management.Instrumentation;
-using System.Runtime.InteropServices;
+﻿using System.ComponentModel;
 using System.Security.Principal;
-using DiskQuotaTypeLibrary;
+using IronFrame.Utilities;
+using System.Runtime.InteropServices;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Management;
-using System.Runtime.InteropServices;
-using Microsoft.VisualBasic.ApplicationServices;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IronFrame.Acceptance
 {
@@ -53,40 +47,22 @@ namespace IronFrame.Acceptance
 
         public class DiskLimit : ContainerAcceptanceTests
         {
+            private ITestOutputHelper logger;
+
+            public DiskLimit(ITestOutputHelper helper)
+            {
+                logger = helper;
+            }
+
             [FactAdminRequired]
             public void Enforced()
             {
+                const ulong diskLimit = (ulong) 7e+6;
                 Container1 = CreateContainer(Container1Handle);
-                Container1.LimitDisk(10 * 1024);
+                Container1.LimitDisk(diskLimit);
 
-                var pSpec = new ProcessSpec
-                {
-                    ExecutablePath = "cmd",
-                    DisablePathMapping = true,
-                    Privileged = false,
-                    WorkingDirectory = Container1.Directory.UserPath,
-                };
-                var io1 = new StringProcessIO();
-
-                var passed = 0;
-                var failed = 0;
-                for (int i = 0; i < 20; i++)
-                {
-                    pSpec.Arguments = new[] { "/C", "echo Hi Bob > bob" + i + ".txt" };
-                    var proc = Container1.Run(pSpec, io1);
-                    var exitCode = proc.WaitForExit();
-
-                    if (exitCode == 0)
-                    {
-                        passed++;
-                    }
-                    else
-                    {
-                        failed++;
-                    }
-                }
-                Assert.Equal(13, passed);
-                Assert.Equal(7, failed);
+                Container1.ImpersonateContainerUser(() => File.WriteAllBytes(Container1.Directory.MapUserPath("file.txt"), new byte[diskLimit]));
+                Assert.Throws<IOException>(() => Container1.ImpersonateContainerUser(() => File.WriteAllBytes(Container1.Directory.MapUserPath("file.txt"), new byte[diskLimit+1024])));
             }
 
             [FactAdminRequired]
@@ -114,6 +90,12 @@ namespace IronFrame.Acceptance
 
         public class Security : ContainerAcceptanceTests
         {
+            private ITestOutputHelper logger;
+
+            public Security(ITestOutputHelper output)
+            {
+                logger = output;
+            }
             [FactAdminRequired]
             public void UniqueUserPerContainer()
             {
@@ -152,12 +134,69 @@ namespace IronFrame.Acceptance
                     DisablePathMapping = true,
                     Arguments = new string[] { "/GROUPS" }
                 };
-
                 var io = new StringProcessIO();
                 Container1.Run(pSpec, io).WaitForExit();
                 var groupOutput = io.Output.ToString();
 
                 Assert.Contains(UserGroupName, groupOutput);
+            }
+
+            [FactAdminRequired]
+            public void UserHasAProfileLoaded()
+            {
+                Container1 = CreateContainer(Container1Handle);
+                var exePath = Container1.Directory.MapUserPath("x509app.exe");
+                var compilerPath = Path.Combine(RuntimeEnvironment.GetRuntimeDirectory(), "csc.exe");
+                var srcPath = Path.Combine(Environment.CurrentDirectory, "..", "..", "fixtures", "x509app.cs");
+                var compileProcess = new Process()
+                {
+                    StartInfo = new ProcessStartInfo()
+                    {
+                        FileName = compilerPath,
+                        Arguments = "/out:" + exePath + " " + srcPath,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                    }
+                };
+                compileProcess.Start();
+
+                string output = compileProcess.StandardOutput.ReadToEnd();
+                string err = compileProcess.StandardOutput.ReadToEnd();
+
+                compileProcess.WaitForExit();
+
+                if (compileProcess.ExitCode != 0)
+                {
+                    logger.WriteLine(output);
+                    logger.WriteLine(err);
+                }
+
+                Assert.Equal(0, compileProcess.ExitCode);
+
+                var pSpec = new ProcessSpec
+                {
+                    ExecutablePath = exePath,
+                    DisablePathMapping = true,
+                };
+
+                var io = new StringProcessIO();
+                Container1.Run(pSpec, io).WaitForExit();
+                output = io.Output.ToString();
+                err = io.Error.ToString();
+
+                if (output.Contains("FAILURE"))
+                {
+                    logger.WriteLine(output);
+                    logger.WriteLine(err);
+                }
+
+                Assert.Contains("SUCCESS", output);
+                var username = "c_" + Container1.Id;
+                Container1.Destroy();
+                Container1Handle = null;
+                var userDir = Path.Combine(Environment.GetEnvironmentVariable("SYSTEMDRIVE")+@"\", "Users", username);
+                Assert.False(Directory.Exists(userDir));
             }
 
             //[FactAdminRequired(Skip = "Can't implement until we can copy files in.")]
@@ -642,7 +681,7 @@ namespace IronFrame.Acceptance
             return containerBasePath;
         }
 
-        private static string GenerateRandomAlphaString(int length = 8)
+        public static string GenerateRandomAlphaString(int length = 8)
         {
             const string alphabet = "abcdefghijklmnopqrstuvwxyz";
 

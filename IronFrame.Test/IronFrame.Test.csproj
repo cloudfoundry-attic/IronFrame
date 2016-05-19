@@ -113,6 +113,7 @@
     <Compile Include="TestSupport\InputSource.cs" />
     <Compile Include="TestSupport\RandomFactory.cs" />
     <Compile Include="TestSupport\TestProcessIO.cs" />
+    <Compile Include="Utilities\ContainerDiskQuotaTests.cs" />
     <Compile Include="Utilities\EffectiveAccessComputerTests.cs" />
     <Compile Include="Utilities\EnvironmentBlockTests.cs" />
     <Compile Include="ExtensionMethodsTests.cs" />
@@ -173,4 +174,3 @@
   </Target>
   -->
 </Project>
-

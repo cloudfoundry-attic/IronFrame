@@ -23,7 +23,7 @@ namespace IronFrame
         IContainerPropertyService ContainerPropertiesService { get; set; }
         ILocalTcpPortManager TcpPortManager { get; set; }
         IContainerUser User { get; set; }
-        DiskQuotaControl DiskQuotaControl { get; set; }
+        IContainerDiskQuota ContainerDiskQuota { get; set; }
         ContainerHostDependencyHelper DependencyHelper { get; set; }
         private readonly string _containerUsername;
 
@@ -52,7 +52,7 @@ namespace IronFrame
             _containerUsername = string.Concat("container-username-", Guid.NewGuid().ToString());
             User.UserName.Returns(_containerUsername);
 
-            DiskQuotaControl = Substitute.For<DiskQuotaControl>();
+            ContainerDiskQuota = Substitute.For<IContainerDiskQuota>();
 
             DependencyHelper = Substitute.For<ContainerHostDependencyHelper>();
 
@@ -64,7 +64,7 @@ namespace IronFrame
                 ContainerPropertiesService,
                 TcpPortManager,
                 JobObject,
-                DiskQuotaControl,
+                ContainerDiskQuota,
                 ProcessRunner,
                 ConstrainedProcessRunner,
                 ProcessHelper,
@@ -554,12 +554,8 @@ namespace IronFrame
             [Fact]
             public void DeletesDiskQuota()
             {
-                var dskuser = Substitute.For<DIDiskQuotaUser>();
-                DiskQuotaControl.FindUser(User.SID).Returns(dskuser);
-
                 Container.Destroy();
-
-                DiskQuotaControl.Received(1).DeleteUser(dskuser);
+                ContainerDiskQuota.Received(1).DeleteQuota();
             }
         }
 
@@ -762,12 +758,8 @@ namespace IronFrame
             [Fact]
             public void SetsUserDiskLimit()
             {
-                var quota = Substitute.For<DIDiskQuotaUser>();
-                this.DiskQuotaControl.FindUser(User.SID).Returns(quota);
-
                 Container.LimitDisk(5);
-
-                Assert.Equal(5, quota.QuotaLimit);
+                ContainerDiskQuota.Received(1).SetQuotaLimit(5);
             }
 
             [Fact]
@@ -783,22 +775,9 @@ namespace IronFrame
             [Fact]
             public void ReturnsDiskLimit()
             {
-                ulong limitInBytes = 2048;
-                var quota = Substitute.For<DIDiskQuotaUser>();
-                quota.QuotaLimit = limitInBytes;
-                this.DiskQuotaControl.FindUser(User.SID).Returns(quota);
-
+                var limitInBytes = (ulong) 7e6;
+                ContainerDiskQuota.CurrentLimit().Returns(limitInBytes);
                 Assert.Equal(limitInBytes, Container.CurrentDiskLimit());
-            }
-
-            [Fact]
-            public void WhenDiskQuotaUsedFails_ReturnZero()
-            {
-                var quota = Substitute.For<DIDiskQuotaUser>();
-                this.DiskQuotaControl.FindUser(User.SID).Returns(quota);
-                quota.QuotaUsed.Throws(new System.Runtime.InteropServices.COMException());
-
-                Assert.Equal(0ul, Container.CurrentDiskUsage());
             }
         }
 

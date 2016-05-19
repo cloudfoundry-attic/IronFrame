@@ -6,20 +6,25 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using IronFrame.Utilities;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IronFrame
 {
     public class ImpersonationProcessRunnerTests : IDisposable
     {
         private LocalPrincipalManager userManager;
-        private string username = "impersonation_tests";
+        private string username;
         private NetworkCredential creds;
+        private ITestOutputHelper logger;
 
-        public ImpersonationProcessRunnerTests()
+        public ImpersonationProcessRunnerTests(ITestOutputHelper helper)
         {
-           userManager = new LocalPrincipalManager("IIS_IUSRS");
-           userManager.DeleteUser(username);
-           creds = userManager.CreateUser(username);
+            logger = helper;
+            username = GenerateRandomAlphaString();
+            helper.WriteLine(username);
+            userManager = new LocalPrincipalManager("IIS_IUSRS");
+            userManager.DeleteUser(username);
+            creds = userManager.CreateUser(username);
         }
 
         public void Dispose()
@@ -117,6 +122,20 @@ namespace IronFrame
             var process = runner.Run(spec);
             process.WaitForExit();
             Assert.True(exited);
+        }
+        private static string GenerateRandomAlphaString(int length = 8)
+        {
+            const string alphabet = "abcdefghijklmnopqrstuvwxyz";
+
+            var r = RandomFactory.Create();
+            var handle = "";
+            for (var count = 0; count < length; count++)
+            {
+                var chosenCharIndex = r.Next(0, alphabet.Length);
+                handle += alphabet[chosenCharIndex];
+            }
+
+            return handle;
         }
     }
 }

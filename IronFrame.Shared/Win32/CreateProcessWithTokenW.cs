@@ -6,11 +6,17 @@ namespace IronFrame.Win32
 {
     internal partial class NativeMethods
     {
+        public enum LogonFlags
+        {
+            WithProfile = 1,
+            NetCredentialsOnly = 2
+        }
+
         [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern Boolean CreateProcessWithTokenW
         (
             SafeFileHandle hToken,
-            uint dwLogonFlags,
+            LogonFlags dwLogonFlags,
             String lpApplicationName,
             String lpCommandLine,
             CreateProcessFlags dwCreationFlags,

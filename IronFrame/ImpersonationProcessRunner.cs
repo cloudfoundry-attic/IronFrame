@@ -80,6 +80,7 @@ namespace IronFrame.Utilities
         public TextReader StandardOutput { get; private set; }
         public TextReader StandardError { get; private set; }
         public TextWriter StandardInput { get; private set; }
+
         public void Kill()
         {
             throw new NotImplementedException();
@@ -150,7 +151,7 @@ namespace IronFrame.Utilities
 
             success = NativeMethods.CreateProcessWithTokenW(
                 hToken,
-                0,
+                NativeMethods.LogonFlags.WithProfile,
                 null,
                 CommandLine(),
                 NativeMethods.CreateProcessFlags.CREATE_UNICODE_ENVIRONMENT,

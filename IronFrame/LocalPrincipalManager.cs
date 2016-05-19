@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Web.Security;
 using IronFrame.Utilities;
+using IronFrame.Win32;
 using NLog;
 using System.Security.Principal;
 
@@ -47,11 +50,41 @@ namespace IronFrame
         {
         }
 
+        const int ERROR_PROFILE_NOT_EXIST = 2;
+        const int ERROR_PROFILE_IN_USE = 87;
+
         public void DeleteUser(string userName)
         {
+            var sid = GetSID(userName);
+            if (sid != null)
+            {
+                const int maxAttempts = 10;
+                for (var attempts = 0; attempts++ < maxAttempts;)
+                {
+                    var success = NativeMethods.DeleteProfile(sid, null, null);
+                    if (success)
+                    {
+                        break;
+                    }
+
+                    var err = Marshal.GetLastWin32Error();
+                    if (err == ERROR_PROFILE_IN_USE && attempts < maxAttempts)
+                    {
+                        Thread.Sleep(100);
+                        continue;
+                    }
+
+                    if (err == ERROR_PROFILE_NOT_EXIST) // the profile was not created or has already been destroyed
+                    {
+                        break;
+                    }
+
+                    throw new Win32Exception(err);
+                }
+            }
             // Don't need to cleanup desktop permissions as they are managed by the group.
 
-            // Using NetUserDel as the DirectoryService APIs were painfully slow (~20-30 seconds to delete a single user).  
+            // Using NetUserDel as the DirectoryService APIs were painfully slow (~20-30 seconds to delete a single user).
             var result = NetUserDel(null, userName);
 
             if (result != NERR_Success)
@@ -74,9 +107,16 @@ namespace IronFrame
 
         public string GetSID(string userName)
         {
-            var account = new NTAccount(null, userName);
-            var securityIdentifier = (SecurityIdentifier)account.Translate(typeof(SecurityIdentifier));
-            return securityIdentifier.ToString();
+            try
+            {
+                var account = new NTAccount(null, userName);
+                var securityIdentifier = (SecurityIdentifier)account.Translate(typeof(SecurityIdentifier));
+                return securityIdentifier.ToString();
+            }
+            catch (IdentityNotMappedException)
+            {
+            }
+            return null;
         }
 
         public string FindUser(string userName)

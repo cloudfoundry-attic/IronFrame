@@ -20,7 +20,7 @@ namespace IronFrame
         readonly IContainerDirectory directory;
         readonly ILocalTcpPortManager tcpPortManager;
         readonly JobObject jobObject;
-        readonly DiskQuotaControl diskQuotaControl;
+        readonly IContainerDiskQuota containerDiskQuota;
         readonly ProcessHelper processHelper;
         readonly IContainerPropertyService propertyService;
         readonly Dictionary<string, string> defaultEnvironment;
@@ -42,7 +42,7 @@ namespace IronFrame
             IContainerPropertyService propertyService,
             ILocalTcpPortManager tcpPortManager,
             JobObject jobObject,
-            DiskQuotaControl diskQuotaControl,
+            IContainerDiskQuota containerDiskQuota,
             IProcessRunner processRunner,
             IProcessRunner constrainedProcessRunner,
             ProcessHelper processHelper,
@@ -57,7 +57,7 @@ namespace IronFrame
             this.propertyService = propertyService;
             this.tcpPortManager = tcpPortManager;
             this.jobObject = jobObject;
-            this.diskQuotaControl = diskQuotaControl;
+            this.containerDiskQuota = containerDiskQuota;
             this.processRunner = processRunner;
             this.constrainedProcessRunner = constrainedProcessRunner;
             this.processHelper = processHelper;
@@ -178,10 +178,10 @@ namespace IronFrame
                 if (directory != null)
                     directory.Destroy();
 
-                deleteUserDiskQuota();
-
                 if (user != null)
                     user.Delete();
+
+                deleteUserDiskQuota();
 
                 this.currentState = ContainerState.Destroyed;
             }
@@ -191,8 +191,7 @@ namespace IronFrame
         {
             try
             {
-                var dskuser = diskQuotaControl.FindUser(user.SID);
-                diskQuotaControl.DeleteUser(dskuser);
+                containerDiskQuota.DeleteQuota();
             }
             catch (COMException)
             {
@@ -223,7 +222,7 @@ namespace IronFrame
         {
             lock (_ioLock)
             {
-                return (ulong) diskQuotaControl.FindUser(user.SID).QuotaLimit;
+                return containerDiskQuota.CurrentLimit();
             }
         }
 
@@ -231,13 +230,7 @@ namespace IronFrame
         {
             lock (_ioLock)
             {
-                try
-                {
-                    return (ulong)diskQuotaControl.FindUser(user.SID).QuotaUsed;
-                }
-                catch (COMException) {
-                    return 0;
-                }
+                return containerDiskQuota.Usage();
             }
         }
 
@@ -297,7 +290,7 @@ namespace IronFrame
                     }
                     catch (InvalidOperationException)
                     {
-                        // skip the error, the process has exited 
+                        // skip the error, the process has exited
                     }
                 }
 
@@ -372,8 +365,7 @@ namespace IronFrame
             lock (_ioLock)
             {
                 ThrowIfNotActive();
-                var dskuser = diskQuotaControl.FindUser(user.SID);
-                dskuser.QuotaLimit = (double) limitInBytes;
+                containerDiskQuota.SetQuotaLimit(limitInBytes);
             }
         }
 

@@ -80,6 +80,7 @@
     <Compile Include="Win32\EnvironmentBlock.cs" />
     <Compile Include="Win32\CreatePipe.cs" />
     <Compile Include="Win32\CreateProcessWithTokenW.cs" />
+    <Compile Include="Win32\UserProfile.cs" />
     <Compile Include="Win32\ProcessInformation.cs" />
     <Compile Include="Win32\SecurityAttributes.cs" />
     <Compile Include="Utilities\ProcessRunner.cs" />
@@ -140,4 +141,3 @@
   </Target>
   -->
 </Project>
-

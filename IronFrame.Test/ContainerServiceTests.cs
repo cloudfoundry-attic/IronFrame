@@ -26,8 +26,9 @@ namespace IronFrame
         ILocalTcpPortManager TcpPortManager { get; set; }
         ContainerService Service { get; set; }
         IDiskQuotaManager diskQuotaManager { get; set; }
-        DiskQuotaControl diskQuotaControl { get; set; }
+        IContainerDiskQuota containerDiskQuota { get; set; }
         public string Id { get; set; }
+        string sid { get; set; }
 
         public ContainerServiceTests()
         {
@@ -54,11 +55,12 @@ namespace IronFrame
                 .ReturnsForAnyArgs(ContainerHostClient);
 
             UserManager.CreateUser(null).ReturnsForAnyArgs(new NetworkCredential("username", "password"));
-            UserManager.GetSID(null).ReturnsForAnyArgs("S-1234");
+            sid = "S-1234";
+            UserManager.GetSID(null).ReturnsForAnyArgs(sid);
 
             diskQuotaManager = Substitute.For<IDiskQuotaManager>();
-            diskQuotaControl = Substitute.For<DiskQuotaControl>();
-            diskQuotaManager.CreateDiskQuotaControl(null).ReturnsForAnyArgs(diskQuotaControl);
+            containerDiskQuota = Substitute.For<IContainerDiskQuota>();
+            diskQuotaManager.CreateDiskQuotaControl(null, "").ReturnsForAnyArgs(containerDiskQuota);
 
             var directoryFactory = Substitute.For<IContainerDirectoryFactory>();
             containerDirectory = Substitute.For<IContainerDirectory>();
@@ -185,7 +187,7 @@ namespace IronFrame
                 };
 
                 Service.CreateContainer(spec);
-                diskQuotaManager.Received().CreateDiskQuotaControl(containerDirectory);
+                diskQuotaManager.Received().CreateDiskQuotaControl(containerDirectory, sid);
             }
 
 
@@ -252,10 +254,6 @@ namespace IronFrame
 
         public class RestoreContainer : ContainerServiceTests
         {
-            public RestoreContainer()
-            {
-            }
-
             [Fact]
             public void RestoresContainerForEachDirectory()
             {

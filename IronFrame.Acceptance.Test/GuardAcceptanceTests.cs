@@ -13,7 +13,7 @@ namespace IronFrame.Acceptance.Test
 {
     public class GuardAcceptanceTests : IDisposable
     {
-        private readonly string username = "fred";
+        private readonly string username = ContainerAcceptanceTests.GenerateRandomAlphaString();
         private JobObject jobObject;
         private LocalPrincipalManager userManager;
         private Process guardProcess;
