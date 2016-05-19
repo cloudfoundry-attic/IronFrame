@@ -1,3 +1,4 @@
+*.*db
 # Nuget (exclude all exes except for the one in the global build folder)
 nuget.exe
 !build/nuget/nuget.exe
