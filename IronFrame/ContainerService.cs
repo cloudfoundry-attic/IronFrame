@@ -2,8 +2,12 @@
 using IronFrame.Utilities;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security.Principal;
+using System.Text;
 
 namespace IronFrame
 {
@@ -92,6 +96,9 @@ namespace IronFrame
 
                 var user = ContainerUser.Create(userManager, id);
                 undoStack.Push(() => user.Delete());
+
+                user.CreateProfile();
+                undoStack.Push(() => user.DeleteProfile());
 
                 var directory = directoryFactory.Create(fileSystem, containerBasePath, id);
                 directory.CreateSubdirectories(user);

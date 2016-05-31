@@ -179,7 +179,10 @@ namespace IronFrame
                     directory.Destroy();
 
                 if (user != null)
+                {
+                    user.DeleteProfile();
                     user.Delete();
+                }
 
                 deleteUserDiskQuota();
 

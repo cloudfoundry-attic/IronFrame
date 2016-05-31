@@ -50,40 +50,9 @@ namespace IronFrame
         {
         }
 
-        const int ERROR_PROFILE_NOT_EXIST = 2;
-        const int ERROR_PROFILE_IN_USE = 87;
-
         public void DeleteUser(string userName)
         {
-            var sid = GetSID(userName);
-            if (sid != null)
-            {
-                const int maxAttempts = 10;
-                for (var attempts = 0; attempts++ < maxAttempts;)
-                {
-                    var success = NativeMethods.DeleteProfile(sid, null, null);
-                    if (success)
-                    {
-                        break;
-                    }
-
-                    var err = Marshal.GetLastWin32Error();
-                    if (err == ERROR_PROFILE_IN_USE && attempts < maxAttempts)
-                    {
-                        Thread.Sleep(100);
-                        continue;
-                    }
-
-                    if (err == ERROR_PROFILE_NOT_EXIST) // the profile was not created or has already been destroyed
-                    {
-                        break;
-                    }
-
-                    throw new Win32Exception(err);
-                }
-            }
             // Don't need to cleanup desktop permissions as they are managed by the group.
-
             // Using NetUserDel as the DirectoryService APIs were painfully slow (~20-30 seconds to delete a single user).
             var result = NetUserDel(null, userName);
 
