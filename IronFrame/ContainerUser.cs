@@ -92,33 +92,12 @@ namespace IronFrame
 
         public void DeleteProfile()
         {
-            if (SID != null)
+            if (SID != null && !NativeMethods.DeleteProfile(SID, null, null))
             {
-                const int maxAttempts = 10;
-                for (var attempts = 0; attempts++ < maxAttempts;)
-                {
-                    var success = NativeMethods.DeleteProfile(SID, null, null);
-                    if (success)
-                    {
-                        break;
-                    }
-
-                    var err = Marshal.GetLastWin32Error();
-                    if (err == ERROR_PROFILE_IN_USE && attempts < maxAttempts)
-                    {
-                        Thread.Sleep(100);
-                        continue;
-                    }
-
-                    if (err == ERROR_PROFILE_NOT_EXIST) // the profile was not created or has already been destroyed
-                    {
-                        break;
-                    }
-
+                var err = Marshal.GetLastWin32Error();
+                if (err != ERROR_PROFILE_NOT_EXIST)
                     throw new Win32Exception(err);
-                }
             }
         }
-
     }
 }
