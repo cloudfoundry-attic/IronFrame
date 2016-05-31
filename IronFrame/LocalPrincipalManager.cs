@@ -11,6 +11,7 @@ using IronFrame.Utilities;
 using IronFrame.Win32;
 using NLog;
 using System.Security.Principal;
+using System.Text;
 
 namespace IronFrame
 {
@@ -19,6 +20,8 @@ namespace IronFrame
         NetworkCredential CreateUser(string userName);
         void DeleteUser(string userName);
         string GetSID(string userName);
+        void CreateProfile(string username);
+        void DeleteProfile(string username);
     }
 
     // Public because it is used by the acceptance tests to create/delete users.
@@ -30,6 +33,7 @@ namespace IronFrame
 
         private const uint COM_EXCEPT_UNKNOWN_DIRECTORY_OBJECT = 0x80005004;
         private const uint COM_EXCEPT_ERROR_NONE_MAPPED = 0x80070534;
+        private const int ERROR_PROFILE_NOT_EXIST = 2;
 
         // TODO: Determine if adding the user to IIS_USRS is really a requirement for the
         // IISHost.  If it is, then pass an array of groups for the user instead of having this hardcoded.
@@ -72,6 +76,30 @@ namespace IronFrame
             }
 
             return new NetworkCredential(data.UserName, data.Password);
+        }
+        
+       public void CreateProfile(string username)
+        {
+            var acct = new NTAccount(username);
+            var si = (SecurityIdentifier)acct.Translate(typeof(SecurityIdentifier));
+            var sidString = si.ToString();
+
+            var pathBuf = new StringBuilder(260);
+            var pathLen = (uint)pathBuf.Capacity;
+
+            var result = NativeMethods.CreateProfile(sidString, username, pathBuf, pathLen);
+            if (result != 0)
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+        }
+
+        public void DeleteProfile(string sid)
+        {
+            if (!NativeMethods.DeleteProfile(sid, null, null))
+            {
+                var err = Marshal.GetLastWin32Error();
+                if (err != ERROR_PROFILE_NOT_EXIST)
+                    throw new Win32Exception(err);
+            }
         }
 
         public string GetSID(string userName)

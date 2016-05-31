@@ -247,6 +247,8 @@ namespace IronFrame
                 // Created and deleted the user
                 UserManager.Received(1).CreateUser(Arg.Any<string>());
                 UserManager.Received(1).DeleteUser(Arg.Any<string>());
+                UserManager.Received(1).CreateProfile(Arg.Any<string>());
+                UserManager.Received(1).DeleteProfile(Arg.Any<string>());
 
                 containerDirectory.Received().Destroy();
             }

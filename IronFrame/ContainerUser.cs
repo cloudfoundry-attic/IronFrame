@@ -23,8 +23,6 @@ namespace IronFrame
         readonly IUserManager userManager; // TODO: Refactor this out of this class
         readonly NetworkCredential credentials;
         private string _sid = null;
-        const int ERROR_PROFILE_NOT_EXIST = 2;
-        const int ERROR_PROFILE_IN_USE = 87;
 
         public ContainerUser(IUserManager userManager, NetworkCredential credentials)
         {
@@ -78,26 +76,13 @@ namespace IronFrame
 
        public void CreateProfile()
         {
-            var acct = new NTAccount(UserName);
-            var si = (SecurityIdentifier)acct.Translate(typeof(SecurityIdentifier));
-            var sidString = si.ToString();
-
-            var pathBuf = new StringBuilder(260);
-            var pathLen = (uint)pathBuf.Capacity;
-
-            var result = NativeMethods.CreateProfile(sidString, UserName, pathBuf, pathLen);
-            if (result != 0)
-                throw new Win32Exception(Marshal.GetLastWin32Error());
+            userManager.CreateProfile(UserName);
         }
 
         public void DeleteProfile()
         {
-            if (SID != null && !NativeMethods.DeleteProfile(SID, null, null))
-            {
-                var err = Marshal.GetLastWin32Error();
-                if (err != ERROR_PROFILE_NOT_EXIST)
-                    throw new Win32Exception(err);
-            }
+            if (SID != null)
+                userManager.DeleteProfile(SID);
         }
     }
 }
