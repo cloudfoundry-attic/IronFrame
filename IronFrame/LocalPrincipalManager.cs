@@ -32,8 +32,8 @@ namespace IronFrame
         private static extern int NetUserDel(string serverName, string userName);
 
         private const uint COM_EXCEPT_UNKNOWN_DIRECTORY_OBJECT = 0x80005004;
-        private const uint COM_EXCEPT_ERROR_NONE_MAPPED = 0x80070534;
         private const int ERROR_PROFILE_NOT_EXIST = 2;
+        const int ERROR_PROFILE_IN_USE = 87;
 
         // TODO: Determine if adding the user to IIS_USRS is really a requirement for the
         // IISHost.  If it is, then pass an array of groups for the user instead of having this hardcoded.
@@ -94,11 +94,28 @@ namespace IronFrame
 
         public void DeleteProfile(string sid)
         {
-            if (!NativeMethods.DeleteProfile(sid, null, null))
+            const int maxAttempts = 10;
+            for (var attempts = 0; attempts++ < maxAttempts;)
             {
+                var success = NativeMethods.DeleteProfile(sid, null, null);
+                if (success)
+                {
+                    break;
+                }
+
                 var err = Marshal.GetLastWin32Error();
-                if (err != ERROR_PROFILE_NOT_EXIST)
-                    throw new Win32Exception(err);
+                if (err == ERROR_PROFILE_IN_USE && attempts < maxAttempts)
+                {
+                    Thread.Sleep(100);
+                    continue;
+                }
+
+                if (err == ERROR_PROFILE_NOT_EXIST) // the profile was not created or has already been destroyed
+                {
+                    break;
+                }
+
+                throw new Win32Exception(err);
             }
         }
 
