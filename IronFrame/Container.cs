@@ -176,7 +176,13 @@ namespace IronFrame
                 jobObject.Dispose();
 
                 if (directory != null)
-                    directory.Destroy();
+                {
+                    try
+                    {
+                        directory.Destroy();
+                    }
+                    catch (System.IO.IOException) { }
+                }
 
                 if (user != null)
                 {
