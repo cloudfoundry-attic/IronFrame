@@ -16,6 +16,7 @@ namespace IronFrame
         IContainer CreateContainer(ContainerSpec containerSpec);
         void DestroyContainer(string handle);
         IContainer GetContainerByHandle(string handle);
+        IContainer GetContainerByHandleIncludingDestroyed(string handle);
         IReadOnlyList<IContainer> GetContainers();
     }
 
@@ -48,8 +49,10 @@ namespace IronFrame
         readonly IDiskQuotaManager diskQuotaManager;
         readonly List<IContainer> containers = new List<IContainer>();
         private IContainerDirectoryFactory directoryFactory;
+        private IContainerFactory containerFactory;
+        private HashSet<IContainer> destroyingContainers = new HashSet<IContainer>();
 
-        internal ContainerService(ContainerHandleHelper handleHelper, IUserManager userManager, IFileSystemManager fileSystem, IContainerPropertyService containerPropertiesService, ILocalTcpPortManager tcpPortManager, IProcessRunner processRunner, IContainerHostService containerHostService, IDiskQuotaManager diskQuotaManager, IContainerDirectoryFactory directoryFactory, string containerBasePath)
+        internal ContainerService(ContainerHandleHelper handleHelper, IUserManager userManager, IFileSystemManager fileSystem, IContainerPropertyService containerPropertiesService, ILocalTcpPortManager tcpPortManager, IProcessRunner processRunner, IContainerHostService containerHostService, IDiskQuotaManager diskQuotaManager, IContainerDirectoryFactory directoryFactory, IContainerFactory containerFactory, string containerBasePath)
         {
             this.handleHelper = handleHelper;
             this.userManager = userManager;
@@ -61,6 +64,7 @@ namespace IronFrame
             this.containerBasePath = containerBasePath;
             this.diskQuotaManager = diskQuotaManager;
             this.directoryFactory = directoryFactory;
+            this.containerFactory = containerFactory;
         }
 
         public ContainerService(string containerBasePath, string userGroupName)
@@ -74,6 +78,7 @@ namespace IronFrame
                 new ContainerHostService(),
                 new DiskQuotaManager(),
                 new ContainerDirectoryFactory(),
+                new ContainerFactory(),
                 containerBasePath
             )
         {
@@ -121,7 +126,7 @@ namespace IronFrame
 
                 var diskQuotaControl = diskQuotaManager.CreateDiskQuotaControl(directory, user.SID);
 
-                container = new Container(
+                container = containerFactory.CreateContainer(
                     id,
                     handle,
                     user,
@@ -160,28 +165,39 @@ namespace IronFrame
 
         public void DestroyContainer(string handle)
         {
-            var container = FindContainer(handle);
+            var container = FindContainer(handle, true);
             if (container != null)
             {
                 lock (containers)
                 {
                     containers.Remove(container);
+
+                    destroyingContainers.Add(container);
+                    container.Destroy();
+                    destroyingContainers.Remove(container);
                 }
-                container.Destroy();
             }
         }
 
-        IContainer FindContainer(string handle)
+        IContainer FindContainer(string handle, bool includeDestroyedContainers)
         {
             lock (containers)
             {
-                return containers.Find(x => x.Handle.Equals(handle, StringComparison.OrdinalIgnoreCase));
+                var containersToSearch = containers;
+                if (includeDestroyedContainers)
+                    containersToSearch = containersToSearch.Concat(destroyingContainers).ToList();
+                return containersToSearch.Find(x => x.Handle.Equals(handle, StringComparison.OrdinalIgnoreCase));
             }
+        }
+
+        public IContainer GetContainerByHandleIncludingDestroyed(string handle)
+        {
+            return FindContainer(handle, true);
         }
 
         public IContainer GetContainerByHandle(string handle)
         {
-            return FindContainer(handle);
+            return FindContainer(handle, false);
         }
 
         public IReadOnlyList<IContainer> GetContainers()
@@ -270,5 +286,58 @@ namespace IronFrame
 
             return containerService;
         }
+    }
+
+    internal class ContainerFactory : IContainerFactory
+    {
+        public IContainer CreateContainer(string id,
+            string handle,
+            IContainerUser user,
+            IContainerDirectory directory,
+            IContainerPropertyService propertyService,
+            ILocalTcpPortManager tcpPortManager,
+            JobObject jobObject,
+            IContainerDiskQuota containerDiskQuota,
+            IProcessRunner processRunner,
+            IProcessRunner constrainedProcessRunner,
+            ProcessHelper processHelper,
+            Dictionary<string, string> defaultEnvironment,
+            ContainerHostDependencyHelper dependencyHelper)
+        {
+            return new Container(
+                id,
+                handle,
+                user,
+                directory,
+                propertyService,
+                tcpPortManager,
+                jobObject,
+                containerDiskQuota,
+                processRunner,
+                constrainedProcessRunner,
+                processHelper,
+                defaultEnvironment,
+                dependencyHelper
+            );
+        }
+    }
+
+    internal interface IContainerFactory
+    {
+        IContainer CreateContainer(
+            string id,
+            string handle,
+            IContainerUser user,
+            IContainerDirectory directory,
+            IContainerPropertyService propertyService,
+            ILocalTcpPortManager tcpPortManager,
+            JobObject jobObject,
+            IContainerDiskQuota containerDiskQuota,
+            IProcessRunner processRunner,
+            IProcessRunner constrainedProcessRunner,
+            ProcessHelper processHelper,
+            Dictionary<string, string> defaultEnvironment,
+            ContainerHostDependencyHelper dependencyHelper
+        );
     }
 }

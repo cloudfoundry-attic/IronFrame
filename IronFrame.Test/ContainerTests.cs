@@ -557,14 +557,6 @@ namespace IronFrame
                 Container.Destroy();
                 ContainerDiskQuota.Received(1).DeleteQuota();
             }
-
-            [Fact]
-            public void DoesNotThrowOnContainerDirectoryDestroy()
-            {
-                Directory.When(x => x.Destroy()).Do(x => { throw new IOException(); });
-
-                Container.Destroy();
-            }
         }
 
         public class GetInfo : ContainerTests

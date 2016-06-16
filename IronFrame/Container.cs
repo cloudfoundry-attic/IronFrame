@@ -158,7 +158,6 @@ namespace IronFrame
                 Stop(true);
                 StopGuardAndWait(new TimeSpan(0, 0, 0, 10));
 
-
                 foreach (var port in reservedPorts)
                 {
                     tcpPortManager.ReleaseLocalPort(port, user.UserName);
@@ -175,14 +174,7 @@ namespace IronFrame
                 }
                 jobObject.Dispose();
 
-                if (directory != null)
-                {
-                    try
-                    {
-                        directory.Destroy();
-                    }
-                    catch (System.IO.IOException) { }
-                }
+                directory.Destroy();
 
                 if (user != null)
                 {

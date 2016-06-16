@@ -30,6 +30,53 @@ namespace IronFrame
         public string Id { get; set; }
         string sid { get; set; }
 
+        class TestContainerFactory : IContainerFactory
+        {
+            private int destroyCount = 0;
+
+            public IContainer CreateContainer(string id,
+                string handle,
+                IContainerUser user,
+                IContainerDirectory directory,
+                IContainerPropertyService propertyService,
+                ILocalTcpPortManager tcpPortManager,
+                JobObject jobObject,
+                IContainerDiskQuota containerDiskQuota,
+                IProcessRunner processRunner,
+                IProcessRunner constrainedProcessRunner,
+                ProcessHelper processHelper,
+                Dictionary<string, string> defaultEnvironment,
+                ContainerHostDependencyHelper dependencyHelper)
+            {
+                if (handle == "KnownBadHandle")
+                {
+                    var badContainer = Substitute.For<IContainer>();
+                    badContainer.Handle.Returns("KnownBadHandle");
+                    badContainer.When(x => x.Destroy()).Do(x => { if (destroyCount++ == 0) throw new Exception(); });
+
+                    return badContainer;
+                }
+                else
+                {
+                    return new Container(
+                        id,
+                        handle,
+                        user,
+                        directory,
+                        propertyService,
+                        tcpPortManager,
+                        jobObject,
+                        containerDiskQuota,
+                        processRunner,
+                        constrainedProcessRunner,
+                        processHelper,
+                        defaultEnvironment,
+                        dependencyHelper
+                    );
+                }
+            }
+        }
+
         public ContainerServiceTests()
         {
             ContainerBasePath = @"C:\Containers";
@@ -66,6 +113,8 @@ namespace IronFrame
             containerDirectory = Substitute.For<IContainerDirectory>();
             directoryFactory.Create(FileSystem, ContainerBasePath, Id).Returns(containerDirectory);
 
+            var containerFactory = new TestContainerFactory();
+
             Service = new ContainerService(
                 HandleHelper,
                 UserManager,
@@ -76,6 +125,7 @@ namespace IronFrame
                 ContainerHostService,
                 diskQuotaManager,
                 directoryFactory,
+                containerFactory,
                 ContainerBasePath
             );
         }
@@ -368,6 +418,61 @@ namespace IronFrame
                     Assert.NotNull(Service.GetContainerByHandle(Container.Handle));
                     Service.DestroyContainer(Container.Handle);
                     Assert.Null(Service.GetContainerByHandle(Container.Handle));
+                }
+
+                [Fact]
+                public void ContainerIsRemovedFromContainerListOnException()
+                {
+                    var badSpec = new ContainerSpec
+                    {
+                        Handle = "KnownBadHandle",
+                    };
+
+                    var badContainer = Service.CreateContainer(badSpec);
+
+                    Assert.NotNull(Service.GetContainerByHandle(badContainer.Handle));
+                    try
+                    {
+                        Service.DestroyContainer(badContainer.Handle);
+                    } catch (Exception) { }
+                    Assert.Null(Service.GetContainerByHandle(badContainer.Handle));
+                }
+
+                [Fact]
+                public void ContainerRemainsInContainerListForRemoveOnException()
+                {
+                    var badSpec = new ContainerSpec
+                    {
+                        Handle = "KnownBadHandle",
+                    };
+
+                    var badContainer = Service.CreateContainer(badSpec);
+
+                    Assert.NotNull(Service.GetContainerByHandle(badContainer.Handle));
+                    try {
+                        Service.DestroyContainer(badContainer.Handle);
+                    } catch (Exception) { }
+                    Assert.NotNull(Service.GetContainerByHandleIncludingDestroyed(badContainer.Handle));
+                }
+
+                [Fact]
+                public void ContainerRemainsInContainerListForRemoveOnExceptionUntilSuccess()
+                {
+                    var badSpec = new ContainerSpec
+                    {
+                        Handle = "KnownBadHandle",
+                    };
+
+                    var badContainer = Service.CreateContainer(badSpec);
+
+                    Assert.NotNull(Service.GetContainerByHandle(badContainer.Handle));
+                    try {
+                        Service.DestroyContainer(badContainer.Handle);
+                    } catch (Exception) { }
+                    Assert.NotNull(Service.GetContainerByHandleIncludingDestroyed(badContainer.Handle));
+
+                    Service.DestroyContainer(badContainer.Handle);
+                    Assert.Null(Service.GetContainerByHandleIncludingDestroyed(badContainer.Handle));
                 }
             }
         }
