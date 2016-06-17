@@ -204,15 +204,7 @@ namespace IronFrame
         {
             lock (containers)
             {
-                return containers.ToArray();
-            }
-        }
-
-        public IReadOnlyList<string> GetContainerHandles()
-        {
-            lock (containers)
-            {
-                return containers.Select(x => x.Handle).ToList();
+                return containers.Concat(destroyingContainers).ToArray();
             }
         }
 

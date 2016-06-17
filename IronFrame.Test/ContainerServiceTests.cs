@@ -461,6 +461,26 @@ namespace IronFrame
                     Service.DestroyContainer(badContainer.Handle);
                     Assert.Null(Service.GetContainerByHandleIncludingDestroyed(badContainer.Handle));
                 }
+
+                [Fact]
+                public void IncludesDestroyingContainersInGetContainers()
+                {
+                    var badSpec = new ContainerSpec
+                    {
+                        Handle = "KnownBadHandle",
+                    };
+
+                    var badContainer = Service.CreateContainer(badSpec);
+
+                    Assert.True(Service.GetContainers().Contains(badContainer));
+
+                    try
+                    {
+                        Service.DestroyContainer(badContainer.Handle);
+                    } catch (Exception) { }
+
+                    Assert.True(Service.GetContainers().Contains(badContainer));
+                }
             }
         }
 
