@@ -97,17 +97,6 @@ namespace IronFrame
             }
 
             [Fact]
-            public void ThrowsWardenExceptionIfNetShFails()
-            {
-                var tcpPortManager = new LocalTcpPortManager(FirewallManager, NetShRunner);
-                NetShRunner.DeleteRule(Arg.Any<int>()).ReturnsForAnyArgs(false);
-
-                var exception = Record.Exception(() => tcpPortManager.ReleaseLocalPort(8888, "userName"));
-
-                Assert.IsType<Exception>(exception);
-            }
-
-            [Fact]
             public void RemovesFirewallRulesEvenWithNoPort()
             {
                 var tcpPortManager = new LocalTcpPortManager(FirewallManager, NetShRunner);

@@ -81,19 +81,10 @@ namespace IronFrame
 
             if (port.HasValue)
             {
-                if (!netShRunner.DeleteRule(port.Value))
-                    throw new Exception(String.Format("Error removing reservation for port '{0}'", port));
+                netShRunner.DeleteRule(port.Value);
             }
 
-            try
-            {
-                firewallManager.ClosePort(userName);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(String.Format("Error removing firewall rule for port '{0}', user '{1}'", port, userName), ex);
-            }
-
+            firewallManager.ClosePort(userName);
         }
 
         public void RemoveFirewallRules(string userName)
