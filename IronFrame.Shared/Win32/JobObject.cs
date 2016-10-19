@@ -257,5 +257,20 @@ namespace IronFrame.Win32
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool TerminateJobObject(SafeHandle jobHandle, uint exitCode);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern IntPtr CreateIoCompletionPort(
+            [In] IntPtr fileHandle,
+            [In] IntPtr existingCompletionPort,
+            [In] UInt32 completionKey,
+            [In] UInt32 numberOfConcurrentThreads);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool GetQueuedCompletionStatus(
+            IntPtr completionPort,
+            out uint completionCode,
+            out IntPtr lpCompletionKey,
+            out IntPtr lpOverlapped,
+            uint dwMilliseconds);
     }
 }

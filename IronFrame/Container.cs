@@ -1,5 +1,5 @@
-﻿using DiskQuotaTypeLibrary;
-using IronFrame.Utilities;
+﻿using IronFrame.Utilities;
+using NLog;
 using SimpleImpersonation;
 using System;
 using System.Collections.Generic;
@@ -63,7 +63,6 @@ namespace IronFrame
             this.processHelper = processHelper;
             this.dependencyHelper = dependencyHelper;
             this.defaultEnvironment = defaultEnvironment ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
             this.currentState = ContainerState.Active;
         }
 
@@ -155,6 +154,8 @@ namespace IronFrame
         {
             lock (_ioLock)
             {
+                LogCompletionStatus();
+
                 Stop(true);
                 StopGuardAndWait(new TimeSpan(0, 0, 0, 10));
 
@@ -185,6 +186,37 @@ namespace IronFrame
                 deleteUserDiskQuota();
 
                 this.currentState = ContainerState.Destroyed;
+            }
+        }
+
+        private void LogCompletionStatus()
+        {
+            var logger = LogManager.GetCurrentClassLogger();
+            logger.Info("JobCompletionStatus(handle: {0}): Destroy()", handle);
+            foreach (var completionMsg in jobObject.GetQueuedCompletionStatus().Distinct())
+            {
+                switch (completionMsg)
+                {
+                    case JobObject.CompletionMsg.NotificationLimit:
+                        var jolvi = jobObject.GetLimitViolationInformation();
+                        logger.Info("JobCompletionStatus(handle: {0}): LimitViolationInformation : {1}", handle, jolvi);
+                        break;
+                    case JobObject.CompletionMsg.JobMemoryLimit:
+                        logger.Info("JobCompletionStatus(handle: {0}): Reached job memory limit", handle);
+                        break;
+                    case JobObject.CompletionMsg.ActiveProcessLimit:
+                        logger.Info("JobCompletionStatus(handle: {0}): Reached active process limit", handle);
+                        break;
+                    case JobObject.CompletionMsg.AbnormalExitProcess:
+                        logger.Info("JobCompletionStatus(handle: {0}): Abnormal Exit Process", handle);
+                        break;
+                    case JobObject.CompletionMsg.ActiveProcessZero:
+                        logger.Info("JobCompletionStatus(handle: {0}): Active process count 0", handle);
+                        break;
+                    default:
+                        logger.Info("JobCompletionStatus(handle: {0}): CompletionCode = {1}", handle, completionMsg);
+                        break;
+                }
             }
         }
 

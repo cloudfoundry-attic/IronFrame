@@ -17,6 +17,7 @@ namespace IronFrame.Utilities
     internal class JobObject : IDisposable
     {
         SafeJobObjectHandle handle;
+        SafeFileHandle completionPort;
 
         public JobObject()
             : this(null)
@@ -43,6 +44,7 @@ namespace IronFrame.Utilities
                 }
                 handle = new SafeJobObjectHandle(token);
                 SetJobLimits(NativeMethods.JobObjectLimit.KillOnJobClose);
+                SetCompletionPort();
             }
 
             if (handle.IsInvalid)
@@ -62,6 +64,12 @@ namespace IronFrame.Utilities
             {
                 handle.Dispose();
                 handle = null;
+            }
+
+            if (completionPort != null)
+            {
+                completionPort.Dispose();
+                completionPort = null;
             }
         }
 
@@ -231,7 +239,43 @@ namespace IronFrame.Utilities
             } while (true);
         }
 
-        NativeMethods.JobObjectLimitViolationInformation GetLimitViolationInformation()
+        public enum CompletionMsg
+        {
+            AbnormalExitProcess = 8,
+            ActiveProcessLimit = 3,
+            ActiveProcessZero = 4,
+            EndOfJobTime = 1,
+            EndOfProcessTime = 2,
+            ExitProcess = 7,
+            JobCycleTimeLimit = 12,
+            JobMemoryLimit = 10,
+            NewProcess = 6,
+            NotificationLimit = 11,
+            ProcessMemoryLimit = 9,
+            NoCompletionStatus = 0
+        }
+
+        public System.Collections.Generic.IEnumerable<CompletionMsg> GetQueuedCompletionStatus()
+        {
+            if (completionPort != null)
+            {
+                IntPtr completionKey;
+                IntPtr overlapped;
+                uint cc;
+                const uint completionWaitMs = 10;
+                while (NativeMethods.GetQueuedCompletionStatus(
+                    completionPort.DangerousGetHandle(),
+                    out cc,
+                    out completionKey,
+                    out overlapped,
+                    completionWaitMs))
+                {
+                    yield return (CompletionMsg) cc;
+                }
+            }
+        }
+
+        public NativeMethods.JobObjectLimitViolationInformation GetLimitViolationInformation()
         {
             using (var allocation = SafeAllocation.Create<NativeMethods.JobObjectLimitViolationInformation>())
             {
@@ -242,26 +286,35 @@ namespace IronFrame.Utilities
             }
         }
 
-        private void SetCompletionPort(SafeFileHandle completionPortHandle)
+        public void SetCompletionPort()
         {
             int length = Marshal.SizeOf(typeof(NativeMethods.JobObjectAssociateCompletionPort));
             IntPtr completionPortPtr = IntPtr.Zero;
             try
             {
-                var completionPort = new NativeMethods.JobObjectAssociateCompletionPort
+                var nativeCompletionPort = NativeMethods.CreateIoCompletionPort(new IntPtr(-1), IntPtr.Zero, 0, 0);
+                completionPort = new SafeFileHandle(nativeCompletionPort, true);
+
+                var cp = new NativeMethods.JobObjectAssociateCompletionPort
                 {
                     CompletionKey = IntPtr.Zero,
-                    CompletionPortHandle = completionPortHandle.DangerousGetHandle(),
+                    CompletionPortHandle = completionPort.DangerousGetHandle(),
                 };
 
                 completionPortPtr = Marshal.AllocHGlobal(length);
 
-                Marshal.StructureToPtr(completionPort, completionPortPtr, false);
+                Marshal.StructureToPtr(cp, completionPortPtr, false);
 
-                if (!NativeMethods.SetInformationJobObject(handle, NativeMethods.JobObjectInfoClass.AssociateCompletionPortInformation, completionPortPtr, length))
+                if (
+                    !NativeMethods.SetInformationJobObject(handle,
+                        NativeMethods.JobObjectInfoClass.AssociateCompletionPortInformation, completionPortPtr, length))
                 {
                     throw new Win32Exception(Marshal.GetLastWin32Error());
                 }
+            }
+            catch (Win32Exception)
+            {
+                completionPort = null;
             }
             finally
             {

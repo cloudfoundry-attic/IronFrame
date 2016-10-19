@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -176,6 +177,62 @@ namespace IronFrame.Utilities
                     Console.Error.WriteLine(process.StandardError.ReadToEnd());
                 }
                 Assert.True(hasExited, "Active process limit was not enforced");
+            }
+        }
+
+        public class GetQueuedCompletionStatus
+        {
+            [Fact]
+            public void GetQueuedCompletionStatus_ForkBomb_DoesHaveLimitViolation()
+            {
+                using (var jobObject = new JobObject())
+                {
+                    jobObject.SetActiveProcessLimit(2);
+
+                    var process = IFTestHelper.ExecuteWithWait("fork-bomb");
+                    jobObject.AssignProcessToJob(process);
+                    IFTestHelper.Continue(process);
+                    process.WaitForExit(1000);
+
+                    var msgs = jobObject.GetQueuedCompletionStatus();
+                    Assert.Contains(msgs, x => x == JobObject.CompletionMsg.ActiveProcessLimit);
+                }
+            }
+
+            [Fact]
+            public void GetQueuedCompletionStatus_NonForkBomb_DoesNotHaveLimitViolation()
+            {
+                using (var jobObject = new JobObject())
+                {
+                    jobObject.SetActiveProcessLimit(2);
+
+                    var process = IFTestHelper.ExecuteWithWait("nop");
+                    jobObject.AssignProcessToJob(process);
+                    IFTestHelper.Continue(process);
+                    process.WaitForExit(1000);
+
+                    var msgs = jobObject.GetQueuedCompletionStatus();
+                    Assert.DoesNotContain(msgs, x => x == JobObject.CompletionMsg.ActiveProcessLimit);
+                    Assert.DoesNotContain(msgs, x => x == JobObject.CompletionMsg.JobMemoryLimit);
+                }
+            }
+
+            [Fact]
+            public void GetQueuedCompletionStatus_CanLimitMemory()
+            {
+                using (var jobObject = new JobObject())
+                {
+                    const ulong limitInBytes = 1024 * 1024 * 25; // 25MB
+                    const ulong allocateBytes = limitInBytes*2;
+
+                    jobObject.SetJobMemoryLimit(limitInBytes);
+
+                    var process = IFTestHelper.ExecuteInJob(jobObject, "allocate-memory", "--bytes", allocateBytes);
+                    process.WaitForExit(1000);
+
+                    var msgs = jobObject.GetQueuedCompletionStatus();
+                    Assert.Contains(msgs, x => x == JobObject.CompletionMsg.JobMemoryLimit);
+                }
             }
         }
 
