@@ -5,11 +5,15 @@ using IronFrame.Host.Handlers;
 using IronFrame.Messages;
 using IronFrame.Messaging;
 using IronFrame.Utilities;
+using System.Runtime.InteropServices;
 
 namespace IronFrame.Host
 {
     class Program
     {
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern int SetErrorMode(int wMode);
+
         static ManualResetEvent exitEvent = new ManualResetEvent(false);
         static ProcessTracker processTracker;
         static string containerId = null;
@@ -19,6 +23,8 @@ namespace IronFrame.Host
         static void Main(string[] args)
         {
             //Debugger.Launch();
+
+            SetErrorMode(0x0002 | SetErrorMode(0x0002)); // SEM_NOGPFAULTERRORBOX = 0x0002
 
             if (args.Length == 0)
                 ExitWithError("Must specify container-id as the first argument.", -1);
