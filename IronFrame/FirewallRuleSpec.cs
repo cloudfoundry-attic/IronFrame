@@ -43,7 +43,7 @@ namespace IronFrame
 
     public enum Protocol
     {
-        All, Tcp, Udp
+        All, Tcp, Udp, Icmp
     }
 
     public class IPRange

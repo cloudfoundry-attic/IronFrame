@@ -119,6 +119,8 @@ namespace IronFrame.Utilities
                 case Protocol.Udp:
                     rule.Protocol = (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_UDP;
                     break;
+                case Protocol.Icmp:
+                    return;
                 default:
                     throw new Exception("Protocol " + proto + " is unknown");
             }
