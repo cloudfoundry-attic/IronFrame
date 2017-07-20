@@ -182,6 +182,27 @@ namespace IronFrame.Utilities
             }
         };
 
+        public class IcmpTest : FirewallManagerTests
+        {
+            [FactAdminRequired]
+            public void TestIcmpProtocolIgnored()
+            {
+                var firewallSpec = new FirewallRuleSpec
+                {
+                    Protocol = Protocol.Icmp,
+                    Networks = new List<IPRange>
+                    {
+                        new IPRange() {Start = "0.0.0.0", End = "0.0.0.0"},
+                    }
+
+                };
+                var rulesBefore = firewallPolicy.Rules;
+                manager.CreateOutboundFirewallRule(Username, firewallSpec);
+                var rulesAfter = firewallPolicy.Rules;
+                Assert.Equal(rulesAfter.Count, rulesBefore.Count);
+            }
+        };
+
         public class RemoveFirewallRulesTest : FirewallManagerTests
         {
             [FactAdminRequired]
