@@ -136,6 +136,25 @@ namespace IronFrame.Utilities
             if (!success)
                 throw new Win32Exception(Marshal.GetLastWin32Error());
 
+            NativeMethods.LUID privilegeLuid;
+            if (!NativeMethods.LookupPrivilegeValue(null, "SeImpersonatePrivilege", out privilegeLuid))
+            {
+                int lastError = Marshal.GetLastWin32Error();
+                throw new Win32Exception(lastError, "Error calling LookupPrivilegeValue: " + lastError);
+            }
+
+            var tokenPrivileges = new NativeMethods.TOKEN_PRIVILEGES();
+            tokenPrivileges.PrivilegeCount = 1;
+            tokenPrivileges.Attributes = 1;
+            tokenPrivileges.Luid = privilegeLuid;
+            if (!NativeMethods.AdjustTokenPrivileges(hToken, false,
+                ref tokenPrivileges,
+                1024, IntPtr.Zero, IntPtr.Zero))
+            {
+                var lastError = Marshal.GetLastWin32Error();
+                throw new Win32Exception(lastError, "Error calling AdjustTokenPrivileges: " + lastError);
+            }
+
             IntPtr unmanagedEnv;
             if (!NativeMethods.CreateEnvironmentBlock(out unmanagedEnv, hToken.DangerousGetHandle(), false))
             {

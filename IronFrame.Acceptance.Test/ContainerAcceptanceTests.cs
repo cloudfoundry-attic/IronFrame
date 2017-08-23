@@ -142,6 +142,24 @@ namespace IronFrame.Acceptance
             }
 
             [FactAdminRequired]
+            public void ContainerUserImpersonationDisabled()
+            {
+                Container1 = CreateContainer(Container1Handle);
+
+                var pSpec = new ProcessSpec
+                {
+                    ExecutablePath = "whoami.exe",
+                    DisablePathMapping = true,
+                    Arguments = new string[] { "/priv", "/fo", "csv"}
+                };
+                var io = new StringProcessIO();
+                Container1.Run(pSpec, io).WaitForExit();
+                var privilegeOutput = io.Output.ToString();
+
+                Assert.Matches("\"SeImpersonatePrivilege\",[^,]+,\"Disabled\"", privilegeOutput);
+            }
+
+            [FactAdminRequired]
             public void UserHasAProfileLoaded()
             {
                 Container1 = CreateContainer(Container1Handle);
