@@ -5,21 +5,18 @@ using Xunit;
 
 namespace IronFrame.Utilities
 {
-    public class FileSystemManagerTests
+    public class FileSystemManagerTest
     {
-        internal class FileSystemManagerTestContext
-        {
-            protected PlatformFileSystem fileSystem;
-            protected FileSystemManager manager;
+        PlatformFileSystem fileSystem { get; set; }
+        FileSystemManager manager { get; set; }
 
-            public FileSystemManagerTestContext()
-            {
-                fileSystem = Substitute.For<PlatformFileSystem>();
-                manager = new FileSystemManager(fileSystem);
-            }
+        public FileSystemManagerTest()
+        {
+            fileSystem = Substitute.For<PlatformFileSystem>();
+            manager = new FileSystemManager(fileSystem);
         }
 
-        class Copy : FileSystemManagerTestContext
+        public class Copy : FileSystemManagerTest
         {
             [Fact]
             public void CopiesOneFileToAnother()
@@ -61,7 +58,7 @@ namespace IronFrame.Utilities
             }
         }
 
-        class CopyFile : FileSystemManagerTestContext
+        public class CopyFile : FileSystemManagerTest
         {
             [Fact]
             public void CopiesFile()
@@ -97,6 +94,16 @@ namespace IronFrame.Utilities
 
                 var ex = Record.Exception(() => manager.CopyFile("source", "destination"));
                 Assert.IsType<InvalidOperationException>(ex);
+            }
+        }
+
+        public class Symlink : FileSystemManagerTest
+        {
+            [Fact]
+            public void SymlinksADirectoryToTheDestination()
+            {
+                manager.Symlink("source", "destination");
+                fileSystem.Received(x => x.SymlinkDirectory("source", "destination"));
             }
         }
     }
