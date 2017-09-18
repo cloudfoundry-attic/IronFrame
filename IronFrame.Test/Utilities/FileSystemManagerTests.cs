@@ -100,10 +100,10 @@ namespace IronFrame.Utilities
         public class Symlink : FileSystemManagerTest
         {
             [Fact]
-            public void SymlinksADirectoryToTheDestination()
+            public void CreatesASymlinkToTheTarget()
             {
-                manager.Symlink("source", "destination");
-                fileSystem.Received(x => x.SymlinkDirectory("source", "destination"));
+                manager.Symlink("symlinkFile", "target");
+                fileSystem.Received(x => x.SymlinkDirectory("symlinkFile", "target"));
             }
         }
     }

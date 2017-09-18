@@ -303,7 +303,7 @@ namespace IronFrame
                     new BindMount()
                     {
                         SourcePath = "source",
-                        DestinationPath = "destination"
+                        DestinationPath = "parent1\\destination"
                     },
                     new BindMount()
                     {
@@ -316,11 +316,10 @@ namespace IronFrame
                 userAccess.UserName = user.UserName;
 
                 directory.CreateBindMounts(bindMounts, user);
-                // We need to do mkdir -p on the destination so we might need to bring this check back
-                //fileSystem.Received().CreateDirectory(directory.MapUserPath("destination"), Arg.Is<ICollection<UserAccess>>(x => x.Any(u => u.UserName == user.UserName)));
-                //fileSystem.Received().CreateDirectory(directory.MapUserPath("destination2"), Arg.Is<ICollection<UserAccess>>(x => x.Any(u => u.UserName == user.UserName)));
-                fileSystem.Received().Symlink("source", directory.MapUserPath("destination"));
-                fileSystem.Received().Symlink("source2", directory.MapUserPath("destination2"));
+
+                fileSystem.Received().CreateDirectory(directory.MapUserPath("parent1"), Arg.Is<ICollection<UserAccess>>(x => x.Any(u => u.UserName == user.UserName)));
+                fileSystem.Received().Symlink(directory.MapUserPath(bindMounts[0].DestinationPath), "source");
+                fileSystem.Received().Symlink(directory.MapUserPath(bindMounts[1].DestinationPath), "source2");
             }
         }
     }

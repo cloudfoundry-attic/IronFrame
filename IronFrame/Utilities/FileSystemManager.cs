@@ -21,9 +21,9 @@ namespace IronFrame.Utilities
         private static extern bool CreateSymbolicLink(
             string lpSymlinkFileName, string lpTargetFileName, SymbolicLink dwFlags);
 
-        public virtual void SymlinkDirectory(string source, string destination)
+        public virtual void SymlinkDirectory(string symlinkFile, string target)
         {
-            CreateSymbolicLink(source, destination, SymbolicLink.Directory);
+            CreateSymbolicLink(symlinkFile, target, SymbolicLink.Directory);
         }
 
         public virtual void Copy(string source, string destination, bool overwrite)
@@ -139,7 +139,7 @@ namespace IronFrame.Utilities
     {
         void CopyFile(string sourceFilePath, string destinationFilePath);
         void Copy(string source, string destination);
-        void Symlink(string source, string destination);
+        void Symlink(string symlinkFile, string target);
         void DeleteDirectory(string path);
         bool FileExists(string path);
 
@@ -333,9 +333,9 @@ namespace IronFrame.Utilities
             return fileSystem.Open(path, fileMode, fileAccess, fileShare);
         }
 
-        public void Symlink(string source, string destination)
+        public void Symlink(string symlinkFile, string target)
         {
-            fileSystem.SymlinkDirectory(source, destination);
+            fileSystem.SymlinkDirectory(symlinkFile, target);
         }
     }
 
