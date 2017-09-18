@@ -161,7 +161,8 @@ namespace IronFrame
 
                 }
                 fileSystem.Symlink(mappedDestinationPath, bindMount.SourcePath);
-                // ACL the symlink correctly (read only for container user)
+                fileSystem.AddDirectoryAccess(mappedDestinationPath, FileAccess.Read, containerUser.UserName);
+                fileSystem.AddDirectoryAccess(bindMount.SourcePath, FileAccess.Read, containerUser.UserName);
             }
         }
     }
