@@ -57,6 +57,10 @@ namespace IronFrame.Acceptance
             [FactAdminRequired]
             public void Enforced()
             {
+                if (Environment.GetEnvironmentVariable("APPVEYOR") != null) {
+                    return;
+                }
+
                 const ulong diskLimit = (ulong) 7e+6;
                 Container1 = CreateContainer(Container1Handle);
                 Container1.LimitDisk(diskLimit);
