@@ -9,8 +9,23 @@ using System.Security.Principal;
 
 namespace IronFrame.Utilities
 {
+    enum SymbolicLink
+    {
+        File = 0,
+        Directory = 1
+    }
+
     internal class PlatformFileSystem
     {
+        [DllImport("kernel32.dll")]
+        private static extern bool CreateSymbolicLink(
+            string lpSymlinkFileName, string lpTargetFileName, SymbolicLink dwFlags);
+
+        public virtual void SymlinkDirectory(string symlinkFile, string target)
+        {
+            CreateSymbolicLink(symlinkFile, target, SymbolicLink.Directory);
+        }
+
         public virtual void Copy(string source, string destination, bool overwrite)
         {
             File.Copy(source, destination, overwrite);
@@ -124,6 +139,7 @@ namespace IronFrame.Utilities
     {
         void CopyFile(string sourceFilePath, string destinationFilePath);
         void Copy(string source, string destination);
+        void Symlink(string symlinkFile, string target);
         void DeleteDirectory(string path);
         bool FileExists(string path);
 
@@ -150,7 +166,6 @@ namespace IronFrame.Utilities
 
     internal class FileSystemManager : IFileSystemManager
     {
-
         private readonly PlatformFileSystem fileSystem;
 
         public FileSystemManager() : this(new PlatformFileSystem())
@@ -197,7 +212,8 @@ namespace IronFrame.Utilities
             }
             else if (sourceIsDirectory && !destinationIsDirectory)
             {
-                throw new InvalidOperationException(string.Format("Unable to copy directory {0} to file {1}.", source, destination));
+                throw new InvalidOperationException(string.Format("Unable to copy directory {0} to file {1}.", source,
+                    destination));
             }
             else
             {
@@ -252,7 +268,7 @@ namespace IronFrame.Utilities
 
         private IEnumerable<FileSystemAccessRule> GetAccessControlRules(FileAccess access, string username)
         {
-            if ((int)access == 0)
+            if ((int) access == 0)
             {
                 // If no flags are set just return
                 return new FileSystemAccessRule[0];
@@ -264,16 +280,19 @@ namespace IronFrame.Utilities
 
             if (access.HasFlag(FileAccess.Read))
             {
-                accessRule = new FileSystemAccessRule(username, FileSystemRights.ReadAndExecute, inheritanceFlags, PropagationFlags.None, AccessControlType.Allow);
+                accessRule = new FileSystemAccessRule(username, FileSystemRights.ReadAndExecute, inheritanceFlags,
+                    PropagationFlags.None, AccessControlType.Allow);
                 rules.Add(accessRule);
             }
 
             if (access.HasFlag(FileAccess.Write))
             {
-                accessRule = new FileSystemAccessRule(username, FileSystemRights.Write, inheritanceFlags, PropagationFlags.None, AccessControlType.Allow);
+                accessRule = new FileSystemAccessRule(username, FileSystemRights.Write, inheritanceFlags,
+                    PropagationFlags.None, AccessControlType.Allow);
                 rules.Add(accessRule);
 
-                accessRule = new FileSystemAccessRule(username, FileSystemRights.Delete, inheritanceFlags, PropagationFlags.None, AccessControlType.Allow);
+                accessRule = new FileSystemAccessRule(username, FileSystemRights.Delete, inheritanceFlags,
+                    PropagationFlags.None, AccessControlType.Allow);
                 rules.Add(accessRule);
             }
 
@@ -285,7 +304,8 @@ namespace IronFrame.Utilities
         /// </summary>
         public virtual void CreateDirectory(string path, IEnumerable<UserAccess> userAccess)
         {
-            IEnumerable<FileSystemAccessRule> rules = userAccess.SelectMany(ua => GetAccessControlRules(ua.Access, ua.UserName));
+            IEnumerable<FileSystemAccessRule> rules =
+                userAccess.SelectMany(ua => GetAccessControlRules(ua.Access, ua.UserName));
 
             DirectorySecurity security = new DirectorySecurity();
             foreach (FileSystemAccessRule rule in rules)
@@ -312,9 +332,14 @@ namespace IronFrame.Utilities
         {
             return fileSystem.Open(path, fileMode, fileAccess, fileShare);
         }
+
+        public void Symlink(string symlinkFile, string target)
+        {
+            fileSystem.SymlinkDirectory(symlinkFile, target);
+        }
     }
 
-    internal class UserAccess 
+    internal class UserAccess
     {
         public FileAccess Access { get; set; }
         public string UserName { get; set; }

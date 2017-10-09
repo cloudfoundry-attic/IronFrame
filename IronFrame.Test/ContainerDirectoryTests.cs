@@ -303,7 +303,7 @@ namespace IronFrame
                     new BindMount()
                     {
                         SourcePath = "source",
-                        DestinationPath = "destination"
+                        DestinationPath = "parent1\\destination"
                     },
                     new BindMount()
                     {
@@ -316,10 +316,15 @@ namespace IronFrame
                 userAccess.UserName = user.UserName;
 
                 directory.CreateBindMounts(bindMounts, user);
-                fileSystem.Received().CreateDirectory(directory.MapUserPath("destination"), Arg.Is<ICollection<UserAccess>>(x => x.Any(u => u.UserName == user.UserName)));
-                fileSystem.Received().CreateDirectory(directory.MapUserPath("destination2"), Arg.Is<ICollection<UserAccess>>(x => x.Any(u => u.UserName == user.UserName)));
-                fileSystem.Received().Copy("source", directory.MapUserPath("destination"));
-                fileSystem.Received().Copy("source2", directory.MapUserPath("destination2"));
+
+                fileSystem.Received().CreateDirectory(directory.MapUserPath("parent1"), Arg.Is<ICollection<UserAccess>>(x => x.Any(u => u.UserName == user.UserName)));
+                fileSystem.Received().Symlink(directory.MapUserPath(bindMounts[0].DestinationPath), "source");
+                fileSystem.Received().AddDirectoryAccess(directory.MapUserPath(bindMounts[0].DestinationPath), FileAccess.Read, user.UserName);
+                fileSystem.Received().AddDirectoryAccess(bindMounts[0].SourcePath, FileAccess.Read, user.UserName);
+
+                fileSystem.Received().Symlink(directory.MapUserPath(bindMounts[1].DestinationPath), "source2");
+                fileSystem.Received().AddDirectoryAccess(directory.MapUserPath(bindMounts[1].DestinationPath), FileAccess.Read, user.UserName);
+                fileSystem.Received().AddDirectoryAccess(bindMounts[1].SourcePath, FileAccess.Read, user.UserName);
             }
         }
     }

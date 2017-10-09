@@ -153,8 +153,16 @@ namespace IronFrame
             foreach (var bindMount in bindMounts)
             {
                 var mappedDestinationPath = MapUserPath(bindMount.DestinationPath);
-                fileSystem.CreateDirectory(mappedDestinationPath, GetContainerUserAccess(containerUser.UserName, FileAccess.ReadWrite));
-                fileSystem.Copy(bindMount.SourcePath, mappedDestinationPath);
+                var parentDir = Directory.GetParent(mappedDestinationPath).FullName;
+                
+                if (parentDir != MapUserPath(""))
+                {
+                    fileSystem.CreateDirectory(parentDir, GetContainerUserAccess(containerUser.UserName, FileAccess.ReadWrite));
+
+                }
+                fileSystem.Symlink(mappedDestinationPath, bindMount.SourcePath);
+                fileSystem.AddDirectoryAccess(mappedDestinationPath, FileAccess.Read, containerUser.UserName);
+                fileSystem.AddDirectoryAccess(bindMount.SourcePath, FileAccess.Read, containerUser.UserName);
             }
         }
     }
