@@ -6,6 +6,10 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using System.Text;
+using System.Threading;
+using System.Web.Compilation;
+using Microsoft.Win32.SafeHandles;
 
 namespace IronFrame.Utilities
 {
@@ -15,16 +19,113 @@ namespace IronFrame.Utilities
         Directory = 1
     }
 
+
     internal class PlatformFileSystem
     {
-        [DllImport("kernel32.dll")]
+        private const UInt32 GENERIC_READ = 0x80000000;
+        private const UInt32 FILE_SHARE_READ = 0x01;
+        private const UInt32 OPEN_EXISTING = 0x3;
+        private const UInt32 FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
+        private const UInt32 FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000;
+        private const UInt32 FSCTL_GET_REPARSE_POINT = 0x900a8;
+        private const UInt32 IO_REPARSE_TAG_SYMLINK = 0xA000000C;
+
+        [StructLayout(LayoutKind.Sequential, CharSet=CharSet.Unicode)]
+        private struct REPARSE_DATA_BUFFER
+        {
+            public UInt32 ReparseTag;
+            public UInt16 ReparseData;
+            public UInt16 Reserverd;
+            public UInt16 SubstituteNameOffset;
+            public UInt16 SubstituteNameLength;
+            public UInt16 PrintNameOffset;
+            public UInt16 PrintNameLength;
+            public UInt32 Flags;
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 16000)]
+            public string PathBuffer;
+        }
+
+
+        [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool CreateSymbolicLink(
-            string lpSymlinkFileName, string lpTargetFileName, SymbolicLink dwFlags);
+            string lpSymlinkFileName, string lpTargetFileName, SymbolicLink dwFlags); 
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern SafeFileHandle CreateFile(
+            string lpFileName, UInt32 dwDesiredAccess, UInt32 dwShareMode,  IntPtr lpSecurityAttributes, UInt32 dwCreationDisposition, UInt32 dwFlagsAndAttributes, IntPtr hTemplateFile);
+
+        [DllImport("kernel32.dll")]
+        public static extern UInt32 GetFinalPathNameByHandle(SafeFileHandle hFile, StringBuilder outFilePath, UInt32 outFilePathLen, UInt32 dwFlags);
+
+        [DllImport("kernel32.dll")]
+        private static extern bool DeviceIoControl(SafeFileHandle hDevice, UInt32 dwIoControlCode, IntPtr lpInBuffer,
+            UInt32 nInBufferSize, out REPARSE_DATA_BUFFER rdb,  UInt32 nOutBufferSize, out IntPtr lpBytesReturned,
+            IntPtr lpOverlapped);
+
+        public static string SymlinkTargetFromHandle(SafeFileHandle handle)
+        {
+            var rdb = new REPARSE_DATA_BUFFER();
+            var x = 10;
+            var outSize = new IntPtr(x);
+
+            if (!DeviceIoControl(handle, FSCTL_GET_REPARSE_POINT, IntPtr.Zero, 0, out rdb, (UInt32)Marshal.SizeOf(rdb), out outSize, IntPtr.Zero))
+            {
+                throw new Win32Exception();
+            }
+
+            if (rdb.ReparseTag != IO_REPARSE_TAG_SYMLINK)
+            {
+                throw new ApplicationException("not a symlink");
+            }
+
+            var arrayOffset = rdb.PrintNameOffset/2;
+
+            return rdb.PathBuffer.Substring(arrayOffset, arrayOffset + (rdb.PrintNameLength / 2));
+        }
+
+
+
+        public static SafeFileHandle OpenSymlinkDirectory(string dir)
+        {
+            if (String.IsNullOrEmpty(dir))
+            {
+               throw new ArgumentNullException("dir");
+            }
+
+            var handle = CreateFile(
+                dir,
+                GENERIC_READ,
+                FILE_SHARE_READ,
+                IntPtr.Zero,
+                OPEN_EXISTING,
+                FILE_FLAG_BACKUP_SEMANTICS|FILE_FLAG_OPEN_REPARSE_POINT,
+                IntPtr.Zero
+            );
+
+            if (handle.IsInvalid)
+            {
+                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+            }
+
+            return handle;
+        }
+
+
+
+
 
         public virtual void SymlinkDirectory(string symlinkFile, string target)
         {
-            CreateSymbolicLink(symlinkFile, target, SymbolicLink.Directory);
+            if (!CreateSymbolicLink(symlinkFile, target, SymbolicLink.Directory))
+            {
+                throw new Win32Exception();
+            }
+
         }
+
+
+
 
         public virtual void Copy(string source, string destination, bool overwrite)
         {
@@ -142,6 +243,8 @@ namespace IronFrame.Utilities
         void Symlink(string symlinkFile, string target);
         void DeleteDirectory(string path);
         bool FileExists(string path);
+        bool DirIsSymlink(string dir);
+        string GetSymlinkTarget(string source);
 
         /// <summary>
         /// Returns true if the path refers to an existing directory.
@@ -337,6 +440,25 @@ namespace IronFrame.Utilities
         {
             fileSystem.SymlinkDirectory(symlinkFile, target);
         }
+
+        public virtual bool DirIsSymlink(string directory)
+        {
+            return (fileSystem.GetAttributes(directory) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
+        }
+
+        public virtual string GetSymlinkTarget(string source)
+        {
+            var strDest = "";
+
+            using (var handle = PlatformFileSystem.OpenSymlinkDirectory(source))
+            {
+                strDest = PlatformFileSystem.SymlinkTargetFromHandle(handle);
+            }
+            
+            return strDest;
+        }
+
+
     }
 
     internal class UserAccess

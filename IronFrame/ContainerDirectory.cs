@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Principal;
+using System.Threading;
 using IronFrame.Utilities;
 
 namespace IronFrame
@@ -158,11 +159,21 @@ namespace IronFrame
                 if (parentDir != MapUserPath(""))
                 {
                     fileSystem.CreateDirectory(parentDir, GetContainerUserAccess(containerUser.UserName, FileAccess.ReadWrite));
-
                 }
-                fileSystem.Symlink(mappedDestinationPath, bindMount.SourcePath);
+
+                    
+                var cleanedSourcePath = bindMount.SourcePath.Replace("/", "\\");
+                fileSystem.Symlink(mappedDestinationPath, cleanedSourcePath);
                 fileSystem.AddDirectoryAccess(mappedDestinationPath, FileAccess.Read, containerUser.UserName);
-                fileSystem.AddDirectoryAccess(bindMount.SourcePath, FileAccess.Read, containerUser.UserName);
+           
+                fileSystem.AddDirectoryAccess(cleanedSourcePath, FileAccess.Read, containerUser.UserName);
+
+                while (fileSystem.DirIsSymlink(cleanedSourcePath))
+                {
+                    var symlinkDest = fileSystem.GetSymlinkTarget(cleanedSourcePath);
+                    fileSystem.AddDirectoryAccess(symlinkDest, FileAccess.Read, containerUser.UserName);
+                    cleanedSourcePath = symlinkDest;
+                }
             }
         }
     }
