@@ -326,6 +326,60 @@ namespace IronFrame
                 fileSystem.Received().AddDirectoryAccess(directory.MapUserPath(bindMounts[1].DestinationPath), FileAccess.Read, user.UserName);
                 fileSystem.Received().AddDirectoryAccess(bindMounts[1].SourcePath, FileAccess.Read, user.UserName);
             }
+
+            public void ItHandlesUnixBindMountPaths()
+            {
+                var bindMounts = new[]
+                {
+                    new BindMount()
+                    {
+                        SourcePath = "/var/dir/source",
+                        DestinationPath = "destination"
+                    },
+                };
+                var user = Substitute.For<IContainerUser>();
+                var userAccess = Substitute.For<UserAccess>();
+                userAccess.UserName = user.UserName;
+
+                directory.CreateBindMounts(bindMounts, user);
+
+                fileSystem.Received().CreateDirectory(directory.MapUserPath(bindMounts[0].DestinationPath), Arg.Is<ICollection<UserAccess>>(x => x.Any(u => u.UserName == user.UserName)));
+                fileSystem.Received().Symlink(directory.MapUserPath(bindMounts[0].DestinationPath), "\\var\\dir\\source");
+                fileSystem.Received().AddDirectoryAccess(directory.MapUserPath(bindMounts[0].DestinationPath), FileAccess.Read, user.UserName);
+                fileSystem.Received().AddDirectoryAccess("\\var\\dir\\source", FileAccess.Read, user.UserName);
+            }
+
+            public void ItFollowsBindMountsThatAreSymlinks()
+            {
+                var bindMounts = new[]
+                {
+                    new BindMount()
+                    {
+                        SourcePath = "symlink2",
+                        DestinationPath = "destination"
+                    },
+                };
+                var user = Substitute.For<IContainerUser>();
+                var userAccess = Substitute.For<UserAccess>();
+
+                fileSystem.DirIsSymlink("symlink2").Returns(true);
+                fileSystem.DirIsSymlink("symlink1").Returns(true);
+                fileSystem.DirIsSymlink("originalDir").Returns(false);
+
+                fileSystem.GetSymlinkTarget("symlink2").Returns("symlink1");
+                fileSystem.GetSymlinkTarget("symlink1").Returns("originalDir");
+
+                userAccess.UserName = user.UserName;
+
+                directory.CreateBindMounts(bindMounts, user);
+
+                fileSystem.Received().CreateDirectory(directory.MapUserPath(bindMounts[0].DestinationPath), Arg.Is<ICollection<UserAccess>>(x => x.Any(u => u.UserName == user.UserName)));
+                fileSystem.Received().Symlink(directory.MapUserPath(bindMounts[0].DestinationPath), "symlink2");
+                fileSystem.Received().AddDirectoryAccess(directory.MapUserPath(bindMounts[0].DestinationPath), FileAccess.Read, user.UserName);
+                fileSystem.Received().AddDirectoryAccess("symlink2", FileAccess.Read, user.UserName);
+                fileSystem.Received().AddDirectoryAccess("symlink1", FileAccess.Read, user.UserName);
+                fileSystem.Received().AddDirectoryAccess("originalDir", FileAccess.Read, user.UserName);
+            }
         }
     }
 }
