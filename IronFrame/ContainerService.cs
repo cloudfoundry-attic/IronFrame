@@ -139,7 +139,8 @@ namespace IronFrame
                     constrainedProcessRunner,
                     processHelper,
                     containerSpec.Environment,
-                    dependencyHelper);
+                    dependencyHelper,
+                    containerSpec.BindMounts);
 
                 containerPropertiesService.SetProperties(container, containerSpec.Properties);
                 lock (containers)
@@ -225,6 +226,11 @@ namespace IronFrame
 
             var dependencyHelper = new ContainerHostDependencyHelper();
 
+            var bindMounts = new[]
+            {
+                new BindMount()
+            };
+
             var container = new Container(
                 id,
                 id, // TODO: Recover the handle from container metadata
@@ -238,7 +244,8 @@ namespace IronFrame
                 processRunner,
                 processHelper,
                 environment,
-                dependencyHelper);
+                dependencyHelper,
+                bindMounts);
 
             return container;
         }
@@ -294,7 +301,8 @@ namespace IronFrame
             IProcessRunner constrainedProcessRunner,
             ProcessHelper processHelper,
             Dictionary<string, string> defaultEnvironment,
-            ContainerHostDependencyHelper dependencyHelper)
+            ContainerHostDependencyHelper dependencyHelper,
+            BindMount[] bindMounts)
         {
             return new Container(
                 id,
@@ -309,7 +317,8 @@ namespace IronFrame
                 constrainedProcessRunner,
                 processHelper,
                 defaultEnvironment,
-                dependencyHelper
+                dependencyHelper,
+                bindMounts
             );
         }
     }
@@ -329,7 +338,8 @@ namespace IronFrame
             IProcessRunner constrainedProcessRunner,
             ProcessHelper processHelper,
             Dictionary<string, string> defaultEnvironment,
-            ContainerHostDependencyHelper dependencyHelper
+            ContainerHostDependencyHelper dependencyHelper,
+            BindMount[] bindMounts
         );
     }
 }

@@ -25,12 +25,13 @@ namespace IronFrame
         IContainerUser User { get; set; }
         IContainerDiskQuota ContainerDiskQuota { get; set; }
         ContainerHostDependencyHelper DependencyHelper { get; set; }
+        BindMount[] bindMounts { get; set; }
         private readonly string _containerUsername;
 
         public ContainerTests()
         {
             ConstrainedProcessRunner = Substitute.For<IProcessRunner>();
-            ContainerEnvironment = new Dictionary<string, string>() { { "Handle", "handle" } };
+            ContainerEnvironment = new Dictionary<string, string>() {{"Handle", "handle"}};
 
             Directory = Substitute.For<IContainerDirectory>();
 
@@ -56,6 +57,11 @@ namespace IronFrame
 
             DependencyHelper = Substitute.For<ContainerHostDependencyHelper>();
 
+            bindMounts = new[]
+            {
+                new BindMount()
+            };
+
             Container = new Container(
                 string.Concat("id-", Guid.NewGuid()),
                 string.Concat("handle-", Guid.NewGuid()),
@@ -69,12 +75,15 @@ namespace IronFrame
                 ConstrainedProcessRunner,
                 ProcessHelper,
                 ContainerEnvironment,
-                DependencyHelper);
+                DependencyHelper,
+                bindMounts
+            );
         }
 
         private EventWaitHandle CreateStopGuardEvent()
         {
-            return new EventWaitHandle(false, EventResetMode.ManualReset, string.Concat(@"Global\discharge-", _containerUsername));
+            return new EventWaitHandle(false, EventResetMode.ManualReset,
+                string.Concat(@"Global\discharge-", _containerUsername));
         }
 
         public class SetActiveProcessLimit : ContainerTests
@@ -118,7 +127,7 @@ namespace IronFrame
             [Fact]
             public void WhenPropertyDoesNotExist_ReturnsNull()
             {
-                ContainerPropertiesService.GetProperty(Container, "Unknown").Returns((string)null);
+                ContainerPropertiesService.GetProperty(Container, "Unknown").Returns((string) null);
 
                 var value = Container.GetProperty("Unknown");
 
@@ -170,7 +179,6 @@ namespace IronFrame
                 ContainerPropertiesService.GetProperties(Container).Returns(x => { throw new IOException(); });
 
                 Assert.Throws<IOException>(() => Container.GetProperties());
-
             }
         }
 
@@ -213,7 +221,7 @@ namespace IronFrame
                 Spec = new ProcessSpec
                 {
                     ExecutablePath = "/.iishost/iishost.exe",
-                    Arguments = new[] { "-p", "3000", "-r", @"/www" },
+                    Arguments = new[] {"-p", "3000", "-r", @"/www"},
                 };
 
                 var containerUserPath = @"C:\Containers\handle\user\";
@@ -301,8 +309,8 @@ namespace IronFrame
                 {
                     Spec.Environment = new Dictionary<string, string>
                     {
-                        { "Handle", "procHandle" },
-                        { "ProcEnv", "ProcEnv" }
+                        {"Handle", "procHandle"},
+                        {"ProcEnv", "ProcEnv"}
                     };
 
                     var io = Substitute.For<IProcessIO>();
@@ -421,7 +429,6 @@ namespace IronFrame
 
         public class StartGuard : ContainerTests
         {
-
             public StartGuard()
             {
                 DependencyHelper.GuardExePath.Returns(@"C:\Containers\handle\bin\Guard.exe");
@@ -536,6 +543,14 @@ namespace IronFrame
             }
 
             [Fact]
+            public void DeletesBindMounts()
+            {
+                Container.Destroy();
+
+                this.Directory.Received(1).DeleteBindMounts(this.bindMounts, this.User);
+            }
+
+            [Fact]
             public void WhenContainerStopped_Runs()
             {
                 Container.Stop(false);
@@ -583,8 +598,8 @@ namespace IronFrame
             {
                 var properties = new Dictionary<string, string>()
                 {
-                    { "name1", "value1" },
-                    { "name2", "value2" },
+                    {"name1", "value1"},
+                    {"name2", "value2"},
                 };
                 ContainerPropertiesService.GetProperties(Container).Returns(properties);
 
@@ -635,14 +650,15 @@ namespace IronFrame
                 secondProcess.PrivateMemoryBytes.Returns(oneProcessPrivateMemory);
 
                 JobObject.GetCpuStatistics().Returns(expectedCpuStats);
-                JobObject.GetProcessIds().Returns(new int[] { 1, 2 });
+                JobObject.GetProcessIds().Returns(new int[] {1, 2});
 
-                ProcessHelper.GetProcesses(null).ReturnsForAnyArgs(new[] { firstProcess, secondProcess });
+                ProcessHelper.GetProcesses(null).ReturnsForAnyArgs(new[] {firstProcess, secondProcess});
 
                 var metrics = Container.GetMetrics();
 
                 Assert.Equal(expectedTotalKernelTime + expectedTotalUserTime, metrics.CpuStat.TotalProcessorTime);
-                Assert.Equal((ulong)firstProcess.PrivateMemoryBytes + (ulong)secondProcess.PrivateMemoryBytes, metrics.MemoryStat.PrivateBytes);
+                Assert.Equal((ulong) firstProcess.PrivateMemoryBytes + (ulong) secondProcess.PrivateMemoryBytes,
+                    metrics.MemoryStat.PrivateBytes);
             }
 
             [Fact]
@@ -678,9 +694,9 @@ namespace IronFrame
                 firstProcess.PrivateMemoryBytes.Throws(new InvalidOperationException());
 
 
-                JobObject.GetProcessIds().Returns(new int[] { 1 });
+                JobObject.GetProcessIds().Returns(new int[] {1});
 
-                ProcessHelper.GetProcesses(null).ReturnsForAnyArgs(new[] { firstProcess });
+                ProcessHelper.GetProcesses(null).ReturnsForAnyArgs(new[] {firstProcess});
                 var metrics = Container.GetMetrics();
 
                 Assert.Equal(0ul, metrics.MemoryStat.PrivateBytes);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -171,6 +172,22 @@ namespace IronFrame
                 {
                     var symlinkDest = fileSystem.GetSymlinkTarget(cleanedSourcePath);
                     fileSystem.AddDirectoryAccess(symlinkDest, FileAccess.Read, containerUser.UserName);
+                    cleanedSourcePath = symlinkDest;
+                }
+            }
+        }
+
+        public void DeleteBindMounts(BindMount[] bindMounts, IContainerUser containerUser)
+        {
+            foreach (var bindMount in bindMounts)
+            {
+                var cleanedSourcePath = bindMount.SourcePath.Replace("/", "\\");
+                fileSystem.RemoveDirectoryAccess(cleanedSourcePath, containerUser.UserName);
+
+                while (fileSystem.DirIsSymlink(cleanedSourcePath))
+                {
+                    var symlinkDest = fileSystem.GetSymlinkTarget(cleanedSourcePath);
+                    fileSystem.RemoveDirectoryAccess(symlinkDest, containerUser.UserName);
                     cleanedSourcePath = symlinkDest;
                 }
             }

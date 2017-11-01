@@ -26,6 +26,7 @@ namespace IronFrame
         readonly Dictionary<string, string> defaultEnvironment;
         readonly List<int> reservedPorts = new List<int>();
         readonly ContainerHostDependencyHelper dependencyHelper;
+        readonly BindMount[] bindMounts;
         private readonly object _ioLock = new object();
 
         IProcessRunner processRunner;
@@ -47,7 +48,8 @@ namespace IronFrame
             IProcessRunner constrainedProcessRunner,
             ProcessHelper processHelper,
             Dictionary<string, string> defaultEnvironment,
-            ContainerHostDependencyHelper dependencyHelper
+            ContainerHostDependencyHelper dependencyHelper,
+            BindMount[] bindMounts
             )
         {
             this.id = id;
@@ -64,6 +66,7 @@ namespace IronFrame
             this.dependencyHelper = dependencyHelper;
             this.defaultEnvironment = defaultEnvironment ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             this.currentState = ContainerState.Active;
+            this.bindMounts = bindMounts;
         }
 
         public string Id
@@ -165,7 +168,6 @@ namespace IronFrame
                 }
                 tcpPortManager.RemoveFirewallRules(user.UserName);
 
-                // BR - Unmap the mounted directories (Removes user ACLs)
                 try
                 {
                     jobObject.TerminateProcessesAndWait();
@@ -179,6 +181,7 @@ namespace IronFrame
 
                 if (user != null)
                 {
+                    directory.DeleteBindMounts(bindMounts, user);
                     user.DeleteProfile();
                     user.Delete();
                 }

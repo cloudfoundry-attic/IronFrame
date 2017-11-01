@@ -46,7 +46,8 @@ namespace IronFrame
                 IProcessRunner constrainedProcessRunner,
                 ProcessHelper processHelper,
                 Dictionary<string, string> defaultEnvironment,
-                ContainerHostDependencyHelper dependencyHelper)
+                ContainerHostDependencyHelper dependencyHelper,
+                BindMount[] bindMounts)
             {
                 if (handle == "KnownBadHandle")
                 {
@@ -71,7 +72,8 @@ namespace IronFrame
                         constrainedProcessRunner,
                         processHelper,
                         defaultEnvironment,
-                        dependencyHelper
+                        dependencyHelper,
+                        bindMounts
                     );
                 }
             }

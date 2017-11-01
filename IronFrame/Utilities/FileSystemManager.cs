@@ -249,6 +249,7 @@ namespace IronFrame.Utilities
         void CreateDirectory(string path, IEnumerable<UserAccess> userAccess);
 
         void AddDirectoryAccess(string path, FileAccess access, string user);
+        void RemoveDirectoryAccess(string path, string user);
         Stream OpenFile(string path, FileMode fileMode, FileAccess fileAccess, FileShare fileShare);
     }
 
@@ -415,6 +416,18 @@ namespace IronFrame.Utilities
 
             fileSystem.SetDirectoryAccessSecurity(path, security);
         }
+
+        public virtual void RemoveDirectoryAccess(string path, string user)
+        {
+            DirectorySecurity security = fileSystem.GetDirectoryAccessSecurity(path);
+
+            // RemoveAccessRuleAll ignores everything in the ACL but the username
+            var userACL = new FileSystemAccessRule(user, FileSystemRights.ListDirectory, AccessControlType.Allow );
+            security.RemoveAccessRuleAll(userACL);
+
+            fileSystem.SetDirectoryAccessSecurity(path, security);
+        }
+
 
         public virtual Stream OpenFile(string path, FileMode fileMode, FileAccess fileAccess, FileShare fileShare)
         {

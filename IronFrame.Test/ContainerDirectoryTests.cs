@@ -385,5 +385,84 @@ namespace IronFrame
                 fileSystem.Received().AddDirectoryAccess("originalDir", FileAccess.Read, user.UserName);
             }
         }
+
+        public class DeleteBindMountTests : ContainerDirectoryTests
+        {
+            [Fact]
+            public void ItDeACLsBindMountSources()
+            {
+                var bindMounts = new[]
+                {
+                    new BindMount()
+                    {
+                        SourcePath = "source",
+                        DestinationPath = "parent1\\destination"
+                    },
+                    new BindMount()
+                    {
+                        SourcePath = "source2",
+                        DestinationPath = "destination2"
+                    }
+                };
+                var user = Substitute.For<IContainerUser>();
+                var userAccess = Substitute.For<UserAccess>();
+                userAccess.UserName = user.UserName;
+
+                directory.DeleteBindMounts(bindMounts, user);
+
+                fileSystem.Received().RemoveDirectoryAccess(bindMounts[0].SourcePath, user.UserName);
+                fileSystem.Received().RemoveDirectoryAccess(bindMounts[1].SourcePath, user.UserName);
+            }
+
+            [Fact]
+            public void ItDeACLsUnixBindMountPaths()
+            {
+                var bindMounts = new[]
+                {
+                    new BindMount()
+                    {
+                        SourcePath = "/var/dir/source",
+                        DestinationPath = "destination"
+                    },
+                };
+                var user = Substitute.For<IContainerUser>();
+                var userAccess = Substitute.For<UserAccess>();
+                userAccess.UserName = user.UserName;
+
+                directory.DeleteBindMounts(bindMounts, user);
+
+                fileSystem.Received().RemoveDirectoryAccess("\\var\\dir\\source", user.UserName);
+            }
+
+            [Fact]
+            public void ItFollowsSymlinksAndDeACLsThem()
+            {
+                var bindMounts = new[]
+                {
+                    new BindMount()
+                    {
+                        SourcePath = "symlink2",
+                        DestinationPath = "destination"
+                    },
+                };
+                var user = Substitute.For<IContainerUser>();
+                var userAccess = Substitute.For<UserAccess>();
+
+                fileSystem.DirIsSymlink("symlink2").Returns(true);
+                fileSystem.DirIsSymlink("symlink1").Returns(true);
+                fileSystem.DirIsSymlink("originalDir").Returns(false);
+
+                fileSystem.GetSymlinkTarget("symlink2").Returns("symlink1");
+                fileSystem.GetSymlinkTarget("symlink1").Returns("originalDir");
+
+                userAccess.UserName = user.UserName;
+
+                directory.DeleteBindMounts(bindMounts, user);
+
+                fileSystem.Received().RemoveDirectoryAccess("symlink2", user.UserName);
+                fileSystem.Received().RemoveDirectoryAccess("symlink1", user.UserName);
+                fileSystem.Received().RemoveDirectoryAccess("originalDir", user.UserName);
+            }
+        }
     }
 }
