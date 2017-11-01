@@ -322,11 +322,14 @@ namespace IronFrame
                 fileSystem.Received().AddDirectoryAccess(directory.MapUserPath(bindMounts[0].DestinationPath), FileAccess.Read, user.UserName);
                 fileSystem.Received().AddDirectoryAccess(bindMounts[0].SourcePath, FileAccess.Read, user.UserName);
 
+                fileSystem.DidNotReceive().CreateDirectory(directory.MapUserPath("").TrimEnd('\\'), Arg.Is<ICollection<UserAccess>>(x => x.Any(u => u.UserName == user.UserName)));
                 fileSystem.Received().Symlink(directory.MapUserPath(bindMounts[1].DestinationPath), "source2");
                 fileSystem.Received().AddDirectoryAccess(directory.MapUserPath(bindMounts[1].DestinationPath), FileAccess.Read, user.UserName);
                 fileSystem.Received().AddDirectoryAccess(bindMounts[1].SourcePath, FileAccess.Read, user.UserName);
             }
 
+
+            [Fact]
             public void ItHandlesUnixBindMountPaths()
             {
                 var bindMounts = new[]
@@ -343,12 +346,13 @@ namespace IronFrame
 
                 directory.CreateBindMounts(bindMounts, user);
 
-                fileSystem.Received().CreateDirectory(directory.MapUserPath(bindMounts[0].DestinationPath), Arg.Is<ICollection<UserAccess>>(x => x.Any(u => u.UserName == user.UserName)));
+                fileSystem.DidNotReceiveWithAnyArgs().CreateDirectory("", Arg.Is<ICollection<UserAccess>>(x => x.Any(u => u.UserName == user.UserName)));
                 fileSystem.Received().Symlink(directory.MapUserPath(bindMounts[0].DestinationPath), "\\var\\dir\\source");
                 fileSystem.Received().AddDirectoryAccess(directory.MapUserPath(bindMounts[0].DestinationPath), FileAccess.Read, user.UserName);
                 fileSystem.Received().AddDirectoryAccess("\\var\\dir\\source", FileAccess.Read, user.UserName);
             }
 
+            [Fact]
             public void ItFollowsBindMountsThatAreSymlinks()
             {
                 var bindMounts = new[]
@@ -373,7 +377,7 @@ namespace IronFrame
 
                 directory.CreateBindMounts(bindMounts, user);
 
-                fileSystem.Received().CreateDirectory(directory.MapUserPath(bindMounts[0].DestinationPath), Arg.Is<ICollection<UserAccess>>(x => x.Any(u => u.UserName == user.UserName)));
+                fileSystem.DidNotReceiveWithAnyArgs().CreateDirectory("", Arg.Is<ICollection<UserAccess>>(x => x.Any(u => u.UserName == user.UserName)));
                 fileSystem.Received().Symlink(directory.MapUserPath(bindMounts[0].DestinationPath), "symlink2");
                 fileSystem.Received().AddDirectoryAccess(directory.MapUserPath(bindMounts[0].DestinationPath), FileAccess.Read, user.UserName);
                 fileSystem.Received().AddDirectoryAccess("symlink2", FileAccess.Read, user.UserName);

@@ -156,9 +156,9 @@ namespace IronFrame
                 var mappedDestinationPath = MapUserPath(bindMount.DestinationPath);
                 var parentDir = Directory.GetParent(mappedDestinationPath).FullName;
                 
-                if (parentDir != MapUserPath(""))
+                if (CanonicalizePath(parentDir, ensureTrailingSlash: true) != MapUserPath(""))
                 {
-                    fileSystem.CreateDirectory(parentDir, GetContainerUserAccess(containerUser.UserName, FileAccess.ReadWrite));
+                   fileSystem.CreateDirectory(parentDir, GetContainerUserAccess(containerUser.UserName, FileAccess.ReadWrite));
                 }
                     
                 var cleanedSourcePath = bindMount.SourcePath.Replace("/", "\\");
