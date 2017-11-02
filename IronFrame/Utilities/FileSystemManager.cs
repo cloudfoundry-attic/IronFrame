@@ -29,7 +29,7 @@ namespace IronFrame.Utilities
         private const UInt32 FSCTL_GET_REPARSE_POINT = 0x900a8;
         private const UInt32 IO_REPARSE_TAG_SYMLINK = 0xA000000C;
 
-        [StructLayout(LayoutKind.Sequential, CharSet=CharSet.Unicode)]
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         private struct REPARSE_DATA_BUFFER
         {
             public UInt32 ReparseTag;
@@ -41,21 +41,21 @@ namespace IronFrame.Utilities
             public UInt16 PrintNameLength;
             public UInt32 Flags;
 
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 16000)]
-            public string PathBuffer;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 16000)] public string PathBuffer;
         }
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool CreateSymbolicLink(
-            string lpSymlinkFileName, string lpTargetFileName, SymbolicLink dwFlags); 
+            string lpSymlinkFileName, string lpTargetFileName, SymbolicLink dwFlags);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern SafeFileHandle CreateFile(
-            string lpFileName, UInt32 dwDesiredAccess, UInt32 dwShareMode,  IntPtr lpSecurityAttributes, UInt32 dwCreationDisposition, UInt32 dwFlagsAndAttributes, IntPtr hTemplateFile);
+            string lpFileName, UInt32 dwDesiredAccess, UInt32 dwShareMode, IntPtr lpSecurityAttributes,
+            UInt32 dwCreationDisposition, UInt32 dwFlagsAndAttributes, IntPtr hTemplateFile);
 
         [DllImport("kernel32.dll")]
         private static extern bool DeviceIoControl(SafeFileHandle hDevice, UInt32 dwIoControlCode, IntPtr lpInBuffer,
-            UInt32 nInBufferSize, out REPARSE_DATA_BUFFER rdb,  UInt32 nOutBufferSize, out IntPtr lpBytesReturned,
+            UInt32 nInBufferSize, out REPARSE_DATA_BUFFER rdb, UInt32 nOutBufferSize, out IntPtr lpBytesReturned,
             IntPtr lpOverlapped);
 
         public static string SymlinkTargetFromHandle(SafeFileHandle handle)
@@ -64,7 +64,9 @@ namespace IronFrame.Utilities
             var x = 10;
             var outSize = new IntPtr(x);
 
-            if (!DeviceIoControl(handle, FSCTL_GET_REPARSE_POINT, IntPtr.Zero, 0, out rdb, (UInt32)Marshal.SizeOf(rdb), out outSize, IntPtr.Zero))
+            if (
+                !DeviceIoControl(handle, FSCTL_GET_REPARSE_POINT, IntPtr.Zero, 0, out rdb, (UInt32) Marshal.SizeOf(rdb),
+                    out outSize, IntPtr.Zero))
             {
                 throw new Win32Exception();
             }
@@ -75,14 +77,14 @@ namespace IronFrame.Utilities
             }
 
             var arrayOffset = rdb.PrintNameOffset/2;
-            return rdb.PathBuffer.Substring(arrayOffset, arrayOffset + (rdb.PrintNameLength / 2));
+            return rdb.PathBuffer.Substring(arrayOffset, arrayOffset + (rdb.PrintNameLength/2));
         }
 
         public static SafeFileHandle OpenSymlinkDirectory(string dir)
         {
             if (String.IsNullOrEmpty(dir))
             {
-               throw new ArgumentNullException("dir");
+                throw new ArgumentNullException("dir");
             }
 
             var handle = CreateFile(
@@ -91,7 +93,7 @@ namespace IronFrame.Utilities
                 FILE_SHARE_READ,
                 IntPtr.Zero,
                 OPEN_EXISTING,
-                FILE_FLAG_BACKUP_SEMANTICS|FILE_FLAG_OPEN_REPARSE_POINT,
+                FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
                 IntPtr.Zero
             );
 
@@ -109,7 +111,6 @@ namespace IronFrame.Utilities
             {
                 throw new Win32Exception();
             }
-
         }
 
         public virtual void Copy(string source, string destination, bool overwrite)
@@ -419,13 +420,16 @@ namespace IronFrame.Utilities
 
         public virtual void RemoveDirectoryAccess(string path, string user)
         {
-            DirectorySecurity security = fileSystem.GetDirectoryAccessSecurity(path);
+            if (DirectoryExists(path))
+            {
+                DirectorySecurity security = fileSystem.GetDirectoryAccessSecurity(path);
 
-            // RemoveAccessRuleAll ignores everything in the ACL but the username
-            var userACL = new FileSystemAccessRule(user, FileSystemRights.ListDirectory, AccessControlType.Allow );
-            security.RemoveAccessRuleAll(userACL);
+                // RemoveAccessRuleAll ignores everything in the ACL but the username
+                var userACL = new FileSystemAccessRule(user, FileSystemRights.ListDirectory, AccessControlType.Allow);
+                security.RemoveAccessRuleAll(userACL);
 
-            fileSystem.SetDirectoryAccessSecurity(path, security);
+                fileSystem.SetDirectoryAccessSecurity(path, security);
+            }
         }
 
 
@@ -441,7 +445,8 @@ namespace IronFrame.Utilities
 
         public virtual bool DirIsSymlink(string directory)
         {
-            return (fileSystem.GetAttributes(directory) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
+            return fileSystem.DirectoryExists(directory) &&
+                   ((fileSystem.GetAttributes(directory) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint);
         }
 
         public virtual string GetSymlinkTarget(string source)
@@ -452,7 +457,7 @@ namespace IronFrame.Utilities
             {
                 strDest = PlatformFileSystem.SymlinkTargetFromHandle(handle);
             }
-            
+
             return strDest;
         }
     }
