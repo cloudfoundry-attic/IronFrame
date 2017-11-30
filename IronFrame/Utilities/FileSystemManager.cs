@@ -408,27 +408,50 @@ namespace IronFrame.Utilities
 
         public virtual void AddDirectoryAccess(string path, FileAccess access, string user)
         {
-            DirectorySecurity security = fileSystem.GetDirectoryAccessSecurity(path);
-
-            foreach (FileSystemAccessRule rule in GetAccessControlRules(access, user))
+            using (var dirMutex = new System.Threading.Mutex(false, path.Replace('\\', '_')))
             {
-                security.AddAccessRule(rule);
-            }
+                dirMutex.WaitOne();
+                try
+                {
+                    DirectorySecurity security = fileSystem.GetDirectoryAccessSecurity(path);
 
-            fileSystem.SetDirectoryAccessSecurity(path, security);
+                    foreach (FileSystemAccessRule rule in GetAccessControlRules(access, user))
+                    {
+                        security.AddAccessRule(rule);
+                    }
+
+                    fileSystem.SetDirectoryAccessSecurity(path, security);
+                }
+                finally
+                {
+                    dirMutex.ReleaseMutex();
+                }
+            }
         }
 
         public virtual void RemoveDirectoryAccess(string path, string user)
         {
             if (DirectoryExists(path) || FileExists(path))
             {
-                DirectorySecurity security = fileSystem.GetDirectoryAccessSecurity(path);
+                using (var dirMutex = new System.Threading.Mutex(false, path.Replace('\\', '_')))
+                {
+                    dirMutex.WaitOne();
+                    try
+                    {
+                        DirectorySecurity security = fileSystem.GetDirectoryAccessSecurity(path);
 
-                // RemoveAccessRuleAll ignores everything in the ACL but the username
-                var userACL = new FileSystemAccessRule(user, FileSystemRights.ListDirectory, AccessControlType.Allow);
-                security.RemoveAccessRuleAll(userACL);
+                        // RemoveAccessRuleAll ignores everything in the ACL but the username
+                        var userACL = new FileSystemAccessRule(user, FileSystemRights.ListDirectory,
+                            AccessControlType.Allow);
+                        security.RemoveAccessRuleAll(userACL);
 
-                fileSystem.SetDirectoryAccessSecurity(path, security);
+                        fileSystem.SetDirectoryAccessSecurity(path, security);
+                    }
+                    finally
+                    {
+                        dirMutex.ReleaseMutex();
+                    }
+                }
             }
         }
 
